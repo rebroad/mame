@@ -16,6 +16,7 @@ ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
 USE_LOCAL_EMSDK=true   # Use repo-local emsdk clone to avoid affecting global
+USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 
 print_usage() {
     echo "Usage: $0 [options]"
@@ -28,9 +29,12 @@ print_usage() {
     echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
+    echo "  -no-ccache             Disable ccache wrapper for this build"
+    echo "  -verbose               Run MAME with -verbose for browser console logs"
 }
 
 # Parse args
+VERBOSE_ARG=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
@@ -42,6 +46,8 @@ while [[ $# -gt 0 ]]; do
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
+        -no-ccache) USE_CCACHE=false; shift;;
+        -verbose) VERBOSE_ARG=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
@@ -101,6 +107,21 @@ ensure_emscripten() {
         echo "Error: emcc not available after setup." >&2
         exit 1
     fi
+
+    # Configure ccache wrapper if enabled and available
+    if $USE_CCACHE; then
+        if command -v ccache >/dev/null 2>&1; then
+            export EM_COMPILER_WRAPPER="ccache"
+            # Prime ccache defaults if not set
+            : "${CCACHE_DIR:=$REPO_ROOT/.ccache}"
+            export CCACHE_DIR
+            ccache --set-config=compiler_check=content >/dev/null 2>&1 || true
+            ccache --set-config=max_size=5G >/dev/null 2>&1 || true
+            echo "Using ccache at $CCACHE_DIR"
+        else
+            echo "ccache not found; proceeding without ccache. Install with: sudo apt install ccache"
+        fi
+    fi
 }
 
 ensure_emscripten
@@ -134,17 +155,27 @@ if $DO_BUILD; then
     popd >/dev/null
 fi
 
+# Locate artifacts (repo root after build; webdist for -no-build runs)
+SRC_ROOT="$REPO_ROOT"
+if ! $DO_BUILD; then
+    if [[ -f "$OUTDIR/starwarswasm.html" ]]; then
+        SRC_ROOT="$OUTDIR"
+    fi
+fi
+
 # Verify artifacts
-for f in "$REPO_ROOT/starwarswasm.html" "$REPO_ROOT/starwarswasm.js" "$REPO_ROOT/starwarswasm.wasm"; do
+for f in "$SRC_ROOT/starwarswasm.html" "$SRC_ROOT/starwarswasm.js" "$SRC_ROOT/starwarswasm.wasm"; do
     if [[ ! -f "$f" ]]; then
         echo "Error: Expected artifact missing: $f" >&2
         exit 1
     fi
 done
 
-# Stage web distribution
+# Stage web distribution (ensure artifacts exist in webdist)
 mkdir -p "$OUTDIR"
-cp -f "$REPO_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
+if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
+    mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
+fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
 python3 "$PACKAGER" \
@@ -168,7 +199,6 @@ cat > "$OUTDIR/index.html" <<EOF
   </head>
   <body>
     <canvas id="c"></canvas>
-    <script src="roms.js"></script>
     <script>
       var Module = {
         canvas: (function(){ return document.getElementById('c'); })(),
@@ -176,12 +206,19 @@ cat > "$OUTDIR/index.html" <<EOF
           "${DRIVER_SHORTNAME}", "-rompath", "roms",
           "-video", "${VIDEO_MODE}",
           "-joystick", "1", "-mouse", "1"
-        ]
+        ],
+        print: function(text){ console.log(text); },
+        printErr: function(text){ console.error(text); },
+        locateFile: function(path){ return path; }
       };
       if ("${VIDEO_MODE}" === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
+      if ("${VERBOSE_ARG}" === "true") {
+        Module.arguments.push("-verbose");
+      }
     </script>
+    <script src="roms.js"></script>
     <script src="starwarswasm.js"></script>
   </body>
   </html>
