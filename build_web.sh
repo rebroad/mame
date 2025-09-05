@@ -246,6 +246,8 @@ start_server() {
     local pid=$!
     popd >/dev/null
     echo "Server PID: $pid"
+    # Expose the chosen port for probe utilities
+    echo "$port" > /tmp/mame_web_port.txt
     if command -v xdg-open >/dev/null 2>&1; then
         xdg-open "http://localhost:$port" >/dev/null 2>&1 || true
     fi
