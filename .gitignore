@@ -9,7 +9,6 @@
 *.S68
 .DS_Store
 
-/*
 /*/
 !/.github/
 !/3rdparty/
