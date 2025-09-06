@@ -41,7 +41,11 @@
         } catch (e) {}
         return 'soft';
       }
-      var chosenVideo = "soft" === "auto" ? detectPreferredVideo() : "soft";
+      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
+      var urlParams = new URLSearchParams(location.search);
+      var urlVideo = (urlParams.get('video')||'').toLowerCase();
+      var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("auto" === "auto" ? detectPreferredVideo() : "auto");
+      var latencyOverride = urlParams.get('latency');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
@@ -54,7 +58,7 @@
           "-joystick", "-mouse",
           "-throttle", "-speed", "1",
           "-samplerate", "48000",
-          "-audio_latency", "5"
+          "-audio_latency", latencyOverride ? String(latencyOverride) : "5"
         ],
         print: function(text){ console.log(text); },
         printErr: function(text){ console.error(text); },
@@ -131,13 +135,14 @@
           var ac = (window.AudioContext||window.webkitAudioContext)? new (window.AudioContext||window.webkitAudioContext)() : null;
           console.log('[Audio] Worklet support:', !!(ac && ac.audioWorklet));
         } catch(e){}
-        console.log('[Workers] WASM workers enabled:', true);
+        console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
+        console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
       console.log('[Args]', Module.arguments.join(' '));
       if (chosenVideo === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
-      if ("true" === "true") {
+      if ("false" === "true") {
         Module.arguments.push("-verbose");
       }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads

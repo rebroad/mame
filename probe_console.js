@@ -1,15 +1,21 @@
 // Headless console probe using Puppeteer
-// Usage: node probe_console.js [port]
+// Usage: node probe_console.js [port|url]
 
 const fs = require('fs');
 
 (async () => {
-  const portArg = process.argv[2];
-  let port = portArg;
-  if (!port) {
-    try { port = fs.readFileSync('/tmp/mame_web_port.txt', 'utf8').trim(); } catch {}
+  const arg = process.argv[2];
+  let targetUrl = '';
+  if (arg && /^https?:\/\//i.test(arg)) {
+    targetUrl = arg;
+  } else {
+    let port = arg;
+    if (!port) {
+      try { port = fs.readFileSync('/tmp/mame_web_port.txt', 'utf8').trim(); } catch {}
+    }
+    if (!port) port = '8000';
+    targetUrl = `http://localhost:${port}/index.html`;
   }
-  if (!port) port = '8000';
 
   let puppeteer;
   try { puppeteer = require('puppeteer'); } catch (e) {
@@ -31,7 +37,7 @@ const fs = require('fs');
     } catch {}
   });
 
-  const url = `http://localhost:${port}/index.html`;
+  const url = targetUrl;
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     // Let the app initialize (use standard delay for compatibility)
