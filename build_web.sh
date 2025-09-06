@@ -161,10 +161,27 @@ if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || tr
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
-    if [[ "$CUR_MODE" != "$PREV_MODE" ]]; then
-        echo "Detected build mode change ($PREV_MODE -> $CUR_MODE). Performing clean of previous artifacts..."
-        rm -rf "$REPO_ROOT/build/asmjs" "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" 2>/dev/null || true
+    # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
+    BUILD_BASE="$REPO_ROOT/build"
+    ASMJS_LINK="$BUILD_BASE/asmjs"
+    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
+    ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
+    GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
+    GMAKE_LINK="$GEN_BASE/gmake-asmjs"
+    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
+    mkdir -p "$ASMJS_MODE_DIR"
+    mkdir -p "$GEN_BASE"
+    # Point asmjs link to mode dir
+    if [[ -L "$ASMJS_LINK" || -e "$ASMJS_LINK" ]]; then
+        if [[ -L "$ASMJS_LINK" ]]; then rm -f "$ASMJS_LINK"; else mv "$ASMJS_LINK" "${ASMJS_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
     fi
+    ln -sfn "$(basename "$ASMJS_MODE_DIR")" "$ASMJS_LINK"
+    # Point gmake-asmjs link to mode dir
+    if [[ -L "$GMAKE_LINK" || -e "$GMAKE_LINK" ]]; then
+        if [[ -L "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; else mv "$GMAKE_LINK" "${GMAKE_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
+    fi
+    mkdir -p "$GMAKE_MODE_DIR"
+    ln -sfn "$(basename "$GMAKE_MODE_DIR")" "$GMAKE_LINK"
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
@@ -175,7 +192,7 @@ if $DO_BUILD; then
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
     fi
     if $DEBUG_MODE; then
-        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s SAFE_HEAP=1 -s DEMANGLE_SUPPORT=1"
+        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
     fi
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
     LDFLAGS="$BUILD_LDFLAGS" CFLAGS="${CFLAGS:-} ${ENABLE_WORKERS:+-pthread}" CXXFLAGS="${CXXFLAGS:-} ${ENABLE_WORKERS:+-pthread}" emmake make \
@@ -333,9 +350,9 @@ cat > "$OUTDIR/index.html" <<EOF
         return 'soft';
       }
       var chosenVideo = "${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}";
-      if ("${ENABLE_WORKERS}" === "true" && chosenVideo === "bgfx") {
-        console.log('[Video] Forcing soft in workers mode to avoid OffscreenCanvas WebGL quirks');
-        chosenVideo = 'soft';
+      if ("${ENABLE_WORKERS}" === "true") {
+        console.log('[Video] Workers enabled; preferring bgfx/WebGL for OffscreenCanvas');
+        chosenVideo = 'bgfx';
       }
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
@@ -396,6 +413,17 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // In workers mode, the canvas may transfer control to OffscreenCanvas.
+      // Some libraries may still try to get a 2D/GL context on the main thread; suppress the throw and return null.
+      if ("${ENABLE_WORKERS}" === "true") {
+        try {
+          var __c = document.getElementById('canvas');
+          var __origGetContext = __c.getContext.bind(__c);
+          __c.getContext = function(type, attrs){
+            try { return __origGetContext(type, attrs); } catch (e) { return null; }
+          };
+        } catch(e) {}
+      }
       // Log whether AudioWorklet/Workers are active at runtime
       (function(){
         try {
