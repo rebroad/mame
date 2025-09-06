@@ -169,11 +169,9 @@ if $DO_BUILD; then
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $ENABLE_WORKERS; then
-        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1'
-        export EMCC_CFLAGS_PTHREAD="-pthread"
-        export EMXX_CFLAGS_PTHREAD="-pthread"
-        export EMMAKEN_CFLAGS="${EMMAKEN_CFLAGS:-} -pthread"
-        export EMMAKEN_CXXFLAGS="${EMMAKEN_CXXFLAGS:-} -pthread"
+        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -pthread'
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
     fi
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s SAFE_HEAP=1 -s DEMANGLE_SUPPORT=1"
