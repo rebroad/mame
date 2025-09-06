@@ -35,7 +35,7 @@ const fs = require('fs');
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     // Let the app initialize (use standard delay for compatibility)
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, 15000));
   } catch (e) {
     logs.push(`[goto-error] ${e.message}`);
   }

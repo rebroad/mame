@@ -10,6 +10,13 @@
   <body>
     <canvas id="canvas"></canvas>
     <script>
+      // Ensure canvas has explicit pixel size and is visible
+      (function(){
+        var c = document.getElementById('canvas');
+        function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+      })();
       function dumpLog(prefix){
         try {
           if (typeof FS !== 'undefined') {
@@ -34,13 +41,14 @@
         } catch (e) {}
         return 'soft';
       }
-      var chosenVideo = "auto" === "auto" ? detectPreferredVideo() : "auto";
+      var chosenVideo = "soft" === "auto" ? detectPreferredVideo() : "soft";
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
           "starwars1",
           "-rompath", "roms",
           "-video", chosenVideo,
+          "-window", "-nomaximize", "-numscreens", "1",
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
@@ -94,11 +102,42 @@
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // Ensure canvas pixel size is set before runtime and notify Emscripten glue
+      (function(){
+        var c=document.getElementById('canvas');
+        function applySize(){
+          var w = window.innerWidth, h = window.innerHeight;
+          c.width=w; c.height=h;
+          if (Module && typeof Module.setCanvasSize === 'function') {
+            try { Module.setCanvasSize(w, h, true); } catch(e) {}
+          }
+        }
+        window.addEventListener('resize', applySize);
+        applySize();
+      })();
+      // In workers mode with OffscreenCanvas, suppress main-thread getContext throws
+      if ("false" === "true") {
+        try {
+          var __c = document.getElementById('canvas');
+          var __origGetContext = __c.getContext.bind(__c);
+          __c.getContext = function(type, attrs){
+            try { return __origGetContext(type, attrs); } catch (e) { return null; }
+          };
+        } catch(e) {}
+      }
+      // Log whether AudioWorklet/Workers are active at runtime
+      (function(){
+        try {
+          var ac = (window.AudioContext||window.webkitAudioContext)? new (window.AudioContext||window.webkitAudioContext)() : null;
+          console.log('[Audio] Worklet support:', !!(ac && ac.audioWorklet));
+        } catch(e){}
+        console.log('[Workers] WASM workers enabled:', true);
+      })();
       console.log('[Args]', Module.arguments.join(' '));
       if (chosenVideo === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
-      if ("false" === "true") {
+      if ("true" === "true") {
         Module.arguments.push("-verbose");
       }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
@@ -113,6 +152,7 @@
       Module.arguments.push("-brightness", "1.05");
       Module.arguments.push("-contrast", "1.0");
       Module.arguments.push("-gamma", "1.3");
+      Module.arguments.push("-bgfx_screen_chains", "vector");
     </script>
     <script src="roms.js"></script>
     <script src="starwarswasm.js"></script>

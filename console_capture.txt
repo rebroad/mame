@@ -1,168 +1,191 @@
-[log] [Args] starwars1 -rompath roms -video bgfx -skip_gameinfo -log -joystick -mouse -throttle -speed 1 -samplerate 48000 -audio_latency 5
-[warn] [GroupMarkerNotSet(crbug.com/242999)!:A0E029005C050000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[log] [Audio] Worklet support: true
+[log] [Workers] WASM workers enabled: true
+[log] [Args] starwars1 -rompath roms -video soft -window -nomaximize -numscreens 1 -skip_gameinfo -log -joystick -mouse -throttle -speed 1 -samplerate 48000 -audio_latency 5
 [log] [FS after preload] roms dir ok: false
 [log] [FS after preload] roms list: 
 [log] [FS after preload] roms dir ok: true
 [log] [FS after preload] roms list: .,..,starwars.zip,starwars1.zip
-[log] Heap resize call from 25165824 to 42008576 took 0.3149999976158142 msecs. Success: true
-[log] Heap resize call from 42008576 to 50462720 took 0.03999999165534973 msecs. Success: true
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
-[log] Heap resize call from 50462720 to 60555264 took 0.07999998331069946 msecs. Success: true
-[log] Heap resize call from 60555264 to 72679424 took 0.0599999725818634 msecs. Success: true
-[log] Heap resize call from 72679424 to 87228416 took 0.06499999761581421 msecs. Success: true
-[log] Heap resize call from 87228416 to 104726528 took 0.04499998688697815 msecs. Success: true
+[log] Attempting load of mame.ini
+[log] Attempting load of mame.ini
+[log] Attempting load of horizont.ini
+[log] Attempting load of vector.ini
+[log] Attempting load of source/starwars.ini
+[log] Attempting load of starwars.ini
+[log] Attempting load of starwars1.ini
+[log] Attempting load of mame.ini
+[log] Attempting load of mame.ini
+[log] Attempting load of horizont.ini
+[log] Attempting load of vector.ini
+[log] Attempting load of source/starwars.ini
+[log] Attempting load of starwars.ini
+[log] Attempting load of starwars1.ini
+[log] Available videodrivers: emscripten 
+[log] Current Videodriver: emscripten
+[log] 	Display #0
+[log] 		Desktop Mode:         800x600-24@0
+[log] 		Current Display Mode: 800x600-24@0
+[log] 		Renderdrivers:
+[log] 			 opengles2 (0x0)
+[log] 			  software (0x0)
+[log] Available audio drivers: 
+[log] 	emscripten          
+[log] 	disk                
+[log] 	dummy               
+[log] Build version:      0.280 (mame0280-204-g1725420c7e4-dirty)
+[log] Build architecure:  
+[log] Build defines 1:    SDLMAME_UNIX=1 
+[log] Build defines 1:    LSB_FIRST=1 MAME_NOASM=1 
+[log] SDL/OpenGL defines: SDL_COMPILEDVERSION=4402 USE_OPENGL=1 
+[log] Compiler defines A: __GNUC__=4 __GNUC_MINOR__=2 __GNUC_PATCHLEVEL__=1 __VERSION__="Clang 17.0.0 (https://github.com/llvm/llvm-project 6865cff8ea8b07d9f2385fd92cecb422404f0f35)" 
+[log] Compiler defines B: __unix__=1 
+[log] Compiler defines C: 
+[log] Enter init_monitors
+[log] Adding monitor screen0 (800 x 600)
+[log] Leave init_monitors
+[log] Using SDL multi-window soft driver (SDL 2.0+)
+[log] Enter sdlwindow_init
+[log] 
+[log] Hints:
+[log] 	SDL_FRAMEBUFFER_ACCELERATION             (NULL)
+[log] 	SDL_RENDER_DRIVER                        (NULL)
+[log] 	SDL_RENDER_OPENGL_SHADERS                (NULL)
+[log] 	SDL_RENDER_SCALE_QUALITY                 (NULL)
+[log] 	SDL_RENDER_VSYNC                         (NULL)
+[log] 	SDL_VIDEO_X11_XVIDMODE                   (NULL)
+[log] 	SDL_VIDEO_X11_XINERAMA                   (NULL)
+[log] 	SDL_VIDEO_X11_XRANDR                     (NULL)
+[log] 	SDL_GRAB_KEYBOARD                        (NULL)
+[log] 	SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS         0
+[log] 	SDL_IOS_IDLE_TIMER_DISABLED              (NULL)
+[log] 	SDL_IOS_ORIENTATIONS                     (NULL)
+[log] 	SDL_XINPUT_ENABLED                       (NULL)
+[log] 	SDL_GAMECONTROLLERCONFIG                 (NULL)
+[log] 	SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS     (NULL)
+[log] 	SDL_ALLOW_TOPMOST                        (NULL)
+[log] 	SDL_TIMER_RESOLUTION                     (NULL)
+[log] 	SDL_RENDER_DIRECT3D_THREADSAFE           (NULL)
+[log] 	SDL_VIDEO_ALLOW_SCREENSAVER              (NULL)
+[log] 	SDL_ACCELEROMETER_AS_JOYSTICK            (NULL)
+[log] 	SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK   (NULL)
+[log] 	SDL_VIDEO_WIN_D3DCOMPILER                (NULL)
+[log] 	SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT      (NULL)
+[log] 	SDL_VIDEO_MAC_FULLSCREEN_SPACES          (NULL)
+[log] 	SDL_MOUSE_RELATIVE_MODE_WARP             (NULL)
+[log] 	SDL_RENDER_DIRECT3D11_DEBUG              (NULL)
+[log] 	SDL_VIDEO_HIGHDPI_DISABLED               (NULL)
+[log] 	SDL_WINRT_PRIVACY_POLICY_URL             (NULL)
+[log] 	SDL_WINRT_PRIVACY_POLICY_LABEL           (NULL)
+[log] 	SDL_WINRT_HANDLE_BACK_BUTTON             (NULL)
+[log] Leave sdlwindow_init
+[log] Enter sdl_info::create
+[error] emscripten_set_main_loop_timing: Cannot set timing mode for main loop since a main loop does not exist! Call emscripten_set_main_loop first to set one up.
+[log] window: using renderer opengles2
+[log] renderer: flag SDL_RENDERER_ACCELERATED
+[log] Leave renderer_sdl2::create
+[log] Keyboard: Start initialization
+[log] Input: Adding keyboard #1: System keyboard (device id: System keyboard)
+[log] Keyboard: Registered System keyboard
+[log] Keyboard: End initialization
+[log] Mouse: Start initialization
+[log] Input: Adding mouse #1: System mouse (device id: System mouse)
+[log] Mouse: Registered System mouse
+[log] Mouse: End initialization
+[log] Lightgun: Start initialization
+[log] Input: Adding lightgun #1: System pointer gun 1 (device id: System pointer gun 1)
+[log] Lightgun: Registered System pointer gun 1
+[log] Lightgun: End initialization
+[log] Could not initialize SDL Haptic subsystem: SDL not built with haptic (force feedback) support.
+[log] Game Controller: Start initialization
+[log] Game Controller: End initialization
+[log] Searching font Liberation Sans in -. path/s
+[log] font Liberation Sans|Regular is not TrueType or BDF, using MAME default
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: found roms/starwars1.zip ECD at 980
+[log] unzip: roms/starwars1.zip has no ZIP64 ECD locator
+[log] unzip: read roms/starwars1.zip central directory
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] unzip: found roms/starwars1.zip in cache
+[log] unzip: opened archive file roms/starwars1.zip
+[log] unzip: closing archive file roms/starwars1.zip and sending to cache
+[log] Optional memory bank ':slapstic_bank' not found
+[log] Optional device ':slapstic' not found
+[log] Optional memory region ':riot' not found
+[log] Optional memory region ':x2212' not found
+[log] Optional memory region ':screen' not found
+[log] Starting Star Wars (set 2) ':'
+[log]   (missing dependencies; rescheduling)
+[log] Starting Motorola MC6809E ':maincpu'
+[log] Starting Watchdog Timer ':watchdog'
+[log] Starting Motorola MC6809E ':audiocpu'
+[log] Starting ADC0809 A/D Converter ':adc'
+[log] Starting MOS 6532 RIOT ':riot'
+[log] Starting Xicor X2212 256x4 NOVRAM ':x2212'
+[log] Starting 74LS259 Addressable Latch ':outlatch'
+[log] Starting VECTOR ':vector'
+[log]   (missing dependencies; rescheduling)
+[log] Starting Video Screen ':screen'
+[log] Starting Atari AVG (Star Wars) ':avg'
+[log]   (missing dependencies; rescheduling)
+[log] Starting Speaker ':mono'
+[log] Starting Atari C012294 POKEY ':pokey1'
+[log] Starting Atari C012294 POKEY ':pokey2'
+[log] Starting Atari C012294 POKEY ':pokey3'
+[log] Starting Atari C012294 POKEY ':pokey4'
+[log] Starting TMS5220 ':tms'
+[log] Starting Generic 8-bit latch ':soundlatch'
+[log] Starting Generic 8-bit latch ':mainlatch'
+[log] Starting Star Wars (set 2) ':'
+[log]   (missing dependencies; rescheduling)
+[log] Starting VECTOR ':vector'
+[log] Starting Atari AVG (Star Wars) ':avg'
+[log] Starting Star Wars (set 2) ':'
+[log] Heap resize call from 25165824 to 30212096 took 0.14000001549720764 msecs. Success: true
+[log] Heap resize call from 30212096 to 36306944 took 9.495000004768372 msecs. Success: true
+[log] Heap resize call from 36306944 to 43581440 took 0.06499999761581421 msecs. Success: true
+[log] Heap resize call from 43581440 to 52297728 took 0.050000011920928955 msecs. Success: true
+[log] Configuration file default.cfg not found
+[log] Attempting to parse: starwars1.cfg
 [warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
-[warn] [GroupMarkerNotSet(crbug.com/242999)!:A0B029005C050000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
-[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+[warn] [GroupMarkerNotSet(crbug.com/242999)!:A0E029000C010000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[warn] [.WebGL-0x22a40b297f00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x22a40b297f00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x22a40b297f00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x22a40b297f00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
 [warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
 [warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
 [warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
