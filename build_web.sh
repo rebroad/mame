@@ -208,6 +208,14 @@ if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
 fi
+# Optional per-game cfg (to carry input inversion, etc.)
+CFG_FILE="$HOME/.mame/cfg/${DRIVER_SHORTNAME}.cfg"
+USE_CFG=false
+if [[ -f "$CFG_FILE" ]]; then
+  echo "Including per-game cfg: $CFG_FILE"
+  PACK_ARGS=("${PACK_ARGS[@]}" --preload "$CFG_FILE@cfg/${DRIVER_SHORTNAME}.cfg")
+  USE_CFG=true
+fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
 
 # Optional autoboot script to insert coin (5) and press start (1)
@@ -348,6 +356,10 @@ cat > "$OUTDIR/index.html" <<EOF
       }
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
+      }
+      // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
+      if (${USE_CFG} === true) {
+        Module.arguments.push("-cfg_directory", "cfg");
       }
       // Keep throttle enabled for smoother audio even in debug.
       if ("${AUTOSTART}" === "true") {
