@@ -12,6 +12,7 @@ SERVER_PORT=""
 VIDEO_MODE="bgfx"   # "bgfx" or "soft"
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
+AUDIO_LATENCY="5"
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -32,6 +33,7 @@ print_usage() {
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -verbose               Run MAME with -verbose for browser console logs"
     echo "  -debug                 Enable verbose and auto-capture browser console"
+    echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
 }
 
@@ -48,11 +50,12 @@ while [[ $# -gt 0 ]]; do
         -bgfx) VIDEO_MODE="bgfx"; shift;;
         -rom) ROM_PATH="${2:-}"; shift 2;;
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
+        -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
-        -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
+        -debug) DEBUG_MODE=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -255,7 +258,10 @@ cat > "$OUTDIR/index.html" <<EOF
           "-video", "${VIDEO_MODE}",
           "-skip_gameinfo",
           "-log",
-          "-joystick", "-mouse"
+          "-joystick", "-mouse",
+          "-throttle", "-speed", "1",
+          "-samplerate", "48000",
+          "-audio_latency", "${AUDIO_LATENCY}"
         ],
         print: function(text){ console.log(text); },
         printErr: function(text){ console.error(text); },
@@ -310,9 +316,7 @@ cat > "$OUTDIR/index.html" <<EOF
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
       }
-      if ("${DEBUG_MODE}" === "true") {
-        Module.arguments.push("-sound", "none", "-nothrottle");
-      }
+      // Keep throttle enabled for smoother audio even in debug.
       if ("${AUTOSTART}" === "true") {
         Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
       }
