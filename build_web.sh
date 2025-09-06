@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
-        -debug) DEBUG_MODE=true; shift;;
+        -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -h|--help) print_usage; exit 0;;
@@ -325,6 +325,13 @@ cat > "$OUTDIR/index.html" <<EOF
   <body>
     <canvas id="canvas"></canvas>
     <script>
+      // Ensure canvas has explicit pixel size and is visible
+      (function(){
+        var c = document.getElementById('canvas');
+        function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+      })();
       function dumpLog(prefix){
         try {
           if (typeof FS !== 'undefined') {
