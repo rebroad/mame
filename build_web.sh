@@ -31,10 +31,14 @@ print_usage() {
     echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -verbose               Run MAME with -verbose for browser console logs"
+    echo "  -debug                 Enable verbose and auto-capture browser console"
+    echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
 }
 
 # Parse args
 VERBOSE_ARG=false
+DEBUG_MODE=false
+AUTOSTART=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
@@ -48,6 +52,8 @@ while [[ $# -gt 0 ]]; do
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
+        -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
+        -autostart) AUTOSTART=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
@@ -144,7 +150,13 @@ fi
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
     pushd "$REPO_ROOT" >/dev/null
-    emmake make \
+    # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
+    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    if $DEBUG_MODE; then
+        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s SAFE_HEAP=1 -s DEMANGLE_SUPPORT=1"
+    fi
+    echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
+    LDFLAGS="$BUILD_LDFLAGS" emmake make \
         SUBTARGET=starwarswasm \
         SOURCES=src/mame/atari/starwars.cpp \
         WEBASSEMBLY=1 \
@@ -178,14 +190,34 @@ if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
-python3 "$PACKAGER" \
-    "$OUTDIR/roms.data" \
-    --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" \
-    --export-name=Module \
-    --use-preload-cache \
-    --no-heap-copy \
-    --lz4 \
-    --js-output="$OUTDIR/roms.js"
+# Optional parent ROM support (embed if present in same dir or default rom dir)
+PARENT_ROM=""
+ROM_DIR="$(dirname "$ROM_PATH")"
+if [[ -f "$ROM_DIR/starwars.zip" ]]; then
+  PARENT_ROM="$ROM_DIR/starwars.zip"
+elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
+  PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+fi
+
+PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
+if [[ -n "$PARENT_ROM" ]]; then
+  echo "Including parent ROM: $PARENT_ROM"
+  PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
+fi
+python3 "$PACKAGER" "${PACK_ARGS[@]}"
+
+# Optional autoboot script to insert coin (5) and press start (1)
+if $AUTOSTART; then
+cat > "$OUTDIR/autoboot.lua" <<'LUA'
+emu.register_frame(function()
+  if emu.framecount() == 60 then
+    emu.keypost('5')
+  elseif emu.framecount() == 120 then
+    emu.keypost('1')
+  end
+end)
+LUA
+fi
 
 # Generate index.html
 cat > "$OUTDIR/index.html" <<EOF
@@ -195,27 +227,94 @@ cat > "$OUTDIR/index.html" <<EOF
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MAME Star Wars (WASM)</title>
-    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #c{width:100%;height:100%;display:block}</style>
+    <link rel="icon" href="data:,"/>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
   </head>
   <body>
-    <canvas id="c"></canvas>
+    <canvas id="canvas"></canvas>
     <script>
+      function dumpLog(prefix){
+        try {
+          if (typeof FS !== 'undefined') {
+            var p = 'mame.log';
+            var inf = FS.analyzePath(p);
+            if (inf.exists) {
+              var d = FS.readFile(p, { encoding: 'utf8' });
+              console.error(prefix + '\\n' + d);
+            }
+          }
+        } catch (e) { console.error(prefix + ' failed', e); }
+      }
+      window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
+      window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
       var Module = {
-        canvas: (function(){ return document.getElementById('c'); })(),
+        canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
-          "${DRIVER_SHORTNAME}", "-rompath", "roms",
+          "${DRIVER_SHORTNAME}",
+          "-rompath", "roms",
           "-video", "${VIDEO_MODE}",
-          "-joystick", "1", "-mouse", "1"
+          "-skip_gameinfo",
+          "-log",
+          "-joystick", "-mouse"
         ],
         print: function(text){ console.log(text); },
         printErr: function(text){ console.error(text); },
-        locateFile: function(path){ return path; }
+        locateFile: function(path){ return path; },
+        preRun: [],
+        monitorRunDependencies: function(left){
+          if (left === 0) {
+            try {
+              if (typeof FS !== 'undefined') {
+                var info = FS.analyzePath('roms');
+                var l = [];
+                try { l = FS.readdir('roms'); } catch(e) {}
+                console.log('[FS after preload] roms dir ok:', !!info.exists);
+                console.log('[FS after preload] roms list:', (l||[]).join(','));
+              }
+            } catch (e) { console.error('[FS after preload] error', e); }
+          }
+        },
+        onAbort: function(reason){
+          console.error('[onAbort]', reason);
+          try {
+            if (typeof FS !== 'undefined') {
+              var path = 'mame.log';
+              var info = FS.analyzePath(path);
+              if (info.exists) {
+                var data = FS.readFile(path, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + data);
+              } else {
+                console.error('[mame.log] not found');
+              }
+            }
+          } catch (e) { console.error('[onAbort] failed to read mame.log', e); }
+        },
+        onExit: function(code){
+          console.error('[onExit]', code);
+          try {
+            if (typeof FS !== 'undefined') {
+              var p = 'mame.log';
+              var inf = FS.analyzePath(p);
+              if (inf.exists) {
+                var d = FS.readFile(p, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + d);
+              }
+            }
+          } catch (e) { console.error('[onExit] read mame.log failed', e); }
+        }
       };
+      console.log('[Args]', Module.arguments.join(' '));
       if ("${VIDEO_MODE}" === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
+      }
+      if ("${DEBUG_MODE}" === "true") {
+        Module.arguments.push("-sound", "none", "-nothrottle");
+      }
+      if ("${AUTOSTART}" === "true") {
+        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
       }
     </script>
     <script src="roms.js"></script>
@@ -242,7 +341,39 @@ start_server() {
     fi
     echo "Starting local server on http://localhost:$port ..."
     pushd "$OUTDIR" >/dev/null
-    python3 -m http.server "$port" >/dev/null 2>&1 &
+    # Prefer Node server with COOP/COEP if available
+    if command -v node >/dev/null 2>&1; then
+      cat > serve.mjs << 'NODE'
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const root = __dirname;
+const port = process.env.PORT || 8000;
+const types = { '.html':'text/html', '.js':'application/javascript', '.wasm':'application/wasm', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.gif':'image/gif', '.svg':'image/svg+xml', '.css':'text/css', '.ico':'image/x-icon', '.data':'application/octet-stream' };
+const server = http.createServer((req, res) => {
+  let p = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
+  if (p === '/') p = '/index.html';
+  const filePath = path.join(root, p);
+  fs.readFile(filePath, (err, data) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (err) { res.writeHead(404); res.end('Not found'); return; }
+    const ext = path.extname(filePath).toLowerCase();
+    res.setHeader('Content-Type', types[ext] || 'application/octet-stream');
+    res.writeHead(200);
+    res.end(data);
+  });
+});
+server.listen(port, () => console.log(`Serving ${root} on http://localhost:${port}`));
+NODE
+      PORT="$port" node serve.mjs >/dev/null 2>&1 &
+    else
+      python3 -m http.server "$port" >/dev/null 2>&1 &
+    fi
     local pid=$!
     popd >/dev/null
     echo "Server PID: $pid"
@@ -253,11 +384,86 @@ start_server() {
     fi
 }
 
+# Optional headless console capture (requires Node + puppeteer)
+run_probe() {
+    if ! $DEBUG_MODE; then return 0; fi
+    echo "Debug mode: attempting headless console capture..."
+    pushd "$OUTDIR" >/dev/null
+    if ! command -v node >/dev/null 2>&1; then
+        echo "Node.js not found; skipping console capture. Install Node to enable."
+        popd >/dev/null
+        return 0
+    fi
+    # Try running probe; if puppeteer missing, advise install
+    if ! node -e "require('puppeteer')" >/dev/null 2>&1; then
+        echo "Puppeteer not installed. Run: (cd $OUTDIR && npm install puppeteer)"
+        popd >/dev/null
+        return 0
+    fi
+    node probe_console.js || true
+    if [[ -f "$OUTDIR/console_capture.txt" ]]; then
+        echo "Console log captured to $OUTDIR/console_capture.txt"
+        echo "--- Last 20 lines ---"
+        tail -n 20 "$OUTDIR/console_capture.txt" || true
+        echo "---------------------"
+    fi
+    popd >/dev/null
+}
+
 if $START_SERVER; then
-    start_server "$SERVER_PORT" || true
+    # Reuse existing server if already running and serving our page
+    ensure_server() {
+        local port="$1"
+        local used_port=""
+        # Prefer previously used COOP/COEP port if available and healthy
+        if [[ -z "$port" && -f /tmp/mame_web_port.txt ]]; then
+            local prev
+            prev="$(cat /tmp/mame_web_port.txt 2>/dev/null | tr -d '\n')"
+            if [[ -n "$prev" ]]; then
+                if command -v curl >/dev/null 2>&1 && \
+                   curl -s "http://localhost:$prev/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+                   curl -sI "http://localhost:$prev/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
+                    used_port="$prev"
+                fi
+            fi
+        fi
+        # If a specific port was requested, try that first
+        if [[ -z "$used_port" && -n "$port" ]]; then
+            if command -v curl >/dev/null 2>&1 && \
+               curl -s "http://localhost:$port/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+               curl -sI "http://localhost:$port/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
+                used_port="$port"
+            fi
+        fi
+        # Otherwise scan common ports
+        if [[ -z "$used_port" ]]; then
+            # Prefer a server that already has COOP/COEP
+            for p in 8000 8001 8002 8003 8004 8005; do
+                if command -v curl >/dev/null 2>&1 && \
+                   curl -s "http://localhost:$p/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+                   curl -sI "http://localhost:$p/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
+                    used_port="$p"; break
+                fi
+            done
+        fi
+        if [[ -n "$used_port" ]]; then
+            echo "Reusing existing server on http://localhost:$used_port"
+            echo "$used_port" > /tmp/mame_web_port.txt
+            if command -v xdg-open >/dev/null 2>&1; then
+                xdg-open "http://localhost:$used_port/index.html" >/dev/null 2>&1 || true
+            fi
+        else
+            # No suitable server found; start our COOP/COEP server
+            start_server "$port" || true
+        fi
+    }
+    ensure_server "$SERVER_PORT"
 else
     echo "To serve locally: (cd $OUTDIR && python3 -m http.server 8000)"
     echo "Then open: http://localhost:8000"
 fi
+
+# If debug mode, attempt headless console capture
+run_probe || true
 
 
