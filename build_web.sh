@@ -186,7 +186,7 @@ if $DO_BUILD; then
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $ENABLE_WORKERS; then
-        # Enable workers + AudioWorklet + OffscreenCanvas for rendering from worker
+        # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
@@ -254,6 +254,19 @@ elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
   PARENT_ROM="$HOME/.mame/roms/starwars.zip"
 fi
 
+# Optional autoboot script must be preloaded into the Emscripten FS
+if $AUTOSTART; then
+cat > "$OUTDIR/autoboot.lua" <<'LUA'
+emu.register_frame(function()
+  if emu.framecount() == 60 then
+    emu.keypost('5')
+  elseif emu.framecount() == 120 then
+    emu.keypost('1')
+  end
+end)
+LUA
+fi
+
 PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
@@ -267,20 +280,13 @@ if [[ -f "$CFG_FILE" ]]; then
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$CFG_FILE@cfg/${DRIVER_SHORTNAME}.cfg")
   USE_CFG=true
 fi
+# Preload autoboot if present
+if $AUTOSTART; then
+  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
+fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
 
-# Optional autoboot script to insert coin (5) and press start (1)
-if $AUTOSTART; then
-cat > "$OUTDIR/autoboot.lua" <<'LUA'
-emu.register_frame(function()
-  if emu.framecount() == 60 then
-    emu.keypost('5')
-  elseif emu.framecount() == 120 then
-    emu.keypost('1')
-  end
-end)
-LUA
-fi
+# (autoboot.lua created and preloaded earlier if AUTOSTART is true)
 
 # Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain)
 INI_ARGS_JS=""
@@ -356,23 +362,24 @@ cat > "$OUTDIR/index.html" <<EOF
         } catch (e) {}
         return 'soft';
       }
-      var chosenVideo = "${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}";
-      if ("${ENABLE_WORKERS}" === "true") {
-        console.log('[Video] Workers enabled; preferring bgfx/WebGL for OffscreenCanvas');
-        chosenVideo = 'bgfx';
-      }
+      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
+      var urlParams = new URLSearchParams(location.search);
+      var urlVideo = (urlParams.get('video')||'').toLowerCase();
+      var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}");
+      var latencyOverride = urlParams.get('latency');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
           "${DRIVER_SHORTNAME}",
           "-rompath", "roms",
           "-video", chosenVideo,
+          "-window", "-nomaximize", "-numscreens", "1",
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
           "-throttle", "-speed", "1",
           "-samplerate", "48000",
-          "-audio_latency", "${AUDIO_LATENCY}"
+          "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
         print: function(text){ console.log(text); },
         printErr: function(text){ console.error(text); },
@@ -420,8 +427,20 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
-      // In workers mode, the canvas may transfer control to OffscreenCanvas.
-      // Some libraries may still try to get a 2D/GL context on the main thread; suppress the throw and return null.
+      // Ensure canvas pixel size is set before runtime and notify Emscripten glue
+      (function(){
+        var c=document.getElementById('canvas');
+        function applySize(){
+          var w = window.innerWidth, h = window.innerHeight;
+          c.width=w; c.height=h;
+          if (Module && typeof Module.setCanvasSize === 'function') {
+            try { Module.setCanvasSize(w, h, true); } catch(e) {}
+          }
+        }
+        window.addEventListener('resize', applySize);
+        applySize();
+      })();
+      // In workers mode with OffscreenCanvas, suppress main-thread getContext throws
       if ("${ENABLE_WORKERS}" === "true") {
         try {
           var __c = document.getElementById('canvas');
@@ -437,7 +456,8 @@ cat > "$OUTDIR/index.html" <<EOF
           var ac = (window.AudioContext||window.webkitAudioContext)? new (window.AudioContext||window.webkitAudioContext)() : null;
           console.log('[Audio] Worklet support:', !!(ac && ac.audioWorklet));
         } catch(e){}
-        console.log('[Workers] WASM workers enabled:', true);
+        console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
+        console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
       console.log('[Args]', Module.arguments.join(' '));
       if (chosenVideo === "bgfx") {

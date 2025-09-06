@@ -16,12 +16,13 @@ warn()    { echo -e "${YELLOW}[WARNING]${NC} $*"; }
 error()   { echo -e "${RED}[ERROR]${NC} $*"; }
 
 usage() {
-    echo "Usage: $0 [--help] [--force] [--build-first] [--message <commit_msg>]"
+    echo "Usage: $0 [--help] [--force] [--build-first] [--message <commit_msg>] [--deploy-worker]"
 }
 
 FORCE_DEPLOY=false
 BUILD_FIRST=false
 COMMIT_MESSAGE="Deploy MAME Star Wars WASM to GitHub Pages [ci skip]"
+DEPLOY_WORKER=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,6 +30,7 @@ while [[ $# -gt 0 ]]; do
         --force) FORCE_DEPLOY=true; shift;;
         --build-first) BUILD_FIRST=true; shift;;
         --message) COMMIT_MESSAGE="${2:-}"; shift 2;;
+        --deploy-worker) DEPLOY_WORKER=true; shift;;
         *) error "Unknown option: $1"; usage; exit 1;;
     esac
 done
@@ -108,45 +110,46 @@ cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
 
 pushd "$WORKTREE_DIR" >/dev/null
 
+DID_PAGES=false
 if git diff --quiet && git diff --cached --quiet; then
     if $FORCE_DEPLOY; then
         warn "No changes detected; forcing empty commit..."
         git commit --allow-empty -m "$COMMIT_MESSAGE"
+        DID_PAGES=true
     else
-        info "No changes to deploy. Use --force to push anyway."
-        popd >/dev/null
-        git worktree remove "$WORKTREE_DIR"
-        rm -rf "$TMPDIR"
-        exit 0
+        info "No changes to deploy to GitHub Pages. Proceeding to Cloudflare Worker (if requested)."
     fi
 else
     info "📝 Committing changes..."
     git add .
     git commit -m "$COMMIT_MESSAGE"
+    DID_PAGES=true
 fi
 
-info "🚀 Pushing to GitHub Pages..."
-if git push origin gh-pages; then
-    success "✅ Deployed to GitHub Pages."
-    REPO_URL="$(git config --get remote.origin.url)"
-    if [[ "$REPO_URL" == *github.com* ]]; then
-        if [[ "$REPO_URL" == *"@"* ]]; then
-            REPO_PATH=$(echo "$REPO_URL" | sed 's/.*github.com[:\/]\([^.]*\)\.git/\1/')
-        else
-            REPO_PATH=$(echo "$REPO_URL" | sed 's/.*github.com\/\([^.]*\)\.git/\1/')
-        fi
-        OWNER="${REPO_PATH%%/*}"
-        REPO="${REPO_PATH##*/}"
-        PAGES_URL="https://${OWNER}.github.io/${REPO}/"
-        success "🌐 URL: ${PAGES_URL}"
-        warn "⚠️  It may take a minute to update."
-    fi
-else
-    error "❌ Push failed."
-    popd >/dev/null
-    git worktree remove "$WORKTREE_DIR"
-    rm -rf "$TMPDIR"
-    exit 1
+if $DID_PAGES; then
+  info "🚀 Pushing to GitHub Pages..."
+  if git push origin gh-pages; then
+      success "✅ Deployed to GitHub Pages."
+      REPO_URL="$(git config --get remote.origin.url)"
+      if [[ "$REPO_URL" == *github.com* ]]; then
+          if [[ "$REPO_URL" == *"@"* ]]; then
+              REPO_PATH=$(echo "$REPO_URL" | sed 's/.*github.com[:\/]\([^.]*\)\.git/\1/')
+          else
+              REPO_PATH=$(echo "$REPO_URL" | sed 's/.*github.com\/\([^.]*\)\.git/\1/')
+          fi
+          OWNER="${REPO_PATH%%/*}"
+          REPO="${REPO_PATH##*/}"
+          PAGES_URL="https://${OWNER}.github.io/${REPO}/"
+          success "🌐 URL: ${PAGES_URL}"
+          warn "⚠️  It may take a minute to update."
+      fi
+  else
+      error "❌ Push failed."
+      popd >/dev/null
+      git worktree remove "$WORKTREE_DIR"
+      rm -rf "$TMPDIR"
+      exit 1
+  fi
 fi
 
 popd >/dev/null
@@ -154,4 +157,37 @@ git worktree remove "$WORKTREE_DIR" || true
 rm -rf "$TMPDIR"
 
 success "🎉 Deployment complete."
+
+# Optionally deploy/update Cloudflare Worker (to front GitHub Pages with COOP/COEP)
+if $DEPLOY_WORKER; then
+    info "☁️  Deploying Cloudflare Worker (proxy) ..."
+    if [[ -d "$WEBDIR/cloudflare-worker" ]]; then
+        pushd "$WEBDIR/cloudflare-worker" >/dev/null
+        if ! command -v npx >/dev/null 2>&1; then
+            warn "npx not found; skipping Worker deploy. Install Node.js >= 20 and npm."
+        else
+            if [[ ! -d node_modules ]]; then
+                info "Installing worker dev dependencies (wrangler) ..."
+                npm i -D wrangler@latest >/dev/null 2>&1 || true
+            fi
+            npx wrangler deploy || warn "wrangler deploy failed; check Cloudflare credentials and zone/route config."
+            # Try to print the configured route(s) and origin
+            ORIGIN_LINE=$(grep -E '^ORIGIN\s*=\s*"' wrangler.toml 2>/dev/null | head -n1 || true)
+            ROUTE_LINE=$(grep -E 'pattern\s*=\s*"' wrangler.toml 2>/dev/null | head -n1 || true)
+            if [[ -n "$ORIGIN_LINE" ]]; then
+                ORIGIN_VAL=$(echo "$ORIGIN_LINE" | sed -E 's/.*ORIGIN\s*=\s*"([^"]+)".*/\1/')
+                info "Worker ORIGIN upstream: $ORIGIN_VAL"
+            fi
+            if [[ -n "$ROUTE_LINE" ]]; then
+                ROUTE_VAL=$(echo "$ROUTE_LINE" | sed -E 's/.*pattern\s*=\s*"([^"]+)".*/\1/')
+                success "Access via Cloudflare route: https://${ROUTE_VAL%/*}/"
+            else
+                warn "No route in wrangler.toml. You can use your workers.dev subdomain instead."
+            fi
+        fi
+        popd >/dev/null
+    else
+        warn "Cloudflare worker folder not found at $WEBDIR/cloudflare-worker; skipping."
+    fi
+fi
 
