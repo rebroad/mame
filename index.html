@@ -101,6 +101,10 @@
       if ("false" === "true") {
         Module.arguments.push("-verbose");
       }
+      // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
+      if (true === true) {
+        Module.arguments.push("-cfg_directory", "cfg");
+      }
       // Keep throttle enabled for smoother audio even in debug.
       if ("false" === "true") {
         Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");

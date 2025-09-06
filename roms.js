@@ -94,6 +94,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
       function assert(check, msg) {
         if (!check) throw msg + new Error().stack;
       }
+Module['FS_createPath']("/", "cfg", true, true);
 Module['FS_createPath']("/", "roms", true, true);
 
       /** @constructor */
@@ -347,6 +348,6 @@ Module['FS_createPath']("/", "roms", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/roms/starwars.zip", "start": 0, "end": 45436}, {"filename": "/roms/starwars1.zip", "start": 45436, "end": 100579}], "remote_package_size": 100579, "package_uuid": "sha256-d94ad03956fe8031549ccf718dc8c13f0a83c4e8ba7b0d4d2e43c3233ab4b51a"});
+    loadPackage({"files": [{"filename": "/cfg/starwars1.cfg", "start": 0, "end": 649}, {"filename": "/roms/starwars.zip", "start": 649, "end": 46085}, {"filename": "/roms/starwars1.zip", "start": 46085, "end": 101228}], "remote_package_size": 101228, "package_uuid": "sha256-f4e0d80f0e3b6abac88ea0ea6d38cc66ba35f43fb76c816d7ac4dab4b457350a"});
 
   })();
