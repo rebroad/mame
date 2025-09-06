@@ -3,8 +3,7 @@ main = "worker.mjs"
 compatibility_date = "2024-01-01"
 
 [vars]
-# Point to your GitHub Pages origin (must include trailing slash)
-ORIGIN = "https://<username>.github.io/<repo>/"
+ORIGIN = "https://rebroad.github.io/mame/"
 
 # Optional: automatically bind to a route like mame.reb.ai/*
 # Uncomment and set zone_id / route if you prefer routing via wrangler
@@ -12,5 +11,3 @@ ORIGIN = "https://<username>.github.io/<repo>/"
 # [routes]
 # pattern = "mame.reb.ai/*"
 # zone_id = "<your-zone-id>"
-
-
