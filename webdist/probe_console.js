@@ -24,12 +24,18 @@ const fs = require('fs');
   page.on('console', msg => logs.push(`[${msg.type()}] ${msg.text()}`));
   page.on('pageerror', err => logs.push(`[pageerror] ${err.message}`));
   page.on('requestfailed', req => logs.push(`[requestfailed] ${req.url()} ${req.failure()?.errorText}`));
+  page.on('response', resp => {
+    try {
+      const status = resp.status();
+      if (status >= 400) logs.push(`[response ${status}] ${resp.url()}`);
+    } catch {}
+  });
 
   const url = `http://localhost:${port}/index.html`;
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    // Let the app initialize
-    await page.waitForTimeout(5000);
+    // Let the app initialize (use standard delay for compatibility)
+    await new Promise(r => setTimeout(r, 5000));
   } catch (e) {
     logs.push(`[goto-error] ${e.message}`);
   }
