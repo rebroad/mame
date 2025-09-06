@@ -9,7 +9,7 @@ set -euo pipefail
 DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
-VIDEO_MODE="bgfx"   # "bgfx" or "soft"
+VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 AUDIO_LATENCY="5"
@@ -24,8 +24,8 @@ print_usage() {
     echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
     echo "  -no-server             Do not start a local web server"
     echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
-    echo "  -soft                  Use -video soft instead of bgfx"
-    echo "  -bgfx                  Use -video bgfx (default)"
+    echo "  -soft                  Force -video soft (override auto)"
+    echo "  -bgfx                  Force -video bgfx (override auto)"
     echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
     echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
@@ -154,6 +154,7 @@ if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
+    # Note: Do NOT enable WASM workers/shared memory here; MAME objects are not built with atomics.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s SAFE_HEAP=1 -s DEMANGLE_SUPPORT=1"
@@ -222,6 +223,27 @@ end)
 LUA
 fi
 
+# Collect per-game INI overrides if available (brightness/contrast/gamma/sync)
+INI_ARGS_JS=""
+INI_FILE="$HOME/.mame/ini/${DRIVER_SHORTNAME}.ini"
+if [[ -f "$INI_FILE" ]]; then
+    # shellcheck disable=SC2013
+    INI_BRIGHTNESS="$(awk 'tolower($1)=="brightness"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_CONTRAST="$(awk 'tolower($1)=="contrast"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_GAMMA="$(awk 'tolower($1)=="gamma"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    # Note: ignore waitvsync/syncrefresh in WASM, they can stall rendering in browsers
+    if [[ -n "$INI_BRIGHTNESS" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-brightness", '"\"$INI_BRIGHTNESS\""');'
+    fi
+    if [[ -n "$INI_CONTRAST" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-contrast", '"\"$INI_CONTRAST\""');'
+    fi
+    if [[ -n "$INI_GAMMA" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-gamma", '"\"$INI_GAMMA\""');'
+    fi
+    # waitvsync/syncrefresh intentionally not applied in web build
+fi
+
 # Generate index.html
 cat > "$OUTDIR/index.html" <<EOF
 <!doctype html>
@@ -250,12 +272,23 @@ cat > "$OUTDIR/index.html" <<EOF
       }
       window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
       window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
+      function detectPreferredVideo() {
+        try {
+          var c = document.createElement('canvas');
+          var gl2 = c.getContext('webgl2');
+          if (gl2) return 'bgfx';
+          var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+          if (gl) return 'bgfx';
+        } catch (e) {}
+        return 'soft';
+      }
+      var chosenVideo = "${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}";
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
           "${DRIVER_SHORTNAME}",
           "-rompath", "roms",
-          "-video", "${VIDEO_MODE}",
+          "-video", chosenVideo,
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
@@ -310,7 +343,7 @@ cat > "$OUTDIR/index.html" <<EOF
         }
       };
       console.log('[Args]', Module.arguments.join(' '));
-      if ("${VIDEO_MODE}" === "bgfx") {
+      if (chosenVideo === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
       if ("${VERBOSE_ARG}" === "true") {
@@ -320,6 +353,7 @@ cat > "$OUTDIR/index.html" <<EOF
       if ("${AUTOSTART}" === "true") {
         Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
       }
+${INI_ARGS_JS}
     </script>
     <script src="roms.js"></script>
     <script src="starwarswasm.js"></script>
@@ -364,6 +398,9 @@ const server = http.createServer((req, res) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    // Required for AudioWorklet and Workers on some browsers
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    res.setHeader('Origin-Trial', '');
     res.setHeader('Access-Control-Allow-Origin', '*');
     if (err) { res.writeHead(404); res.end('Not found'); return; }
     const ext = path.extname(filePath).toLowerCase();
