@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MAME Star Wars (WASM)</title>
+    <link rel="icon" href="data:,"/>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      function dumpLog(prefix){
+        try {
+          if (typeof FS !== 'undefined') {
+            var p = 'mame.log';
+            var inf = FS.analyzePath(p);
+            if (inf.exists) {
+              var d = FS.readFile(p, { encoding: 'utf8' });
+              console.error(prefix + '\n' + d);
+            }
+          }
+        } catch (e) { console.error(prefix + ' failed', e); }
+      }
+      window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
+      window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
+      function detectPreferredVideo() {
+        try {
+          var c = document.createElement('canvas');
+          var gl2 = c.getContext('webgl2');
+          if (gl2) return 'bgfx';
+          var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+          if (gl) return 'bgfx';
+        } catch (e) {}
+        return 'soft';
+      }
+      var chosenVideo = "auto" === "auto" ? detectPreferredVideo() : "auto";
+      var Module = {
+        canvas: (function(){ return document.getElementById('canvas'); })(),
+        arguments: [
+          "starwars1",
+          "-rompath", "roms",
+          "-video", chosenVideo,
+          "-skip_gameinfo",
+          "-log",
+          "-joystick", "-mouse",
+          "-throttle", "-speed", "1",
+          "-samplerate", "48000",
+          "-audio_latency", "5"
+        ],
+        print: function(text){ console.log(text); },
+        printErr: function(text){ console.error(text); },
+        locateFile: function(path){ return path; },
+        preRun: [],
+        monitorRunDependencies: function(left){
+          if (left === 0) {
+            try {
+              if (typeof FS !== 'undefined') {
+                var info = FS.analyzePath('roms');
+                var l = [];
+                try { l = FS.readdir('roms'); } catch(e) {}
+                console.log('[FS after preload] roms dir ok:', !!info.exists);
+                console.log('[FS after preload] roms list:', (l||[]).join(','));
+              }
+            } catch (e) { console.error('[FS after preload] error', e); }
+          }
+        },
+        onAbort: function(reason){
+          console.error('[onAbort]', reason);
+          try {
+            if (typeof FS !== 'undefined') {
+              var path = 'mame.log';
+              var info = FS.analyzePath(path);
+              if (info.exists) {
+                var data = FS.readFile(path, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + data);
+              } else {
+                console.error('[mame.log] not found');
+              }
+            }
+          } catch (e) { console.error('[onAbort] failed to read mame.log', e); }
+        },
+        onExit: function(code){
+          console.error('[onExit]', code);
+          try {
+            if (typeof FS !== 'undefined') {
+              var p = 'mame.log';
+              var inf = FS.analyzePath(p);
+              if (inf.exists) {
+                var d = FS.readFile(p, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + d);
+              }
+            }
+          } catch (e) { console.error('[onExit] read mame.log failed', e); }
+        }
+      };
+      console.log('[Args]', Module.arguments.join(' '));
+      if (chosenVideo === "bgfx") {
+        Module.arguments.push("-bgfx_screen_chains", "vector");
+      }
+      if ("false" === "true") {
+        Module.arguments.push("-verbose");
+      }
+      // Keep throttle enabled for smoother audio even in debug.
+      if ("false" === "true") {
+        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
+      }
+
+      Module.arguments.push("-brightness", "1.05");
+      Module.arguments.push("-contrast", "1.0");
+      Module.arguments.push("-gamma", "1.3");
+    </script>
+    <script src="roms.js"></script>
+    <script src="starwarswasm.js"></script>
+  </body>
+  </html>

@@ -1,0 +1,173 @@
+[log] [Args] starwars1 -rompath roms -video bgfx -skip_gameinfo -log -joystick -mouse -throttle -speed 1 -samplerate 48000 -audio_latency 5
+[warn] [GroupMarkerNotSet(crbug.com/242999)!:A0E029005C050000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[log] [FS after preload] roms dir ok: false
+[log] [FS after preload] roms list: 
+[log] [FS after preload] roms dir ok: true
+[log] [FS after preload] roms list: .,..,starwars.zip,starwars1.zip
+[log] Heap resize call from 25165824 to 42008576 took 0.3149999976158142 msecs. Success: true
+[log] Heap resize call from 42008576 to 50462720 took 0.03999999165534973 msecs. Success: true
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat when EXT_texture_norm16 is not enabled
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[warn] WebGL: INVALID_ENUM: getInternalformatParameter: invalid target
+[log] Heap resize call from 50462720 to 60555264 took 0.07999998331069946 msecs. Success: true
+[log] Heap resize call from 60555264 to 72679424 took 0.0599999725818634 msecs. Success: true
+[log] Heap resize call from 72679424 to 87228416 took 0.06499999761581421 msecs. Success: true
+[log] Heap resize call from 87228416 to 104726528 took 0.04499998688697815 msecs. Success: true
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] [GroupMarkerNotSet(crbug.com/242999)!:A0B029005C050000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warn] [.WebGL-0x2d5c0b562900]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[warn] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead. (https://bit.ly/audio-worklet)
+[warn] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
