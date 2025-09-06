@@ -169,6 +169,7 @@ if $DO_BUILD; then
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $ENABLE_WORKERS; then
+        # Enable workers + AudioWorklet + OffscreenCanvas for rendering from worker
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
@@ -212,6 +213,17 @@ if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
     # Also stage worker bootstrap if present (pthreads/workers builds)
     if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
         cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
+        # Inject shims at top of worker to define `window` and `globalThis`
+        if ! grep -q "self.window = self" "$OUTDIR/starwarswasm.worker.js" 2>/dev/null; then
+          tmpfile="$(mktemp)"
+          {
+            echo '/* injected by build_web.sh: worker global shims */'
+            echo 'self.window = self;'
+            echo 'self.globalThis = self.globalThis || self;'
+          } > "$tmpfile"
+          cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
+          mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
+        fi
     fi
 fi
 
