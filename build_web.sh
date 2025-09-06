@@ -10,6 +10,7 @@ DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
 VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
+ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 AUDIO_LATENCY="5"
@@ -35,6 +36,7 @@ print_usage() {
     echo "  -debug                 Enable verbose and auto-capture browser console"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
+    echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
 }
 
 # Parse args
@@ -57,6 +59,7 @@ while [[ $# -gt 0 ]]; do
         -verbose) VERBOSE_ARG=true; shift;;
         -debug) DEBUG_MODE=true; shift;;
         -autostart) AUTOSTART=true; shift;;
+        -workers) ENABLE_WORKERS=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
@@ -64,6 +67,7 @@ done
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="$REPO_ROOT/webdist"
+MODE_STAMP="$REPO_ROOT/.wasm_build_mode"
 
 echo "Repo: $REPO_ROOT"
 
@@ -149,18 +153,33 @@ if [[ ! -f "$PACKAGER" ]]; then
     exit 1
 fi
 
+# Track current vs previous build mode to avoid mixing pthread and non-pthread objects
+CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
+PREV_MODE=""
+if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
+
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
+    if [[ "$CUR_MODE" != "$PREV_MODE" ]]; then
+        echo "Detected build mode change ($PREV_MODE -> $CUR_MODE). Performing clean of previous artifacts..."
+        rm -rf "$REPO_ROOT/build/asmjs" "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" 2>/dev/null || true
+    fi
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
-    # Note: Do NOT enable WASM workers/shared memory here; MAME objects are not built with atomics.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    if $ENABLE_WORKERS; then
+        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1'
+        export EMCC_CFLAGS_PTHREAD="-pthread"
+        export EMXX_CFLAGS_PTHREAD="-pthread"
+        export EMMAKEN_CFLAGS="${EMMAKEN_CFLAGS:-} -pthread"
+        export EMMAKEN_CXXFLAGS="${EMMAKEN_CXXFLAGS:-} -pthread"
+    fi
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s SAFE_HEAP=1 -s DEMANGLE_SUPPORT=1"
     fi
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
-    LDFLAGS="$BUILD_LDFLAGS" emmake make \
+    LDFLAGS="$BUILD_LDFLAGS" CFLAGS="${CFLAGS:-} ${ENABLE_WORKERS:+-pthread}" CXXFLAGS="${CXXFLAGS:-} ${ENABLE_WORKERS:+-pthread}" emmake make \
         SUBTARGET=starwarswasm \
         SOURCES=src/mame/atari/starwars.cpp \
         WEBASSEMBLY=1 \
@@ -169,6 +188,7 @@ if $DO_BUILD; then
         NOWERROR=1 \
         -j"$(nproc)"
     popd >/dev/null
+    echo "$CUR_MODE" > "$MODE_STAMP"
 fi
 
 # Locate artifacts (repo root after build; webdist for -no-build runs)
@@ -231,7 +251,7 @@ end)
 LUA
 fi
 
-# Collect per-game INI overrides if available (brightness/contrast/gamma/sync)
+# Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain)
 INI_ARGS_JS=""
 INI_FILE="$HOME/.mame/ini/${DRIVER_SHORTNAME}.ini"
 if [[ -f "$INI_FILE" ]]; then
@@ -239,6 +259,8 @@ if [[ -f "$INI_FILE" ]]; then
     INI_BRIGHTNESS="$(awk 'tolower($1)=="brightness"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_CONTRAST="$(awk 'tolower($1)=="contrast"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_GAMMA="$(awk 'tolower($1)=="gamma"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_BGFX_CHAIN="$(awk 'tolower($1)=="bgfx_screen_chains"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_AUTOFRAMESKIP="$(awk 'tolower($1)=="autoframeskip"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     # Note: ignore waitvsync/syncrefresh in WASM, they can stall rendering in browsers
     if [[ -n "$INI_BRIGHTNESS" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-brightness", '"\"$INI_BRIGHTNESS\""');'
@@ -248,6 +270,12 @@ if [[ -f "$INI_FILE" ]]; then
     fi
     if [[ -n "$INI_GAMMA" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-gamma", '"\"$INI_GAMMA\""');'
+    fi
+    if [[ -n "$INI_BGFX_CHAIN" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-bgfx_screen_chains", '"\"$INI_BGFX_CHAIN\""');'
+    fi
+    if [[ "$INI_AUTOFRAMESKIP" == "1" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
     fi
     # waitvsync/syncrefresh intentionally not applied in web build
 fi
