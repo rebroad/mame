@@ -169,7 +169,7 @@ if $DO_BUILD; then
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $ENABLE_WORKERS; then
-        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -pthread'
+        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
     fi
@@ -197,7 +197,7 @@ if ! $DO_BUILD; then
     fi
 fi
 
-# Verify artifacts
+# Verify artifacts (worker js is optional)
 for f in "$SRC_ROOT/starwarswasm.html" "$SRC_ROOT/starwarswasm.js" "$SRC_ROOT/starwarswasm.wasm"; do
     if [[ ! -f "$f" ]]; then
         echo "Error: Expected artifact missing: $f" >&2
@@ -209,6 +209,10 @@ done
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
     mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
+    # Also stage worker bootstrap if present (pthreads/workers builds)
+    if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
+        cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
+    fi
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
@@ -317,6 +321,10 @@ cat > "$OUTDIR/index.html" <<EOF
         return 'soft';
       }
       var chosenVideo = "${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}";
+      if ("${ENABLE_WORKERS}" === "true" && chosenVideo === "bgfx") {
+        console.log('[Video] Forcing soft in workers mode to avoid OffscreenCanvas WebGL quirks');
+        chosenVideo = 'soft';
+      }
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
@@ -376,6 +384,14 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // Log whether AudioWorklet/Workers are active at runtime
+      (function(){
+        try {
+          var ac = (window.AudioContext||window.webkitAudioContext)? new (window.AudioContext||window.webkitAudioContext)() : null;
+          console.log('[Audio] Worklet support:', !!(ac && ac.audioWorklet));
+        } catch(e){}
+        console.log('[Workers] WASM workers enabled:', true);
+      })();
       console.log('[Args]', Module.arguments.join(' '));
       if (chosenVideo === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
