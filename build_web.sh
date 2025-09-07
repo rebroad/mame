@@ -12,8 +12,9 @@ SERVER_PORT=""
 VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars1"
-ROM_PATH="$HOME/.mame/roms/starwars1.zip"
+ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
+SKIP_PARENT=false     # Do not auto-include parent ROM even if present
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -53,6 +54,7 @@ while [[ $# -gt 0 ]]; do
         -rom) ROM_PATH="${2:-}"; shift 2;;
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
+        -no-parent) SKIP_PARENT=true; shift;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
@@ -248,10 +250,16 @@ echo "Packaging ROM into roms.data (mounted at roms/)..."
 # Optional parent ROM support (embed if present in same dir or default rom dir)
 PARENT_ROM=""
 ROM_DIR="$(dirname "$ROM_PATH")"
-if [[ -f "$ROM_DIR/starwars.zip" ]]; then
-  PARENT_ROM="$ROM_DIR/starwars.zip"
-elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
-  PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+if ! $SKIP_PARENT; then
+  if [[ -f "$ROM_DIR/starwars.zip" ]]; then
+    PARENT_ROM="$ROM_DIR/starwars.zip"
+  elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
+    PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+  fi
+  # Avoid double-adding if ROM_PATH is already starwars.zip
+  if [[ -n "$PARENT_ROM" && "$PARENT_ROM" -ef "$ROM_PATH" ]]; then
+    PARENT_ROM=""
+  fi
 fi
 
 # Optional autoboot script must be preloaded into the Emscripten FS
