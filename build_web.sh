@@ -14,7 +14,7 @@ ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
-SKIP_PARENT=false     # Do not auto-include parent ROM even if present
+SKIP_PARENT=true      # Skip auto-including parent ROM by default (smaller package)
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -75,10 +75,20 @@ echo "Repo: $REPO_ROOT"
 
 echo "Using Emscripten: version target $EMSDK_VERSION (local clone: $USE_LOCAL_EMSDK)"
 
-# Ensure ROM exists
+# Ensure ROM exists (auto-detect if default path is missing)
 if [[ ! -f "$ROM_PATH" ]]; then
-    echo "Error: ROM not found at $ROM_PATH"
-    exit 1
+    if [[ -f "$HOME/.mame/roms/starwars1.zip" ]]; then
+        ROM_PATH="$HOME/.mame/roms/starwars1.zip"
+        DRIVER_SHORTNAME="starwars1"
+    elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
+        ROM_PATH="$HOME/.mame/roms/starwars.zip"
+        # Prefer starwars1 driver for non-merged sets; we'll mount ROM as starwars1.zip
+        DRIVER_SHORTNAME="starwars1"
+    else
+        echo "Error: ROM not found at $ROM_PATH"
+        echo "Searched: $HOME/.mame/roms/starwars1.zip and $HOME/.mame/roms/starwars.zip"
+        exit 1
+    fi
 fi
 
 version_ge() { printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1 | grep -qx "$2"; }
@@ -275,7 +285,8 @@ end)
 LUA
 fi
 
-PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
+# Mount ROM under expected set name so driver and filename always match
+PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/${DRIVER_SHORTNAME}.zip" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
@@ -306,6 +317,9 @@ if [[ -f "$INI_FILE" ]]; then
     INI_GAMMA="$(awk 'tolower($1)=="gamma"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_BGFX_CHAIN="$(awk 'tolower($1)=="bgfx_screen_chains"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_AUTOFRAMESKIP="$(awk 'tolower($1)=="autoframeskip"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_ANTIALIAS="$(awk 'tolower($1)=="antialias"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_BEAM="$(awk 'tolower($1)=="beam"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_FLICKER="$(awk 'tolower($1)=="flicker"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     # Note: ignore waitvsync/syncrefresh in WASM, they can stall rendering in browsers
     if [[ -n "$INI_BRIGHTNESS" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-brightness", '"\"$INI_BRIGHTNESS\""');'
@@ -321,6 +335,15 @@ if [[ -f "$INI_FILE" ]]; then
     fi
     if [[ "$INI_AUTOFRAMESKIP" == "1" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
+    fi
+    if [[ -n "$INI_ANTIALIAS" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-antialias", '"\"$INI_ANTIALIAS\""');'
+    fi
+    if [[ -n "$INI_BEAM" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-beam", '"\"$INI_BEAM\""');'
+    fi
+    if [[ -n "$INI_FLICKER" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-flicker", '"\"$INI_FLICKER\""');'
     fi
     # waitvsync/syncrefresh intentionally not applied in web build
 fi
@@ -338,6 +361,10 @@ cat > "$OUTDIR/index.html" <<EOF
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="controls" style="position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#ccc;padding:8px 10px;border-radius:6px;font:12px/1.2 sans-serif;z-index:10">
+      <div style="margin-bottom:6px">Vector beam: <span id="beamVal">1.0</span></div>
+      <input id="beamSlider" type="range" min="0.2" max="2" step="0.05" value="1.0" style="width:180px">
+    </div>
     <script>
       // Ensure canvas has explicit pixel size and is visible
       (function(){
@@ -370,11 +397,14 @@ cat > "$OUTDIR/index.html" <<EOF
         } catch (e) {}
         return 'soft';
       }
-      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
+      // Allow URL overrides: ?video=soft|bgfx, ?latency=5, and vector tuning: ?beam=, ?aa=, ?flicker=
       var urlParams = new URLSearchParams(location.search);
       var urlVideo = (urlParams.get('video')||'').toLowerCase();
       var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}");
       var latencyOverride = urlParams.get('latency');
+      var beamOverride = urlParams.get('beam');
+      var aaOverride = urlParams.get('aa');
+      var flickerOverride = urlParams.get('flicker');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
@@ -474,6 +504,31 @@ cat > "$OUTDIR/index.html" <<EOF
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
       }
+      // Vector tuning from URL overrides
+      if (beamOverride) { Module.arguments.push("-beam", String(beamOverride)); }
+      if (aaOverride)    { Module.arguments.push("-antialias", String(aaOverride)); }
+      if (flickerOverride) { Module.arguments.push("-flicker", String(flickerOverride)); }
+
+      // UI: interactive beam tuning (reload with updated query param)
+      (function(){
+        try {
+          var s = document.getElementById('beamSlider');
+          var v = document.getElementById('beamVal');
+          if (!s || !v) return;
+          var cur = parseFloat(beamOverride || '1.0');
+          if (!isFinite(cur)) cur = 1.0;
+          s.value = String(cur);
+          v.textContent = s.value;
+          s.addEventListener('input', function(){ v.textContent = s.value; });
+          s.addEventListener('change', function(){
+            var p = new URLSearchParams(location.search);
+            p.set('beam', s.value);
+            if (!p.has('aa')) p.set('aa', aaOverride || '0');
+            if (!p.has('flicker')) p.set('flicker', flickerOverride || '0');
+            location.search = p.toString();
+          });
+        } catch(e) {}
+      })();
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
       if (${USE_CFG} === true) {
         Module.arguments.push("-cfg_directory", "cfg");
