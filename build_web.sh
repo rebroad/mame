@@ -258,10 +258,10 @@ if $DO_BUILD; then
     BUILD_CFLAGS=''
     BUILD_CXXFLAGS=''
     if $RELEASE_MODE; then
-        # Size-focused flags
-        BUILD_CFLAGS+=' -Oz -flto -fdata-sections -ffunction-sections'
-        BUILD_CXXFLAGS+=' -Oz -flto -fdata-sections -ffunction-sections'
-        BUILD_LDFLAGS+=' -Oz -flto -Wl,--gc-sections -s ASSERTIONS=0 -g0'
+        # Size-focused flags (avoid -flto to prevent Emscripten LTO port races)
+        BUILD_CFLAGS+=' -Oz -fdata-sections -ffunction-sections'
+        BUILD_CXXFLAGS+=' -Oz -fdata-sections -ffunction-sections'
+        BUILD_LDFLAGS+=' -Oz -Wl,--gc-sections -s ASSERTIONS=0 -g0'
         # Do NOT enable exception catching in release to keep size down
     else
         # Keep helpful diagnostics in non-release
@@ -287,6 +287,8 @@ if $DO_BUILD; then
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
     # Final safety: ensure no cache lock env is inherited
     unset EM_CACHE_IS_LOCKED || true
+    # Prevent emcc from attempting to (re)build ports; rely on prewarmed cache
+    export EMCC_SKIP_PORTS=1
     # Build function with retry in serial mode to avoid EM_CACHE lock races
     run_make_with_retry() {
         local jobs="$1"
