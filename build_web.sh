@@ -435,11 +435,22 @@ cat > "$OUTDIR/index.html" <<EOF
       (function(){
         var overlay = document.getElementById('unmute');
         function ctxState(){ try{ var c=Module&&Module.SDL2&&Module.SDL2.audioContext; return c?c.state:'unknown'; }catch(e){ return 'unknown'; } }
+        function nudgeContext(ac){ try { var g=ac.createGain(); g.gain.value=0.0; var o=ac.createOscillator(); o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+0.05); } catch(e) {} }
         function attemptResume(){
           try {
+            // 1) Create/Resume a temporary context to unlock the page-level gesture gate
+            var TempAC = window.AudioContext||window.webkitAudioContext;
+            if (TempAC) {
+              var tac = new TempAC();
+              if (typeof tac.resume === 'function') tac.resume().catch(function(){});
+              nudgeContext(tac);
+              try { if (typeof tac.close === 'function') tac.close(); } catch(e) {}
+            }
+            // 2) If SDL2 context exists, resume it and nudge it as well
             var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
-            if (ctx && typeof ctx.resume === 'function') {
-              ctx.resume().then(function(){ console.log('[Audio] resumed, state=', ctx.state); if (ctx.state === 'running') overlay.style.display='none'; }).catch(function(err){ console.warn('[Audio] resume failed', err); });
+            if (ctx) {
+              var p = typeof ctx.resume === 'function' ? ctx.resume() : Promise.resolve();
+              Promise.resolve(p).then(function(){ nudgeContext(ctx); }).catch(function(err){ console.warn('[Audio] resume failed', err); });
             } else {
               // Retry shortly in case SDL2 not initialized yet
               setTimeout(attemptResume, 300);
