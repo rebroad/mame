@@ -15,6 +15,7 @@ DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 AUDIO_LATENCY="5"
 RELEASE_MODE=false    # Size-optimized build configuration
+DO_WIPE=false
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -40,6 +41,7 @@ print_usage() {
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
+    echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
 # Parse args
@@ -72,6 +74,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift;;
         -release) RELEASE_MODE=true; DEBUG_MODE=false; VERBOSE_ARG=false; VIDEO_MODE="soft"; shift;;
+        -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
@@ -84,6 +87,26 @@ MODE_STAMP="$REPO_ROOT/.wasm_build_mode"
 echo "Repo: $REPO_ROOT"
 
 echo "Using Emscripten: version target $EMSDK_VERSION (local clone: $USE_LOCAL_EMSDK)"
+
+# Optional destructive cleanup using git clean/reset with confirmation
+if $DO_WIPE; then
+    if ! git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: $REPO_ROOT is not a git repository; cannot wipe." >&2
+        exit 1
+    fi
+    echo "WARNING: This will run 'git reset --hard' and 'git clean -fdx' in:"
+    echo "  $REPO_ROOT"
+    echo "This deletes ALL untracked and ignored files/dirs (build artifacts, caches, webdist, .emsdk-mame, etc.)."
+    echo "This is destructive and cannot be undone."
+    read -r -p "Type 'yes' to proceed with wipe, or anything else to cancel: " _ans
+    if [[ "${_ans:-}" == "yes" ]]; then
+        git -C "$REPO_ROOT" reset --hard
+        git -C "$REPO_ROOT" clean -fdx
+        echo "Repository wipe complete."
+    else
+        echo "Wipe cancelled."
+    fi
+fi
 
 # Ensure ROM exists
 if [[ ! -f "$ROM_PATH" ]]; then
