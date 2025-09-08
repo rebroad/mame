@@ -41,7 +41,6 @@ print_usage() {
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
-    echo "  -no-regen              Skip project regeneration (REGENIE=0)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -68,7 +67,6 @@ while [[ $# -gt 0 ]]; do
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
-        -no-regen) DO_REGEN=false; shift;;
         -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -208,6 +206,30 @@ ensure_emscripten() {
 
 ensure_emscripten
 
+# Auto-regen logic: hash Lua build scripts to detect changes
+SCRIPTS_HASH_FILE="$REPO_ROOT/.genie_scripts.sha256"
+compute_scripts_hash() {
+    (
+      cd "$REPO_ROOT" >/dev/null || exit 0
+      # Include all Lua under scripts/, and filter/layout lists if present
+      {
+        find scripts -type f -name "*.lua" -print0 2>/dev/null
+        find scripts -type f -not -name "*.lua" -print0 2>/dev/null
+        find src -maxdepth 3 -type f \( -name "*.flt" -o -name "*.lst" \) -print0 2>/dev/null
+      } | sort -z | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}'
+    )
+}
+CURRENT_SCRIPTS_HASH="$(compute_scripts_hash || true)"
+PREV_SCRIPTS_HASH=""
+if [[ -f "$SCRIPTS_HASH_FILE" ]]; then PREV_SCRIPTS_HASH="$(cat "$SCRIPTS_HASH_FILE" 2>/dev/null || true)"; fi
+if [[ -z "$PREV_SCRIPTS_HASH" || "$CURRENT_SCRIPTS_HASH" != "$PREV_SCRIPTS_HASH" ]]; then
+    DO_REGEN=true
+    echo "[regen] Build scripts changed → will regenerate projects (REGENIE=1)"
+else
+    DO_REGEN=false
+    echo "[regen] No build script changes detected → skipping regeneration (REGENIE=0)"
+fi
+
 # Resolve file_packager path robustly from active emcc
 EMSCRIPTEN_DIR="$(dirname "$(which emcc)")"
 PACKAGER=""
@@ -295,6 +317,8 @@ if $DO_BUILD; then
         -j"$(nproc)"
     popd >/dev/null
     echo "$CUR_MODE" > "$MODE_STAMP"
+    # Persist scripts hash after successful build
+    if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
 fi
 
 # Locate artifacts (repo root after build; webdist for -no-build runs)
