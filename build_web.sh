@@ -20,6 +20,8 @@ DO_WIPE=false
 EMSDK_VERSION="3.1.35"
 USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local clone
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
+LINK_THREADS=""
+DO_REGEN=true
 
 print_usage() {
     echo "Usage: $0 [options]"
@@ -33,17 +35,17 @@ print_usage() {
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
     echo "  -no-ccache             Disable ccache wrapper for this build"
-    echo "  -verbose               Run MAME with -verbose for browser console logs"
     echo "  -console-debug         Enable browser console capture/logging (runtime only)"
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
+    echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
+    echo "  -no-regen              Skip project regeneration (REGENIE=0)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
 # Parse args
-VERBOSE_ARG=false
 CONSOLE_DEBUG=false
 BUILD_DEBUG=false
 AUTOSTART=false
@@ -60,12 +62,13 @@ while [[ $# -gt 0 ]]; do
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
-        -verbose) VERBOSE_ARG=true; shift;;
-        -console-debug) CONSOLE_DEBUG=true; VERBOSE_ARG=true; shift;;
+        -console-debug) CONSOLE_DEBUG=true; shift;;
         -build-debug) BUILD_DEBUG=true; shift;;
-        -debug) echo "[warn] -debug is deprecated; use -console-debug/-build-debug"; CONSOLE_DEBUG=true; VERBOSE_ARG=true; shift;;
+        -debug) echo "[warn] -debug is deprecated; use -console-debug/-build-debug"; CONSOLE_DEBUG=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
+        -link-threads) LINK_THREADS="${2:-}"; shift 2;;
+        -no-regen) DO_REGEN=false; shift;;
         -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -265,11 +268,16 @@ if $DO_BUILD; then
     # Add size-optimization defaults for release builds
     if $BUILD_DEBUG; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
+        export EMCC_DEBUG=1
+        BUILD_LDFLAGS+=" -v"
     else
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz"
         BUILD_LDFLAGS+=" -Oz"
     fi
+    # Default threads to CPU count if not specified
+    if [[ -z "$LINK_THREADS" ]]; then LINK_THREADS="$(nproc)"; fi
+    if [[ -n "$LINK_THREADS" ]]; then BUILD_LDFLAGS+=" -Wl,--threads=${LINK_THREADS}"; fi
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
@@ -279,7 +287,7 @@ if $DO_BUILD; then
         SOURCES=src/mame/atari/starwars.cpp \
         WEBASSEMBLY=1 \
         TOOLS=0 \
-        REGENIE=1 \
+        REGENIE=$($DO_REGEN && echo 1 || echo 0) \
         NOWERROR=1 \
         SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
         NO_OPENGL=1 \
@@ -349,7 +357,7 @@ end)
 LUA
 fi
 
-PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
+PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --js-output="$OUTDIR/roms.js")
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
@@ -545,9 +553,7 @@ cat > "$OUTDIR/index.html" <<EOF
       if (chosenVideo === "bgfx") {
         Module.arguments.push("-bgfx_screen_chains", "vector");
       }
-      if ("${VERBOSE_ARG}" === "true") {
-        Module.arguments.push("-verbose");
-      } else if ("${CONSOLE_DEBUG}" === "true") {
+      if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
       }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
@@ -568,6 +574,7 @@ EOF
 
 echo "Web artifacts staged in: $OUTDIR"
 ls -la "$OUTDIR"
+echo "Artifacts ready. Next: ${START_SERVER:+start server}${START_SERVER:-no server} | console-debug=${CONSOLE_DEBUG}"
 
 start_server() {
     local port="$1"
