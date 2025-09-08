@@ -182,9 +182,7 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 		// normalize width
 		beam_width *= 1.0f / (float)VECTOR_WIDTH_DENOM;
 
-		// apply point scale for points
-		if (lastx == curpoint->x && lasty == curpoint->y)
-			beam_width *= vector_options::s_beam_dot_size;
+		// dot scaling handled later to decide if it's an isolated dot vs. a join
 
 		coords.x0 = ((float)lastx - xoffs) * xscale;
 		coords.y0 = ((float)lasty - yoffs) * yscale;
@@ -193,6 +191,19 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		if (curpoint->intensity != 0)
 		{
+			// Determine adjacency to avoid drawing extra bright join "dots"
+			bool is_zero_len = (lastx == curpoint->x) && (lasty == curpoint->y);
+			bool next_drawn = (i + 1 < m_vector_index) && (m_vector_list[i + 1].intensity != 0);
+			bool should_draw = true;
+			if (is_zero_len)
+			{
+				// Only draw a zero-length segment if it is an isolated dot (no adjacent drawn segments)
+				if (prev_drawn || next_drawn)
+					should_draw = false; // suppress join dot
+				else
+					beam_width *= vector_options::s_beam_dot_size; // isolated dot: keep, but scale size
+			}
+
 			// Trim endpoints slightly to reduce overlap at joins (both straight and angled)
 			float sx = coords.x0;
 			float sy = coords.y0;
@@ -201,7 +212,6 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 			float dxn = ex - sx;
 			float dyn = ey - sy;
 			float len = std::sqrt(dxn * dxn + dyn * dyn);
-			bool next_drawn = (i + 1 < m_vector_index) && (m_vector_list[i + 1].intensity != 0);
 			if (len > 0.0f)
 			{
 				float trim_start = prev_drawn ? beam_width : 0.0f;
@@ -216,11 +226,14 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 					ey -= dyn * (trim_end * inv);
 				}
 			}
-			screen.container().add_line(
-				sx, sy, ex, ey,
-				beam_width,
-				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
-				flags);
+			if (should_draw)
+			{
+				screen.container().add_line(
+					sx, sy, ex, ey,
+					beam_width,
+					(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
+					flags);
+			}
 		}
 
 		prev_drawn = (curpoint->intensity != 0);
