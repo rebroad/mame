@@ -164,11 +164,10 @@ if $DO_BUILD; then
     # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
     BUILD_BASE="$REPO_ROOT/build"
     ASMJS_LINK="$BUILD_BASE/asmjs"
-    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
-    ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
+    ASMJS_MODE_DIR="$BUILD_BASE/asmjs"
     GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
     GMAKE_LINK="$GEN_BASE/gmake-asmjs"
-    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
+    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs"
     mkdir -p "$ASMJS_MODE_DIR"
     mkdir -p "$GEN_BASE"
     # Point asmjs link to mode dir
