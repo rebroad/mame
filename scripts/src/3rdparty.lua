@@ -1494,9 +1494,13 @@ project "bimg"
 -- BGFX library objects
 --------------------------------------------------
 
-project "bgfx"
+-- Exclude third-party bgfx only for Star Wars asmjs subtarget
+if not (_OPTIONS["targetos"] == "asmjs" and _OPTIONS["subtarget"] == "starwarswasm") then
+ project "bgfx"
 	uuid "d3e7e119-35cf-4f4f-aba0-d3bdcd1b879a"
 	kind "StaticLib"
+@@
+end
 
 	configuration { "vs*" }
 if _OPTIONS["vs"]==nil then
