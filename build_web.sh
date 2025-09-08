@@ -34,7 +34,8 @@ print_usage() {
     echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -verbose               Run MAME with -verbose for browser console logs"
-    echo "  -debug                 Enable verbose and auto-capture browser console"
+    echo "  -console-debug         Enable browser console capture/logging (runtime only)"
+    echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
@@ -43,7 +44,8 @@ print_usage() {
 
 # Parse args
 VERBOSE_ARG=false
-DEBUG_MODE=false
+CONSOLE_DEBUG=false
+BUILD_DEBUG=false
 AUTOSTART=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -59,7 +61,9 @@ while [[ $# -gt 0 ]]; do
         -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
-        -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
+        -console-debug) CONSOLE_DEBUG=true; VERBOSE_ARG=true; shift;;
+        -build-debug) BUILD_DEBUG=true; shift;;
+        -debug) echo "[warn] -debug is deprecated; use -console-debug/-build-debug"; CONSOLE_DEBUG=true; VERBOSE_ARG=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
@@ -251,15 +255,20 @@ if $DO_BUILD; then
         ( cd "$REPO_ROOT/3rdparty/genie" && LDFLAGS= CFLAGS= CXXFLAGS= make -j"$(nproc)" ) || true
     fi
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
-    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912'
     if $ENABLE_WORKERS; then
         # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
     fi
-    if $DEBUG_MODE; then
-        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
+    # Add size-optimization defaults for release builds
+    if $BUILD_DEBUG; then
+        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
+    else
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz -flto"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz -flto"
+        BUILD_LDFLAGS+=" -Oz -flto"
     fi
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
@@ -272,6 +281,8 @@ if $DO_BUILD; then
         TOOLS=0 \
         REGENIE=1 \
         NOWERROR=1 \
+        SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
+        NO_OPENGL=1 \
         LDOPTS="$BUILD_LDFLAGS" \
         -j"$(nproc)"
     popd >/dev/null
@@ -536,6 +547,8 @@ cat > "$OUTDIR/index.html" <<EOF
       }
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
+      } else if ("${CONSOLE_DEBUG}" === "true") {
+        Module.arguments.push("-verbose");
       }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
       if (${USE_CFG} === true) {
@@ -619,7 +632,7 @@ NODE
 
 # Optional headless console capture (requires Node + puppeteer)
 run_probe() {
-    if ! $DEBUG_MODE; then return 0; fi
+    if ! $CONSOLE_DEBUG; then return 0; fi
     echo "Debug mode: attempting headless console capture..."
     pushd "$OUTDIR" >/dev/null
     if ! command -v node >/dev/null 2>&1; then
@@ -697,6 +710,8 @@ else
 fi
 
 # If debug mode, attempt headless console capture
-run_probe || true
+if $CONSOLE_DEBUG; then
+    run_probe || true
+fi
 
 
