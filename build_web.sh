@@ -14,6 +14,7 @@ ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 AUDIO_LATENCY="5"
+RELEASE_MODE=false    # Size-optimized build configuration
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -60,6 +61,7 @@ while [[ $# -gt 0 ]]; do
         -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
+        -release) RELEASE_MODE=true; DEBUG_MODE=false; VERBOSE_ARG=false; VIDEO_MODE="soft"; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
@@ -202,12 +204,28 @@ if $DO_BUILD; then
     ln -sfn "$GMAKE_MODE_DIR" "$GMAKE_LINK"
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
-    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912'
+    # Compiler flags
+    BUILD_CFLAGS=''
+    BUILD_CXXFLAGS=''
+    if $RELEASE_MODE; then
+        # Size-focused flags
+        BUILD_CFLAGS+=' -Oz -flto -fdata-sections -ffunction-sections'
+        BUILD_CXXFLAGS+=' -Oz -flto -fdata-sections -ffunction-sections'
+        BUILD_LDFLAGS+=' -Oz -flto -Wl,--gc-sections -s ASSERTIONS=0 -g0'
+        # Do NOT enable exception catching in release to keep size down
+    else
+        # Keep helpful diagnostics in non-release
+        BUILD_LDFLAGS+=' -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    fi
     if $ENABLE_WORKERS; then
         # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
-        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
-        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} ${BUILD_CFLAGS} -pthread"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} ${BUILD_CXXFLAGS} -pthread"
+    else
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} ${BUILD_CFLAGS}"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} ${BUILD_CXXFLAGS}"
     fi
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
