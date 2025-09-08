@@ -42,9 +42,15 @@
 !/LICENSE
 /.idea
 .vscode
+.wasm_build_mode
 docs/build
 docs/source/_build
 regtests/chdman/temp
 regtests/jedutil/output
 /CMakeLists.txt
 /samples
+!/webdist/
+/webdist/*
+!/webdist/cloudflare-worker/
+/webdist/cloudflare-worker/*
+!/webdist/cloudflare-worker/worker.mjs
