@@ -222,8 +222,34 @@ if $DO_BUILD; then
     fi
     # Prewarm common ports serially to avoid lock races on first build
     if [[ -f "${EMSCRIPTEN_DIR}/tools/embuilder.py" ]]; then
-        echo "Prewarming ports (SDL2, freetype, harfbuzz, SDL2_ttf) ..."
-        EMCC_CORES=1 python3 "${EMSCRIPTEN_DIR}/tools/embuilder.py" build sdl2 freetype harfbuzz sdl2_ttf || true
+        echo "Bootstrapping Emscripten ports (serial) to avoid cache lock races..."
+        LTO_DIR="${EM_CACHE}/sysroot/lib/wasm32-emscripten/lto"
+        mkdir -p "$LTO_DIR" || true
+        embuild_if_missing() {
+            local port_name="$1"; shift
+            local lib_name="$1"; shift
+            local lib_path="$LTO_DIR/$lib_name"
+            if [[ -f "$lib_path" ]]; then
+                echo "  [ok] $lib_name present"
+                return 0
+            fi
+            echo "  [build] $port_name -> $lib_name"
+            # Build this port in isolation with a single core
+            EMCC_CORES=1 \
+            EM_CACHE="$EM_CACHE" \
+            python3 "${EMSCRIPTEN_DIR}/tools/embuilder.py" build "$port_name" || return 1
+            if [[ -f "$lib_path" ]]; then
+                echo "  [done] $lib_name built"
+            else
+                echo "  [warn] $lib_name not found after build; continuing"
+            fi
+        }
+        embuild_if_missing sdl2 libSDL2.a || true
+        embuild_if_missing freetype libfreetype.a || true
+        embuild_if_missing harfbuzz libharfbuzz.a || true
+        embuild_if_missing sdl2_ttf libSDL2_ttf.a || true
+        # Ensure no stale lock flag leaks into subsequent builds
+        unset EM_CACHE_IS_LOCKED || true
     fi
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
@@ -259,6 +285,8 @@ if $DO_BUILD; then
         MAKE_BGFX_FLAGS="USE_BGFX=0"
     fi
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
+    # Final safety: ensure no cache lock env is inherited
+    unset EM_CACHE_IS_LOCKED || true
     # Build function with retry in serial mode to avoid EM_CACHE lock races
     run_make_with_retry() {
         local jobs="$1"
