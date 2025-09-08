@@ -425,6 +425,9 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // Force SDL2 to use AudioWorklet when available
+      Module.SDL2 = Module.SDL2 || {};
+      Module.SDL2.useAudioWorklet = true;
       // UI helpers
       (function(){
         function getAC(){ try{ return Module && Module.SDL2 && Module.SDL2.audioContext; }catch(e){ return null; } }
@@ -585,6 +588,7 @@ const server = http.createServer((req, res) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    res.setHeader('Cache-Control', 'no-store');
     // Required for AudioWorklet and Workers on some browsers
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
     res.setHeader('Origin-Trial', '');
