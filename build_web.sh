@@ -313,7 +313,7 @@ cat > "$OUTDIR/index.html" <<EOF
   </head>
   <body>
     <canvas id="canvas"></canvas>
-    <div id="unmute">Click to enable audio</div>
+    <div id="unmute">Click to Start (enable audio)</div>
     <script>
       // Ensure canvas has explicit pixel size and is visible
       (function(){
@@ -423,22 +423,17 @@ cat > "$OUTDIR/index.html" <<EOF
         function nudgeContext(ac){ try { var g=ac.createGain(); g.gain.value=0.0; var o=ac.createOscillator(); o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+0.05); } catch(e) {} }
         function attemptResume(){
           try {
-            // 1) Create/Resume a temporary context to unlock the page-level gesture gate
-            var TempAC = window.AudioContext||window.webkitAudioContext;
-            if (TempAC) {
-              var tac = new TempAC();
-              if (typeof tac.resume === 'function') tac.resume().catch(function(){});
-              nudgeContext(tac);
-              try { if (typeof tac.close === 'function') tac.close(); } catch(e) {}
+            var AC = window.AudioContext||window.webkitAudioContext;
+            if (!AC) return;
+            // Ensure we own an unlocked persistent context for SDL2 before init
+            if (!Module.SDL2) Module.SDL2 = {};
+            if (!Module.SDL2.audioContext) {
+              try { Module.SDL2.audioContext = new AC(); } catch(e) { /* ignore */ }
             }
-            // 2) If SDL2 context exists, resume it and nudge it as well
             var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
             if (ctx) {
-              var p = typeof ctx.resume === 'function' ? ctx.resume() : Promise.resolve();
+              var p = (typeof ctx.resume === 'function') ? ctx.resume() : Promise.resolve();
               Promise.resolve(p).then(function(){ nudgeContext(ctx); }).catch(function(err){ console.warn('[Audio] resume failed', err); });
-            } else {
-              // Retry shortly in case SDL2 not initialized yet
-              setTimeout(attemptResume, 300);
             }
           } catch(e) { console.warn('[Audio] resume exception', e); }
         }
@@ -450,17 +445,14 @@ cat > "$OUTDIR/index.html" <<EOF
         overlay.addEventListener('click', attemptResume);
         ['click','pointerdown','touchstart','keydown','mousedown'].forEach(function(ev){ window.addEventListener(ev, attemptResume, { once:false }); });
         setInterval(tick, 800);
-        // Gate program start behind user gesture to ensure audio works
+        // Require a click to start the emulator and enable audio
         var started = false;
-        window.__tryStartMame = function(){
+        overlay.addEventListener('click', function(){
           if (started) return;
-          if (!window.__mameRuntimeReady || !window.__mameDepsReady) return;
-          // Require at least one gesture before starting to ensure AudioContext may run
-          if (ctxState() !== 'running') return;
+          if (!window.__mameRuntimeReady || !window.__mameDepsReady) { console.log('[Start] runtime not ready yet'); attemptResume(); return; }
+          attemptResume();
           try { started = true; console.log('[Start] calling main with args:', Module.arguments.join(' ')); Module.callMain(Module.arguments); } catch(e){ console.error('[Start] callMain failed', e); started = false; }
-        };
-        // Try autostart if policy already allows audio (some browsers)
-        setInterval(function(){ if (typeof window.__tryStartMame === 'function') window.__tryStartMame(); }, 500);
+        });
       })();
       // Ensure canvas pixel size is set before runtime and notify Emscripten glue
       (function(){
