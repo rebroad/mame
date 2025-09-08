@@ -1499,7 +1499,6 @@ if not (_OPTIONS["targetos"] == "asmjs" and _OPTIONS["subtarget"] == "starwarswa
  project "bgfx"
 	uuid "d3e7e119-35cf-4f4f-aba0-d3bdcd1b879a"
 	kind "StaticLib"
-@@
 end
 
 	configuration { "vs*" }
