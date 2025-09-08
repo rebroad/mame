@@ -266,9 +266,9 @@ if $DO_BUILD; then
     if $BUILD_DEBUG; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
     else
-        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz -flto"
-        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz -flto"
-        BUILD_LDFLAGS+=" -Oz -flto"
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz"
+        BUILD_LDFLAGS+=" -Oz"
     fi
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
@@ -642,9 +642,14 @@ run_probe() {
     fi
     # Try running probe; if puppeteer missing, advise install
     if ! node -e "require('puppeteer')" >/dev/null 2>&1; then
-        echo "Puppeteer not installed. Run: (cd $OUTDIR && npm install puppeteer)"
-        popd >/dev/null
-        return 0
+        echo "Puppeteer not installed. Installing locally in $OUTDIR ..."
+        if command -v npm >/dev/null 2>&1; then
+            ( npm init -y >/dev/null 2>&1 || true; npm install puppeteer --no-fund --no-audit >/dev/null 2>&1 ) || true
+        else
+            echo "npm not found; skipping console capture."
+            popd >/dev/null
+            return 0
+        fi
     fi
     node probe_console.js || true
     if [[ -f "$OUTDIR/console_capture.txt" ]]; then
@@ -661,7 +666,7 @@ if $START_SERVER; then
     ensure_server() {
         local port="$1"
         local used_port=""
-        # Prefer previously used COOP/COEP port if available and healthy
+        # Prefer previously used COOP/COEP port if available and healthy (only when no explicit port requested)
         if [[ -z "$port" && -f /tmp/mame_web_port.txt ]]; then
             local prev
             prev="$(cat /tmp/mame_web_port.txt 2>/dev/null | tr -d '\n')"
@@ -673,15 +678,12 @@ if $START_SERVER; then
                 fi
             fi
         fi
-        # If a specific port was requested, try that first
-        if [[ -z "$used_port" && -n "$port" ]]; then
-            if command -v curl >/dev/null 2>&1 && \
-               curl -s "http://localhost:$port/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
-               curl -sI "http://localhost:$port/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
-                used_port="$port"
-            fi
+        # If a specific port was requested, always start a fresh server there
+        if [[ -n "$port" ]]; then
+            start_server "$port" || true
+            return
         fi
-        # Otherwise scan common ports
+        # Otherwise scan common ports and reuse if healthy
         if [[ -z "$used_port" ]]; then
             # Prefer a server that already has COOP/COEP
             for p in 8000 8001 8002 8003 8004 8005; do
