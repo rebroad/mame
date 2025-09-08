@@ -312,6 +312,11 @@ cat > "$OUTDIR/index.html" <<EOF
     <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block} #unmute{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;z-index:9999}</style>
   </head>
   <body>
+    <div style="position:fixed;top:8px;left:8px;z-index:10000;display:flex;gap:8px;align-items:center;">
+      <button id="btn-tone" style="padding:6px 10px;">Test Tone (1s)</button>
+      <button id="btn-dump" style="padding:6px 10px;">Dump MAME Log</button>
+      <span id="audio-state" style="color:#8f8;">Audio: init</span>
+    </div>
     <canvas id="canvas"></canvas>
     <div id="unmute">Click to Start (enable audio)</div>
     <script>
@@ -416,6 +421,37 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // UI helpers
+      (function(){
+        function getAC(){ try{ return Module && Module.SDL2 && Module.SDL2.audioContext; }catch(e){ return null; } }
+        var lbl = document.getElementById('audio-state');
+        function setLabel(){ var s='unknown'; var ac=getAC(); try{ s = ac?ac.state:'noctx'; }catch(e){}; lbl.textContent='Audio: '+s; }
+        setInterval(setLabel, 1000);
+        document.getElementById('btn-tone').addEventListener('click', function(){
+          try {
+            var AC = window.AudioContext||window.webkitAudioContext;
+            var ac = getAC() || (AC? new AC():null);
+            if (!ac) { console.warn('[Tone] No AudioContext'); return; }
+            if (typeof ac.resume==='function') ac.resume().catch(function(){});
+            var g = ac.createGain(); g.gain.value = 0.05;
+            var o = ac.createOscillator(); o.type='sine'; o.frequency.value=440;
+            o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+1.0);
+            console.log('[Tone] Played 1s 440Hz'); setLabel();
+          } catch(e) { console.error('[Tone] failed', e); }
+        });
+        document.getElementById('btn-dump').addEventListener('click', function(){
+          try {
+            if (typeof FS==='undefined') { console.warn('[Dump] FS not ready'); return; }
+            var p='mame.log'; var inf=FS.analyzePath(p);
+            if (!inf.exists) { console.warn('[Dump] mame.log not found yet'); return; }
+            var d=FS.readFile(p,{encoding:'utf8'});
+            console.log('[mame.log]\n'+d);
+            // crude mixer scan
+            var lines=d.split(/\n/).filter(function(l){ return /mixer|volume|audio|sound/i.test(l); });
+            console.log('[mixer-scan]\n'+lines.join('\n'));
+          } catch(e) { console.error('[Dump] failed', e); }
+        });
+      })();
       // Audio unlock helper for browsers requiring user gesture
       (function(){
         var overlay = document.getElementById('unmute');
