@@ -119,7 +119,7 @@ ensure_emscripten() {
         source ./emsdk_env.sh
         popd >/dev/null
     else
-        # Prefer an already-configured PATH emcc if compatible; otherwise try ~/src/emsdk, else fallback to local
+        # Prefer an already-configured PATH emcc if compatible; otherwise try sourcing envs, then ~/src/emsdk, else fallback to local
         local GLOBAL_SDK="$HOME/src/emsdk"
         local EMVER=""
         if command -v emcc >/dev/null 2>&1; then
@@ -129,18 +129,47 @@ ensure_emscripten() {
             echo "Using existing emcc on PATH (version $EMVER)"
             :
         else
-            if [[ -d "$GLOBAL_SDK" ]]; then
-                pushd "$GLOBAL_SDK" >/dev/null
-                ./emsdk install "$EMSDK_VERSION"
-                ./emsdk activate "$EMSDK_VERSION"
+            # Try sourcing existing emsdk environments first (no install)
+            if [[ -n "${EMSDK:-}" && -f "$EMSDK/emsdk_env.sh" ]]; then
                 # shellcheck disable=SC1091
-                source ./emsdk_env.sh
-                popd >/dev/null
+                source "$EMSDK/emsdk_env.sh"
+            elif [[ -f "$GLOBAL_SDK/emsdk_env.sh" ]]; then
+                # shellcheck disable=SC1091
+                source "$GLOBAL_SDK/emsdk_env.sh"
+            elif [[ -f "$REPO_ROOT/.emsdk-mame/emsdk_env.sh" ]]; then
+                # shellcheck disable=SC1091
+                source "$REPO_ROOT/.emsdk-mame/emsdk_env.sh"
+            fi
+            if command -v emcc >/dev/null 2>&1; then
+                EMVER="$(emcc -v 2>/dev/null | head -n1 | sed -E 's/.* ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" || true
+            fi
+            if [[ -n "$EMVER" ]] && version_ge "$EMVER" "$EMSDK_VERSION"; then
+                echo "Using emcc after sourcing env (version $EMVER)"
+                :
             else
-                echo "Global emsdk not found at $GLOBAL_SDK; falling back to local clone."
-                USE_LOCAL_EMSDK=true
-                ensure_emscripten
-                return
+                if [[ -d "$GLOBAL_SDK" ]]; then
+                    pushd "$GLOBAL_SDK" >/dev/null
+                    # Install only if not already present in emsdk list
+                    if ! ./emsdk list | grep -E "(^|[[:space:]])${EMSDK_VERSION}([[:space:]]|$)" >/dev/null 2>&1; then
+                        ./emsdk install "$EMSDK_VERSION"
+                    fi
+                    # Activate only if current emcc version mismatches
+                    local CUR=""
+                    if command -v emcc >/dev/null 2>&1; then
+                        CUR="$(emcc -v 2>/dev/null | head -n1 | sed -E 's/.* ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" || true
+                    fi
+                    if [[ "$CUR" != "$EMSDK_VERSION" ]]; then
+                        ./emsdk activate "$EMSDK_VERSION"
+                        # shellcheck disable=SC1091
+                        source ./emsdk_env.sh
+                    fi
+                    popd >/dev/null
+                else
+                    echo "Global emsdk not found at $GLOBAL_SDK; falling back to local clone."
+                    USE_LOCAL_EMSDK=true
+                    ensure_emscripten
+                    return
+                fi
             fi
         fi
     fi
