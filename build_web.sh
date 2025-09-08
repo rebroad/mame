@@ -17,7 +17,7 @@ AUDIO_LATENCY="5"
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
-USE_LOCAL_EMSDK=true   # Use repo-local emsdk clone to avoid affecting global
+USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local clone
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 
 print_usage() {
@@ -96,24 +96,20 @@ ensure_emscripten() {
         source ./emsdk_env.sh
         popd >/dev/null
     else
-        # Try global emsdk
-        if [[ -f "$HOME/src/emsdk/emsdk_env.sh" ]]; then
-            # shellcheck disable=SC1091
-            source "$HOME/src/emsdk/emsdk_env.sh"
-        fi
-        if ! command -v emcc >/dev/null 2>&1; then
-            echo "Error: emcc not found. Install emsdk or re-run without -use-global-emsdk." >&2
-            exit 1
-        fi
-        # Verify version; if incompatible, fall back to local isolated emsdk
-        local EMVER
-        EMVER="$(emcc -v 2>/dev/null | head -n1 | sed -E 's/.* ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" || true
-        if [[ -z "$EMVER" ]] || [[ "$EMVER" != 3.1.* ]] || ! version_ge "$EMVER" 3.1.35; then
-            echo "Global emcc version '$EMVER' is not compatible. Switching to local emsdk $EMSDK_VERSION."
+        # Prefer global emsdk at ~/src/emsdk; install/activate requested version
+        local GLOBAL_SDK="$HOME/src/emsdk"
+        if [[ ! -d "$GLOBAL_SDK" ]]; then
+            echo "Global emsdk not found at $GLOBAL_SDK; falling back to local clone."
             USE_LOCAL_EMSDK=true
             ensure_emscripten
             return
         fi
+        pushd "$GLOBAL_SDK" >/dev/null
+        ./emsdk install "$EMSDK_VERSION"
+        ./emsdk activate "$EMSDK_VERSION"
+        # shellcheck disable=SC1091
+        source ./emsdk_env.sh
+        popd >/dev/null
     fi
     # Final sanity
     if ! command -v emcc >/dev/null 2>&1; then
@@ -183,6 +179,11 @@ if $DO_BUILD; then
     mkdir -p "$GMAKE_MODE_DIR"
     ln -sfn "$(basename "$GMAKE_MODE_DIR")" "$GMAKE_LINK"
     pushd "$REPO_ROOT" >/dev/null
+    # Bootstrap native 'genie' without Emscripten flags polluting host link
+    if [[ -d "$REPO_ROOT/3rdparty/genie" ]]; then
+        echo "Bootstrapping native genie (host build)..."
+        ( cd "$REPO_ROOT/3rdparty/genie" && LDFLAGS= CFLAGS= CXXFLAGS= make -j"$(nproc)" ) || true
+    fi
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
     if $ENABLE_WORKERS; then
@@ -195,13 +196,15 @@ if $DO_BUILD; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
     fi
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
-    LDFLAGS="$BUILD_LDFLAGS" CFLAGS="${CFLAGS:-} ${ENABLE_WORKERS:+-pthread}" CXXFLAGS="${CXXFLAGS:-} ${ENABLE_WORKERS:+-pthread}" emmake make \
+    # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
+    emmake make \
         SUBTARGET=starwarswasm \
         SOURCES=src/mame/atari/starwars.cpp \
         WEBASSEMBLY=1 \
         TOOLS=0 \
         REGENIE=1 \
         NOWERROR=1 \
+        LDOPTS="$BUILD_LDFLAGS" \
         -j"$(nproc)"
     popd >/dev/null
     echo "$CUR_MODE" > "$MODE_STAMP"
