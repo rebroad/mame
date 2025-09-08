@@ -9,7 +9,7 @@ set -euo pipefail
 DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
-VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
+VIDEO_MODE="soft"   # default soft for web; override with -bgfx if needed
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
