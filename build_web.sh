@@ -164,23 +164,42 @@ if $DO_BUILD; then
     # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
     BUILD_BASE="$REPO_ROOT/build"
     ASMJS_LINK="$BUILD_BASE/asmjs"
-    ASMJS_MODE_DIR="$BUILD_BASE/asmjs"
+    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
+    ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
     GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
     GMAKE_LINK="$GEN_BASE/gmake-asmjs"
-    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs"
+    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
     mkdir -p "$ASMJS_MODE_DIR"
     mkdir -p "$GEN_BASE"
-    # Point asmjs link to mode dir
+    # Point asmjs link to mode dir (robustly remove bad/self-referential links)
     if [[ -L "$ASMJS_LINK" || -e "$ASMJS_LINK" ]]; then
-        if [[ -L "$ASMJS_LINK" ]]; then rm -f "$ASMJS_LINK"; else mv "$ASMJS_LINK" "${ASMJS_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
+        if [[ -L "$ASMJS_LINK" ]]; then
+            rm -f "$ASMJS_LINK"
+        else
+            mv "$ASMJS_LINK" "${ASMJS_LINK}-backup-$(date +%s)" 2>/dev/null || true
+        fi
     fi
-    ln -sfn "$(basename "$ASMJS_MODE_DIR")" "$ASMJS_LINK"
-    # Point gmake-asmjs link to mode dir
+    # Safety: if a broken loop-y link persists, force unlink
+    if [[ -L "$ASMJS_LINK" ]]; then
+        tgt="$(readlink -f "$ASMJS_LINK" 2>/dev/null || true)"
+        if [[ -n "$tgt" && "$tgt" == "$ASMJS_LINK" ]]; then rm -f "$ASMJS_LINK"; fi
+    fi
+    ln -sfn "$ASMJS_MODE_DIR" "$ASMJS_LINK"
+    # Point gmake-asmjs link to mode dir (robustly remove bad/self-referential links)
     if [[ -L "$GMAKE_LINK" || -e "$GMAKE_LINK" ]]; then
-        if [[ -L "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; else mv "$GMAKE_LINK" "${GMAKE_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
+        if [[ -L "$GMAKE_LINK" ]]; then
+            rm -f "$GMAKE_LINK"
+        else
+            mv "$GMAKE_LINK" "${GMAKE_LINK}-backup-$(date +%s)" 2>/dev/null || true
+        fi
     fi
     mkdir -p "$GMAKE_MODE_DIR"
-    ln -sfn "$(basename "$GMAKE_MODE_DIR")" "$GMAKE_LINK"
+    # Safety: if a broken loop-y link persists, force unlink
+    if [[ -L "$GMAKE_LINK" ]]; then
+        tgt="$(readlink -f "$GMAKE_LINK" 2>/dev/null || true)"
+        if [[ -n "$tgt" && "$tgt" == "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; fi
+    fi
+    ln -sfn "$GMAKE_MODE_DIR" "$GMAKE_LINK"
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
