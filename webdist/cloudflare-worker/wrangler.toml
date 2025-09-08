@@ -1,9 +1,15 @@
 name = "mame-proxy"
 main = "worker.mjs"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-01"
 
 [vars]
+# Default production origin (GitHub Pages)
 ORIGIN = "https://rebroad.github.io/mame/"
+
+[env.dev]
+[env.dev.vars]
+# For local testing, override to local server
+# ORIGIN = "http://localhost:8000/"
 
 [observability.logs]
 enabled = true

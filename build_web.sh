@@ -22,6 +22,7 @@ USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local 
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 LINK_THREADS=""
 DO_REGEN=true
+DO_COMPRESS=false
 
 print_usage() {
     echo "Usage: $0 [options]"
@@ -41,6 +42,7 @@ print_usage() {
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
+    echo "  -compress             Produce starwarswasm.wasm.br and .gz (for HTTP Content-Encoding)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -67,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
+        -compress) DO_COMPRESS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -600,6 +603,21 @@ echo "Web artifacts staged in: $OUTDIR"
 ls -la "$OUTDIR"
 echo "Artifacts ready. Next: ${START_SERVER:+start server}${START_SERVER:-no server} | console-debug=${CONSOLE_DEBUG}"
 
+# Optional compression for deployment (served via HTTP Content-Encoding)
+if $DO_COMPRESS; then
+    echo "Compressing wasm for deployment..."
+    if command -v brotli >/dev/null 2>&1; then
+        brotli -f -q 11 "$OUTDIR/starwarswasm.wasm" -o "$OUTDIR/starwarswasm.wasm.br" || true
+    else
+        echo "brotli not found; skipping .wasm.br. Install: sudo apt install brotli"
+    fi
+    if command -v gzip >/dev/null 2>&1; then
+        gzip -f -9 -c "$OUTDIR/starwarswasm.wasm" > "$OUTDIR/starwarswasm.wasm.gz" || true
+    else
+        echo "gzip not found; skipping .wasm.gz"
+    fi
+fi
+
 start_server() {
     local port="$1"
     if [[ -z "$port" ]]; then
@@ -630,6 +648,21 @@ const server = http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
   if (p === '/') p = '/index.html';
   const filePath = path.join(root, p);
+  // Handle precompressed wasm
+  if (filePath.endsWith('.wasm')) {
+    const ae = String(req.headers['accept-encoding'] || '').toLowerCase();
+    if (ae.includes('br') && fs.existsSync(filePath + '.br')) {
+      res.setHeader('Content-Type', 'application/wasm');
+      res.setHeader('Content-Encoding', 'br');
+      fs.createReadStream(filePath + '.br').pipe(res);
+      return;
+    } else if (ae.includes('gzip') && fs.existsSync(filePath + '.gz')) {
+      res.setHeader('Content-Type', 'application/wasm');
+      res.setHeader('Content-Encoding', 'gzip');
+      fs.createReadStream(filePath + '.gz').pipe(res);
+      return;
+    }
+  }
   fs.readFile(filePath, (err, data) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
