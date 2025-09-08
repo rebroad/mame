@@ -312,13 +312,17 @@ cat > "$OUTDIR/index.html" <<EOF
     <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block} #unmute{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;z-index:9999}</style>
   </head>
   <body>
-    <div style="position:fixed;top:8px;left:8px;z-index:10000;display:flex;gap:8px;align-items:center;">
+    <div style="position:fixed;top:8px;left:8px;z-index:20000;display:flex;gap:8px;align-items:center;background:rgba(32,32,32,.8);padding:6px 8px;border-radius:6px;color:#fff;">
       <button id="btn-tone" style="padding:6px 10px;">Test Tone (1s)</button>
       <button id="btn-dump" style="padding:6px 10px;">Dump MAME Log</button>
-      <span id="audio-state" style="color:#8f8;">Audio: init</span>
+      <span id="audio-state" style="color:#8f8;min-width:120px;">Audio: init</span>
     </div>
     <canvas id="canvas"></canvas>
-    <div id="unmute">Click to Start (enable audio)</div>
+    <div id="unmute">Click to Start (enable audio)
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button id="btn-tone-overlay" style="padding:6px 10px;">Test Tone (1s)</button>
+      </div>
+    </div>
     <script>
       // Ensure canvas has explicit pixel size and is visible
       (function(){
@@ -439,6 +443,8 @@ cat > "$OUTDIR/index.html" <<EOF
             console.log('[Tone] Played 1s 440Hz'); setLabel();
           } catch(e) { console.error('[Tone] failed', e); }
         });
+        var toneOv = document.getElementById('btn-tone-overlay');
+        if (toneOv) toneOv.addEventListener('click', function(ev){ ev.stopPropagation(); document.getElementById('btn-tone').click(); });
         document.getElementById('btn-dump').addEventListener('click', function(){
           try {
             if (typeof FS==='undefined') { console.warn('[Dump] FS not ready'); return; }
