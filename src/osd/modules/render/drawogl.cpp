@@ -43,6 +43,7 @@ typedef uint64_t HashT;
 #include "emucore.h"
 #include "emuopts.h"
 #include "render.h"
+#include "rendutil.h"
 
 
 #if !defined(OSD_WINDOWS) && !defined(OSD_MAC)
@@ -440,7 +441,7 @@ private:
 //============================================================
 
 #define DEBUG_MODE_SCORES   0
-#define USE_WIN32_STYLE_LINES   0   // use the same method baseline does - yields somewhat nicer vectors but a little buggy
+#define USE_WIN32_STYLE_LINES   1   // use the same method baseline does - yields somewhat nicer vectors but a little buggy
 
 //============================================================
 //  CONSTANTS
@@ -490,7 +491,7 @@ struct line_aa_step
 	float       weight;                 // weight contribution
 };
 
-#if 0
+#if 1
 static const line_aa_step line_aa_1step[] =
 {
 	{  0.00f,  0.00f,  1.00f  },
@@ -1381,10 +1382,10 @@ int renderer_ogl::draw(const int update)
 						pendingPrimitive=GL_NO_PRIMITIVE;
 					}
 
-					set_blendmode(sdl, PRIMFLAG_GET_BLENDMODE(prim.flags));
+					set_blendmode(PRIMFLAG_GET_BLENDMODE(prim.flags));
 
 					// compute the effective width based on the direction of the line
-					float effwidth = std::max(prim.width(), 0.5f);
+					float effwidth = std::max(prim.width, 0.5f);
 
 					// determine the bounds of a quad to draw this line
 					auto [b0, b1] = render_line_to_quad(prim.bounds, effwidth, 0.0f);
