@@ -329,10 +329,11 @@ cat > "$OUTDIR/index.html" <<EOF
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MAME Star Wars (WASM)</title>
     <link rel="icon" href="data:,"/>
-    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block} #unmute{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;z-index:9999}</style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="unmute">Click to enable audio</div>
     <script>
       // Ensure canvas has explicit pixel size and is visible
       (function(){
@@ -430,6 +431,28 @@ cat > "$OUTDIR/index.html" <<EOF
           } catch (e) { console.error('[onExit] read mame.log failed', e); }
         }
       };
+      // Audio unlock helper for browsers requiring user gesture
+      (function(){
+        var overlay = document.getElementById('unmute');
+        function tryResume(){
+          try {
+            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
+            if (ctx && typeof ctx.resume === 'function') {
+              ctx.resume().then(function(){ overlay.style.display='none'; }).catch(function(){});
+            }
+          } catch(e) {}
+        }
+        function maybeShow(){
+          try {
+            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
+            if (ctx && ctx.state && ctx.state !== 'running') {
+              overlay.style.display='flex';
+            }
+          } catch(e) {}
+        }
+        ['click','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, tryResume, { once:false }); });
+        setInterval(maybeShow, 1000);
+      })();
       // Ensure canvas pixel size is set before runtime and notify Emscripten glue
       (function(){
         var c=document.getElementById('canvas');
@@ -561,9 +584,14 @@ run_probe() {
     fi
     # Try running probe; if puppeteer missing, advise install
     if ! node -e "require('puppeteer')" >/dev/null 2>&1; then
-        echo "Puppeteer not installed. Run: (cd $OUTDIR && npm install puppeteer)"
-        popd >/dev/null
-        return 0
+        echo "Puppeteer not installed. Installing locally in $OUTDIR ..."
+        if command -v npm >/dev/null 2>&1; then
+            ( npm init -y >/dev/null 2>&1 || true; npm install puppeteer --no-fund --no-audit >/dev/null 2>&1 ) || true
+        else
+            echo "npm not found; skipping console capture."
+            popd >/dev/null
+            return 0
+        fi
     fi
     node probe_console.js || true
     if [[ -f "$OUTDIR/console_capture.txt" ]]; then
