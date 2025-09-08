@@ -35,14 +35,12 @@ print_usage() {
     echo "  -verbose               Run MAME with -verbose for browser console logs"
     echo "  -debug                 Enable verbose and auto-capture browser console"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
-    echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
 }
 
 # Parse args
 VERBOSE_ARG=false
 DEBUG_MODE=false
-AUTOSTART=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
@@ -58,7 +56,6 @@ while [[ $# -gt 0 ]]; do
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
         -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
-        -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -257,19 +254,6 @@ elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
   PARENT_ROM="$HOME/.mame/roms/starwars.zip"
 fi
 
-# Optional autoboot script must be preloaded into the Emscripten FS
-if $AUTOSTART; then
-cat > "$OUTDIR/autoboot.lua" <<'LUA'
-emu.register_frame(function()
-  if emu.framecount() == 60 then
-    emu.keypost('5')
-  elseif emu.framecount() == 120 then
-    emu.keypost('1')
-  end
-end)
-LUA
-fi
-
 PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
@@ -282,10 +266,6 @@ if [[ -f "$CFG_FILE" ]]; then
   echo "Including per-game cfg: $CFG_FILE"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$CFG_FILE@cfg/${DRIVER_SHORTNAME}.cfg")
   USE_CFG=true
-fi
-# Preload autoboot if present
-if $AUTOSTART; then
-  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
 fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
 
@@ -510,9 +490,6 @@ cat > "$OUTDIR/index.html" <<EOF
         Module.arguments.push("-cfg_directory", "cfg");
       }
       // Keep throttle enabled for smoother audio even in debug.
-      if ("${AUTOSTART}" === "true") {
-        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
-      }
 ${INI_ARGS_JS}
     </script>
     <script src="roms.js"></script>
