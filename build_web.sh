@@ -329,7 +329,7 @@ cat > "$OUTDIR/index.html" <<EOF
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MAME Star Wars (WASM)</title>
     <link rel="icon" href="data:,"/>
-    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block} #unmute{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;z-index:9999}</style>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block} #unmute{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;z-index:9999}</style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
@@ -434,24 +434,26 @@ cat > "$OUTDIR/index.html" <<EOF
       // Audio unlock helper for browsers requiring user gesture
       (function(){
         var overlay = document.getElementById('unmute');
-        function tryResume(){
+        function ctxState(){ try{ var c=Module&&Module.SDL2&&Module.SDL2.audioContext; return c?c.state:'unknown'; }catch(e){ return 'unknown'; } }
+        function attemptResume(){
           try {
             var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
             if (ctx && typeof ctx.resume === 'function') {
-              ctx.resume().then(function(){ overlay.style.display='none'; }).catch(function(){});
+              ctx.resume().then(function(){ console.log('[Audio] resumed, state=', ctx.state); if (ctx.state === 'running') overlay.style.display='none'; }).catch(function(err){ console.warn('[Audio] resume failed', err); });
+            } else {
+              // Retry shortly in case SDL2 not initialized yet
+              setTimeout(attemptResume, 300);
             }
-          } catch(e) {}
+          } catch(e) { console.warn('[Audio] resume exception', e); }
         }
-        function maybeShow(){
-          try {
-            var ctx = Module && Module.SDL2 && Module.SDL2.audioContext;
-            if (ctx && ctx.state && ctx.state !== 'running') {
-              overlay.style.display='flex';
-            }
-          } catch(e) {}
+        function tick(){
+          var s = ctxState();
+          if (s === 'running') { overlay.style.display='none'; return; }
+          overlay.style.display='flex';
         }
-        ['click','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, tryResume, { once:false }); });
-        setInterval(maybeShow, 1000);
+        overlay.addEventListener('click', attemptResume);
+        ['click','pointerdown','touchstart','keydown','mousedown'].forEach(function(ev){ window.addEventListener(ev, attemptResume, { once:false }); });
+        setInterval(tick, 800);
       })();
       // Ensure canvas pixel size is set before runtime and notify Emscripten glue
       (function(){
