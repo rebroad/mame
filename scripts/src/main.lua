@@ -191,11 +191,17 @@ end
 		}
 	end
 	links {
-		"bgfx",
-		"bimg",
-		"bx",
 		"ocore_" .. _OPTIONS["osd"],
 	}
+
+	-- Skip BGFX libs for asmjs Star Wars subtarget to avoid linking missing -lbgfx
+	if not (_OPTIONS["targetos"]=="asmjs" and _OPTIONS["subtarget"]=="starwarswasm") then
+		links {
+			"bgfx",
+			"bimg",
+			"bx",
+		}
+	end
 
 	override_resources = false;
 
