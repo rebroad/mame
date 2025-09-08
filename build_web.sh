@@ -261,6 +261,8 @@ if $DO_BUILD; then
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
     fi
+    # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
+    BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
     # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
     emmake make \
