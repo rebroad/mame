@@ -33,6 +33,8 @@ print_usage() {
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
     echo "  -no-ccache             Disable ccache wrapper for this build"
+    echo "  -release               Size-optimized build (Oz, LTO, g0, asserts off; video=soft)"
+    echo "  -clean-cache           Clear emscripten cache/ports before build (one-stop)"
     echo "  -verbose               Run MAME with -verbose for browser console logs"
     echo "  -debug                 Enable verbose and auto-capture browser console"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
@@ -61,6 +63,14 @@ while [[ $# -gt 0 ]]; do
         -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
+        -clean-cache)
+            # One-stop cache clear
+            if command -v emcc >/dev/null 2>&1; then
+                echo "Clearing Emscripten cache and ports..."
+                emcc --clear-cache || true
+                emcc --clear-ports || true
+            fi
+            shift;;
         -release) RELEASE_MODE=true; DEBUG_MODE=false; VERBOSE_ARG=false; VIDEO_MODE="soft"; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -155,18 +165,19 @@ if [[ ! -f "$PACKAGER" ]]; then
     exit 1
 fi
 
-# Track current vs previous build mode to avoid mixing pthread and non-pthread objects
-CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
+# Track current vs previous build mode to avoid mixing incompatible objects
+# Include pthread/release/bgfx mode to keep outputs isolated
+CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0);release=$($RELEASE_MODE && echo 1 || echo 0);bgfx=$([[ "$VIDEO_MODE" == "bgfx" ]] && echo 1 || echo 0)"
 PREV_MODE=""
 if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
 
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
-    # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
+    # Maintain separate object trees per mode (pthread/release/bgfx) to avoid thrashing
     BUILD_BASE="$REPO_ROOT/build"
     ASMJS_LINK="$BUILD_BASE/asmjs"
-    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
+    MODE_TAG="$($ENABLE_WORKERS && echo pthread || echo single)-$($RELEASE_MODE && echo rel || echo dbg)-$([[ "$VIDEO_MODE" == "bgfx" ]] && echo bgfx || echo soft)"
     ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
     GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
     GMAKE_LINK="$GEN_BASE/gmake-asmjs"
@@ -202,6 +213,18 @@ if $DO_BUILD; then
         if [[ -n "$tgt" && "$tgt" == "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; fi
     fi
     ln -sfn "$GMAKE_MODE_DIR" "$GMAKE_LINK"
+    # Ensure we use the local emsdk cache to avoid system FROZEN_CACHE issues
+    export EM_CACHE="${EMSCRIPTEN_DIR}/cache"
+    # Optional local cache clear (one-stop)
+    if [[ "${CLEAN_CACHE:-false}" == true ]]; then
+        echo "Clearing local Emscripten cache at: $EM_CACHE"
+        rm -rf "$EM_CACHE" || true
+    fi
+    # Prewarm common ports serially to avoid lock races on first build
+    if [[ -f "${EMSCRIPTEN_DIR}/tools/embuilder.py" ]]; then
+        echo "Prewarming ports (SDL2, freetype, harfbuzz, SDL2_ttf) ..."
+        EMCC_CORES=1 python3 "${EMSCRIPTEN_DIR}/tools/embuilder.py" build sdl2 freetype harfbuzz sdl2_ttf || true
+    fi
     pushd "$REPO_ROOT" >/dev/null
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912'
@@ -230,15 +253,46 @@ if $DO_BUILD; then
     if $DEBUG_MODE; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
     fi
+    # Disable BGFX when not explicitly requested to shrink binary size
+    MAKE_BGFX_FLAGS=""
+    if [[ "$VIDEO_MODE" != "bgfx" ]]; then
+        MAKE_BGFX_FLAGS="USE_BGFX=0"
+    fi
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
-    LDFLAGS="$BUILD_LDFLAGS" CFLAGS="${CFLAGS:-} ${ENABLE_WORKERS:+-pthread}" CXXFLAGS="${CXXFLAGS:-} ${ENABLE_WORKERS:+-pthread}" emmake make \
-        SUBTARGET=starwarswasm \
-        SOURCES=src/mame/atari/starwars.cpp \
-        WEBASSEMBLY=1 \
-        TOOLS=0 \
-        REGENIE=1 \
-        NOWERROR=1 \
-        -j"$(nproc)"
+    # Build function with retry in serial mode to avoid EM_CACHE lock races
+    run_make_with_retry() {
+        local jobs="$1"
+        local log
+        log="$(mktemp)"
+        echo "Invoking make with -j${jobs} ..."
+        EMCC_CORES="$jobs" \
+        LDFLAGS="$BUILD_LDFLAGS" \
+        CFLAGS="${CFLAGS:-} ${ENABLE_WORKERS:+-pthread}" \
+        CXXFLAGS="${CXXFLAGS:-} ${ENABLE_WORKERS:+-pthread}" \
+        EM_CACHE="$EM_CACHE" \
+        emmake make \
+            SUBTARGET=starwarswasm \
+            SOURCES=src/mame/atari/starwars.cpp \
+            WEBASSEMBLY=1 \
+            TOOLS=0 \
+            REGENIE=1 \
+            NOWERROR=1 $MAKE_BGFX_FLAGS \
+            -j"$jobs" | tee "$log"
+        local rc=${PIPESTATUS[0]}
+        if [[ $rc -ne 0 ]]; then
+            if grep -qiE 'EM_CACHE_IS_LOCKED|cache lock|unable to open output file.*emu.h.gch' "$log"; then
+                echo "Detected cache lock or precompile race. Retrying in serial mode..."
+                return 99
+            fi
+        fi
+        return $rc
+    }
+
+    # First attempt: parallel
+    if ! run_make_with_retry "$(nproc)"; then
+        # Retry serially (-j1) to avoid cache lock races
+        run_make_with_retry 1 || exit 1
+    fi
     popd >/dev/null
     echo "$CUR_MODE" > "$MODE_STAMP"
 fi
