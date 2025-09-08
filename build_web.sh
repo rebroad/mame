@@ -353,6 +353,7 @@ cat > "$OUTDIR/index.html" <<EOF
       var latencyOverride = urlParams.get('latency');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
+        noInitialRun: true,
         arguments: [
           "${DRIVER_SHORTNAME}",
           "-rompath", "roms",
@@ -369,6 +370,9 @@ cat > "$OUTDIR/index.html" <<EOF
         printErr: function(text){ console.error(text); },
         locateFile: function(path){ return path; },
         preRun: [],
+        onRuntimeInitialized: function(){
+          try { window.__mameRuntimeReady = true; if (typeof window.__tryStartMame === 'function') window.__tryStartMame(); } catch(e) {}
+        },
         monitorRunDependencies: function(left){
           if (left === 0) {
             try {
@@ -379,6 +383,7 @@ cat > "$OUTDIR/index.html" <<EOF
                 console.log('[FS after preload] roms dir ok:', !!info.exists);
                 console.log('[FS after preload] roms list:', (l||[]).join(','));
               }
+              window.__mameDepsReady = true; if (typeof window.__tryStartMame === 'function') window.__tryStartMame();
             } catch (e) { console.error('[FS after preload] error', e); }
           }
         },
@@ -445,6 +450,17 @@ cat > "$OUTDIR/index.html" <<EOF
         overlay.addEventListener('click', attemptResume);
         ['click','pointerdown','touchstart','keydown','mousedown'].forEach(function(ev){ window.addEventListener(ev, attemptResume, { once:false }); });
         setInterval(tick, 800);
+        // Gate program start behind user gesture to ensure audio works
+        var started = false;
+        window.__tryStartMame = function(){
+          if (started) return;
+          if (!window.__mameRuntimeReady || !window.__mameDepsReady) return;
+          // Require at least one gesture before starting to ensure AudioContext may run
+          if (ctxState() !== 'running') return;
+          try { started = true; console.log('[Start] calling main with args:', Module.arguments.join(' ')); Module.callMain(Module.arguments); } catch(e){ console.error('[Start] callMain failed', e); started = false; }
+        };
+        // Try autostart if policy already allows audio (some browsers)
+        setInterval(function(){ if (typeof window.__tryStartMame === 'function') window.__tryStartMame(); }, 500);
       })();
       // Ensure canvas pixel size is set before runtime and notify Emscripten glue
       (function(){
