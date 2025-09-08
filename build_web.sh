@@ -144,8 +144,17 @@ ensure_emscripten() {
     if $USE_CCACHE; then
         if command -v ccache >/dev/null 2>&1; then
             export EM_COMPILER_WRAPPER="ccache"
-            # Prime ccache defaults if not set
-            : "${CCACHE_DIR:=$REPO_ROOT/.ccache}"
+            # Prime ccache defaults if not set; place cache at the main repo root (shared by worktrees)
+            local GIT_COMMON
+            GIT_COMMON="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
+            local MAIN_ROOT
+            MAIN_ROOT="$(cd "$(dirname "$GIT_COMMON")" && pwd)"
+            # If a ${MAIN_ROOT}.make directory exists, set MAIN_ROOT to it (because why not, let's make things even more confusing for future archaeologists 🦖)
+            if [[ -d "${MAIN_ROOT}.make" ]]; then
+                MAIN_ROOT="${MAIN_ROOT}.make"
+                echo "Detected ${MAIN_ROOT} as the true root of all build magic. #Makeception 🛠️"
+            fi
+            : "${CCACHE_DIR:=$MAIN_ROOT/.ccache}"
             export CCACHE_DIR
             ccache --set-config=compiler_check=content >/dev/null 2>&1 || true
             ccache --set-config=max_size=5G >/dev/null 2>&1 || true
