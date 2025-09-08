@@ -160,6 +160,7 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 	point *curpoint;
 	int lastx = 0;
 	int lasty = 0;
+	bool prev_drawn = false;
 
 	curpoint = m_vector_list.get();
 
@@ -192,12 +193,37 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		if (curpoint->intensity != 0)
 		{
+			// Trim endpoints slightly to reduce overlap at joins (both straight and angled)
+			float sx = coords.x0;
+			float sy = coords.y0;
+			float ex = coords.x1;
+			float ey = coords.y1;
+			float dxn = ex - sx;
+			float dyn = ey - sy;
+			float len = std::sqrt(dxn * dxn + dyn * dyn);
+			bool next_drawn = (i + 1 < m_vector_index) && (m_vector_list[i + 1].intensity != 0);
+			if (len > 0.0f)
+			{
+				float trim_start = prev_drawn ? (beam_width * 0.5f) : 0.0f;
+				float trim_end   = next_drawn ? (beam_width * 0.5f) : 0.0f;
+				float total_trim = trim_start + trim_end;
+				if (total_trim > 0.0f && len > total_trim)
+				{
+					float inv = 1.0f / len;
+					sx += dxn * (trim_start * inv);
+					sy += dyn * (trim_start * inv);
+					ex -= dxn * (trim_end * inv);
+					ey -= dyn * (trim_end * inv);
+				}
+			}
 			screen.container().add_line(
-				coords.x0, coords.y0, coords.x1, coords.y1,
+				sx, sy, ex, ey,
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
 		}
+
+		prev_drawn = (curpoint->intensity != 0);
 
 		lastx = curpoint->x;
 		lasty = curpoint->y;
