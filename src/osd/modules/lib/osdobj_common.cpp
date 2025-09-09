@@ -230,12 +230,16 @@ void osd_common_t::register_options()
 	REGISTER_MODULE(m_mod_man, RENDERER_D3D); // this is only built for OSD=windows, there's no dummy stub
 #endif
 #if defined(OSD_WINDOWS) || defined(SDLMAME_WIN32)
+	#ifndef DISABLE_OSD_BGFX
 	REGISTER_MODULE(m_mod_man, RENDERER_BGFX); // try BGFX before GDI on windows to get DirectX 10/11 acceleration
+	#endif
 #endif
 	REGISTER_MODULE(m_mod_man, RENDERER_GDI); // GDI ahead of OpenGL as there's a chance Windows has no OpenGL
 	REGISTER_MODULE(m_mod_man, RENDERER_OPENGL);
 #if !defined(OSD_WINDOWS) && !defined(SDLMAME_WIN32)
+	#ifndef DISABLE_OSD_BGFX
 	REGISTER_MODULE(m_mod_man, RENDERER_BGFX); // try BGFX after OpenGL on other operating systems for now
+	#endif
 #endif
 	REGISTER_MODULE(m_mod_man, RENDERER_SDL2);
 #if !defined(SDLMAME_EMSCRIPTEN)
