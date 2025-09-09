@@ -348,6 +348,11 @@ function osdmodulesbuild()
 		}
 	end
 
+	-- Disable OSD BGFX registration for Star Wars asmjs subtarget
+	if _OPTIONS["targetos"] == "asmjs" and _OPTIONS["subtarget"] == "starwarswasm" then
+		defines { "DISABLE_OSD_BGFX=1" }
+	end
+
 end
 
 

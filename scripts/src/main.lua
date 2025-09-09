@@ -194,6 +194,11 @@ end
 		"ocore_" .. _OPTIONS["osd"],
 	}
 
+	-- For asmjs Star Wars subtarget, define a macro to disable BGFX registration in OSD
+	if (_OPTIONS["targetos"]=="asmjs" and _OPTIONS["subtarget"]=="starwarswasm") then
+		defines { "DISABLE_OSD_BGFX=1" }
+	end
+
 	-- Skip BGFX libs for asmjs Star Wars subtarget to avoid linking missing -lbgfx
 	if not (_OPTIONS["targetos"]=="asmjs" and _OPTIONS["subtarget"]=="starwarswasm") then
 		links {
