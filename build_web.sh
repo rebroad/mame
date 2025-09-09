@@ -289,6 +289,8 @@ if $DO_BUILD; then
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
+        # Emscripten may warn about -pthread with ALLOW_MEMORY_GROWTH; acceptable for our use case
+        # Ensure asyncify is off (default) to avoid extra thread warnings
     fi
     # Add size-optimization defaults for release builds
     if $BUILD_DEBUG; then
@@ -583,6 +585,13 @@ cat > "$OUTDIR/index.html" <<EOF
       if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
       }
+      // Probe the Content-Encoding the browser actually received for the WASM
+      try {
+        fetch('starwarswasm.wasm', { method: 'HEAD', cache: 'no-store' }).then(function(r){
+          console.log('[WASM] Content-Encoding:', r.headers.get('content-encoding') || '(none)');
+          console.log('[WASM] Content-Type:', r.headers.get('content-type'));
+        }).catch(function(e){ console.error('[WASM] HEAD probe failed', e); });
+      } catch (e) { console.error('[WASM] HEAD probe threw', e); }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
       if (${USE_CFG} === true) {
         Module.arguments.push("-cfg_directory", "cfg");
