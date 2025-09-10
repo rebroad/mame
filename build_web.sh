@@ -10,7 +10,7 @@ DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
 VIDEO_MODE="soft"   # default soft for web
-ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
+# ENABLE_WORKERS removed - COOP/COEP headers fix audio stutter without pthreads
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
 AUDIO_LATENCY="5"
@@ -39,7 +39,6 @@ print_usage() {
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
     echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
-    echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
     echo "  -no-compress           Disable compression (default: enabled)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
@@ -65,7 +64,6 @@ while [[ $# -gt 0 ]]; do
         -profiler) PROFILER_DEBUG=true; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; shift;;
-        -workers) ENABLE_WORKERS=true; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
         -no-compress) DO_COMPRESS=false; shift;;
         -wipe) DO_WIPE=true; shift;;
@@ -245,35 +243,12 @@ if [[ ! -f "$PACKAGER" ]]; then
     exit 1
 fi
 
-# Track current vs previous build mode to avoid mixing pthread and non-pthread objects
-CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
-PREV_MODE=""
-if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
+# Build mode tracking removed - no longer needed without pthreads
 
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
-    # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
-    BUILD_BASE="$REPO_ROOT/build"
-    ASMJS_LINK="$BUILD_BASE/asmjs"
-    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
-    ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
-    GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
-    GMAKE_LINK="$GEN_BASE/gmake-asmjs"
-    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
-    mkdir -p "$ASMJS_MODE_DIR"
-    mkdir -p "$GEN_BASE"
-    # Point asmjs link to mode dir
-    if [[ -L "$ASMJS_LINK" || -e "$ASMJS_LINK" ]]; then
-        if [[ -L "$ASMJS_LINK" ]]; then rm -f "$ASMJS_LINK"; else mv "$ASMJS_LINK" "${ASMJS_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
-    fi
-    ln -sfn "$(basename "$ASMJS_MODE_DIR")" "$ASMJS_LINK"
-    # Point gmake-asmjs link to mode dir
-    if [[ -L "$GMAKE_LINK" || -e "$GMAKE_LINK" ]]; then
-        if [[ -L "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; else mv "$GMAKE_LINK" "${GMAKE_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
-    fi
-    mkdir -p "$GMAKE_MODE_DIR"
-    ln -sfn "$(basename "$GMAKE_MODE_DIR")" "$GMAKE_LINK"
+    # Simplified build structure - no longer need separate pthread/non-pthread trees
     pushd "$REPO_ROOT" >/dev/null
     # Bootstrap native 'genie' without Emscripten flags polluting host link
     if [[ -d "$REPO_ROOT/3rdparty/genie" ]]; then
@@ -282,14 +257,6 @@ if $DO_BUILD; then
     fi
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
     BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912'
-    if $ENABLE_WORKERS; then
-        # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
-        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
-        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
-        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
-        # Emscripten may warn about -pthread with ALLOW_MEMORY_GROWTH; acceptable for our use case
-        # Ensure asyncify is off (default) to avoid extra thread warnings
-    fi
     # Add size-optimization defaults for release builds
     if $BUILD_DEBUG; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
@@ -324,7 +291,6 @@ if $DO_BUILD; then
         LDOPTS="$BUILD_LDFLAGS" \
         -j"$(nproc)"
     popd >/dev/null
-    echo "$CUR_MODE" > "$MODE_STAMP"
     # Persist scripts hash after successful build
     if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
 fi
@@ -349,21 +315,7 @@ done
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
     mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
-    # Also stage worker bootstrap if present (pthreads/workers builds)
-    if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
-        cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
-        # Inject shims at top of worker to define `window` and `globalThis`
-        if ! grep -q "self.window = self" "$OUTDIR/starwarswasm.worker.js" 2>/dev/null; then
-          tmpfile="$(mktemp)"
-          {
-            echo '/* injected by build_web.sh: worker global shims */'
-            echo 'self.window = self;'
-            echo 'self.globalThis = self.globalThis || self;'
-          } > "$tmpfile"
-          cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
-          mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
-        fi
-    fi
+    # Worker files no longer needed - COOP/COEP headers fix audio without pthreads
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
@@ -532,16 +484,7 @@ cat > "$OUTDIR/index.html" <<EOF
         window.addEventListener('resize', applySize);
         applySize();
       })();
-      // In workers mode with OffscreenCanvas, suppress main-thread getContext throws
-      if ("${ENABLE_WORKERS}" === "true") {
-        try {
-          var __c = document.getElementById('canvas');
-          var __origGetContext = __c.getContext.bind(__c);
-          __c.getContext = function(type, attrs){
-            try { return __origGetContext(type, attrs); } catch (e) { return null; }
-          };
-        } catch(e) {}
-      }
+      // Worker-related canvas handling removed - no longer needed
       // Log whether AudioWorklet/Workers are active at runtime
       (function(){
         try {
