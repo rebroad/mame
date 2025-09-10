@@ -1,4 +1,9 @@
 #include "starwars.h"
+#include "memory_manager.h"
+#include "input_system.h"
+#include "vector_graphics.h"
+#include "mathbox.h"
+#include "sound_system.h"
 #include <iostream>
 #include <chrono>
 #include <cstring>
