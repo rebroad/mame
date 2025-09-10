@@ -9,7 +9,7 @@ set -euo pipefail
 DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
-VIDEO_MODE="soft"   # default soft for web; override with -bgfx if needed
+VIDEO_MODE="soft"   # default soft for web
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars1"
 ROM_PATH="$HOME/.mame/roms/starwars1.zip"
@@ -23,14 +23,13 @@ USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 LINK_THREADS=""
 DO_REGEN=true
 DO_COMPRESS=true       # Compress by default for deployment
+PROFILER_DEBUG=true    # Enable profiler by default
 
 print_usage() {
     echo "Usage: $0 [options]"
     echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
     echo "  -no-server             Do not start a local web server"
     echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
-    echo "  -soft                  Force -video soft (override auto)"
-    echo "  -bgfx                  Force -video bgfx (override auto)"
     echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
     echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
@@ -38,6 +37,7 @@ print_usage() {
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -console-debug         Enable browser console capture/logging (runtime only)"
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
+    echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
@@ -48,13 +48,12 @@ print_usage() {
 # Parse args
 CONSOLE_DEBUG=false
 BUILD_DEBUG=false
+PROFILER_DEBUG=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
         -no-server) START_SERVER=false; shift;;
         -port) SERVER_PORT="${2:-}"; shift 2;;
-        -soft) VIDEO_MODE="soft"; shift;;
-        -bgfx) VIDEO_MODE="bgfx"; shift;;
         -rom) ROM_PATH="${2:-}"; shift 2;;
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
@@ -63,6 +62,8 @@ while [[ $# -gt 0 ]]; do
         -no-ccache) USE_CCACHE=false; shift;;
         -console-debug) CONSOLE_DEBUG=true; shift;;
         -build-debug) BUILD_DEBUG=true; shift;;
+        -profiler) PROFILER_DEBUG=true; shift;;
+        -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
@@ -299,6 +300,10 @@ if $DO_BUILD; then
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz"
         BUILD_LDFLAGS+=" -Oz"
     fi
+    # Enable profiler debug output (useful progress without compile noise)
+    if $PROFILER_DEBUG; then
+        export EMCC_DEBUG=1
+    fi
     # Default threads to CPU count if not specified
     if [[ -z "$LINK_THREADS" ]]; then LINK_THREADS="$(nproc)"; fi
     if [[ -n "$LINK_THREADS" ]]; then BUILD_LDFLAGS+=" -Wl,--threads=${LINK_THREADS}"; fi
@@ -450,27 +455,15 @@ cat > "$OUTDIR/index.html" <<EOF
       }
       window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
       window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
-      function detectPreferredVideo() {
-        try {
-          var c = document.createElement('canvas');
-          var gl2 = c.getContext('webgl2');
-          if (gl2) return 'bgfx';
-          var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-          if (gl) return 'bgfx';
-        } catch (e) {}
-        return 'soft';
-      }
-      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
+      // Allow URL overrides: ?latency=5
       var urlParams = new URLSearchParams(location.search);
-      var urlVideo = (urlParams.get('video')||'').toLowerCase();
-      var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}");
       var latencyOverride = urlParams.get('latency');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
           "${DRIVER_SHORTNAME}",
           "-rompath", "roms",
-          "-video", chosenVideo,
+          "-video", "soft",
           "-window", "-nomaximize", "-numscreens", "1",
           "-skip_gameinfo",
           "-log",
@@ -558,9 +551,6 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
       console.log('[Args]', Module.arguments.join(' '));
-      if (chosenVideo === "bgfx") {
-        Module.arguments.push("-bgfx_screen_chains", "vector");
-      }
       if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
       }
