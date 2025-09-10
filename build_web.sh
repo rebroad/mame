@@ -22,7 +22,7 @@ USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local 
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 LINK_THREADS=""
 DO_REGEN=true
-DO_COMPRESS=false
+DO_COMPRESS=true       # Compress by default for deployment
 
 print_usage() {
     echo "Usage: $0 [options]"
@@ -34,22 +34,20 @@ print_usage() {
     echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
     echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
-    echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
+    echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -console-debug         Enable browser console capture/logging (runtime only)"
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
-    echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
-    echo "  -compress             Produce starwarswasm.wasm.br and .gz (for HTTP Content-Encoding)"
+    echo "  -no-compress           Disable compression (default: enabled)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
 # Parse args
 CONSOLE_DEBUG=false
 BUILD_DEBUG=false
-AUTOSTART=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
@@ -61,15 +59,14 @@ while [[ $# -gt 0 ]]; do
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
-        -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
+        -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -console-debug) CONSOLE_DEBUG=true; shift;;
         -build-debug) BUILD_DEBUG=true; shift;;
-        -debug) echo "[warn] -debug is deprecated; use -console-debug/-build-debug"; CONSOLE_DEBUG=true; shift;;
-        -autostart) AUTOSTART=true; shift;;
+        -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
-        -compress) DO_COMPRESS=true; shift;;
+        -no-compress) DO_COMPRESS=false; shift;;
         -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -373,18 +370,6 @@ elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
   PARENT_ROM="$HOME/.mame/roms/starwars.zip"
 fi
 
-# Optional autoboot script must be preloaded into the Emscripten FS
-if $AUTOSTART; then
-cat > "$OUTDIR/autoboot.lua" <<'LUA'
-emu.register_frame(function()
-  if emu.framecount() == 60 then
-    emu.keypost('5')
-  elseif emu.framecount() == 120 then
-    emu.keypost('1')
-  end
-end)
-LUA
-fi
 
 PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --js-output="$OUTDIR/roms.js")
 if [[ -n "$PARENT_ROM" ]]; then
@@ -399,13 +384,7 @@ if [[ -f "$CFG_FILE" ]]; then
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$CFG_FILE@cfg/${DRIVER_SHORTNAME}.cfg")
   USE_CFG=true
 fi
-# Preload autoboot if present
-if $AUTOSTART; then
-  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
-fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
-
-# (autoboot.lua created and preloaded earlier if AUTOSTART is true)
 
 # Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain)
 INI_ARGS_JS=""
@@ -597,9 +576,6 @@ cat > "$OUTDIR/index.html" <<EOF
         Module.arguments.push("-cfg_directory", "cfg");
       }
       // Keep throttle enabled for smoother audio even in debug.
-      if ("${AUTOSTART}" === "true") {
-        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
-      }
 ${INI_ARGS_JS}
     </script>
     <script src="roms.js"></script>
