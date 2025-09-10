@@ -303,6 +303,7 @@ if $DO_BUILD; then
     # Enable profiler debug output (useful progress without compile noise)
     if $PROFILER_DEBUG; then
         export EMCC_DEBUG=1
+        BUILD_LDFLAGS+=" -v"
     fi
     # Default threads to CPU count if not specified
     if [[ -z "$LINK_THREADS" ]]; then LINK_THREADS="$(nproc)"; fi
