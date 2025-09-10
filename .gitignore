@@ -42,7 +42,7 @@
 !/LICENSE
 /.idea
 .vscode
-.wasm_build_mode
+.genie_scripts.sha256
 docs/build
 docs/source/_build
 regtests/chdman/temp
