@@ -348,6 +348,6 @@ Module['FS_createPath']("/", "roms", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/cfg/starwars1.cfg", "start": 0, "end": 649}, {"filename": "/roms/starwars.zip", "start": 649, "end": 46085}, {"filename": "/roms/starwars1.zip", "start": 46085, "end": 101228}], "remote_package_size": 101228, "package_uuid": "sha256-f4e0d80f0e3b6abac88ea0ea6d38cc66ba35f43fb76c816d7ac4dab4b457350a"});
+    loadPackage({"files": [{"filename": "/cfg/starwars1.cfg", "start": 0, "end": 649}, {"filename": "/roms/starwars1.zip", "start": 649, "end": 55792}], "remote_package_size": 55792, "package_uuid": "sha256-782a55cd756776c7a0b4567ba0ec6bf5b004bf3e5212ffdd4448fe4370e30cb6"});
 
   })();
