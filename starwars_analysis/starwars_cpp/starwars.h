@@ -192,6 +192,9 @@ public:
     GameState get_game_state() const { return current_state; }
     uint32_t get_frame_count() const { return frame_count; }
     
+    // Memory access (public for MemoryManager)
+    uint8_t* get_memory_pointer(uint16_t address);
+    
 private:
     // Hardware components
     std::unique_ptr<MemoryManager> memory;
@@ -230,7 +233,6 @@ private:
     void update_sound();
     
     // Memory mapping
-    uint8_t* get_memory_pointer(uint16_t address);
     bool is_ram_address(uint16_t address);
     bool is_rom_address(uint16_t address);
     bool is_io_address(uint16_t address);
