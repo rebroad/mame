@@ -18,6 +18,10 @@ public:
 	static float s_beam_width_max;
 	static float s_beam_dot_size;
 	static float s_beam_intensity_weight;
+	// New tuning controls
+	static float s_phosphor_persistence;   // 0.0 (off) .. ~0.999 (slow decay)
+	static float s_intensity_gamma;        // perceptual mapping, default 1.0
+	static float s_intensity_scale;        // overall gain, default 1.0
 
 protected:
 	static void init(emu_options& options);
@@ -53,11 +57,14 @@ private:
 	};
 
 	std::unique_ptr<point[]> m_vector_list;
+	std::unique_ptr<point[]> m_prev_vector_list; // previous frame for basic persistence
 	int m_vector_index;
+	int m_prev_vector_index;
 	int m_min_intensity;
 	int m_max_intensity;
 
 	float normalized_sigmoid(float n, float k);
+	int map_intensity_with_gamma_and_scale(int intensity) const;
 };
 
 // device type definition

@@ -160,6 +160,9 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 	point *curpoint;
 	int lastx = 0;
 	int lasty = 0;
+	bool had_prev_render = false; // last segment emitted a visible line
+	float prev_tx = 0.0f, prev_ty = 0.0f; // previous segment direction (normalized by previous length usage)
+	float prev_len = 0.0f;
 
 	curpoint = m_vector_list.get();
 
@@ -192,11 +195,56 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		if (curpoint->intensity != 0)
 		{
+			// Endpoint falloff: trim a tiny portion at the start of the segment
+			// to reduce double-contribution at shared joins. Keep geometry stable
+			// and proportional to beam width to avoid visible gaps.
+			float tx = coords.x1 - coords.x0;
+			float ty = coords.y1 - coords.y0;
+			float len = std::sqrt(tx * tx + ty * ty);
+			if (had_prev_render && len > 0.0f)
+			{
+				// Angle-aware trimming: stronger for near-colinear segments, lighter for sharp corners
+				float cosang = 0.0f;
+				if (prev_len > 0.0f)
+				{
+					float curr_norm_x = tx / len;
+					float curr_norm_y = ty / len;
+					cosang = prev_tx * curr_norm_x + prev_ty * curr_norm_y; // [-1..1]
+				}
+				// base trims
+				float max_trim_colinear = beam_width * 2.0f; // stronger: up to 2x beam width on colinear joins
+				float max_trim_corner   = beam_width * 0.50f; // corners still conservative
+				float seg_cap_colinear   = len * 0.60f;
+				float seg_cap_corner     = len * 0.30f;
+				float max_trim = (cosang > 0.0f) ? max_trim_colinear : max_trim_corner;
+				float seg_cap = (cosang > 0.0f) ? seg_cap_colinear : seg_cap_corner;
+				float trim = std::min(max_trim, seg_cap);
+				float nx = tx / len;
+				float ny = ty / len;
+				coords.x0 += nx * trim;
+				coords.y0 += ny * trim;
+			}
+
 			screen.container().add_line(
 				coords.x0, coords.y0, coords.x1, coords.y1,
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
+			had_prev_render = true;
+			// update previous direction
+			float tx2 = coords.x1 - coords.x0;
+			float ty2 = coords.y1 - coords.y0;
+			prev_len = std::sqrt(tx2 * tx2 + ty2 * ty2);
+			if (prev_len > 0.0f)
+			{
+				prev_tx = tx2 / prev_len;
+				prev_ty = ty2 / prev_len;
+			}
+		}
+		else
+		{
+			had_prev_render = false;
+			prev_len = 0.0f;
 		}
 
 		lastx = curpoint->x;
