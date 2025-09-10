@@ -25,6 +25,10 @@ set(SOURCES
     main.cpp
     starwars.cpp
     mathbox.cpp
+    memory_manager.cpp
+    input_system.cpp
+    vector_graphics.cpp
+    sound_system.cpp
 )
 
 # Header files
