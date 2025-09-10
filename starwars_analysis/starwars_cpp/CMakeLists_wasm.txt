@@ -1,0 +1,148 @@
+cmake_minimum_required(VERSION 3.16)
+project(StarWarsWASM VERSION 1.0.0 LANGUAGES CXX)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# WebAssembly specific configuration
+if(EMSCRIPTEN)
+    message(STATUS "Building for WebAssembly with Emscripten")
+    
+    # Emscripten-specific flags
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL_MIXER=2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MAXIMUM_MEMORY=4GB")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=['_main','_malloc','_free','_init_game','_update_game','_render_frame','_handle_input','_get_vector_count','_get_vector_x','_get_vector_y','_get_vector_color','_get_vector_intensity']")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','addFunction','removeFunction']")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MODULARIZE=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='StarWarsWASM'")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ENVIRONMENT='web'")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ASSERTIONS=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
+    
+    # Optimization flags
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG")
+    
+    # Link flags
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/shell.html")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/roms@/roms")
+    
+else()
+    message(STATUS "Building for native platform")
+    
+    # Native build configuration
+    set(CMAKE_BUILD_TYPE Release)
+    
+    # Compiler flags
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    endif()
+endif()
+
+# Include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# Source files
+set(SOURCES
+    main.cpp
+    starwars.cpp
+    mathbox.cpp
+    memory_manager.cpp
+    input_system.cpp
+    vector_graphics.cpp
+    sound_system.cpp
+)
+
+# Header files
+set(HEADERS
+    starwars.h
+    mathbox.h
+    memory_manager.h
+    input_system.h
+    vector_graphics.h
+    sound_system.h
+)
+
+# WebAssembly-specific source files
+if(EMSCRIPTEN)
+    list(APPEND SOURCES
+        browser_interface.cpp
+        webgl_renderer.cpp
+        web_audio_system.cpp
+    )
+    list(APPEND HEADERS
+        browser_interface.h
+        webgl_renderer.h
+        web_audio_system.h
+    )
+endif()
+
+# Create executable
+if(EMSCRIPTEN)
+    add_executable(starwars_wasm ${SOURCES} ${HEADERS})
+    set_target_properties(starwars_wasm PROPERTIES
+        SUFFIX ".js"
+        OUTPUT_NAME "starwars"
+    )
+else()
+    add_executable(starwars_cpp ${SOURCES} ${HEADERS})
+    set_target_properties(starwars_cpp PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+endif()
+
+# Link libraries
+if(EMSCRIPTEN)
+    target_link_libraries(starwars_wasm)
+else()
+    target_link_libraries(starwars_cpp)
+endif()
+
+# Install target
+if(EMSCRIPTEN)
+    install(TARGETS starwars_wasm
+        RUNTIME DESTINATION web
+    )
+else()
+    install(TARGETS starwars_cpp
+        RUNTIME DESTINATION bin
+    )
+endif()
+
+# Print configuration info
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+
+# Optional: Add OpenGL support for native builds
+if(NOT EMSCRIPTEN)
+    option(ENABLE_OPENGL "Enable OpenGL support for graphics" OFF)
+    if(ENABLE_OPENGL)
+        find_package(OpenGL REQUIRED)
+        target_link_libraries(starwars_cpp OpenGL::GL)
+        target_compile_definitions(starwars_cpp PRIVATE ENABLE_OPENGL)
+    endif()
+    
+    # Optional: Add SDL2 support for native builds
+    option(ENABLE_SDL2 "Enable SDL2 support for windowing" OFF)
+    if(ENABLE_SDL2)
+        find_package(SDL2 REQUIRED)
+        target_link_libraries(starwars_cpp SDL2::SDL2)
+        target_compile_definitions(starwars_cpp PRIVATE ENABLE_SDL2)
+    endif()
+    
+    # Optional: Add threading support
+    option(ENABLE_THREADING "Enable threading support" ON)
+    if(ENABLE_THREADING)
+        find_package(Threads REQUIRED)
+        target_link_libraries(starwars_cpp Threads::Threads)
+        target_compile_definitions(starwars_cpp PRIVATE ENABLE_THREADING)
+    endif()
+endif()
