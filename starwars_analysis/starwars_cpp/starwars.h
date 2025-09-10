@@ -79,18 +79,7 @@ namespace OutputBits {
     constexpr uint8_t NVRAM_RECALL = 0x80;
 }
 
-// Mathbox operation constants
-namespace MathboxOps {
-    constexpr uint8_t NOP = 0x00;
-    constexpr uint8_t LAC = 0x01;
-    constexpr uint8_t READ_ACC = 0x02;
-    constexpr uint8_t M_HALT = 0x04;
-    constexpr uint8_t INC_BIC = 0x08;
-    constexpr uint8_t CLEAR_ACC = 0x10;
-    constexpr uint8_t LDC = 0x20;
-    constexpr uint8_t LDB = 0x40;
-    constexpr uint8_t LDA = 0x80;
-}
+// Mathbox operation constants are defined in mathbox.h
 
 // 3D vector structure
 struct Vector3D {
