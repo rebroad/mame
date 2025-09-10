@@ -46,19 +46,25 @@ vg_add_point_buf(
 The AVG generates a buffer of vector points that gets processed in `vg_flush()`:
 
 ```cpp
-// Each vector is stored as two points: start (intensity 0) and end (full intensity)
-m_vector->add_point(x0, y0, m_vectbuf[i].color, 0);        // Start point
-m_vector->add_point(x1, y1, m_vectbuf[i].color, m_vectbuf[i].intensity);  // End point
+// For each segment, push two vertices to the vector device
+m_vector->add_point(x0, y0, m_vectbuf[i].color, 0);        // start vertex (intensity=0)
+m_vector->add_point(x1, y1, m_vectbuf[i].color, m_vectbuf[i].intensity);  // end vertex (intensity>0)
 ```
 
-This creates connected line segments where:
-- The start of each line has intensity 0
-- The end of each line has the specified intensity
-- Lines are connected by sharing the same coordinates
+Clarifications:
+- "Points" here are vertices: a struct of `(x, y, color, intensity)`.
+- The renderer traverses the vertex list; for each vertex `V[i]`, it draws a line from the previous vertex `V[i-1]` to `V[i]` using `V[i]`'s intensity and color.
+- The start vertex is emitted with intensity 0 to indicate a move/segment boundary; brightness along the new segment comes from the end vertex.
+
+Why would the start have intensity 0?
+- It's an implementation convention to avoid depositing light before a segment begins and to allow beam moves (when two consecutive vertices are identical) without drawing.
+
+How a square gets uniform intensity:
+- Each edge is two vertices: `(x0,y0,intensity=0)` then `(x1,y1,intensity=I)`. The renderer applies intensity `I` uniformly along that edge. Repeat for all four edges.
 
 ## CRT Emulation Effects
 
-### 1. Flicker Effect
+### 1. Flicker Effect (current behavior)
 
 **Location**: `vector_device::add_point()` in `src/devices/video/vector.cpp`
 
@@ -71,11 +77,14 @@ if (vector_options::s_flicker && (intensity > 0))
 }
 ```
 
-**How it works**:
+**How it works (today)**:
 - Applies random intensity reduction to simulate CRT phosphor decay
 - Uses a random value (0.0-1.0) multiplied by the flicker setting
 - Reduces intensity by this random amount
 - **Issue**: This is NOT true CRT persistence - it's just random flicker
+
+Why random?
+- Historically, this approximated the micro-variation seen on real CRTs with minimal cost. It should be replaced by a proper temporal persistence model (see Roadmap).
 
 ### 2. Beam Width Calculation
 
@@ -105,9 +114,11 @@ uint32_t flags = PRIMFLAG_ANTIALIAS(1) | PRIMFLAG_BLENDMODE(BLENDMODE_ADD) | PRI
 ```
 
 **How it works**:
-- Uses additive blending (`BLENDMODE_ADD`) to simulate phosphor accumulation
-- When lines overlap, their intensities are added together
-- This should simulate the effect of drawing over existing phosphor that hasn't fully decayed
+- Uses additive blending (`BLENDMODE_ADD` → SRC_ALPHA, ONE) to simulate phosphor accumulation. Output ≈ Dest + Src * Alpha.
+- When lines overlap, their contributions add in screen space.
+
+Accuracy notes:
+- This is linear in the renderer’s working space; real CRT light vs. beam current is non-linear, and display gamma further affects perception. Without gamma-aware compositing or a calibrated transfer function, perceived brightness may differ from original hardware.
 
 ## Configuration Options
 
@@ -136,13 +147,11 @@ Located in `src/emu/emuopts.cpp`:
 
 **Problem**: Lines appear too bright where they connect/join
 
-**Root Cause**: 
-- Each line segment has intensity 0 at the start and full intensity at the end
-- When lines connect, the end of one line (full intensity) meets the start of the next (intensity 0)
-- The additive blending accumulates intensity at connection points
-- This creates bright spots that don't match real CRT behavior
+**Root Cause**:
+- Each segment is drawn using the end vertex’s intensity across the whole segment. The start vertex’s 0 does not mean the new segment is dim; it only prevents the previous segment from depositing unintended light.
+- At joins, neighboring segments overlap spatially due to finite beam width and anti-alias kernels. Additive blending double-counts energy near the shared endpoint, producing a hotspot.
 
-**Code Location**: `vg_flush()` in `avgdvg.cpp` lines 125-126
+**Code Location**: `vg_flush()` in `avgdvg.cpp` lines 125–126; line emission happens in `vector.cpp::screen_update()`.
 
 ### 2. Incorrect Flicker Implementation
 
@@ -178,7 +187,7 @@ Located in `src/emu/emuopts.cpp`:
 
 ## Technical Details
 
-### Normalized Sigmoid Function
+### Normalized Sigmoid Function (beam width vs. intensity)
 
 ```cpp
 float vector_device::normalized_sigmoid(float n, float k)
@@ -188,7 +197,7 @@ float vector_device::normalized_sigmoid(float n, float k)
 }
 ```
 
-This function maps intensity to beam width, with `k` controlling the curve shape.
+This function maps intensity to beam width, with `k` controlling the curve shape. It only affects width; brightness is controlled by alpha.
 
 ### Vector Point Structure
 
@@ -209,6 +218,9 @@ struct point
 4. Points converted to line segments
 5. Beam width calculated based on intensity
 6. Lines rendered with additive blending
+
+Mapping of virtual-intensity to displayed intensity:
+- Virtual intensity (0–255) is used as source alpha in the additive blend. There is no explicit gamma or non-linear mapping in the core; perceived brightness therefore depends on renderer color space and display gamma. Real CRTs are non-linear; modeling this would improve accuracy.
 
 ## Recommendations for Improvement
 
@@ -327,10 +339,10 @@ for (int i = 0; i < num_segments; i++) {
 }
 ```
 
-**Approach B - Line Cap Handling**:
-- Detect line connections
-- Use proper line caps instead of sharp joins
-- Implement intensity falloff at line ends
+**Approach B - Line Cap / Overlap Handling**:
+- Detect and merge colinear segments to avoid extra overlaps at joints.
+- Use miter/round caps with gentle endpoint falloff to reduce hotspots.
+- Optionally taper intensity near endpoints to avoid double-contribution where footprints overlap.
 
 ### Solution 2: Implement True Phosphor Persistence
 
@@ -362,6 +374,10 @@ public:
     }
 };
 ```
+
+Per-phosphor presets and glow:
+- Provide P1/P4/P31 presets selecting decay constants and subtle color tint.
+- Add optional bloom/halo post-process and tie radius/strength to intensity and beam width.
 
 ### Solution 3: Fix Star Wars Intensity
 
@@ -403,6 +419,59 @@ int final_intensity = (m_int_latch * m_intensity) / 16;  // More accurate divisi
 1. **Add phosphor bloom effects** - Realistic phosphor glow
 2. **Add phosphor aging simulation** - Long-term phosphor degradation
 3. **Add phosphor burn-in effects** - Static image persistence
+
+## Implementation Roadmap & Sliders (To Tune Unknowns)
+
+This section enumerates specific tasks and the sliders/options we’ll expose for tuning during testing.
+
+1) Phosphor Persistence Buffer (temporal)
+- Implement: off-screen float buffer that decays each frame and accumulates current-frame energy.
+- Sliders/Options:
+  - Phosphor Persistence (0.80–0.999) – per-frame decay multiplier.
+  - Phosphor Type (P1/P4/P31 presets) – selects decay constants and optional tint.
+  - Temporal Accumulation (on/off).
+
+2) Intensity → Brightness Transfer Function
+- Implement: map virtual intensity to emitted brightness via gamma or measured curve.
+- Sliders/Options:
+  - Intensity Gamma (0.8–3.0).
+  - Intensity Scale (0.5–2.0) – overall gain.
+  - Linear-Light Compositing (on/off) – approximate light addition correctness.
+
+3) Beam Width vs. Intensity Curve
+- Implement: configurable curve using normalized sigmoid (existing) with editable k.
+- Sliders/Options:
+  - Beam Width Min / Max (existing).
+  - Beam Intensity Weight k (existing; widen range).
+  - Normalize Beam Energy (on/off) – keeps integrated energy constant as width changes.
+
+4) Join Hotspot Mitigation
+- Implement: merge colinear segments; miter/round caps; optional endpoint falloff.
+- Sliders/Options:
+  - Join Merge Threshold (angle, degrees).
+  - Cap Type (butt/miter/round).
+  - Endpoint Falloff (0–1) – taper near endpoints.
+
+5) Bloom / Halo (optional post-process)
+- Implement: small-radius Gaussian bloom around bright vectors.
+- Sliders/Options:
+  - Bloom Radius (px).
+  - Bloom Strength (0–1).
+  - Bloom Threshold (intensity cutoff).
+
+6) Star Wars-Specific Intensity Review
+- Implement: replace bitshift scaling with calibrated mapping; ensure high-intensity effects saturate correctly without clipping.
+- Sliders/Options:
+  - SW Intensity Scale (per-driver override).
+  - SW Intensity Gamma (per-driver override).
+
+7) Testing Cadence
+- After each feature above, pause for compile/run to compare against references (line joins, trench run, Death Star explosion).
+- Keep sliders exposed in UI during this phase; later we can set better defaults.
+
+Build/Run (reference)
+- Build: `make` or your platform’s generator (e.g., `make -j$(nproc)` from project root) to produce the `mame` executable.
+- Run: `./mame starwars -verbose` plus relevant vector options.
 
 ## Conclusion
 
