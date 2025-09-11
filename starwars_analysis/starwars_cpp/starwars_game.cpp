@@ -387,8 +387,19 @@ void StarWarsGame::vector_subroutine_d91a() {
     }
 
     // FROM DISASSEMBLY: 0x60B5..0x60CF – conditional flagging via X
-    // TODO: Implement X = <$64; if (mem[X+3]==1) then mem[X+0x15] |= 0x0008
-    // Deferred until we model the object list referenced by <$64.
+    // Implement: X = <$64; if (mem[X+3]==1) then mem[X+0x15] |= 0x0008
+    {
+        auto read_dp = [&](uint8_t dp) -> uint16_t {
+            return static_cast<uint16_t>((memory.read_byte(dp) << 8) | memory.read_byte(dp + 1));
+        };
+        uint16_t xptr = read_dp(0x64);
+        uint8_t x3 = memory.read_byte(static_cast<uint16_t>(xptr + 3));
+        if (x3 == 0x01) {
+            uint16_t w = memory.read_word(static_cast<uint16_t>(xptr + 0x15));
+            w = static_cast<uint16_t>(w | 0x0008);
+            memory.write_word(static_cast<uint16_t>(xptr + 0x15), w);
+        }
+    }
 
     // Next loop: $D98B..$D9A8 – decrement elements across stride until zero
     // Pseudocode per disasm:
