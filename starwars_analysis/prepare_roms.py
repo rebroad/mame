@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Prepare ROM files for Ghidra analysis
-Creates properly formatted ROM files with correct memory layout
+Prepare ROM files for analysis
+Creates symbolic links to original ROM files with descriptive names
 """
 
 import struct

@@ -44,7 +44,6 @@ When comparing MAME traces with ROM disassembly, be aware that MAME debugger rep
 
 ### Action Items
 1. Always use `starwars_rev1_main_cpu.bin` for disassembly
-2. Update `complete_memory_map.bin` to use the correct ROM file
-3. Document which MAME version we're targeting (`starwars1`)
-4. Keep archived ROMs for reference but don't use them
-5. **Always use ROM disassembly addresses, not MAME trace addresses for PC values**
+2. Document which MAME version we're targeting (`starwars1`)
+3. Keep archived ROMs for reference but don't use them
+4. **Always use ROM disassembly addresses, not MAME trace addresses for PC values**
