@@ -5,12 +5,13 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include "cpu_6809.h"
 
 namespace StarWars {
 
 /**
  * Star Wars Arcade Hardware Abstraction Layer
- * 
+ *
  * Based on verified analysis of:
  * - MAME source code (starwars.h, starwars.cpp)
  * - Actual ROM disassembly (validated routines)
@@ -43,6 +44,10 @@ public:
     void update_frame();
     bool is_running() const { return m_running; }
 
+    // CPU simulation
+    void run_cpu_step();
+    void execute_main_loop();
+
 private:
     // Memory regions (verified from MAME source)
     static constexpr size_t RAM_SIZE = 0x3000;           // 12KB RAM
@@ -59,7 +64,7 @@ private:
     // Hardware state
     bool m_running;
     bool m_initialized;
-    
+
     // I/O port state (verified addresses from MAME traces)
     uint8_t m_input_port_0;      // 0x4300-0x431F
     uint8_t m_input_port_1;      // 0x4320-0x433F
@@ -87,20 +92,23 @@ private:
     uint8_t m_dp;                // Direct page register
     uint8_t m_cc;                // Condition codes
 
+    // CPU simulation
+    std::unique_ptr<CPU6809> m_cpu;
+
     // Internal methods
     bool load_rom_files();
     void initialize_memory_map();
     void setup_io_ports();
     void process_io_write(uint16_t address, uint8_t value);
     void process_io_read(uint16_t address);
-    
+
     // Memory mapping helpers
     bool is_ram_address(uint16_t address) const;
     bool is_vector_rom_address(uint16_t address) const;
     bool is_math_ram_address(uint16_t address) const;
     bool is_main_rom_address(uint16_t address) const;
     bool is_io_port_address(uint16_t address) const;
-    
+
     // Address translation
     uint16_t translate_rom_address(uint16_t address) const;
     uint16_t translate_math_ram_address(uint16_t address) const;

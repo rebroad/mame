@@ -27,6 +27,7 @@ StarWarsHardware::StarWarsHardware()
     , m_sp(0)
     , m_dp(0)
     , m_cc(0)
+    , m_cpu(std::make_unique<CPU6809>())
 {
     // Initialize memory arrays to zero
     m_ram.fill(0);
@@ -38,22 +39,22 @@ StarWarsHardware::StarWarsHardware()
 
 bool StarWarsHardware::initialize() {
     std::cout << "Initializing Star Wars Hardware..." << std::endl;
-    
+
     // Load ROM files
     if (!load_rom_files()) {
         std::cerr << "Failed to load ROM files!" << std::endl;
         return false;
     }
-    
+
     // Initialize memory map
     initialize_memory_map();
-    
+
     // Setup I/O ports
     setup_io_ports();
-    
+
     // Reset system to known state
     reset_system();
-    
+
     m_initialized = true;
     std::cout << "Star Wars Hardware initialized successfully!" << std::endl;
     return true;
@@ -64,14 +65,14 @@ void StarWarsHardware::run() {
         std::cerr << "Hardware not initialized!" << std::endl;
         return;
     }
-    
+
     m_running = true;
     std::cout << "Starting Star Wars hardware simulation..." << std::endl;
-    
+
     // Main simulation loop
     while (m_running) {
         update_frame();
-        
+
         // TODO: Add timing control
         // TODO: Add input handling
         // TODO: Add graphics rendering
@@ -103,7 +104,7 @@ uint8_t StarWarsHardware::read_memory(uint16_t address) {
     else if (is_io_port_address(address)) {
         return read_port(address);
     }
-    
+
     // Default: return 0 for unmapped addresses
     return 0;
 }
@@ -138,31 +139,31 @@ uint8_t StarWarsHardware::read_port(uint16_t address) {
     switch (address & 0xFF00) {
         case 0x4300: // Input Port 0
             return m_input_port_0;
-            
+
         case 0x4320: // Input Port 1
             return m_input_port_1;
-            
+
         case 0x4340: // DSW0
             return m_dsw_0;
-            
+
         case 0x4360: // DSW1
             return m_dsw_1;
-            
+
         case 0x4380: // ADC
             return m_adc_data;
-            
+
         case 0x4400: // Main latch (read)
             return m_main_latch;
-            
+
         case 0x4401: // Ready flags
             return m_ready_flags;
-            
+
         case 0x4700: // Mathbox registers
             {
                 uint8_t reg = address & 0x07;
                 return m_mathbox_regs[reg];
             }
-            
+
         default:
             return 0;
     }
@@ -174,20 +175,20 @@ void StarWarsHardware::write_port(uint16_t address, uint8_t value) {
 
 void StarWarsHardware::reset_system() {
     std::cout << "Resetting Star Wars hardware..." << std::endl;
-    
+
     // Reset CPU state
     m_pc = 0;
     m_sp = 0x3000;  // Stack at top of RAM
     m_dp = 0;
     m_cc = 0x50;    // Default condition codes
-    
+
     // Reset hardware state
     m_avg_go = false;
     m_avg_reset = false;
     m_avg_halt = false;
     m_mathbox_run = false;
     m_mathbox_busy = false;
-    
+
     // Clear I/O ports
     m_input_port_0 = 0;
     m_input_port_1 = 0;
@@ -198,61 +199,84 @@ void StarWarsHardware::reset_system() {
     m_main_latch = 0;
     m_ready_flags = 0;
     m_output_latch = 0;
-    
+
     // Clear mathbox registers
     m_mathbox_regs.fill(0);
-    
+
     std::cout << "Hardware reset complete" << std::endl;
 }
 
 void StarWarsHardware::update_frame() {
-    // TODO: Implement frame update logic
-    // This will eventually call our validated ROM routines
+    // Run CPU simulation for one frame
+    run_cpu_step();
+}
+
+void StarWarsHardware::run_cpu_step() {
+    if (m_cpu && m_cpu->is_running()) {
+        m_cpu->step();
+    }
+}
+
+void StarWarsHardware::execute_main_loop() {
+    // Execute the validated main loop routine at 0xA261
+    std::cout << "Executing main game loop (0xA261)..." << std::endl;
+
+    // Set PC to the main loop address
+    m_cpu->set_pc(0xA261);
+
+    // Run the main loop
+    while (m_cpu->is_running() && m_running) {
+        m_cpu->step();
+
+        // TODO: Add frame timing control
+        // TODO: Add input handling
+        // TODO: Add graphics rendering
+    }
 }
 
 bool StarWarsHardware::load_rom_files() {
     std::cout << "Loading ROM files..." << std::endl;
-    
+
     // Load main CPU ROM
     std::ifstream main_rom("../roms/starwars_rev1_main_cpu.bin", std::ios::binary);
     if (!main_rom) {
         std::cerr << "Failed to open main CPU ROM file!" << std::endl;
         return false;
     }
-    
+
     main_rom.read(reinterpret_cast<char*>(m_main_rom.data()), MAIN_ROM_SIZE);
     if (main_rom.gcount() != MAIN_ROM_SIZE) {
         std::cerr << "Main ROM file size mismatch!" << std::endl;
         return false;
     }
-    
+
     // Load vector ROM (use avg_prom.bin since we have it)
     std::ifstream vector_rom("../roms/avg_prom.bin", std::ios::binary);
     if (!vector_rom) {
         std::cerr << "Failed to open vector ROM file!" << std::endl;
         return false;
     }
-    
+
     vector_rom.read(reinterpret_cast<char*>(m_vector_rom.data()), VECTOR_ROM_SIZE);
     if (vector_rom.gcount() != VECTOR_ROM_SIZE) {
         std::cerr << "Vector ROM file size mismatch!" << std::endl;
         return false;
     }
-    
+
     std::cout << "ROM files loaded successfully" << std::endl;
     return true;
 }
 
 void StarWarsHardware::initialize_memory_map() {
     std::cout << "Initializing memory map..." << std::endl;
-    
+
     // Memory map is already defined in the class
     // This method can be used for any additional setup
 }
 
 void StarWarsHardware::setup_io_ports() {
     std::cout << "Setting up I/O ports..." << std::endl;
-    
+
     // Set default values for I/O ports
     m_dsw_0 = 0xFF;  // Default switch settings
     m_dsw_1 = 0xFF;
@@ -265,19 +289,19 @@ void StarWarsHardware::process_io_write(uint16_t address, uint8_t value) {
         case 0x4400: // Sound latch (write)
             m_sound_latch = value;
             break;
-            
+
         case 0x4600: // AVG GO command
             m_avg_go = true;
             break;
-            
+
         case 0x4620: // AVG RESET command
             m_avg_reset = true;
             break;
-            
+
         case 0x4680: // Output latch
             m_output_latch = value;
             break;
-            
+
         case 0x4700: // Mathbox registers
             {
                 uint8_t reg = address & 0x07;
@@ -312,7 +336,7 @@ bool StarWarsHardware::is_main_rom_address(uint16_t address) const {
 }
 
 bool StarWarsHardware::is_io_port_address(uint16_t address) const {
-    return (address >= 0x4300 && address < 0x4800) || 
+    return (address >= 0x4300 && address < 0x4800) ||
            (address >= 0x4600 && address < 0x4800);
 }
 

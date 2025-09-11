@@ -24,6 +24,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/starwars_hardware.cpp
+    src/cpu_6809.cpp
 )
 
 # Create executable
