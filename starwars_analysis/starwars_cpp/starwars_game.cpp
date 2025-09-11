@@ -252,6 +252,15 @@ void StarWarsGame::vector_graphics_control() {
     vector_subroutine_d91a();
     if (graphics) {
         graphics->update();
+        // TODO: Map AVG/Mathbox protocol to real vector ops.
+        // Temporary: interpret ADDR_MATH_PARAM_A/B as coarse XY to visualize flow.
+        uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
+        uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
+        int x = static_cast<int>(static_cast<int16_t>(pa));
+        int y = static_cast<int>(static_cast<int16_t>(pb));
+        // Scale down to console-friendly range
+        x >>= 4; y >>= 4;
+        graphics->add_vector(Vector(x, y, 1, 200));
     }
 }
 
