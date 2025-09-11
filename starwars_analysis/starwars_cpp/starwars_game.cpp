@@ -144,12 +144,15 @@ void StarWarsGame::stack_management() {
     // Push registers to stack
     memory.write_byte(game_state.stack_pointer--, game_state.accumulator_a);
     memory.write_byte(game_state.stack_pointer--, game_state.accumulator_b);
-    memory.write_byte(game_state.stack_pointer--, game_state.index_register_x >> 8);
-    memory.write_byte(game_state.stack_pointer--, game_state.index_register_x & 0xFF);
+    memory.write_byte(game_state.stack_pointer--, static_cast<uint8_t>(game_state.index_register_x >> 8));
+    memory.write_byte(game_state.stack_pointer--, static_cast<uint8_t>(game_state.index_register_x & 0xFF));
     
     // Restore registers from stack
-    game_state.index_register_x = (memory.read_byte(++game_state.stack_pointer) << 8) |
-                                  memory.read_byte(++game_state.stack_pointer);
+    ++game_state.stack_pointer; // high byte position
+    uint16_t high = memory.read_byte(game_state.stack_pointer);
+    ++game_state.stack_pointer; // low byte position
+    uint16_t low = memory.read_byte(game_state.stack_pointer);
+    game_state.index_register_x = static_cast<uint16_t>((high << 8) | low);
     game_state.accumulator_b = memory.read_byte(++game_state.stack_pointer);
     game_state.accumulator_a = memory.read_byte(++game_state.stack_pointer);
 }
