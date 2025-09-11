@@ -48,6 +48,24 @@ def create_memory_map():
         memory[0xA000:0xA000+len(text_rom)] = text_rom
         print(f"Loaded text ROM: {len(text_rom)} bytes at 0xA000")
     
+    # Load extended/banked ROMs into 0xC000-0xFFFF (best-effort mapping)
+    # NOTE: This is an approximation to enable analysis of addresses like $D91A.
+    # TODO: Verify exact bank mapping/order against Star Wars ROM schematics.
+    offset = 0xC000
+    ext_parts = [
+        '136021.203.1jk',  # 8KB
+        '136021.208',      # 8KB
+        '136021.214.1f'    # 16KB (if present, may overlap earlier mapping)
+    ]
+    for part in ext_parts:
+        if os.path.exists(part):
+            with open(part, 'rb') as f:
+                data = f.read()
+            end = min(0x10000, offset + len(data))
+            memory[offset:end] = data[:end - offset]
+            print(f"Loaded extended ROM chunk {part}: {len(data)} bytes at 0x{offset:04X}")
+            offset = end
+    
     return memory
 
 def create_individual_roms():
