@@ -6,6 +6,8 @@
 
 namespace StarWars {
 
+class VectorGraphics; // forward declaration
+
 // CPU/runtime state structure (renamed to avoid clash with StarWars::GameState enum)
 struct GameCpuState {
     uint8_t accumulator_a;
@@ -72,6 +74,7 @@ class StarWarsGame {
 private:
     GameCpuState game_state;
     GameMemory memory;
+    std::unique_ptr<VectorGraphics> graphics;
     
 public:
     StarWarsGame();

@@ -1,4 +1,5 @@
 #include "starwars_game.h"
+#include "vector_graphics.h"
 #include <iostream>
 #include <cstring>
 
@@ -9,6 +10,7 @@ StarWarsGame::StarWarsGame() {
     memset(&game_state, 0, sizeof(game_state));
     game_state.game_running = false;
     game_state.attract_mode = true;
+    graphics = std::make_unique<VectorGraphics>();
 }
 
 StarWarsGame::~StarWarsGame() {
@@ -23,6 +25,10 @@ void StarWarsGame::init() {
     
     // Initialize graphics
     graphics_initialization();
+    if (graphics) {
+        graphics->init();
+        graphics->go();
+    }
     
     // Set up initial game state
     game_state.score = 0;
@@ -70,6 +76,9 @@ void StarWarsGame::update() {
 void StarWarsGame::render() {
     // Render vector graphics
     vector_graphics_control();
+    if (graphics) {
+        graphics->render_frame();
+    }
 }
 
 // Converted from 6809 assembly at 0xf261
