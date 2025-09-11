@@ -108,6 +108,11 @@ void StarWarsGame::run_vector_test_d91a() {
         if (memory.read_byte(addr) == 0x00) ++zero_count;
     }
     std::cout << "[TEST] zeroed(stride=0x0E) in [0x49E2..0x4A52): " << zero_count << "/" << total << std::endl;
+    
+    auto read_word = [&](uint16_t a){ return static_cast<uint16_t>((memory.read_byte(a) << 8) | memory.read_byte(a+1)); };
+    std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(0x5022) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(0x5024) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(0x4701) << std::dec << std::endl;
 }
 
 uint32_t StarWarsGame::checksum_region(uint16_t start, uint16_t end) const {
@@ -262,6 +267,22 @@ void StarWarsGame::vector_subroutine_d91a() {
     for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
         memory.write_byte(addr, 0x00);
     }
+    
+    // TODO: Map these addresses to named registers/constants once hardware mapping is finalized.
+    // From enhanced disasm:
+    //   LDD #$14BD; STD $5022
+    //   LDD #$3C8C; STD $5024
+    //   LDD #$0018; STD $4701
+    // Then later:
+    //   LDD #$0590; STD $5022
+    //   LDD #$3FC2; STD $5024
+    //   LDD #$0018; STD $4701
+    memory.write_word(0x5022, 0x14BD);
+    memory.write_word(0x5024, 0x3C8C);
+    memory.write_word(0x4701, 0x0018);
+    memory.write_word(0x5022, 0x0590);
+    memory.write_word(0x5024, 0x3FC2);
+    memory.write_word(0x4701, 0x0018);
     
     // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
     // and conditionals affecting flow. These will be implemented as we translate
