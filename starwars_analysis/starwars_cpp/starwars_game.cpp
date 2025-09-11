@@ -226,6 +226,18 @@ void StarWarsGame::vector_subroutine_d91a() {
     // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
     // and conditionals affecting flow. These will be implemented as we translate
     // the full AVG instruction stream and hardware interactions.
+    rom_sub_cdb5();  // TODO: Translate $CDB5
+    rom_sub_cdba();  // TODO: Translate $CDBA
+}
+
+// TODO: Implement $CDB5 behavior
+void StarWarsGame::rom_sub_cdb5() {
+    // Placeholder: performs no operation for now
+}
+
+// TODO: Implement $CDBA behavior
+void StarWarsGame::rom_sub_cdba() {
+    // Placeholder: performs no operation for now
 }
 
 // Converted from 6809 assembly at 0xc6d4

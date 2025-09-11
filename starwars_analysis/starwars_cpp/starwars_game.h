@@ -88,6 +88,8 @@ public:
     void mathbox_interface();    // 0x6161 - Mathbox interface
     void vector_graphics_control(); // 0x62d5 - Vector graphics
     void vector_subroutine_d91a();  // 0xd91a - Vector subroutine (placeholder)
+    void rom_sub_cdb5();            // 0xCDB5 - ROM subroutine stub
+    void rom_sub_cdba();            // 0xCDBA - ROM subroutine stub
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     
