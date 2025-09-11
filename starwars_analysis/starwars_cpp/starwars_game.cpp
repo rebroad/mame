@@ -88,6 +88,10 @@ void StarWarsGame::render() {
 // Small, verifiable harness to exercise just the $D91A path and print observable effects.
 void StarWarsGame::run_vector_test_d91a() {
     // TODO: remove harness once full flow is implemented
+    // Prefill the suspected strided buffer with 0xFF to verify the zeroing effect
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        memory.write_byte(addr, 0xFF);
+    }
     vector_subroutine_d91a();
     if (graphics) {
         graphics->render_frame();
@@ -96,6 +100,14 @@ void StarWarsGame::run_vector_test_d91a() {
     std::cout << "[TEST] mem[0x49E2] = " << static_cast<int>(memory.read_byte(0x49E2)) << std::endl;
     // Also print checksum over a small region for determinism
     std::cout << "[TEST] cksum[0x49E0..0x49FF] = " << checksum_region(0x49E0, 0x49FF) << std::endl;
+    // Count zeroed entries across the strided range for an objective metric
+    int zero_count = 0;
+    int total = 0;
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        ++total;
+        if (memory.read_byte(addr) == 0x00) ++zero_count;
+    }
+    std::cout << "[TEST] zeroed(stride=0x0E) in [0x49E2..0x4A52): " << zero_count << "/" << total << std::endl;
 }
 
 uint32_t StarWarsGame::checksum_region(uint16_t start, uint16_t end) const {
@@ -243,6 +255,13 @@ void StarWarsGame::vector_subroutine_d91a() {
     // From disasm: "$D939: LDX #$49E2; $D93C: LDA #$00; $D93E: STA ,X"
     // Store 0 at memory 0x49E2 as per ROM behavior.
     memory.write_byte(0x49E2, 0x00);
+    
+    // From pattern: 30 0E (LEAX $0E,X); 8C 4A 52 (CMPX #$4A52); 25 F5 (BCS back)
+    // Interpreted as: zero a strided buffer from 0x49E2 up to (but not including) 0x4A52, step 0x000E.
+    // TODO: Confirm exact stride and bounds against full 6809 spec and ROM flow.
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        memory.write_byte(addr, 0x00);
+    }
     
     // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
     // and conditionals affecting flow. These will be implemented as we translate
