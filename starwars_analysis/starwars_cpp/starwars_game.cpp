@@ -215,8 +215,17 @@ void StarWarsGame::vector_graphics_control() {
 void StarWarsGame::vector_subroutine_d91a() {
     if (!graphics) return;
     
-    // For authenticity, do nothing until we port the exact sequence.
-    // We'll keep this function as the integration point for the 0xd91a routine.
+    // TODO: Implement full translation of ROM subroutine at $D91A.
+    // See analysis in: starwars_analysis/rom_disasm_d91a.md
+
+    // Partial faithful translation of a small, self-contained block:
+    // From disasm: "$D939: LDX #$49E2; $D93C: LDA #$00; $D93E: STA ,X"
+    // Store 0 at memory 0x49E2 as per ROM behavior.
+    memory.write_byte(0x49E2, 0x00);
+    
+    // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
+    // and conditionals affecting flow. These will be implemented as we translate
+    // the full AVG instruction stream and hardware interactions.
 }
 
 // Converted from 6809 assembly at 0xc6d4
