@@ -87,6 +87,7 @@ public:
     void stack_management();     // 0x70db - Stack management
     void mathbox_interface();    // 0x6161 - Mathbox interface
     void vector_graphics_control(); // 0x62d5 - Vector graphics
+    void vector_subroutine_d91a();  // 0xd91a - Vector subroutine (placeholder)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     
