@@ -188,6 +188,8 @@ void StarWarsGame::mathbox_interface() {
     // Read results
     uint8_t result1 = memory.read_byte(0x5001);
     uint8_t result2 = memory.read_byte(0x5002);
+    (void)result1; // TODO: Use Mathbox results when wiring real algorithms
+    (void)result2;
 }
 
 // Converted from 6809 assembly at 0x62d5
@@ -201,11 +203,20 @@ void StarWarsGame::vector_graphics_control() {
     memory.write_byte(0x4002, 0x00);  // Y coordinate
     memory.write_byte(0x4003, 0x00);  // Color/intensity
 
-    // Draw vectors
-    // This would interface with our VectorGraphics class
+    // Draw vectors via AVG-compatible subroutine (from ROM 0xd91a)
+    vector_subroutine_d91a();
     if (graphics) {
         graphics->update();
     }
+}
+
+// Placeholder faithful port of ROM subroutine at 0xd91a.
+// TODO: Replace with a real translation of the AVG sequence from ROM $D91A.
+void StarWarsGame::vector_subroutine_d91a() {
+    if (!graphics) return;
+    
+    // For authenticity, do nothing until we port the exact sequence.
+    // We'll keep this function as the integration point for the 0xd91a routine.
 }
 
 // Converted from 6809 assembly at 0xc6d4
