@@ -1,9 +1,9 @@
-wp 0x5022,1,w,1,{ printf "W 5022 %02X @%04X\n", wpdata, pc; }
-wp 0x5023,1,w,1,{ printf "W 5023 %02X @%04X\n", wpdata, pc; }
-wp 0x5024,1,w,1,{ printf "W 5024 %02X @%04X\n", wpdata, pc; }
-wp 0x5025,1,w,1,{ printf "W 5025 %02X @%04X\n", wpdata, pc; }
-wp 0x4600,1,w,1,{ printf "W 4600 %02X @%04X (AVG_GO)\n", wpdata, pc; }
-wp 0x4620,1,w,1,{ printf "W 4620 %02X @%04X (AVG_RESET)\n", wpdata, pc; }
-wp 0x4700,1,w,1,{ printf "W 4700 %02X @%04X (MATH)\n", wpdata, pc; }
-wp 0x4701,1,w,1,{ printf "W 4701 %02X @%04X (MATH)\n", wpdata, pc; }
+wp 0x5022,1,w,1,{ printf "W 5022 %02X @%04X\n", wpdata, pc; g }
+wp 0x5023,1,w,1,{ printf "W 5023 %02X @%04X\n", wpdata, pc; g }
+wp 0x5024,1,w,1,{ printf "W 5024 %02X @%04X\n", wpdata, pc; g }
+wp 0x5025,1,w,1,{ printf "W 5025 %02X @%04X\n", wpdata, pc; g }
+wp 0x4600,1,w,1,{ printf "W 4600 %02X @%04X (AVG_GO)\n", wpdata, pc; g }
+wp 0x4620,1,w,1,{ printf "W 4620 %02X @%04X (AVG_RESET)\n", wpdata, pc; g }
+wp 0x4700,1,w,1,{ printf "W 4700 %02X @%04X (MATH)\n", wpdata, pc; g }
+wp 0x4701,1,w,1,{ printf "W 4701 %02X @%04X (MATH)\n", wpdata, pc; g }
 g
