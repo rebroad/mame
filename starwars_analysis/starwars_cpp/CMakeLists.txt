@@ -23,6 +23,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # Source files
 set(SOURCES
     main.cpp
+    starwars_game.cpp
     starwars.cpp
     mathbox.cpp
     memory_manager.cpp
