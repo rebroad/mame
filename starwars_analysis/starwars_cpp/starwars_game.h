@@ -75,6 +75,9 @@ private:
     GameCpuState game_state;
     GameMemory memory;
     std::unique_ptr<VectorGraphics> graphics;
+    // TODO: Remove once real AVG interpreter is in place
+    uint16_t last_param_a = 0;
+    uint16_t last_param_b = 0;
     
 public:
     StarWarsGame();
