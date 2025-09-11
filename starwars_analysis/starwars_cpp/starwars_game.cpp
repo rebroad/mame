@@ -359,6 +359,37 @@ void StarWarsGame::vector_subroutine_d91a() {
         write_dp(0x03, dp03);
     }
 
+    // FROM DISASSEMBLY: 0x6091..0x60B5 – comparisons and best-candidate update
+    {
+        auto read_dp = [&](uint8_t dp) -> uint16_t {
+            return static_cast<uint16_t>((memory.read_byte(dp) << 8) | memory.read_byte(dp + 1));
+        };
+        auto write_dp = [&](uint8_t dp, uint16_t val) {
+            memory.write_byte(dp, static_cast<uint8_t>(val >> 8));
+            memory.write_byte(dp + 1, static_cast<uint8_t>(val & 0xFF));
+        };
+        int16_t cmp1 = static_cast<int16_t>(read_dp(0x05)) - static_cast<int16_t>(read_dp(0x01));
+        if (cmp1 <= 0) {
+            int16_t cmp2 = static_cast<int16_t>(read_dp(0x07)) - static_cast<int16_t>(read_dp(0x01));
+            if (cmp2 <= 0) {
+                uint16_t dp01 = read_dp(0x01);
+                uint16_t tmp = static_cast<uint16_t>((dp01 >> 1) + dp01);
+                int16_t cmp3 = static_cast<int16_t>(tmp) - static_cast<int16_t>(read_dp(0x03));
+                if (cmp3 >= 0) {
+                    uint16_t v5018 = memory.read_word(0x5018);
+                    if (static_cast<int16_t>(v5018) > static_cast<int16_t>(read_dp(0xC4))) {
+                        write_dp(0xC4, v5018);
+                        write_dp(0xC2, read_dp(0x64)); // <$C2 = <$64
+                    }
+                }
+            }
+        }
+    }
+
+    // FROM DISASSEMBLY: 0x60B5..0x60CF – conditional flagging via X
+    // TODO: Implement X = <$64; if (mem[X+3]==1) then mem[X+0x15] |= 0x0008
+    // Deferred until we model the object list referenced by <$64.
+
     // Next loop: $D98B..$D9A8 – decrement elements across stride until zero
     // Pseudocode per disasm:
     //   X = 0x49E2
@@ -390,6 +421,16 @@ void StarWarsGame::vector_subroutine_d91a() {
     if (any_nonzero) {
         rom_jump_b95c(); // TODO: translate $B95C real behavior
     }
+
+    // NEW TEMPORARY/TEST CODE: create visible param variance tied to <$01 for placeholder AVG
+    // TODO: Remove when faithful AVG interpreter is in place.
+    uint16_t dp01_now = static_cast<uint16_t>((memory.read_byte(0x01) << 8) | memory.read_byte(0x02));
+    memory.write_word(ADDR_MATH_PARAM_A, static_cast<uint16_t>(0x0590 + (dp01_now & 0x003F)));
+    memory.write_word(ADDR_MATH_PARAM_B, static_cast<uint16_t>(0x3FC2 + ((dp01_now >> 1) & 0x003F)));
+    uint16_t trig = static_cast<uint16_t>(0x0018 ^ (dp01_now & 0x0001));
+    memory.write_word(ADDR_AVG_PARAM, trig);
+    avg_trigger(trig);
+    trace_params("d91a_var");
 }
 
 // NEW TEMPORARY/TEST CODE (not from ROM): record writes to AVG control ($4701)
