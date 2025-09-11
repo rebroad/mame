@@ -119,6 +119,9 @@ public:
     void rom_sub_70cc();            // 0x70CC - ROM subroutine stub (TODO)
     void rom_sub_cd14();            // 0xCD14 - ROM subroutine stub (TODO)
     void rom_sub_cd2c();            // 0xCD2C - ROM subroutine stub (TODO)
+    void rom_sub_bd5d();            // 0xBD5D - ROM subroutine stub (TODO)
+    void rom_sub_bd2b();            // 0xBD2B - ROM subroutine stub (TODO)
+    void rom_sub_bd1c();            // 0xBD1C - ROM subroutine stub (TODO)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     

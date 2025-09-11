@@ -1,0 +1,4 @@
+wp w,0x5022,2,1,{ printf "W 5022 %04X @%s\n",wpdata,device.pc; }
+wp w,0x5024,2,1,{ printf "W 5024 %04X @%s\n",wpdata,device.pc; }
+wp w,0x4701,2,1,{ printf "W 4701 %04X @%s\n",wpdata,device.pc; }
+g

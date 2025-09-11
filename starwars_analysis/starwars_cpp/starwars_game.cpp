@@ -359,6 +359,27 @@ void StarWarsGame::vector_subroutine_d91a() {
         write_dp(0x03, dp03);
     }
 
+    // FROM DISASSEMBLY: 0x6040..0x6058 – conditional JSRS based on $4B14 LSR and $4703 sign
+    //   INC $4B3B; LDA $4B14; LSRA; if carry then JSR $BD1C else { if $4703 < 0 then JSR $BD5D else JSR $BD2B }
+    {
+        uint8_t a4b3b = memory.read_byte(0x4B3B);
+        memory.write_byte(0x4B3B, static_cast<uint8_t>(a4b3b + 1));
+        uint8_t a4b14 = memory.read_byte(0x4B14);
+        bool carry = (a4b14 & 0x01) != 0;
+        a4b14 >>= 1;
+        memory.write_byte(0x4B14, a4b14);
+        if (carry) {
+            rom_sub_bd1c();
+        } else {
+            int8_t s4703 = static_cast<int8_t>(memory.read_byte(0x4703));
+            if (s4703 < 0) {
+                rom_sub_bd5d();
+            } else {
+                rom_sub_bd2b();
+            }
+        }
+    }
+
     // FROM DISASSEMBLY: 0x6091..0x60B5 – comparisons and best-candidate update
     {
         auto read_dp = [&](uint8_t dp) -> uint16_t {
@@ -615,6 +636,21 @@ void StarWarsGame::rom_sub_cd14() {
 
 // TODO: Implement $CD2C behavior (referenced near 0x60E5)
 void StarWarsGame::rom_sub_cd2c() {
+    // Placeholder: performs no operation for now
+}
+
+// TODO: Implement $BD5D behavior (referenced near 0x604B)
+void StarWarsGame::rom_sub_bd5d() {
+    // Placeholder: performs no operation for now
+}
+
+// TODO: Implement $BD2B behavior (referenced near 0x6050)
+void StarWarsGame::rom_sub_bd2b() {
+    // Placeholder: performs no operation for now
+}
+
+// TODO: Implement $BD1C behavior (referenced near 0x6055)
+void StarWarsGame::rom_sub_bd1c() {
     // Placeholder: performs no operation for now
 }
 
