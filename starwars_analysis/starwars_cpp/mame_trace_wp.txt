@@ -1,4 +1,10 @@
-wp w,0x5022,2,1,{ printf "W 5022 %04X @%s\n",wpdata,device.pc; }
-wp w,0x5024,2,1,{ printf "W 5024 %04X @%s\n",wpdata,device.pc; }
-wp w,0x4701,2,1,{ printf "W 4701 %04X @%s\n",wpdata,device.pc; }
+wp 0x5022,1,w,1,{ printf "W 5022 %02X @%04X\n", wpdata, pc; }
+wp 0x5023,1,w,1,{ printf "W 5023 %02X @%04X\n", wpdata, pc; }
+
+wp 0x5024,1,w,1,{ printf "W 5024 %02X @%04X\n", wpdata, pc; }
+wp 0x5025,1,w,1,{ printf "W 5025 %02X @%04X\n", wpdata, pc; }
+
+wp 0x4701,1,w,1,{ printf "W 4701 %02X @%04X\n", wpdata, pc; }
+wp 0x4702,1,w,1,{ printf "W 4702 %02X @%04X\n", wpdata, pc; }
+
 g
