@@ -114,7 +114,7 @@ void StarWarsGame::run_vector_test_d91a() {
     auto read_word = [&](uint16_t a){ return static_cast<uint16_t>((memory.read_byte(a) << 8) | memory.read_byte(a+1)); };
     std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_A) << std::dec << std::endl;
     std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_B) << std::dec << std::endl;
-    std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(ADDR_AVG_PARAM) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x4600..0x4601] = 0x" << std::hex << read_word(ADDR_AVG_GO) << std::dec << std::endl;
 
     // After the decrement loop, count nonzero residues to verify branch coverage
     int nonzero = 0;
@@ -260,7 +260,7 @@ void StarWarsGame::vector_graphics_control() {
         // Minimal placeholder: treat write to $4701 as an "emit" trigger using current params at $5022/$5024.
         uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
         uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
-        uint16_t dc = (memory.read_byte(ADDR_AVG_PARAM) << 8) | memory.read_byte(ADDR_AVG_PARAM + 1);
+        uint16_t dc = (memory.read_byte(ADDR_AVG_GO) << 8) | memory.read_byte(ADDR_AVG_GO + 1);
         if (dc != last_div_ctrl) {
             last_div_ctrl = dc;
             avg_trigger(dc); // TEMP: count triggers
@@ -308,12 +308,12 @@ void StarWarsGame::vector_subroutine_d91a() {
     //   LDD #$0018; STD $4701
     memory.write_word(ADDR_MATH_PARAM_A, 0x14BD);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3C8C);
-    memory.write_word(ADDR_AVG_PARAM,    0x0018);
+    memory.write_word(ADDR_AVG_GO,       0x0018);
     avg_trigger(0x0018); // TEMP: note AVG write seen
     trace_params("d91a_a");
     memory.write_word(ADDR_MATH_PARAM_A, 0x0590);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3FC2);
-    memory.write_word(ADDR_AVG_PARAM,    0x0018);
+    memory.write_word(ADDR_AVG_GO,       0x0018);
     avg_trigger(0x0018); // TEMP: note AVG write seen
     trace_params("d91a_b");
 
@@ -475,7 +475,7 @@ void StarWarsGame::vector_subroutine_d91a() {
         avg_std_ypp(tword);
         memory.write_word(ADDR_MATH_PARAM_A, tword);
         memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
-        memory.write_word(ADDR_AVG_PARAM, 0x0018);
+        memory.write_word(ADDR_AVG_GO, 0x0018);
         avg_trigger(0x0018);
         trace_params("d91a_tbl1");
 
@@ -493,7 +493,7 @@ void StarWarsGame::vector_subroutine_d91a() {
         avg_std_ypp(0x8040);
         memory.write_word(ADDR_MATH_PARAM_A, 0x8040);
         memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
-        memory.write_word(ADDR_AVG_PARAM, 0x0018);
+        memory.write_word(ADDR_AVG_GO, 0x0018);
         avg_trigger(0x0018);
         trace_params("d91a_tbl2");
     }
@@ -504,7 +504,7 @@ void StarWarsGame::vector_subroutine_d91a() {
     memory.write_word(ADDR_MATH_PARAM_A, static_cast<uint16_t>(0x0590 + (dp01_now & 0x003F)));
     memory.write_word(ADDR_MATH_PARAM_B, static_cast<uint16_t>(0x3FC2 + ((dp01_now >> 1) & 0x003F)));
     uint16_t trig = static_cast<uint16_t>(0x0018 ^ (dp01_now & 0x0001));
-    memory.write_word(ADDR_AVG_PARAM, trig);
+    memory.write_word(ADDR_AVG_GO, trig);
     avg_trigger(trig);
     trace_params("d91a_var");
 }
@@ -530,7 +530,7 @@ void StarWarsGame::trace_params(const char* tag) {
     if (!trace_file.is_open()) return;
     uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
     uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
-    uint16_t av = (memory.read_byte(ADDR_AVG_PARAM) << 8) | memory.read_byte(ADDR_AVG_PARAM + 1);
+    uint16_t av = (memory.read_byte(ADDR_AVG_GO) << 8) | memory.read_byte(ADDR_AVG_GO + 1);
     trace_file << game_state.score /* TEMP use score as frame counter placeholder */
                << "," << tag
                << "," << pa
