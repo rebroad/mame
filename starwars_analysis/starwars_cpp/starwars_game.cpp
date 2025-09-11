@@ -113,6 +113,13 @@ void StarWarsGame::run_vector_test_d91a() {
     std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_A) << std::dec << std::endl;
     std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_B) << std::dec << std::endl;
     std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(ADDR_AVG_PARAM) << std::dec << std::endl;
+    
+    // After the decrement loop, count nonzero residues to verify branch coverage
+    int nonzero = 0;
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        if (memory.read_byte(addr) != 0) ++nonzero;
+    }
+    std::cout << "[TEST] nonzero after dec loop: " << nonzero << "/" << total << std::endl;
 }
 
 uint32_t StarWarsGame::checksum_region(uint16_t start, uint16_t end) const {
@@ -289,6 +296,24 @@ void StarWarsGame::vector_subroutine_d91a() {
     // the full AVG instruction stream and hardware interactions.
     rom_sub_cdb5();  // TODO: Translate $CDB5
     rom_sub_cdba();  // TODO: Translate $CDBA
+
+    // Next loop: $D98B..$D9A8 – decrement elements across stride until zero
+    // Pseudocode per disasm:
+    //   X = 0x49E2
+    //   do {
+    //     A = mem[X]
+    //     if (A != 0) {
+    //       mem[X]--
+    //       // various flags/branches elided for now
+    //     }
+    //     X += 0x0E
+    //   } while (X < 0x4A52)
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        uint8_t v = memory.read_byte(addr);
+        if (v != 0) {
+            memory.write_byte(addr, static_cast<uint8_t>(v - 1));
+        }
+    }
 }
 
 // TODO: Implement $CDB5 behavior
@@ -299,6 +324,11 @@ void StarWarsGame::rom_sub_cdb5() {
 // TODO: Implement $CDBA behavior
 void StarWarsGame::rom_sub_cdba() {
     // Placeholder: performs no operation for now
+}
+
+// TODO: Implement JSR ,X equivalent (indirect through X)
+void StarWarsGame::rom_sub_indirect_at_x(uint16_t addr) {
+    (void)addr; // TODO - resolve when X is modeled and code pointers known
 }
 
 // Converted from 6809 assembly at 0xc6d4
