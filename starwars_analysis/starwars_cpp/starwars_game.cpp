@@ -422,6 +422,48 @@ void StarWarsGame::vector_subroutine_d91a() {
         rom_jump_b95c(); // TODO: translate $B95C real behavior
     }
 
+    // FROM DISASSEMBLY: 0x60CF..0x60ED – table fetch via U/Y++, JSRs, and STD ,Y++ of #$8040
+    //   X = <$64
+    //   B = mem[X+6]
+    //   U = #$7A08; ASLB; D = [U + B]; STD ,Y++
+    //   LDA #$40; JSR $CDBA
+    //   LDB $4,X; JSR $CD14; JSR $CD2C
+    //   LDD #$8040; STD ,Y++
+    // TODO: We do not yet model Y-based AVG buffer writes; emit placeholders via AVG params/trigger for visibility.
+    {
+        auto read_dp = [&](uint8_t dp) -> uint16_t {
+            return static_cast<uint16_t>((memory.read_byte(dp) << 8) | memory.read_byte(dp + 1));
+        };
+        uint16_t xptr = read_dp(0x64);
+        uint8_t b_val = memory.read_byte(static_cast<uint16_t>(xptr + 6));
+        uint16_t ubase = 0x7A08;
+        uint16_t taddr = static_cast<uint16_t>(ubase + static_cast<uint16_t>(b_val) * 2);
+        uint16_t tword = memory.read_word(taddr);
+        // Placeholder for "STD ,Y++": reflect tword in AVG params and trigger
+        memory.write_word(ADDR_MATH_PARAM_A, tword);
+        memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
+        memory.write_word(ADDR_AVG_PARAM, 0x0018);
+        avg_trigger(0x0018);
+        trace_params("d91a_tbl1");
+
+        // LDA #$40; JSR $CDBA
+        memory.write_byte(0x0000, 0x40);
+        rom_sub_cdba();
+
+        // LDB $4,X; JSR $CD14; JSR $CD2C
+        uint8_t b2 = memory.read_byte(static_cast<uint16_t>(xptr + 4));
+        (void)b2; // TODO: pass/register semantics for B when stubs are implemented
+        rom_sub_cd14();
+        rom_sub_cd2c();
+
+        // LDD #$8040; STD ,Y++  (emit second placeholder segment)
+        memory.write_word(ADDR_MATH_PARAM_A, 0x8040);
+        memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
+        memory.write_word(ADDR_AVG_PARAM, 0x0018);
+        avg_trigger(0x0018);
+        trace_params("d91a_tbl2");
+    }
+
     // NEW TEMPORARY/TEST CODE: create visible param variance tied to <$01 for placeholder AVG
     // TODO: Remove when faithful AVG interpreter is in place.
     uint16_t dp01_now = static_cast<uint16_t>((memory.read_byte(0x01) << 8) | memory.read_byte(0x02));
@@ -545,6 +587,16 @@ void StarWarsGame::rom_sub_70bd() {
 }
 void StarWarsGame::rom_sub_70cc() {
     // TODO: translate 70CC effects
+}
+
+// TODO: Implement $CD14 behavior (referenced near 0x60E2)
+void StarWarsGame::rom_sub_cd14() {
+    // Placeholder: performs no operation for now
+}
+
+// TODO: Implement $CD2C behavior (referenced near 0x60E5)
+void StarWarsGame::rom_sub_cd2c() {
+    // Placeholder: performs no operation for now
 }
 
 // Converted from 6809 assembly at 0xc6d4
