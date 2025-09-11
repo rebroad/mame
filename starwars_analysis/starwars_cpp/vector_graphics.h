@@ -109,6 +109,8 @@ private:
     
     // Simulation functions
     void simulate_vector_generation();
+
+public:
     void update_avg_params(uint16_t pa, uint16_t pb, uint16_t avg_go);
 };
 
