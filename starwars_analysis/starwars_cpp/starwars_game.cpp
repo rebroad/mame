@@ -232,6 +232,9 @@ void StarWarsGame::vector_graphics_control() {
 
     // Draw vectors
     // This would interface with our VectorGraphics class
+    if (graphics) {
+        graphics->update();
+    }
 }
 
 // Converted from 6809 assembly at 0xc6d4
