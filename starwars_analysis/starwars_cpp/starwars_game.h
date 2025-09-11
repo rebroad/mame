@@ -129,6 +129,9 @@ public:
     void rom_sub_bd5d();            // 0xBD5D - ROM subroutine stub (TODO)
     void rom_sub_bd2b();            // 0xBD2B - ROM subroutine stub (TODO)
     void rom_sub_bd1c();            // 0xBD1C - ROM subroutine stub (TODO)
+    void rom_sub_6112();            // 0x6112 - ROM subroutine (FROM DISASSEMBLY)
+    void rom_sub_62d5();            // 0x62D5 - ROM subroutine (FROM DISASSEMBLY)
+    void rom_sub_6368();            // 0x6368 - ROM subroutine (FROM DISASSEMBLY)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
 
