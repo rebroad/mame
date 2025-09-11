@@ -2,6 +2,7 @@
 #include "vector_graphics.h"
 #include <iostream>
 #include <cstring>
+#include <cmath>
 
 namespace StarWars {
 
