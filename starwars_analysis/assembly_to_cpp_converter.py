@@ -71,6 +71,22 @@ class AssemblyToCppConverter:
             0x9F: ('STX', 'DIRECT', 2),         # STX $xx
             0xAF: ('STX', 'INDEXED', 2),        # STX ,X
             0xBF: ('STX', 'EXTENDED', 3),       # STX $xxxx
+            # 16-bit D register operations
+            0xCC: ('LDD', 'IMMEDIATE', 3),      # LDD #$xxxx
+            0xDC: ('LDD', 'DIRECT', 2),         # LDD $xx
+            0xEC: ('LDD', 'INDEXED_POST', 2),   # LDD <post>,indexed
+            0xFC: ('LDD', 'EXTENDED', 3),       # LDD $xxxx
+            0xDD: ('STD', 'DIRECT', 2),         # STD $xx
+            0xED: ('STD', 'INDEXED_POST', 2),   # STD <post>,indexed
+            0xFD: ('STD', 'EXTENDED', 3),       # STD $xxxx
+            0xC3: ('ADDD', 'IMMEDIATE', 3),     # ADDD #$xxxx
+            0xD3: ('ADDD', 'DIRECT', 2),        # ADDD $xx
+            0xE3: ('ADDD', 'INDEXED_POST', 2),  # ADDD <post>,indexed
+            0xF3: ('ADDD', 'EXTENDED', 3),      # ADDD $xxxx
+            0x83: ('SUBD', 'IMMEDIATE', 3),     # SUBD #$xxxx
+            0x93: ('SUBD', 'DIRECT', 2),        # SUBD $xx
+            0xA3: ('SUBD', 'INDEXED_POST', 2),  # SUBD <post>,indexed
+            0xB3: ('SUBD', 'EXTENDED', 3),      # SUBD $xxxx
             0x30: ('LEAX', 'INDEXED_POST', 2),  # LEAX <postbyte>
             0x31: ('LEAY', 'INDEXED_POST', 2),  # LEAY <postbyte>
             0x32: ('LEAS', 'INDEXED_POST', 2),  # LEAS <postbyte>
@@ -201,6 +217,10 @@ class AssemblyToCppConverter:
                 0x8E: 3, 0x8C: 3, 0x9E: 2, 0xAE: 2, 0xBE: 3,
                 0x9F: 2, 0xAF: 2, 0xBF: 3,
                 0x30: 2, 0x31: 2, 0x32: 2, 0x33: 2,
+                0xCC: 3, 0xDC: 2, 0xEC: 2, 0xFC: 3,
+                0xDD: 2, 0xED: 2, 0xFD: 3,
+                0xC3: 3, 0xD3: 2, 0xE3: 2, 0xF3: 3,
+                0x83: 3, 0x93: 2, 0xA3: 2, 0xB3: 3,
                 0x4F: 1, 0x5F: 1, 0x0F: 2, 0x6F: 2, 0x7F: 3,
                 0x4C: 1, 0x5C: 1, 0x0C: 2, 0x6C: 2, 0x7C: 3,
                 0x4A: 1, 0x5A: 1, 0x0A: 2, 0x6A: 2, 0x7A: 3,
