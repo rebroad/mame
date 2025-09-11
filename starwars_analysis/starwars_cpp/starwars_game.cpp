@@ -550,6 +550,7 @@ void StarWarsGame::trace_params(const char* tag) {
 
 // NEW: PC-tagged trace for alignment against MAME debug PCs
 void StarWarsGame::trace_params_pc(const char* tag, uint16_t pc_tag) {
+    (void)tag; // TODO: use tag in future if needed
     open_trace_if_needed();
     if (!trace_file.is_open()) return;
     uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);

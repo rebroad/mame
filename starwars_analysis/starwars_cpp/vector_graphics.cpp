@@ -1,6 +1,7 @@
 #include "vector_graphics.h"
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 
 namespace StarWars {
 
