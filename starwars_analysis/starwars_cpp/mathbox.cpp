@@ -268,18 +268,6 @@ void Mathbox::perform_division() {
     }
 }
 
-uint16_t Mathbox::read_math_ram(uint16_t address) {
-    if (address < math_ram.size()) {
-        return math_ram[address];
-    }
-    return 0;
-}
-
-void Mathbox::write_math_ram(uint16_t address, uint16_t data) {
-    if (address < math_ram.size()) {
-        math_ram[address] = data;
-    }
-}
 
 uint16_t Mathbox::construct_ram_address(uint8_t am, uint8_t mas) {
     if (am == 0) {

@@ -67,7 +67,7 @@ namespace InputBits {
     constexpr uint8_t SERVICE = 0x10;
     constexpr uint8_t BUTTON4 = 0x40;
     constexpr uint8_t BUTTON1 = 0x80;
-    
+
     constexpr uint8_t BUTTON3 = 0x10;
     constexpr uint8_t BUTTON2 = 0x20;
     constexpr uint8_t VG_HALT = 0x40;
@@ -91,18 +91,24 @@ namespace OutputBits {
 // 3D vector structure
 struct Vector3D {
     float x, y, z;
-    
-    Vector3D() : x(0), y(0), z(0) {}
-    Vector3D(float x, float y, float z) : x(x), y(y), z(z) {}
-    
+    uint8_t color;
+    uint8_t intensity;
+    bool opaque;
+    uint16_t object_id;
+
+    Vector3D() : x(0), y(0), z(0), color(0), intensity(0), opaque(true), object_id(0) {}
+    Vector3D(float x, float y, float z) : x(x), y(y), z(z), color(0), intensity(0), opaque(true), object_id(0) {}
+    Vector3D(float x, float y, float z, uint8_t c, uint8_t i, bool op = true, uint16_t id = 0)
+        : x(x), y(y), z(z), color(c), intensity(i), opaque(op), object_id(id) {}
+
     Vector3D operator+(const Vector3D& other) const {
         return Vector3D(x + other.x, y + other.y, z + other.z);
     }
-    
+
     Vector3D operator-(const Vector3D& other) const {
         return Vector3D(x - other.x, y - other.y, z - other.z);
     }
-    
+
     Vector3D operator*(float scalar) const {
         return Vector3D(x * scalar, y * scalar, z * scalar);
     }
@@ -111,7 +117,7 @@ struct Vector3D {
 // 3D matrix structure
 struct Matrix3D {
     float m[3][3];
-    
+
     Matrix3D() {
         // Initialize to identity matrix
         for (int i = 0; i < 3; i++) {
@@ -120,7 +126,7 @@ struct Matrix3D {
             }
         }
     }
-    
+
     Vector3D transform(const Vector3D& v) const {
         return Vector3D(
             m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
@@ -162,46 +168,46 @@ class StarWarsHardware {
 public:
     StarWarsHardware();
     ~StarWarsHardware();
-    
+
     // Initialization
     bool init();
     void reset();
     void shutdown();
-    
+
     // Main execution
     void run();
     void update();
     void render();
-    
+
     // Memory access
     uint8_t read_byte(uint16_t address);
     void write_byte(uint16_t address, uint8_t data);
     uint16_t read_word(uint16_t address);
     void write_word(uint16_t address, uint16_t data);
-    
+
     // I/O operations
     uint8_t read_input_port(uint16_t port);
     void write_output_port(uint16_t port, uint8_t data);
-    
+
     // Hardware control
     void irq_acknowledge();
     void watchdog_reset();
     void sound_reset();
     void avg_go();
     void avg_reset();
-    
+
     // Mathbox operations
     void mathbox_write(uint8_t offset, uint8_t data);
     uint8_t mathbox_read(uint8_t offset);
-    
+
     // Getters
     InputState get_input_state() const { return input_state; }
     GameState get_game_state() const { return current_state; }
     uint32_t get_frame_count() const { return frame_count; }
-    
+
     // Memory access (public for MemoryManager)
     uint8_t* get_memory_pointer(uint16_t address);
-    
+
 private:
     // Hardware components
     std::unique_ptr<MemoryManager> memory;
@@ -209,28 +215,28 @@ private:
     std::unique_ptr<VectorGraphics> graphics;
     std::unique_ptr<Mathbox> mathbox;
     std::unique_ptr<SoundSystem> sound;
-    
+
     // Memory arrays
     std::array<uint8_t, 0x3000> ram;
     std::array<uint8_t, 0x1000> vector_rom;
     std::array<uint8_t, 0x2000> math_ram;
     std::array<uint8_t, 0x10000> main_rom;
-    
+
     // System state
     InputState input_state;
     GameState current_state = GameState::ATTRACT;
     uint32_t frame_count = 0;
     float delta_time = 0.0f;
-    
+
     // Hardware flags
     bool irq_pending = false;
     bool math_run = false;
     uint16_t bank_select = 0;
-    
+
     // Timing
     uint64_t last_update_time = 0;
     uint64_t frame_start_time = 0;
-    
+
     // Internal methods
     void update_timing();
     void handle_interrupts();
@@ -238,7 +244,7 @@ private:
     void update_game_logic();
     void update_graphics();
     void update_sound();
-    
+
     // Memory mapping
     bool is_ram_address(uint16_t address);
     bool is_rom_address(uint16_t address);

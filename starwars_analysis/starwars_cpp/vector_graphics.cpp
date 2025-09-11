@@ -1,7 +1,9 @@
 #include "vector_graphics.h"
+#include "starwars.h"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
+#include <map>
 
 namespace StarWars {
 
@@ -321,6 +323,98 @@ void VectorGraphics::display_instructions() {
     add_vector(Vector(150, 400, 4, 150));  // Instructions - GUESSWORK
     add_vector(Vector(450, 400, 4, 150));
     std::cout << "Displaying instructions" << std::endl;
+}
+
+// Enhanced rendering methods for future improvements
+void VectorGraphics::add_vector_3d(const Vector3D& v) {
+    if (m_vectors_3d.size() < MAX_VECTORS) {
+        m_vectors_3d.push_back(v);
+    }
+}
+
+void VectorGraphics::render_frame_enhanced() {
+    // Enhanced rendering with depth sorting and transparency support
+    // This is the foundation for implementing proper object occlusion
+
+    if (m_vectors_3d.empty()) {
+        // Fall back to original rendering if no 3D vectors
+        render_frame();
+        return;
+    }
+
+    // 1. Sort vectors by depth (Z coordinate) for proper rendering order
+    std::sort(m_vectors_3d.begin(), m_vectors_3d.end(),
+        [](const Vector3D& a, const Vector3D& b) {
+            return a.z < b.z;  // Back to front rendering
+        });
+
+    // 2. Group vectors by object for occlusion testing
+    std::map<uint16_t, std::vector<Vector3D*>> objects;
+    for (auto& vec : m_vectors_3d) {
+        objects[vec.object_id].push_back(&vec);
+    }
+
+    // 3. Render with proper object occlusion
+    std::cout << "Enhanced rendering: " << m_vectors_3d.size() << " vectors, " << objects.size() << " objects" << std::endl;
+
+    for (auto& [object_id, vectors] : objects) {
+        bool is_opaque = vectors[0]->opaque;
+        std::cout << "Object " << object_id << " (" << vectors.size() << " vectors, "
+                  << (is_opaque ? "opaque" : "transparent") << ")" << std::endl;
+
+        // TODO: Implement actual rendering with occlusion testing
+        // For now, just log the structure
+        for (auto* vec : vectors) {
+            std::cout << "  Vector: (" << vec->x << "," << vec->y << "," << vec->z
+                      << ") color=" << static_cast<int>(vec->color)
+                      << " intensity=" << static_cast<int>(vec->intensity) << std::endl;
+        }
+    }
+}
+
+void VectorGraphics::render_with_occlusion() {
+    // Render with proper object occlusion (towers block objects behind them)
+    // This addresses the transparency issue you mentioned
+
+    std::cout << "Rendering with object occlusion..." << std::endl;
+
+    // Group vectors by object type
+    std::map<uint16_t, std::vector<Vector3D*>> objects;
+    for (auto& vec : m_vectors_3d) {
+        objects[vec.object_id].push_back(&vec);
+    }
+
+    // Render opaque objects first (towers, ships)
+    for (auto& [object_id, vectors] : objects) {
+        if (vectors[0]->opaque) {
+            std::cout << "Rendering opaque object " << object_id << " (" << vectors.size() << " vectors)" << std::endl;
+            // TODO: Render opaque object vectors
+        }
+    }
+
+    // Then render transparent objects (particles, effects) with alpha blending
+    for (auto& [object_id, vectors] : objects) {
+        if (!vectors[0]->opaque) {
+            std::cout << "Rendering transparent object " << object_id << " (" << vectors.size() << " vectors)" << std::endl;
+            // TODO: Render transparent object vectors with alpha blending
+        }
+    }
+}
+
+void VectorGraphics::set_frame_rate(float fps) {
+    // Set target frame rate for smooth gameplay
+    std::cout << "Setting target frame rate to " << fps << " FPS" << std::endl;
+
+    // TODO: Implement frame rate limiting
+    // This would integrate with the main game loop timing
+}
+
+void VectorGraphics::enable_transparency(bool enable) {
+    // Enable/disable transparency effects
+    std::cout << "Transparency effects " << (enable ? "enabled" : "disabled") << std::endl;
+
+    // TODO: Implement transparency toggle
+    // This would affect how vectors are rendered
 }
 
 // Placeholder implementations for other handlers

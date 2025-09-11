@@ -65,15 +65,9 @@ public:
 
     // High-level 3D math functions (reverse-engineered from microcode analysis)
     // These replace complex microcode sequences with understandable C++ functions
-    struct Vector3D {
-        float x, y, z;
-        Vector3D(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
-    };
+    // Note: Using Vector3D from starwars.h to avoid naming conflicts
 
-    struct Matrix3D {
-        float m[3][3];
-        Matrix3D() { memset(m, 0, sizeof(m)); }
-    };
+    // Note: Using Matrix3D from starwars.h to avoid naming conflicts
 
     // High-level math operations (replace microcode sequences)
     Vector3D transform_3d_point(const Vector3D& point, const Matrix3D& matrix);
@@ -115,8 +109,6 @@ private:
     void perform_division();
 
     // Helper methods
-    uint16_t read_math_ram(uint16_t address);
-    void write_math_ram(uint16_t address, uint16_t data);
     uint16_t construct_ram_address(uint8_t am, uint8_t mas);
 };
 

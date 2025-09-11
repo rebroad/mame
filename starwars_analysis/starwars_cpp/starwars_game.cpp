@@ -1,5 +1,6 @@
 #include "starwars_game.h"
 #include "vector_graphics.h"
+#include "mathbox.h"
 #include "starwars.h"
 #include <iostream>
 #include <cstring>
@@ -13,6 +14,7 @@ StarWarsGame::StarWarsGame() {
     game_state.game_running = false;
     game_state.attract_mode = true;
     graphics = std::make_unique<VectorGraphics>();
+    mathbox = std::make_unique<Mathbox>();
     // NEW TEMPORARY/TEST CODE: open trace lazily when first needed
 }
 
@@ -1018,6 +1020,24 @@ void StarWarsGame::execute_gameplay() {
 
     // Update frame counter
     game_state.score++;  // Using score as frame counter for now
+}
+
+void StarWarsGame::update_physics() {
+    // FROM DISASSEMBLY: Physics updates for game objects
+    // This would be implemented based on ROM physics routines
+
+    // TODO: Implement actual physics based on ROM analysis
+    // For now, just a placeholder
+    std::cout << "Physics update" << std::endl;
+}
+
+void StarWarsGame::update_game_objects() {
+    // FROM DISASSEMBLY: Update game objects (ships, enemies, towers, etc.)
+    // This would be implemented based on ROM object management routines
+
+    // TODO: Implement actual object updates based on ROM analysis
+    // For now, just a placeholder
+    std::cout << "Game objects update" << std::endl;
 }
 
 void StarWarsGame::execute_paused_state() {

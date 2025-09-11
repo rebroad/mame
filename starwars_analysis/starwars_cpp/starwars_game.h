@@ -8,6 +8,7 @@
 namespace StarWars {
 
 class VectorGraphics; // forward declaration
+class Mathbox; // forward declaration
 
 // CPU/runtime state structure (renamed to avoid clash with StarWars::GameState enum)
 struct GameCpuState {
@@ -76,6 +77,7 @@ private:
     GameCpuState game_state;
     GameMemory memory;
     std::unique_ptr<VectorGraphics> graphics;
+    std::unique_ptr<Mathbox> mathbox;
     // TODO: Remove once real AVG interpreter is in place
     uint16_t last_param_a = 0;
     uint16_t last_param_b = 0;
@@ -147,10 +149,13 @@ private:
     void execute_attract_mode();
     void execute_gameplay();
     void execute_paused_state();
+    void update_physics();
+    void update_game_objects();
     uint32_t get_next_level_threshold();
     void reset_level_state();
     void run_attract_sequence(uint8_t sequence);
 
+public:
     // Test harnesses for verifiable progress
     void run_vector_test_d91a();
     uint32_t checksum_region(uint16_t start, uint16_t end) const;
