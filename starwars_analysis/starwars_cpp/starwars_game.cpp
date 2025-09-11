@@ -85,6 +85,17 @@ void StarWarsGame::render() {
     }
 }
 
+// Small, verifiable harness to exercise just the $D91A path and print observable effects.
+void StarWarsGame::run_vector_test_d91a() {
+    // TODO: remove harness once full flow is implemented
+    vector_subroutine_d91a();
+    if (graphics) {
+        graphics->render_frame();
+    }
+    // Print key memory location modified by $D91A fragment
+    std::cout << "[TEST] mem[0x49E2] = " << static_cast<int>(memory.read_byte(0x49E2)) << std::endl;
+}
+
 // Converted from 6809 assembly at 0xf261
 void StarWarsGame::main_entry() {
     std::cout << "Main entry point (0xf261) - Initializing hardware..." << std::endl;

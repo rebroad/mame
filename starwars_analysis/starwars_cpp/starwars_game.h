@@ -98,6 +98,9 @@ public:
     void reset();
     void update();
     void render();
+
+    // Test harnesses for verifiable progress
+    void run_vector_test_d91a();
     
     // Input handling
     void handle_input();
