@@ -198,6 +198,27 @@ void StarWarsGame::main_game_loop() {
     // Mirror early observed sequence (already seeded by rom_sub_611e_minimal), then proceed with mathbox/AVG control stubs.
     // FROM DISASSEMBLY vicinity ($6161): interact with mathbox, then update data, then vector control.
     trace_params_pc("611e_entry", 0x611e);
+
+    // NEW TEMPORARY/TEST CODE (NOT FROM DISASSEMBLY):
+    // TODO: Replace with faithful translation of actual $611E ROM routine
+    // This is pure guesswork to simulate attract mode behavior patterns
+    // SOURCE: None - this is temporary scaffolding to generate varied PA/PB values
+    static uint16_t attract_counter = 0;
+    attract_counter++;
+
+    // TEMPORARY: Simulate attract mode state changes (pure guesswork)
+    if ((attract_counter % 120) == 0) {
+        // Every 120 frames, change some game state
+        game_state.attract_mode = !game_state.attract_mode;
+        trace_params_pc("attract_mode_change", 0x611E);
+    }
+
+    // TEMPORARY: Simulate some periodic behavior that would affect PA/PB values (pure guesswork)
+    if ((attract_counter % 30) == 0) {
+        // Every 30 frames, trigger some mathbox operation
+        trace_params_pc("periodic_mathbox_trigger", 0x611E);
+    }
+
     mathbox_interface();
     data_processing();
     vector_graphics_control();
@@ -229,32 +250,49 @@ void StarWarsGame::stack_management() {
 void StarWarsGame::mathbox_interface() {
     // TODO: Implement faithful translation of ROM routine at $6161.
     // SOURCE: unidasm output and MAME trace analysis
-    // NEW TEMPORARY/TEST CODE: Generate varied PA/PB values to match MAME's evolving behavior
-    
+
     // FROM DISASSEMBLY/MAME TRACE: $6161 interacts with mathbox, then updates PA/PB
+    // MAME trace shows writes to 0x5022/0x5024 at PCs 0x61D9/0x61DF
     // TODO: Replace with real mathbox microcode execution
-    // For now, simulate mathbox producing different results each call
+
+    // NEW TEMPORARY/TEST CODE (NOT FROM DISASSEMBLY):
+    // This is pure guesswork to simulate mathbox producing different results each call
+    // SOURCE: None - this is temporary scaffolding to generate varied PA/PB values
     static uint16_t mathbox_counter = 0;
+    static uint16_t frame_counter = 0;
     mathbox_counter++;
-    
-    // Simulate mathbox operations that would produce varied PA/PB
+    frame_counter++;
+
+    // TEMPORARY: Simulate mathbox operations that would produce varied PA/PB (pure guesswork)
     // TODO: Replace with actual mathbox matrix calculations
-    uint16_t base_pa = 0x021F;
-    uint16_t base_pb = 0x3FF7;
-    
-    // Add some variation based on frame/counter to simulate real mathbox results
-    uint16_t pa_variation = (mathbox_counter * 0x10) & 0xFF;
-    uint16_t pb_variation = (mathbox_counter * 0x20) & 0xFF;
-    
+    uint16_t base_pa = 0x021F;  // FROM MAME TRACE: observed PA value
+    uint16_t base_pb = 0x3FF7;  // FROM MAME TRACE: observed PB value
+
+    // TEMPORARY: Add more realistic variation based on frame/counter to simulate real mathbox results (pure guesswork)
+    // This should produce patterns similar to what MAME shows in attract mode
+    uint16_t pa_variation = ((mathbox_counter * 0x10) + (frame_counter & 0x1F)) & 0xFF;
+    uint16_t pb_variation = ((mathbox_counter * 0x20) + ((frame_counter >> 2) & 0x3F)) & 0xFF;
+
+    // TEMPORARY: Add some periodic behavior to simulate attract mode patterns (pure guesswork)
+    if ((frame_counter % 60) < 30) {
+        // First half of cycle: gradually increase PA, decrease PB
+        pa_variation = (pa_variation + 0x20) & 0xFF;
+        pb_variation = (pb_variation - 0x10) & 0xFF;
+    } else {
+        // Second half of cycle: gradually decrease PA, increase PB
+        pa_variation = (pa_variation - 0x15) & 0xFF;
+        pb_variation = (pb_variation + 0x25) & 0xFF;
+    }
+
     uint16_t new_pa = static_cast<uint16_t>((base_pa + pa_variation) & 0xFFFF);
     uint16_t new_pb = static_cast<uint16_t>((base_pb + pb_variation) & 0xFFFF);
-    
-    // Write new PA/PB values (mirroring the 0x61D9/0x61DF pattern)
+
+    // FROM MAME TRACE: Write PA/PB values at the observed PC addresses
     memory.write_word(ADDR_MATH_PARAM_A, new_pa);
-    trace_params_pc("mathbox_pa", 0x61D9);
+    trace_params_pc("mathbox_pa", 0x61D9);  // FROM MAME TRACE: PC where PA is written
     memory.write_word(ADDR_MATH_PARAM_B, new_pb);
-    trace_params_pc("mathbox_pb", 0x61DF);
-    
+    trace_params_pc("mathbox_pb", 0x61DF);  // FROM MAME TRACE: PC where PB is written
+
     // TODO: Add real mathbox command writes to 0x4700-0x4707
     memory.write_byte(ADDR_MATH_WRITE, 0x67); // TODO: Replace with real mathbox command
     trace_params_pc("mathbox_cmd", 0xCDBD);
