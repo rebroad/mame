@@ -104,8 +104,12 @@ class AutomatedDisassembler:
     def validate_routine(self, file_path: Path):
         """Validate a disassembly file using our validation tool"""
         try:
+            # Get the directory of this script
+            script_dir = Path(__file__).parent
+            validation_script = script_dir / "validate_disassembly.py"
+            
             result = subprocess.run(
-                ["python3", "validate_disassembly.py", str(file_path)],
+                ["python3", str(validation_script), str(file_path)],
                 capture_output=True, text=True, check=True
             )
             print(f"Validation: {result.stdout.strip()}")
