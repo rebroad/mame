@@ -252,16 +252,19 @@ void StarWarsGame::vector_graphics_control() {
     vector_subroutine_d91a();
     if (graphics) {
         graphics->update();
-        // TODO: Map AVG/Mathbox protocol to real vector ops.
-        // Temporary: only emit when params change; clear per frame.
+        // TODO: Replace with faithful AVG interpreter.
+        // Minimal: treat write to DIV control as "emit" trigger with current params.
         uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
         uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
-        if (pa != last_param_a || pb != last_param_b) {
-            last_param_a = pa;
-            last_param_b = pb;
+        uint16_t dc = (memory.read_byte(ADDR_DIV_CONTROL) << 8) | memory.read_byte(ADDR_DIV_CONTROL + 1);
+
+        if (dc != last_div_ctrl) {
+            last_div_ctrl = dc;
             graphics->clear_vectors();
             int x = static_cast<int>(static_cast<int16_t>(pa)) >> 4;
             int y = static_cast<int>(static_cast<int16_t>(pb)) >> 4;
+            // Emit a short line from origin to (x,y) as a placeholder
+            graphics->add_vector(Vector(0, 0, 1, 200));
             graphics->add_vector(Vector(x, y, 1, 200));
         }
     }
