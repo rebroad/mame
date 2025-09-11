@@ -113,10 +113,12 @@ void VectorGraphics::render_frame() {
 }
 
 void VectorGraphics::go_w(uint8_t data) {
+    (void)data; // TODO: data semantics when wiring real AVG commands
     go();
 }
 
 void VectorGraphics::reset_w(uint8_t data) {
+    (void)data; // TODO: data semantics when wiring real AVG reset behavior
     reset();
 }
 
@@ -194,8 +196,8 @@ void VectorGraphics::vg_add_point_buf(int x, int y, uint8_t color, uint8_t inten
 }
 
 void VectorGraphics::apply_flipping(int& x, int& y) {
+    (void)x; (void)y; // TODO: implement flipping if hardware config requires it
     // Apply coordinate flipping (if enabled)
-    // For now, no flipping
 }
 
 void VectorGraphics::render_vectors_modern() {
