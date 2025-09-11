@@ -866,8 +866,8 @@ void StarWarsGame::rom_sub_62d5() {
 
     // FROM DISASSEMBLY: Calculate new value (lines 4-8)
     uint8_t difference = immediate_40 - val_at_x;  // FROM DISASSEMBLY: Subtract from X (line 4)
-    difference = difference >> 3;                   // FROM DISASSEMBLY: Three right shifts (lines 5-7)
-    difference++;                                   // FROM DISASSEMBLY: Increment (line 8)
+    difference = difference >> 3;                  // FROM DISASSEMBLY: Three right shifts (lines 5-7)
+    difference++;                                  // FROM DISASSEMBLY: Increment (line 8)
     uint8_t result = difference + val_at_x;        // FROM DISASSEMBLY: Add to X (line 9)
 
     std::cout << "62D5: Calculated result: " << std::hex << static_cast<int>(result) << std::endl;
