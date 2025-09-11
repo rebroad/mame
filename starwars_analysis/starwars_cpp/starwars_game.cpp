@@ -192,16 +192,18 @@ void StarWarsGame::hardware_io_handler() {
 
 // Converted from 6809 assembly at 0x611e
 void StarWarsGame::main_game_loop() {
-    // This is the main game loop - self-referencing in original
-    // Convert to modern game loop structure
+    // TODO: Implement faithful translation of ROM routine at $611E.
+    // SOURCE: unidasm output in starwars_analysis/rom_disasm_611e_unidasm.md
+    // NOTE: This routine forms the main game loop; in ROM it self-jumps (JMP $611E).
+    // NEW TEMPORARY/TEST CODE: Minimal scaffolding to mirror initial observed behavior and log PC-tagged params for alignment.
 
-    // Update game objects
-    // Process AI
-    // Handle collisions
-    // Update graphics
-
-    // In original: JMP $611e (infinite loop)
-    // In C++: This function is called from update() in a controlled loop
+    // Mirror early observed sequence (already seeded by rom_sub_611e_minimal), then proceed with mathbox/AVG control stubs.
+    // FROM DISASSEMBLY vicinity ($6161): interact with mathbox, then update data, then vector control.
+    trace_params_pc("611e_entry", 0x611e);
+    mathbox_interface();
+    data_processing();
+    vector_graphics_control();
+    trace_params_pc("611e_exit", 0x6124); // TODO: replace with actual flow PC once known
 }
 
 // Converted from 6809 assembly at 0x70db
@@ -550,14 +552,13 @@ void StarWarsGame::trace_params(const char* tag) {
 
 // NEW: PC-tagged trace for alignment against MAME debug PCs
 void StarWarsGame::trace_params_pc(const char* tag, uint16_t pc_tag) {
-    (void)tag; // TODO: use tag in future if needed
     open_trace_if_needed();
     if (!trace_file.is_open()) return;
     uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
     uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
     uint16_t av = (memory.read_byte(ADDR_AVG_GO) << 8) | memory.read_byte(ADDR_AVG_GO + 1);
     trace_file << game_state.score
-               << ",pc_" << std::hex << pc_tag << std::dec
+               << "," << tag << "_pc_" << std::hex << pc_tag << std::dec
                << "," << pa
                << "," << pb
                << "," << av
@@ -566,13 +567,15 @@ void StarWarsGame::trace_params_pc(const char* tag, uint16_t pc_tag) {
 
 // NEW TEMP: minimal $611E/$6161 alignment to match initial MAME parameters
 void StarWarsGame::rom_sub_611e_minimal() {
-    // FROM DISASSEMBLY/MAME TRACE: earliest AVG_GO has PA=0x021F, PB=0x3FF7, AVG_GO=0xC0
-    // NEW TEMPORARY/TEST CODE: seed parameters and emit one AVG_GO to align with MAME
+    // FROM DISASSEMBLY/MAME TRACE: sequence shows writes at PCs 0x61D9 (PA), 0x61DF (PB), then AVG_GO at 0xF12B
+    // NEW TEMPORARY/TEST CODE: mirror that ordering for alignment
     memory.write_word(ADDR_MATH_PARAM_A, 0x021F);
+    trace_params_pc("pre611e_pa", 0x61D9);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3FF7);
+    trace_params_pc("pre611e_pb", 0x61DF);
     memory.write_word(ADDR_AVG_GO, 0x00C0);
     avg_trigger(0x00C0);
-    trace_params_pc("pre611e", 0xF12B); // tag with observed PC for alignment
+    trace_params_pc("pre611e_go", 0xF12B); // tag with observed PC for alignment
 }
 
 // NEW TEMPORARY/TEST CODE: simulate "STD ,Y++" by recording words and advancing a pseudo Y
