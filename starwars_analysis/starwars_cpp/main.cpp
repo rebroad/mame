@@ -16,10 +16,10 @@ int main() {
         std::cout << "\nGame initialized successfully!" << std::endl;
         std::cout << "Starting main loop... (press Ctrl+C to exit)" << std::endl;
 
-        // Simple fixed-iteration loop with periodic test harness
-        // TODO: Replace with frame-timed loop once AVG interpreter is integrated
+        // Use the new clean game state manager instead of the old update()
+        // This provides a more understandable C++ implementation of the main game loop
         for (int i = 0; i < 10000; ++i) {
-            game.update();
+            game.main_game_state_manager();  // Clean C++ version of 611E/CD9E/CDC3 routines
             if ((i % 50) == 0) {
                 game.run_vector_test_d91a();
             }

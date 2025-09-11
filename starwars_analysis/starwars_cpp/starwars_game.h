@@ -17,25 +17,25 @@ struct GameCpuState {
     uint16_t index_register_y;
     uint16_t stack_pointer;
     uint16_t program_counter;
-    
+
     // CPU flags
     bool zero_flag;
     bool negative_flag;
     bool carry_flag;
     bool overflow_flag;
-    
+
     // Game variables
     uint32_t score;
     uint8_t shields;
     uint8_t lives;
     uint8_t wave;
     uint8_t level;
-    
+
     // Input state
     uint8_t player_input;
     uint8_t coin_input;
     uint8_t start_input;
-    
+
     // Game state
     bool game_running;
     bool game_paused;
@@ -46,24 +46,24 @@ struct GameCpuState {
 class GameMemory {
 private:
     std::vector<uint8_t> memory;
-    
+
 public:
     GameMemory() : memory(0x10000, 0) {}
-    
+
     uint8_t read_byte(uint16_t address) const {
         return (address < memory.size()) ? memory[address] : 0;
     }
-    
+
     void write_byte(uint16_t address, uint8_t value) {
         if (address < memory.size()) {
             memory[address] = value;
         }
     }
-    
+
     uint16_t read_word(uint16_t address) const {
         return (read_byte(address) << 8) | read_byte(address + 1);
     }
-    
+
     void write_word(uint16_t address, uint16_t value) {
         write_byte(address, value >> 8);
         write_byte(address + 1, value & 0xFF);
@@ -97,11 +97,11 @@ private:
     void avg_std_ypp(uint16_t value); // simulate STD ,Y++ by buffering 16-bit words
     bool did_pre611e = false; // NEW TEMP: run minimal $611E once for alignment
     void rom_sub_611e_minimal(); // NEW TEMP: minimal $611E/$6161 path for alignment
-    
+
 public:
     StarWarsGame();
     ~StarWarsGame();
-    
+
     // Main game functions (converted from 6809 assembly)
     void main_entry();           // 0xf261 - Main initialization
     void hardware_io_handler();  // 0xbd03 - I/O port handling
@@ -129,33 +129,46 @@ public:
     void rom_sub_bd1c();            // 0xBD1C - ROM subroutine stub (TODO)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
-    
+
     // Game control
     void init();
     void reset();
     void update();
     void render();
 
+    // Clean C++ game state management (replaces assembly routines)
+    void main_game_state_manager();  // Clean version of 611E/CD9E/CDC3 routines
+
+private:
+    // Helper methods for clean game state management
+    bool validate_game_state();
+    void handle_game_state_transitions();
+    void execute_game_logic();
+    void execute_attract_mode();
+    void execute_gameplay();
+    void execute_paused_state();
+    uint32_t get_next_level_threshold();
+    void reset_level_state();
+    void run_attract_sequence(uint8_t sequence);
+
     // Test harnesses for verifiable progress
     void run_vector_test_d91a();
-    
-private:
     uint32_t checksum_region(uint16_t start, uint16_t end) const;
-    
+
     // Input handling
     void handle_input();
     void process_controls();
-    
+
     // Game logic
     void update_game_state();
     void check_collisions();
     void update_score();
     void update_shields();
-    
+
     // Getters
     const GameCpuState& get_game_state() const { return game_state; }
     const GameMemory& get_memory() const { return memory; }
-    
+
 };
 
 } // namespace StarWars

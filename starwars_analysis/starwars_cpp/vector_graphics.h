@@ -112,6 +112,12 @@ private:
 
 public:
     void update_avg_params(uint16_t pa, uint16_t pb, uint16_t avg_go);
+    
+    // Attract mode display methods
+    void display_high_scores();
+    void display_title_screen();
+    void display_demo_sequence();
+    void display_instructions();
 };
 
 } // namespace StarWars
