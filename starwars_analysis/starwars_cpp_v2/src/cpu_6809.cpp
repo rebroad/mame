@@ -22,7 +22,7 @@ CPU6809::CPU6809()
 
 void CPU6809::reset() {
     std::cout << "Resetting 6809 CPU..." << std::endl;
-    
+
     // Reset registers to default values
     m_pc = 0;
     m_sp = 0x3000;  // Stack at top of RAM
@@ -34,10 +34,10 @@ void CPU6809::reset() {
     m_b = 0;
     m_dp = 0;
     m_cc = 0x50;    // Default condition codes
-    
+
     m_running = true;
     m_initialized = true;
-    
+
     std::cout << "6809 CPU reset complete" << std::endl;
 }
 
@@ -45,14 +45,14 @@ void CPU6809::step() {
     if (!m_running) {
         return;
     }
-    
+
     execute_instruction();
 }
 
 void CPU6809::execute_instruction() {
     // Fetch and decode instruction
     uint8_t opcode = fetch_byte();
-    
+
     // Simple instruction decoder for our validated routines
     switch (opcode) {
         case 0x7E: // JMP extended
@@ -61,35 +61,35 @@ void CPU6809::execute_instruction() {
                 execute_jmp(address);
             }
             break;
-            
+
         case 0xEF: // STU indexed
             {
                 uint8_t offset = fetch_byte();
                 execute_stu_indexed(offset);
             }
             break;
-            
+
         case 0x8E: // LDX immediate
             {
                 uint16_t value = fetch_word();
                 execute_ldx_immediate(value);
             }
             break;
-            
+
         case 0xCC: // LDD immediate
             {
                 uint16_t value = fetch_word();
                 execute_ldd_immediate(value);
             }
             break;
-            
+
         case 0x86: // LDA immediate
             {
                 uint8_t value = fetch_byte();
                 execute_lda_immediate(value);
             }
             break;
-            
+
         case 0x1F: // TFR
             {
                 uint8_t regs = fetch_byte();
@@ -99,42 +99,43 @@ void CPU6809::execute_instruction() {
                 }
             }
             break;
-            
+
         case 0x04: // LSR direct
             {
                 uint8_t address = fetch_byte();
                 execute_lsr_direct(address);
             }
             break;
-            
+
         case 0x24: // BCC
             {
                 uint8_t offset = fetch_byte();
                 execute_bcc(m_pc + static_cast<int8_t>(offset));
             }
             break;
-            
+
         case 0x11: // CMPS immediate
             {
                 uint16_t value = fetch_word();
                 execute_cmps_immediate(value);
             }
             break;
-            
+
         case 0x27: // BEQ
             {
                 uint8_t offset = fetch_byte();
                 execute_beq(m_pc + static_cast<int8_t>(offset));
             }
             break;
-            
+
         case 0x39: // RTS
             execute_rts();
             break;
-            
+
         default:
-            std::cout << "Unknown opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') 
+            std::cout << "Unknown opcode: 0x" << std::hex << std::setw(2) << std::setfill('0')
                       << static_cast<int>(opcode) << " at PC=0x" << std::setw(4) << (m_pc - 1) << std::endl;
+            std::cout << "CPU simulation stopped due to unknown instruction." << std::endl;
             m_running = false;
             break;
     }
@@ -142,6 +143,8 @@ void CPU6809::execute_instruction() {
 
 uint8_t CPU6809::fetch_byte() {
     uint8_t value = read_memory(m_pc);
+    std::cout << "Fetch byte at PC=0x" << std::hex << std::setw(4) << std::setfill('0')
+              << m_pc << " = 0x" << std::setw(2) << static_cast<int>(value) << std::endl;
     m_pc++;
     return value;
 }

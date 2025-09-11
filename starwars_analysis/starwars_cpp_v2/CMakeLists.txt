@@ -25,6 +25,7 @@ set(SOURCES
     src/main.cpp
     src/starwars_hardware.cpp
     src/cpu_6809.cpp
+    src/cpu_6809_hardware.cpp
 )
 
 # Create executable

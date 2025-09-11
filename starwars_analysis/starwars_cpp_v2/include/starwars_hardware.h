@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include "cpu_6809.h"
+#include "cpu_6809_hardware.h"
 
 namespace StarWars {
 
@@ -93,7 +93,7 @@ private:
     uint8_t m_cc;                // Condition codes
 
     // CPU simulation
-    std::unique_ptr<CPU6809> m_cpu;
+    std::unique_ptr<CPU6809Hardware> m_cpu;
 
     // Internal methods
     bool load_rom_files();

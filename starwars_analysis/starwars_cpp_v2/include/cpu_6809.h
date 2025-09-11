@@ -35,10 +35,10 @@ public:
     void set_cc(uint8_t cc) { m_cc = cc; }
 
     // Memory access (delegated to hardware)
-    virtual uint8_t read_memory(uint16_t address) = 0;
-    virtual void write_memory(uint16_t address, uint8_t value) = 0;
-    virtual uint16_t read_memory16(uint16_t address) = 0;
-    virtual void write_memory16(uint16_t address, uint16_t value) = 0;
+    virtual uint8_t read_memory(uint16_t /* address */) { return 0; }
+    virtual void write_memory(uint16_t /* address */, uint8_t /* value */) { }
+    virtual uint16_t read_memory16(uint16_t /* address */) { return 0; }
+    virtual void write_memory16(uint16_t /* address */, uint16_t /* value */) { }
 
     // Instruction execution
     void execute_instruction();

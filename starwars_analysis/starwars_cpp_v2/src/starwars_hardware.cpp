@@ -27,7 +27,7 @@ StarWarsHardware::StarWarsHardware()
     , m_sp(0)
     , m_dp(0)
     , m_cc(0)
-    , m_cpu(std::make_unique<CPU6809>())
+    , m_cpu(nullptr)  // Will be initialized in initialize()
 {
     // Initialize memory arrays to zero
     m_ram.fill(0);
@@ -51,6 +51,13 @@ bool StarWarsHardware::initialize() {
 
     // Setup I/O ports
     setup_io_ports();
+
+    // Initialize CPU simulation
+    m_cpu = std::make_unique<CPU6809Hardware>(this);
+    m_cpu->reset();
+
+    // Set PC to our validated main loop routine
+    m_cpu->set_pc(0xA261);
 
     // Reset system to known state
     reset_system();
@@ -99,6 +106,8 @@ uint8_t StarWarsHardware::read_memory(uint16_t address) {
     }
     else if (is_main_rom_address(address)) {
         uint16_t rom_addr = translate_rom_address(address);
+        std::cout << "ROM read: 6809 addr=0x" << std::hex << std::setw(4) << std::setfill('0')
+                  << address << " -> ROM offset=0x" << std::setw(4) << rom_addr << std::endl;
         return m_main_rom[rom_addr];
     }
     else if (is_io_port_address(address)) {
@@ -106,6 +115,8 @@ uint8_t StarWarsHardware::read_memory(uint16_t address) {
     }
 
     // Default: return 0 for unmapped addresses
+    std::cout << "Unmapped read: 0x" << std::hex << std::setw(4) << std::setfill('0')
+              << address << std::endl;
     return 0;
 }
 
@@ -214,6 +225,12 @@ void StarWarsHardware::update_frame() {
 void StarWarsHardware::run_cpu_step() {
     if (m_cpu && m_cpu->is_running()) {
         m_cpu->step();
+
+        // Stop the hardware if CPU stops
+        if (!m_cpu->is_running()) {
+            std::cout << "Hardware simulation stopped - CPU no longer running." << std::endl;
+            m_running = false;
+        }
     }
 }
 
@@ -332,7 +349,8 @@ bool StarWarsHardware::is_math_ram_address(uint16_t address) const {
 }
 
 bool StarWarsHardware::is_main_rom_address(uint16_t address) const {
-    return (address >= 0x6000 && address < 0x8000);
+    return (address >= 0x6000 && address < 0x8000) ||
+           (address >= 0x8000 && address < 0xC000);
 }
 
 bool StarWarsHardware::is_io_port_address(uint16_t address) const {
@@ -344,6 +362,15 @@ uint16_t StarWarsHardware::translate_rom_address(uint16_t address) const {
     // Translate 6809 memory address to ROM file offset
     if (address >= 0x6000 && address < 0x8000) {
         return address - 0x6000;  // Banked ROM region
+    }
+    else if (address >= 0x8000 && address < 0xC000) {
+        // Extended ROM region - map to same ROM file
+        return (address - 0x8000) % MAIN_ROM_SIZE;
+    }
+    else if (address >= 0xA000 && address < 0xC000) {
+        // High memory region - map to ROM file offset (0xA261 -> 0x0000)
+        uint16_t rom_offset = address - 0xA000;
+        return rom_offset % MAIN_ROM_SIZE;  // Wrap to ROM size
     }
     return 0;
 }
