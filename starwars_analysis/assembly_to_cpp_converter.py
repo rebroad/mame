@@ -64,12 +64,17 @@ class AssemblyToCppConverter:
             0xA7: ('STA', 'INDEXED', 2),        # STA ,X
             0xB7: ('STA', 'EXTENDED', 3),       # STA $xxxx
             0x8E: ('LDX', 'IMMEDIATE', 3),      # LDX #$xxxx
+            0x8C: ('CMPX', 'IMMEDIATE', 3),     # CMPX #$xxxx
             0x9E: ('LDX', 'DIRECT', 2),         # LDX $xx
             0xAE: ('LDX', 'INDEXED', 2),        # LDX ,X
             0xBE: ('LDX', 'EXTENDED', 3),       # LDX $xxxx
             0x9F: ('STX', 'DIRECT', 2),         # STX $xx
             0xAF: ('STX', 'INDEXED', 2),        # STX ,X
             0xBF: ('STX', 'EXTENDED', 3),       # STX $xxxx
+            0x30: ('LEAX', 'INDEXED_POST', 2),  # LEAX <postbyte>
+            0x31: ('LEAY', 'INDEXED_POST', 2),  # LEAY <postbyte>
+            0x32: ('LEAS', 'INDEXED_POST', 2),  # LEAS <postbyte>
+            0x33: ('LEAU', 'INDEXED_POST', 2),  # LEAU <postbyte>
             0x4F: ('CLRA', 'INHERENT', 1),      # CLRA
             0x5F: ('CLRB', 'INHERENT', 1),      # CLRB
             0x0F: ('CLR', 'DIRECT', 2),         # CLR $xx
@@ -114,6 +119,7 @@ class AssemblyToCppConverter:
             0x25: ('BCS', 'RELATIVE', 2),       # BCS $xx
             0x28: ('BVC', 'RELATIVE', 2),       # BVC $xx
             0x29: ('BVS', 'RELATIVE', 2),       # BVS $xx
+            0x2B: ('BMI', 'RELATIVE', 2),       # BMI $xx (dup for completeness)
             0x8D: ('BSR', 'RELATIVE', 2),       # BSR $xx
             0x9D: ('JSR', 'DIRECT', 2),         # JSR $xx
             0xAD: ('JSR', 'INDEXED', 2),        # JSR ,X
@@ -149,6 +155,9 @@ class AssemblyToCppConverter:
                     operand = f"${self.read_word(current_addr + 1):04X}"
                 elif addressing_mode == 'INDEXED':
                     operand = ",X"  # Simplified
+                elif addressing_mode == 'INDEXED_POST':
+                    post = self.read_byte(current_addr + 1)
+                    operand = f"[{post:02X}],X"  # Show raw postbyte for accuracy
                 elif addressing_mode == 'RELATIVE':
                     offset = self.read_byte(current_addr + 1)
                     if offset >= 0x80:
@@ -170,6 +179,51 @@ class AssemblyToCppConverter:
                 bytes_processed += 1
         
         return instructions
+
+    def enhanced_disassemble_to_markdown(self, start_addr: int, max_bytes: int, out_path: str) -> None:
+        """Generate a markdown disassembly with addresses and bytes for better analysis."""
+        md_lines: List[str] = []
+        md_lines.append(f"# Enhanced 6809 Disassembly @ ${start_addr:04X}")
+        md_lines.append("")
+        current = start_addr
+        processed = 0
+        while processed < max_bytes and current < len(self.rom_data):
+            before = current
+            ins = self.disassemble_6809(current, 1)
+            # disassemble_6809 returns one instruction if max_bytes=1 but because of our size accounting,
+            # we need to fetch the full instruction size by decoding again from the opcode.
+            opcode = self.read_byte(current)
+            size = 1
+            # Rough size inference using the same opcode map as above
+            size_map = {
+                0x86: 2, 0x96: 2, 0xA6: 2, 0xB6: 3,
+                0x97: 2, 0xA7: 2, 0xB7: 3,
+                0x8E: 3, 0x8C: 3, 0x9E: 2, 0xAE: 2, 0xBE: 3,
+                0x9F: 2, 0xAF: 2, 0xBF: 3,
+                0x30: 2, 0x31: 2, 0x32: 2, 0x33: 2,
+                0x4F: 1, 0x5F: 1, 0x0F: 2, 0x6F: 2, 0x7F: 3,
+                0x4C: 1, 0x5C: 1, 0x0C: 2, 0x6C: 2, 0x7C: 3,
+                0x4A: 1, 0x5A: 1, 0x0A: 2, 0x6A: 2, 0x7A: 3,
+                0x8B: 2, 0x9B: 2, 0xAB: 2, 0xBB: 3,
+                0x80: 2, 0x90: 2, 0xA0: 2, 0xB0: 3,
+                0x4D: 1, 0x5D: 1, 0x0D: 2, 0x6D: 2, 0x7D: 3,
+                0x27: 2, 0x26: 2, 0x2C: 2, 0x2E: 2, 0x2F: 2, 0x2D: 2, 0x2A: 2, 0x2B: 2, 0x20: 2, 0x21: 2, 0x22: 2, 0x23: 2, 0x24: 2, 0x25: 2, 0x28: 2, 0x29: 2,
+                0x8D: 2, 0x9D: 2, 0xAD: 2, 0xBD: 3,
+                0x39: 1, 0x3B: 1,
+                0x7E: 3, 0x6E: 2, 0x0E: 2,
+                0x1A: 2, 0x1C: 2, 0x35: 2, 0x34: 2, 0x37: 2, 0x36: 2
+            }
+            size = size_map.get(opcode, 1)
+            # Decode instruction text for this one
+            decoded = self.disassemble_6809(current, size)
+            # Bytes
+            bytestr = ' '.join(f"{self.read_byte(current + i):02X}" for i in range(size))
+            text = decoded[0][1] if decoded else f"DB ${opcode:02X}"
+            md_lines.append(f"- ${before:04X}: {bytestr:<8}  {text}")
+            current += size
+            processed += size
+        with open(out_path, 'w') as f:
+            f.write('\n'.join(md_lines) + '\n')
     
     def analyze_function(self, address: int, name: str) -> Dict:
         """Analyze a specific function and convert it to C++"""
