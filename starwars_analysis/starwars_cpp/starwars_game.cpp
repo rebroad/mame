@@ -1,5 +1,6 @@
 #include "starwars_game.h"
 #include "vector_graphics.h"
+#include "starwars.h"
 #include <iostream>
 #include <cstring>
 #include <cmath>
@@ -249,21 +250,23 @@ void StarWarsGame::vector_graphics_control() {
     memory.write_byte(0x4003, 0x00);  // Color/intensity
 
     // Draw vectors via AVG-compatible subroutine (from ROM 0xd91a)
+    // FROM DISASSEMBLY: Calls into ROM routine at $D91A which drives AVG setup
     vector_subroutine_d91a();
     if (graphics) {
         graphics->update();
-        // TODO: Replace with faithful AVG interpreter.
-        // Minimal: treat write to DIV control as "emit" trigger with current params.
+        // NEW TEMPORARY/TEST CODE (not from ROM):
+        // TODO: Replace with faithful AVG interpreter that consumes AVG/Mathbox protocol.
+        // Minimal placeholder: treat write to $4701 as an "emit" trigger using current params at $5022/$5024.
         uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
         uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
-        uint16_t dc = (memory.read_byte(ADDR_DIV_CONTROL) << 8) | memory.read_byte(ADDR_DIV_CONTROL + 1);
+        uint16_t dc = (memory.read_byte(ADDR_AVG_PARAM) << 8) | memory.read_byte(ADDR_AVG_PARAM + 1);
 
         if (dc != last_div_ctrl) {
             last_div_ctrl = dc;
             graphics->clear_vectors();
             int x = static_cast<int>(static_cast<int16_t>(pa)) >> 4;
             int y = static_cast<int>(static_cast<int16_t>(pb)) >> 4;
-            // Emit a short line from origin to (x,y) as a placeholder
+            // NEW TEMPORARY/TEST CODE (not from ROM): emit a short line from origin to (x,y)
             graphics->add_vector(Vector(0, 0, 1, 200));
             graphics->add_vector(Vector(x, y, 1, 200));
         }
@@ -276,26 +279,25 @@ void StarWarsGame::vector_subroutine_d91a() {
     if (!graphics) return;
 
     // TODO: Implement full translation of ROM subroutine at $D91A.
-    // See analysis in: starwars_analysis/rom_disasm_d91a.md
+    // SOURCE: unidasm disassembly in starwars_analysis/rom_disasm_d91a_unidasm.md
 
     // Partial faithful translation of a small, self-contained block:
-    // From disasm: "$D939: LDX #$49E2; $D93C: LDA #$00; $D93E: STA ,X"
+    // FROM DISASSEMBLY: $D939 LDX #$49E2; $D93C LDA #$00; $D93E STA ,X
     // Store 0 at memory 0x49E2 as per ROM behavior.
     memory.write_byte(0x49E2, 0x00);
 
-    // From pattern: 30 0E (LEAX $0E,X); 8C 4A 52 (CMPX #$4A52); 25 F5 (BCS back)
+    // FROM DISASSEMBLY PATTERN: 30 0E (LEAX $0E,X); 8C 4A 52 (CMPX #$4A52); 25 F5 (BCS back)
     // Interpreted as: zero a strided buffer from 0x49E2 up to (but not including) 0x4A52, step 0x000E.
     // TODO: Confirm exact stride and bounds against full 6809 spec and ROM flow.
     for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
         memory.write_byte(addr, 0x00);
     }
 
-    // TODO: Map these addresses to named registers/constants once hardware mapping is finalized.
-    // From enhanced disasm:
+    // FROM DISASSEMBLY (unidasm):
     //   LDD #$14BD; STD $5022
     //   LDD #$3C8C; STD $5024
     //   LDD #$0018; STD $4701
-    // Then later:
+    // Later:
     //   LDD #$0590; STD $5022
     //   LDD #$3FC2; STD $5024
     //   LDD #$0018; STD $4701
@@ -306,9 +308,8 @@ void StarWarsGame::vector_subroutine_d91a() {
     memory.write_word(ADDR_MATH_PARAM_B, 0x3FC2);
     memory.write_word(ADDR_AVG_PARAM,    0x0018);
 
-    // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
-    // and conditionals affecting flow. These will be implemented as we translate
-    // the full AVG instruction stream and hardware interactions.
+    // FROM DISASSEMBLY: Nearby JSRs $CDB5 and $CDBA are invoked here.
+    // TODO: Implement those routines precisely; currently stubbed.
     rom_sub_cdb5();  // TODO: Translate $CDB5
     rom_sub_cdba();  // TODO: Translate $CDBA
 
@@ -330,12 +331,13 @@ void StarWarsGame::vector_subroutine_d91a() {
         }
     }
 
-    // TODO: Translate calls at $D9BC: JSR $CDC3 and $D9CB/$D9DD: JSR $CD9E
+    // FROM DISASSEMBLY: $D9BC calls $CDC3; $D9CB/$D9DD call $CD9E
+    // TODO: Translate precisely; currently simplified stubs.
     rom_sub_cdc3();
     rom_sub_cd9e();
 
-    // TODO: Handle conditional JMP $B95C at $D9AF when the loop finds nonzero entries
-    // For observability, trigger stub when any entry remains nonzero.
+    // FROM DISASSEMBLY: Conditional branch to $B95C
+    // TODO: Implement exact branch conditions; placeholder triggers when any entry remains nonzero.
     bool any_nonzero = false;
     for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
         if (memory.read_byte(addr) != 0) { any_nonzero = true; break; }
