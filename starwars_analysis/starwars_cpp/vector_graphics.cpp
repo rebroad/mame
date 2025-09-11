@@ -112,6 +112,17 @@ void VectorGraphics::render_frame() {
     #endif
 }
 
+void VectorGraphics::write_vectors_csv(const char* path, int frame_index) {
+    // NEW: Dump current vectors to CSV for diffing
+    std::ofstream f(path, std::ios::app);
+    if (!f.is_open()) return; // TODO: report error
+    for (const auto &v : m_vectors) {
+        f << frame_index << "," << v.x << "," << v.y << ","
+          << static_cast<int>(v.color) << "," << static_cast<int>(v.intensity)
+          << "," << (v.visible ? 1 : 0) << "\n";
+    }
+}
+
 void VectorGraphics::go_w(uint8_t data) {
     (void)data; // TODO: data semantics when wiring real AVG commands
     go();

@@ -89,11 +89,14 @@ private:
     std::ofstream trace_file;
     void open_trace_if_needed();
     void trace_params(const char* tag);
+    void trace_params_pc(const char* tag, uint16_t pc_tag); // NEW: PC-tagged CSV for alignment (TODO: replace with real PC)
 
     // TODO: Temporary AVG buffer/Y-pointer simulation for STD ,Y++ writes
     uint16_t avg_y_ptr = 0; // unknown init; used for relative increment tracking only
     std::vector<uint16_t> avg_buffer_words;
     void avg_std_ypp(uint16_t value); // simulate STD ,Y++ by buffering 16-bit words
+    bool did_pre611e = false; // NEW TEMP: run minimal $611E once for alignment
+    void rom_sub_611e_minimal(); // NEW TEMP: minimal $611E/$6161 path for alignment
     
 public:
     StarWarsGame();

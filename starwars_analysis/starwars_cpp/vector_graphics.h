@@ -29,6 +29,7 @@ public:
     void go();
     void update();
     void render_frame();
+    void write_vectors_csv(const char* path, int frame_index); // NEW: per-frame CSV logging (TODO: gate via option)
     
     // AVG control functions
     void go_w(uint8_t data = 0);

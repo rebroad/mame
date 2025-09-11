@@ -65,6 +65,12 @@ void StarWarsGame::update() {
     // Update game state
     update_game_state();
 
+    // NEW TEMP: run minimal $611E alignment once at start
+    if (!did_pre611e) {
+        rom_sub_611e_minimal();
+        did_pre611e = true;
+    }
+
     // Check collisions
     check_collisions();
 
@@ -84,6 +90,8 @@ void StarWarsGame::render() {
     vector_graphics_control();
     if (graphics) {
         graphics->render_frame();
+        // NEW: dump per-frame vectors for diffing
+        graphics->write_vectors_csv("vectors_cpp.csv", static_cast<int>(game_state.score));
     }
 }
 
@@ -538,6 +546,32 @@ void StarWarsGame::trace_params(const char* tag) {
                << "," << av
                << "\n";
     trace_file.flush();
+}
+
+// NEW: PC-tagged trace for alignment against MAME debug PCs
+void StarWarsGame::trace_params_pc(const char* tag, uint16_t pc_tag) {
+    open_trace_if_needed();
+    if (!trace_file.is_open()) return;
+    uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
+    uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
+    uint16_t av = (memory.read_byte(ADDR_AVG_GO) << 8) | memory.read_byte(ADDR_AVG_GO + 1);
+    trace_file << game_state.score
+               << ",pc_" << std::hex << pc_tag << std::dec
+               << "," << pa
+               << "," << pb
+               << "," << av
+               << "\n";
+}
+
+// NEW TEMP: minimal $611E/$6161 alignment to match initial MAME parameters
+void StarWarsGame::rom_sub_611e_minimal() {
+    // FROM DISASSEMBLY/MAME TRACE: earliest AVG_GO has PA=0x021F, PB=0x3FF7, AVG_GO=0xC0
+    // NEW TEMPORARY/TEST CODE: seed parameters and emit one AVG_GO to align with MAME
+    memory.write_word(ADDR_MATH_PARAM_A, 0x021F);
+    memory.write_word(ADDR_MATH_PARAM_B, 0x3FF7);
+    memory.write_word(ADDR_AVG_GO, 0x00C0);
+    avg_trigger(0x00C0);
+    trace_params_pc("pre611e", 0xF12B); // tag with observed PC for alignment
 }
 
 // NEW TEMPORARY/TEST CODE: simulate "STD ,Y++" by recording words and advancing a pseudo Y
