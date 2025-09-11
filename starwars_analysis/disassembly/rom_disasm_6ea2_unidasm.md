@@ -5,3 +5,6 @@
 0eac: 81 01        CMPA   #$01
 0eae: 26 09        BNE    $0EB9
 0eb0: a6 06        LDA    $6,X
+0eb2: 26 05        BNE    $0EB9
+0eb4: 9f 64        STX    <$64
+0eb6: 7e 6e f7     JMP    $6EF7
