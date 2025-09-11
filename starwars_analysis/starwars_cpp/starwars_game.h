@@ -7,6 +7,7 @@
 namespace StarWars {
 
 class VectorGraphics; // forward declaration
+struct Vector;        // forward declaration
 
 // CPU/runtime state structure (renamed to avoid clash with StarWars::GameState enum)
 struct GameCpuState {
@@ -75,6 +76,7 @@ private:
     GameCpuState game_state;
     GameMemory memory;
     std::unique_ptr<VectorGraphics> graphics;
+    uint32_t frame_counter = 0;
     
 public:
     StarWarsGame();
@@ -109,6 +111,10 @@ public:
     // Getters
     const GameCpuState& get_game_state() const { return game_state; }
     const GameMemory& get_memory() const { return memory; }
+    uint32_t get_frame_counter() const { return frame_counter; }
+    
+private:
+    void demo_draw(uint32_t t);
 };
 
 } // namespace StarWars
