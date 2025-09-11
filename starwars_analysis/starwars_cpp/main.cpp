@@ -16,10 +16,11 @@ int main() {
         std::cout << "\nGame initialized successfully!" << std::endl;
         std::cout << "Starting main loop... (press Ctrl+C to exit)" << std::endl;
 
-        // Simple fixed-iteration loop for now with periodic test harness
-        for (int i = 0; i < 60; ++i) {
+        // Simple fixed-iteration loop with periodic test harness
+        // TODO: Replace with frame-timed loop once AVG interpreter is integrated
+        for (int i = 0; i < 10000; ++i) {
             game.update();
-            if ((i % 20) == 0) {
+            if ((i % 50) == 0) {
                 game.run_vector_test_d91a();
             }
             game.render();
