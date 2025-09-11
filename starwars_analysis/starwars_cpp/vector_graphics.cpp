@@ -288,35 +288,37 @@ void VectorGraphics::update_avg_params(uint16_t pa, uint16_t pb, uint16_t avg_go
     }
 }
 
-// Attract mode display methods
+// GUESSWORK/LOGICAL DEDUCTION: Attract mode display methods
+// These are NOT from disassembly - they are logical placeholders for attract mode functionality
+// TODO: Replace with actual attract mode vector data from ROM analysis
 void VectorGraphics::display_high_scores() {
-    // Display high scores in attract mode
+    // GUESSWORK: Display high scores in attract mode
     m_vectors.clear();
-    add_vector(Vector(100, 100, 1, 255));  // "HIGH SCORES"
+    add_vector(Vector(100, 100, 1, 255));  // "HIGH SCORES" - GUESSWORK
     add_vector(Vector(200, 100, 1, 255));
     std::cout << "Displaying high scores" << std::endl;
 }
 
 void VectorGraphics::display_title_screen() {
-    // Display game title screen
+    // GUESSWORK: Display game title screen
     m_vectors.clear();
-    add_vector(Vector(200, 200, 2, 255));  // "STAR WARS"
+    add_vector(Vector(200, 200, 2, 255));  // "STAR WARS" - GUESSWORK
     add_vector(Vector(400, 200, 2, 255));
     std::cout << "Displaying title screen" << std::endl;
 }
 
 void VectorGraphics::display_demo_sequence() {
-    // Display demo gameplay sequence
+    // GUESSWORK: Display demo gameplay sequence
     m_vectors.clear();
-    add_vector(Vector(300, 300, 3, 200));  // Demo X-Wing
+    add_vector(Vector(300, 300, 3, 200));  // Demo X-Wing - GUESSWORK
     add_vector(Vector(350, 300, 3, 200));
     std::cout << "Displaying demo sequence" << std::endl;
 }
 
 void VectorGraphics::display_instructions() {
-    // Display game instructions
+    // GUESSWORK: Display game instructions
     m_vectors.clear();
-    add_vector(Vector(150, 400, 4, 150));  // Instructions
+    add_vector(Vector(150, 400, 4, 150));  // Instructions - GUESSWORK
     add_vector(Vector(450, 400, 4, 150));
     std::cout << "Displaying instructions" << std::endl;
 }
