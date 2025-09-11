@@ -59,8 +59,27 @@ public:
 
     // Getters
     bool is_running() const { return math_run; }
+    bool is_initialized() const { return initialized; }
     uint16_t get_mpa() const { return MPA; }
     uint16_t get_bic() const { return BIC; }
+
+    // High-level 3D math functions (reverse-engineered from microcode analysis)
+    // These replace complex microcode sequences with understandable C++ functions
+    struct Vector3D {
+        float x, y, z;
+        Vector3D(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
+    };
+
+    struct Matrix3D {
+        float m[3][3];
+        Matrix3D() { memset(m, 0, sizeof(m)); }
+    };
+
+    // High-level math operations (replace microcode sequences)
+    Vector3D transform_3d_point(const Vector3D& point, const Matrix3D& matrix);
+    Matrix3D create_rotation_matrix(float angle_x, float angle_y, float angle_z);
+    Vector3D perspective_project(const Vector3D& point, float screen_distance);
+    void execute_high_level_math(uint8_t operation_id, const Vector3D& input);
 
 private:
     // PROM microcode (from MAME)
