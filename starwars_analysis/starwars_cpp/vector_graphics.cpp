@@ -12,7 +12,7 @@ VectorGraphics::VectorGraphics() {
     m_dvx = m_dvy = 0;
     m_stack[0] = m_stack[1] = m_stack[2] = m_stack[3] = 0;
     m_data = 0;
-    
+
     m_state_latch = 0;
     m_scale = 0;
     m_intensity = 0;
@@ -20,19 +20,19 @@ VectorGraphics::VectorGraphics() {
     m_op = 0;
     m_halt = 0;
     m_sync_halt = 0;
-    
+
     m_xpos = m_ypos = 0;
-    
+
     // AVG specific registers
     m_dvy12 = 0;
     m_timer = 0;
     m_int_latch = 0;
     m_bin_scale = 0;
     m_color_latch = 0;
-    
+
     // Initialize PROM (would load from ROM in real implementation)
     m_prom.fill(0);
-    
+
     m_initialized = false;
     m_running = false;
 }
@@ -42,26 +42,26 @@ VectorGraphics::~VectorGraphics() {
 
 void VectorGraphics::init() {
     std::cout << "Initializing Vector Graphics (AVG)..." << std::endl;
-    
+
     // Load PROM data (in real implementation, this would load from ROM files)
     // For now, initialize with some basic patterns
     for (int i = 0; i < 256; i++) {
         m_prom[i] = i & 0xFF;
     }
-    
+
     m_initialized = true;
     std::cout << "Vector Graphics initialized successfully!" << std::endl;
 }
 
 void VectorGraphics::reset() {
     std::cout << "Resetting Vector Graphics..." << std::endl;
-    
+
     // Reset AVG state machine
     m_pc = 0;
     m_sp = 0;
     m_dvx = m_dvy = 0;
     m_data = 0;
-    
+
     m_state_latch = 0;
     m_scale = 0;
     m_intensity = 0;
@@ -69,12 +69,12 @@ void VectorGraphics::reset() {
     m_op = 0;
     m_halt = 0;
     m_sync_halt = 0;
-    
+
     m_xpos = m_ypos = 0;
-    
+
     // Clear vector buffer
     m_vectors.clear();
-    
+
     m_running = false;
 }
 
@@ -83,11 +83,11 @@ void VectorGraphics::go() {
         std::cerr << "Vector Graphics not initialized!" << std::endl;
         return;
     }
-    
+
     std::cout << "Starting AVG vector generation..." << std::endl;
     m_running = true;
     m_halt = 0;
-    
+
     // Start the AVG state machine
     // In a real implementation, this would run the PROM microcode
     // For now, we'll simulate some basic vector generation
@@ -96,7 +96,7 @@ void VectorGraphics::go() {
 
 void VectorGraphics::update() {
     if (!m_running) return;
-    
+
     // Update AVG state machine
     // This would normally process PROM microcode
     // For now, we'll just maintain the current state
@@ -104,7 +104,7 @@ void VectorGraphics::update() {
 
 void VectorGraphics::render_frame() {
     if (m_vectors.empty()) return;
-    
+
     // Render vectors using modern graphics or console fallback
     #ifdef ENABLE_OPENGL
     render_vectors_modern();
@@ -155,14 +155,14 @@ int VectorGraphics::handler_6() {
         m_intensity = m_dvy & 0xff;
         m_color = (m_dvy >> 8) & 0xf;
     }
-    
+
     return avg_common_strobe2();
 }
 
 int VectorGraphics::handler_7() {
     // Star Wars strobe3 handler
     const int cycles = avg_common_strobe3();
-    
+
     if (!(m_op & 0x01) && !(m_op & 0x04)) {
         vg_add_point_buf(
             m_xpos,
@@ -170,7 +170,7 @@ int VectorGraphics::handler_7() {
             m_color,
             ((m_int_latch >> 1) * m_intensity) >> 3);
     }
-    
+
     return cycles;
 }
 
@@ -221,19 +221,19 @@ void VectorGraphics::render_vectors_modern() {
 void VectorGraphics::render_vectors_console() {
     // Console fallback rendering for testing
     if (m_vectors.empty()) return;
-    
+
     std::cout << "=== Vector Graphics Frame ===" << std::endl;
     std::cout << "Vectors: " << m_vectors.size() << std::endl;
-    
+
     // Show first few vectors
     int count = std::min(static_cast<int>(m_vectors.size()), 10);
     for (int i = 0; i < count; i++) {
         const Vector& v = m_vectors[i];
-        std::cout << "  Vector " << i << ": (" << v.x << ", " << v.y 
-                  << ") color=" << static_cast<int>(v.color) 
+        std::cout << "  Vector " << i << ": (" << v.x << ", " << v.y
+                  << ") color=" << static_cast<int>(v.color)
                   << " intensity=" << static_cast<int>(v.intensity) << std::endl;
     }
-    
+
     if (m_vectors.size() > 10) {
         std::cout << "  ... and " << (m_vectors.size() - 10) << " more vectors" << std::endl;
     }
@@ -241,17 +241,51 @@ void VectorGraphics::render_vectors_console() {
 }
 
 void VectorGraphics::simulate_vector_generation() {
-    // Simulate some basic vector generation for testing
-    std::cout << "Simulating vector generation..." << std::endl;
-    
-    // Generate some test vectors (Star Wars style)
-    add_vector(Vector(0, 0, 1, 255));      // Bright white
-    add_vector(Vector(100, 0, 2, 200));    // Red
-    add_vector(Vector(100, 100, 3, 150));  // Green
-    add_vector(Vector(0, 100, 4, 100));    // Blue
-    add_vector(Vector(50, 50, 1, 255));    // Center point
-    
-    std::cout << "Generated " << m_vectors.size() << " test vectors" << std::endl;
+    // Simulate vector generation based on AVG parameters
+    // This is a simplified version that responds to the actual parameters being written
+
+    // Clear previous vectors for this frame
+    m_vectors.clear();
+
+    // Generate vectors based on current AVG state
+    // For now, create simple patterns based on the parameters
+    // TODO: Implement full AVG microcode interpretation
+
+    // Generate a basic line from (0,0) to a point based on the parameters
+    int end_x = (m_dvx & 0x7FFF) % 1024;  // Use DVX parameter for X coordinate
+    int end_y = (m_dvy & 0x7FFF) % 1024;  // Use DVY parameter for Y coordinate
+
+    // Ensure coordinates are within valid range
+    if (end_x > 1023) end_x = 1023;
+    if (end_y > 1023) end_y = 1023;
+
+    // Add the vector line
+    add_vector(Vector(0, 0, m_color, m_intensity));      // Start point
+    add_vector(Vector(end_x, end_y, m_color, m_intensity)); // End point
+
+    std::cout << "Generated vector: (0,0) to (" << end_x << "," << end_y << ") color=" << static_cast<int>(m_color) << " intensity=" << static_cast<int>(m_intensity) << std::endl;
+}
+
+void VectorGraphics::update_avg_params(uint16_t pa, uint16_t pb, uint16_t avg_go) {
+    // Update AVG parameters from memory values
+    // This is a simplified interpretation of the AVG parameter format
+
+    // PA and PB contain vector data (simplified interpretation)
+    m_dvx = pa;  // X component of vector
+    m_dvy = pb;  // Y component of vector
+
+    // AVG_GO contains control information
+    // Bit 0: GO bit (trigger vector generation)
+    // Bits 1-3: Color
+    // Bits 4-7: Intensity
+    if (avg_go & 0x01) {
+        // GO bit is set - trigger vector generation
+        m_color = static_cast<uint8_t>((avg_go >> 1) & 0x07);
+        m_intensity = static_cast<uint8_t>((avg_go >> 4) & 0x0F) << 4; // Scale to 0-255
+
+        // Generate vectors based on the new parameters
+        simulate_vector_generation();
+    }
 }
 
 // Placeholder implementations for other handlers

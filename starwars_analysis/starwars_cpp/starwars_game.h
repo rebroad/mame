@@ -109,7 +109,9 @@ public:
     void stack_management();     // 0x70db - Stack management
     void mathbox_interface();    // 0x6161 - Mathbox interface
     void vector_graphics_control(); // 0x62d5 - Vector graphics
-    void vector_subroutine_d91a();  // 0xd91a - Vector subroutine (placeholder)
+    void vector_subroutine_d91a();  // 0xd91a - Main game loop (FROM DISASSEMBLY)
+    void rom_sub_d91a_memory_init();  // $D939: Memory initialization
+    void rom_sub_d91a_object_loop();  // $D98B: Object processing loop
     void rom_sub_cdb5();            // 0xCDB5 - ROM subroutine stub
     void rom_sub_cdba();            // 0xCDBA - ROM subroutine stub
     void rom_sub_indirect_at_x(uint16_t addr); // TODO: placeholder for JSR ,X semantics

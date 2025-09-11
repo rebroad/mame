@@ -333,6 +333,11 @@ void StarWarsGame::vector_graphics_control() {
             last_div_ctrl = dc;
             avg_trigger(dc); // TEMP: count triggers
             trace_params("avg_write");
+
+            // Update vector graphics with new AVG parameters
+            if (graphics) {
+                graphics->update_avg_params(pa, pb, dc);
+            }
         }
         if (last_avg_trigger_seen != avg_trigger_count) {
             last_avg_trigger_seen = avg_trigger_count;
