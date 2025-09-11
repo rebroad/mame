@@ -91,6 +91,8 @@ public:
     void rom_sub_cdb5();            // 0xCDB5 - ROM subroutine stub
     void rom_sub_cdba();            // 0xCDBA - ROM subroutine stub
     void rom_sub_indirect_at_x(uint16_t addr); // TODO: placeholder for JSR ,X semantics
+    void rom_sub_cdc3();            // 0xCDC3 - ROM subroutine stub
+    void rom_sub_cd9e();            // 0xCD9E - ROM subroutine stub
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     

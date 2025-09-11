@@ -314,6 +314,10 @@ void StarWarsGame::vector_subroutine_d91a() {
             memory.write_byte(addr, static_cast<uint8_t>(v - 1));
         }
     }
+
+    // TODO: Translate calls at $D9BC: JSR $CDC3 and $D9CB/$D9DD: JSR $CD9E
+    rom_sub_cdc3();
+    rom_sub_cd9e();
 }
 
 // TODO: Implement $CDB5 behavior
@@ -329,6 +333,16 @@ void StarWarsGame::rom_sub_cdba() {
 // TODO: Implement JSR ,X equivalent (indirect through X)
 void StarWarsGame::rom_sub_indirect_at_x(uint16_t addr) {
     (void)addr; // TODO - resolve when X is modeled and code pointers known
+}
+
+// TODO: Implement $CDC3 behavior
+void StarWarsGame::rom_sub_cdc3() {
+    // TODO: translate CDC3 effects
+}
+
+// TODO: Implement $CD9E behavior
+void StarWarsGame::rom_sub_cd9e() {
+    // TODO: translate CD9E effects
 }
 
 // Converted from 6809 assembly at 0xc6d4
