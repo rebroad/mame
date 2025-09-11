@@ -16,6 +16,7 @@ class AssemblyToCppConverter:
         self.rom_data = self.load_rom()
         self.functions = {}
         self.memory_map = self.create_memory_map()
+        self.converted_functions = {}
         
     def load_rom(self) -> bytes:
         """Load the complete memory map ROM file"""
@@ -722,6 +723,8 @@ void StarWarsGame::update_shields() {
             except Exception as e:
                 print(f"Error converting {name} at 0x{address:04X}: {e}")
         
+        # Save for report generation
+        self.converted_functions = converted_functions
         return converted_functions
     
     def generate_files(self):
@@ -745,6 +748,32 @@ void StarWarsGame::update_shields() {
         with open("assembly_to_cpp_report.md", "w") as f:
             f.write(report_content)
         print("Generated: assembly_to_cpp_report.md")
+
+    def generate_conversion_report(self) -> str:
+        """Generate a markdown report of converted functions and summaries."""
+        lines = []
+        lines.append("# Assembly to C++ Conversion Report")
+        lines.append("")
+        lines.append("## Overview")
+        lines.append("This report lists key 6809 functions analyzed and their initial C++ skeleton equivalents.")
+        lines.append("")
+        lines.append("## Functions Converted")
+        if not self.converted_functions:
+            lines.append("No functions recorded. Did the conversion step run?")
+        else:
+            for name, info in self.converted_functions.items():
+                lines.append(f"- **{name}** at `0x{info['address']:04X}`: {len(info.get('instructions', []))} instructions")
+            lines.append("")
+            for name, info in self.converted_functions.items():
+                lines.append(f"### {name} (0x{info['address']:04X})")
+                if info.get('cpp_code'):
+                    lines.append("```cpp")
+                    # include only first ~30 lines for brevity
+                    preview = info['cpp_code'][:30]
+                    lines.extend(preview)
+                    lines.append("```")
+                lines.append("")
+        return "\n".join(lines)
 
 def main():
     """Main function"""
