@@ -28,7 +28,7 @@ void StarWarsGame::init() {
     graphics_initialization();
     if (graphics) {
         graphics->init();
-        graphics->go();
+        // Do not simulate vectors; original behavior relies on AVG instructions
     }
 
     // Set up initial game state
@@ -69,13 +69,12 @@ void StarWarsGame::update() {
     // Update score and shields
     update_score();
     update_shields();
-
+    
     // Call main game loop (converted from 0x611e)
-    main_game_loop();
-
-    // Demo dynamic vectors for visual feedback
-    ++frame_counter;
-    demo_draw(frame_counter);
+    // Original flow: mathbox -> data processing -> avg/vector
+    mathbox_interface();
+    data_processing();
+    vector_graphics_control();
 }
 
 void StarWarsGame::render() {
@@ -84,34 +83,6 @@ void StarWarsGame::render() {
     if (graphics) {
         graphics->render_frame();
     }
-}
-
-void StarWarsGame::demo_draw(uint32_t t) {
-    if (!graphics) return;
-
-    // Clear and draw a rotating square outline around center
-    graphics->clear_vectors();
-    const int cx = 0;
-    const int cy = 0;
-    const int r = 50 + static_cast<int>(20 * std::sin(t * 0.1));
-    const uint8_t col = 1 + (t % 4);
-    const uint8_t inten = 200;
-
-    // Four corners (simple rotation approximation)
-    int x0 = cx - r;
-    int y0 = cy - r;
-    int x1 = cx + r;
-    int y1 = cy - r;
-    int x2 = cx + r;
-    int y2 = cy + r;
-    int x3 = cx - r;
-    int y3 = cy + r;
-
-    graphics->add_vector(Vector(x0, y0, col, inten));
-    graphics->add_vector(Vector(x1, y1, col, inten));
-    graphics->add_vector(Vector(x2, y2, col, inten));
-    graphics->add_vector(Vector(x3, y3, col, inten));
-    graphics->add_vector(Vector(x0, y0, col, inten));
 }
 
 // Converted from 6809 assembly at 0xf261
