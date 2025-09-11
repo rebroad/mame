@@ -210,36 +210,37 @@ void StarWarsHardware::update_frame() {
     // This will eventually call our validated ROM routines
 }
 
-void StarWarsHardware::load_rom_files() {
+bool StarWarsHardware::load_rom_files() {
     std::cout << "Loading ROM files..." << std::endl;
     
     // Load main CPU ROM
-    std::ifstream main_rom("roms/starwars_rev1_main_cpu.bin", std::ios::binary);
+    std::ifstream main_rom("../roms/starwars_rev1_main_cpu.bin", std::ios::binary);
     if (!main_rom) {
         std::cerr << "Failed to open main CPU ROM file!" << std::endl;
-        return;
+        return false;
     }
     
     main_rom.read(reinterpret_cast<char*>(m_main_rom.data()), MAIN_ROM_SIZE);
     if (main_rom.gcount() != MAIN_ROM_SIZE) {
         std::cerr << "Main ROM file size mismatch!" << std::endl;
-        return;
+        return false;
     }
     
-    // Load vector ROM
-    std::ifstream vector_rom("roms/starwars_rev1_avg.bin", std::ios::binary);
+    // Load vector ROM (use avg_prom.bin since we have it)
+    std::ifstream vector_rom("../roms/avg_prom.bin", std::ios::binary);
     if (!vector_rom) {
         std::cerr << "Failed to open vector ROM file!" << std::endl;
-        return;
+        return false;
     }
     
     vector_rom.read(reinterpret_cast<char*>(m_vector_rom.data()), VECTOR_ROM_SIZE);
     if (vector_rom.gcount() != VECTOR_ROM_SIZE) {
         std::cerr << "Vector ROM file size mismatch!" << std::endl;
-        return;
+        return false;
     }
     
     std::cout << "ROM files loaded successfully" << std::endl;
+    return true;
 }
 
 void StarWarsHardware::initialize_memory_map() {
@@ -289,7 +290,7 @@ void StarWarsHardware::process_io_write(uint16_t address, uint8_t value) {
     }
 }
 
-void StarWarsHardware::process_io_read(uint16_t address) {
+void StarWarsHardware::process_io_read(uint16_t /* address */) {
     // Handle any side effects of I/O port reads
     // Most reads are simple, but some might have side effects
 }

@@ -18,7 +18,7 @@
  * behavior and feel.
  */
 
-int main(int argc, char* argv[]) {
+int main(int /* argc */, char* /* argv */[]) {
     std::cout << "========================================" << std::endl;
     std::cout << "    Star Wars Arcade - Native C++      " << std::endl;
     std::cout << "    Version 2.0 - Fresh Implementation " << std::endl;

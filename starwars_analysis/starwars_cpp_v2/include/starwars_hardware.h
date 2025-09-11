@@ -46,7 +46,7 @@ public:
 private:
     // Memory regions (verified from MAME source)
     static constexpr size_t RAM_SIZE = 0x3000;           // 12KB RAM
-    static constexpr size_t VECTOR_ROM_SIZE = 0x1000;    // 4KB Vector ROM
+    static constexpr size_t VECTOR_ROM_SIZE = 256;       // 256 bytes AVG PROM
     static constexpr size_t MATH_RAM_SIZE = 0x1000;      // 4KB Math RAM
     static constexpr size_t MAIN_ROM_SIZE = 0x4000;      // 16KB Main ROM
 
@@ -88,7 +88,7 @@ private:
     uint8_t m_cc;                // Condition codes
 
     // Internal methods
-    void load_rom_files();
+    bool load_rom_files();
     void initialize_memory_map();
     void setup_io_ports();
     void process_io_write(uint16_t address, uint8_t value);
