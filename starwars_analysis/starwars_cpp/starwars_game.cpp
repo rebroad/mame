@@ -351,13 +351,16 @@ void StarWarsGame::vector_graphics_control() {
 void StarWarsGame::vector_subroutine_d91a() {
     if (!graphics) return;
 
-    // TODO: Implement full translation of ROM subroutine at $D91A.
-    // SOURCE: unidasm disassembly in starwars_analysis/rom_disasm_d91a_unidasm.md
+    // FROM DISASSEMBLY: ROM subroutine $D91A - Main game loop
+    // SOURCE: starwars_analysis/disassembly/rom_disasm_d91a_enhanced.md
 
-    // Partial faithful translation of a small, self-contained block:
-    // FROM DISASSEMBLY: $D939 LDX #$49E2; $D93C LDA #$00; $D93E STA ,X
-    // Store 0 at memory 0x49E2 as per ROM behavior.
-    memory.write_byte(0x49E2, 0x00);
+    // This is the main game loop that handles:
+    // 1. Memory initialization ($D939)
+    // 2. Object processing loop ($D98B)
+    // 3. Mathbox operations and vector generation
+
+    rom_sub_d91a_memory_init();  // $D939: Initialize memory region
+    rom_sub_d91a_object_loop();  // $D98B: Process game objects
 
     // FROM DISASSEMBLY PATTERN: 30 0E (LEAX $0E,X); 8C 4A 52 (CMPX #$4A52); 25 F5 (BCS back)
     // Interpreted as: zero a strided buffer from 0x49E2 up to (but not including) 0x4A52, step 0x000E.
