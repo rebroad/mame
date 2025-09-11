@@ -68,7 +68,7 @@ class DisassemblyValidator:
             if line.startswith('#'):
                 comment_lines += 1
             elif re.match(r'^[0-9a-f]+:', line, re.IGNORECASE):
-                if 'DB' in line or 'FCB' in line or 'FDB' in line:
+                if any(pattern in line.upper() for pattern in ['DB', 'FCB', 'FDB']):
                     data_lines += 1
                 else:
                     code_lines += 1
