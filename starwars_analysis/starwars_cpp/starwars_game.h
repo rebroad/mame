@@ -89,6 +89,11 @@ private:
     std::ofstream trace_file;
     void open_trace_if_needed();
     void trace_params(const char* tag);
+
+    // TODO: Temporary AVG buffer/Y-pointer simulation for STD ,Y++ writes
+    uint16_t avg_y_ptr = 0; // unknown init; used for relative increment tracking only
+    std::vector<uint16_t> avg_buffer_words;
+    void avg_std_ypp(uint16_t value); // simulate STD ,Y++ by buffering 16-bit words
     
 public:
     StarWarsGame();

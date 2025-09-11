@@ -439,7 +439,8 @@ void StarWarsGame::vector_subroutine_d91a() {
         uint16_t ubase = 0x7A08;
         uint16_t taddr = static_cast<uint16_t>(ubase + static_cast<uint16_t>(b_val) * 2);
         uint16_t tword = memory.read_word(taddr);
-        // Placeholder for "STD ,Y++": reflect tword in AVG params and trigger
+        // Placeholder for "STD ,Y++": buffer the word and also reflect via AVG params for visibility
+        avg_std_ypp(tword);
         memory.write_word(ADDR_MATH_PARAM_A, tword);
         memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
         memory.write_word(ADDR_AVG_PARAM, 0x0018);
@@ -457,6 +458,7 @@ void StarWarsGame::vector_subroutine_d91a() {
         rom_sub_cd2c();
 
         // LDD #$8040; STD ,Y++  (emit second placeholder segment)
+        avg_std_ypp(0x8040);
         memory.write_word(ADDR_MATH_PARAM_A, 0x8040);
         memory.write_word(ADDR_MATH_PARAM_B, 0x0000);
         memory.write_word(ADDR_AVG_PARAM, 0x0018);
@@ -504,6 +506,12 @@ void StarWarsGame::trace_params(const char* tag) {
                << "," << av
                << "\n";
     trace_file.flush();
+}
+
+// NEW TEMPORARY/TEST CODE: simulate "STD ,Y++" by recording words and advancing a pseudo Y
+void StarWarsGame::avg_std_ypp(uint16_t value) {
+    avg_buffer_words.push_back(value);
+    avg_y_ptr = static_cast<uint16_t>(avg_y_ptr + 2);
 }
 
 // TODO: Implement $CDB5 behavior
