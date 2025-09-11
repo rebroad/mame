@@ -13,6 +13,7 @@ StarWarsGame::StarWarsGame() {
     game_state.game_running = false;
     game_state.attract_mode = true;
     graphics = std::make_unique<VectorGraphics>();
+    // NEW TEMPORARY/TEST CODE: open trace lazily when first needed
 }
 
 StarWarsGame::~StarWarsGame() {
@@ -260,9 +261,13 @@ void StarWarsGame::vector_graphics_control() {
         uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
         uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
         uint16_t dc = (memory.read_byte(ADDR_AVG_PARAM) << 8) | memory.read_byte(ADDR_AVG_PARAM + 1);
-
         if (dc != last_div_ctrl) {
             last_div_ctrl = dc;
+            avg_trigger(dc); // TEMP: count triggers
+            trace_params("avg_write");
+        }
+        if (last_avg_trigger_seen != avg_trigger_count) {
+            last_avg_trigger_seen = avg_trigger_count;
             graphics->clear_vectors();
             int x = static_cast<int>(static_cast<int16_t>(pa)) >> 4;
             int y = static_cast<int>(static_cast<int16_t>(pb)) >> 4;
@@ -304,9 +309,13 @@ void StarWarsGame::vector_subroutine_d91a() {
     memory.write_word(ADDR_MATH_PARAM_A, 0x14BD);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3C8C);
     memory.write_word(ADDR_AVG_PARAM,    0x0018);
+    avg_trigger(0x0018); // TEMP: note AVG write seen
+    trace_params("d91a_a");
     memory.write_word(ADDR_MATH_PARAM_A, 0x0590);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3FC2);
     memory.write_word(ADDR_AVG_PARAM,    0x0018);
+    avg_trigger(0x0018); // TEMP: note AVG write seen
+    trace_params("d91a_b");
 
     // FROM DISASSEMBLY: Nearby JSRs $CDB5 and $CDBA are invoked here.
     // TODO: Implement those routines precisely; currently stubbed.
@@ -328,13 +337,12 @@ void StarWarsGame::vector_subroutine_d91a() {
         uint8_t v = memory.read_byte(addr);
         if (v != 0) {
             memory.write_byte(addr, static_cast<uint8_t>(v - 1));
+            // FROM DISASSEMBLY: JSR $CDC3 within the loop
+            rom_sub_cdc3();
+            // FROM DISASSEMBLY: JSR $CD9E within the loop
+            rom_sub_cd9e();
         }
     }
-
-    // FROM DISASSEMBLY: $D9BC calls $CDC3; $D9CB/$D9DD call $CD9E
-    // TODO: Translate precisely; currently simplified stubs.
-    rom_sub_cdc3();
-    rom_sub_cd9e();
 
     // FROM DISASSEMBLY: Conditional branch to $B95C
     // TODO: Implement exact branch conditions; placeholder triggers when any entry remains nonzero.
@@ -345,6 +353,37 @@ void StarWarsGame::vector_subroutine_d91a() {
     if (any_nonzero) {
         rom_jump_b95c(); // TODO: translate $B95C real behavior
     }
+}
+
+// NEW TEMPORARY/TEST CODE (not from ROM): record writes to AVG control ($4701)
+void StarWarsGame::avg_trigger(uint16_t value) {
+    (void)value; // value unused in placeholder
+    ++avg_trigger_count;
+}
+
+// NEW TEMPORARY/TEST CODE: CSV trace of params and triggers for verification later
+void StarWarsGame::open_trace_if_needed() {
+    if (!trace_file.is_open()) {
+        trace_file.open("trace_params.csv", std::ios::out | std::ios::trunc);
+        if (trace_file.is_open()) {
+            trace_file << "frame,tag,pa,pb,avg\n";
+        }
+    }
+}
+
+void StarWarsGame::trace_params(const char* tag) {
+    open_trace_if_needed();
+    if (!trace_file.is_open()) return;
+    uint16_t pa = (memory.read_byte(ADDR_MATH_PARAM_A) << 8) | memory.read_byte(ADDR_MATH_PARAM_A + 1);
+    uint16_t pb = (memory.read_byte(ADDR_MATH_PARAM_B) << 8) | memory.read_byte(ADDR_MATH_PARAM_B + 1);
+    uint16_t av = (memory.read_byte(ADDR_AVG_PARAM) << 8) | memory.read_byte(ADDR_AVG_PARAM + 1);
+    trace_file << game_state.score /* TEMP use score as frame counter placeholder */
+               << "," << tag
+               << "," << pa
+               << "," << pb
+               << "," << av
+               << "\n";
+    trace_file.flush();
 }
 
 // TODO: Implement $CDB5 behavior

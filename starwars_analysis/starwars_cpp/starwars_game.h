@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <fstream>
 
 namespace StarWars {
 
@@ -79,6 +80,15 @@ private:
     uint16_t last_param_a = 0;
     uint16_t last_param_b = 0;
     uint16_t last_div_ctrl = 0;
+    uint32_t avg_trigger_count = 0;       // TODO: Temporary counter for AVG writes (test scaffolding)
+    uint32_t last_avg_trigger_seen = 0;   // TODO: Temporary render gating based on AVG writes
+
+    void avg_trigger(uint16_t value);     // TODO: Temporary helper to track writes to $4701
+
+    // TODO: tracing (temporary): log writes to AVG/math params for verification
+    std::ofstream trace_file;
+    void open_trace_if_needed();
+    void trace_params(const char* tag);
     
 public:
     StarWarsGame();
