@@ -253,6 +253,14 @@ void StarWarsGame::mathbox_interface() {
 
     // FROM DISASSEMBLY: $6161 interacts with mathbox, then updates PA/PB
     // ROM disassembly shows writes to 0x5022/0x5024 at PCs 0x61D3/0x61D9 (LDD #$021F; STD $5022; LDD #$3FF7; STD $5024)
+    //
+    // IMPORTANT: MAME DEBUGGER QUIRK - The MAME debugger reports PC addresses for multi-byte writes
+    // as the address of the SECOND byte write, not the first. So:
+    // - ROM: PC=0x61D3: LDD #$021F; STD $5022 (writes 0x02 to 0x5022, then 0x1F to 0x5023)
+    // - MAME trace: Shows PC=0x61D9 for the 0x1F write to 0x5023 (6 bytes later)
+    // - ROM: PC=0x61D9: LDD #$3FF7; STD $5024 (writes 0x3F to 0x5024, then 0xF7 to 0x5025)
+    // - MAME trace: Shows PC=0x61DF for the 0xF7 write to 0x5025 (6 bytes later)
+    // This is why our C++ code uses PC=0x61D3 and PC=0x61D9 (ROM addresses) not 0x61D9 and 0x61DF (MAME trace addresses)
     // TODO: Replace with real mathbox microcode execution
 
     // NEW TEMPORARY/TEST CODE (NOT FROM DISASSEMBLY):
@@ -288,6 +296,7 @@ void StarWarsGame::mathbox_interface() {
     uint16_t new_pb = static_cast<uint16_t>((base_pb + pb_variation) & 0xFFFF);
 
     // FROM ROM DISASSEMBLY: Write PA/PB values at the actual PC addresses found in ROM
+    // NOTE: These PC addresses are from ROM disassembly, not MAME trace (see MAME debugger quirk comment above)
     memory.write_word(ADDR_MATH_PARAM_A, new_pa);
     trace_params_pc("mathbox_pa", 0x61D3);  // FROM ROM DISASSEMBLY: PC where PA is written (LDD #$021F; STD $5022)
     memory.write_word(ADDR_MATH_PARAM_B, new_pb);

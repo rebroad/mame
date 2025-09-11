@@ -37,8 +37,14 @@ The archived `main_cpu_rom.bin` contains different code that doesn't match the M
 
 **No, we don't need the archived ROMs for this project.** We're converting the revision 1 version (`starwars1`) which uses `starwars_rev1_main_cpu.bin`.
 
-## Action Items
+## Important Notes
+
+### MAME Debugger Quirk
+When comparing MAME traces with ROM disassembly, be aware that MAME debugger reports PC addresses for multi-byte writes as the address of the second byte write, not the first. See `MAME_DEBUGGER_QUIRKS.md` for details.
+
+### Action Items
 1. Always use `starwars_rev1_main_cpu.bin` for disassembly
 2. Update `complete_memory_map.bin` to use the correct ROM file
 3. Document which MAME version we're targeting (`starwars1`)
 4. Keep archived ROMs for reference but don't use them
+5. **Always use ROM disassembly addresses, not MAME trace addresses for PC values**
