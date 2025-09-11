@@ -6,8 +6,8 @@
 
 namespace StarWars {
 
-// Game state structure
-struct GameState {
+// CPU/runtime state structure (renamed to avoid clash with StarWars::GameState enum)
+struct GameCpuState {
     uint8_t accumulator_a;
     uint8_t accumulator_b;
     uint16_t index_register_x;
@@ -39,13 +39,13 @@ struct GameState {
     bool attract_mode;
 };
 
-// Memory management
-class MemoryManager {
+// Local memory manager (renamed to avoid clash with existing MemoryManager)
+class GameMemory {
 private:
     std::vector<uint8_t> memory;
     
 public:
-    MemoryManager() : memory(0x10000, 0) {}
+    GameMemory() : memory(0x10000, 0) {}
     
     uint8_t read_byte(uint16_t address) const {
         return (address < memory.size()) ? memory[address] : 0;
@@ -70,8 +70,8 @@ public:
 // Main game class
 class StarWarsGame {
 private:
-    GameState game_state;
-    MemoryManager memory;
+    GameCpuState game_state;
+    GameMemory memory;
     
 public:
     StarWarsGame();
@@ -104,8 +104,8 @@ public:
     void update_shields();
     
     // Getters
-    const GameState& get_game_state() const { return game_state; }
-    const MemoryManager& get_memory() const { return memory; }
+    const GameCpuState& get_game_state() const { return game_state; }
+    const GameMemory& get_memory() const { return memory; }
 };
 
 } // namespace StarWars
