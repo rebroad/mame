@@ -94,6 +94,16 @@ void StarWarsGame::run_vector_test_d91a() {
     }
     // Print key memory location modified by $D91A fragment
     std::cout << "[TEST] mem[0x49E2] = " << static_cast<int>(memory.read_byte(0x49E2)) << std::endl;
+    // Also print checksum over a small region for determinism
+    std::cout << "[TEST] cksum[0x49E0..0x49FF] = " << checksum_region(0x49E0, 0x49FF) << std::endl;
+}
+
+uint32_t StarWarsGame::checksum_region(uint16_t start, uint16_t end) const {
+    uint32_t sum = 0;
+    for (uint16_t a = start; a <= end; ++a) {
+        sum = (sum * 1315423911u) ^ memory.read_byte(a);
+    }
+    return sum;
 }
 
 // Converted from 6809 assembly at 0xf261

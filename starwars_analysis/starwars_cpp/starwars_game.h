@@ -102,6 +102,9 @@ public:
     // Test harnesses for verifiable progress
     void run_vector_test_d91a();
     
+private:
+    uint32_t checksum_region(uint16_t start, uint16_t end) const;
+    
     // Input handling
     void handle_input();
     void process_controls();
