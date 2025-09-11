@@ -173,7 +173,7 @@ class DisassemblyValidator:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate Star Wars ROM disassembly files")
-    parser.add_argument("file", help="Disassembly file to validate")
+    parser.add_argument("file", nargs='?', help="Disassembly file to validate")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--check-all", action="store_true", help="Check all disassembly files in directory")
     
