@@ -839,4 +839,50 @@ void StarWarsGame::update_shields() {
     // Handle shield display
 }
 
+// FROM DISASSEMBLY: $D939 - Memory initialization routine
+void StarWarsGame::rom_sub_d91a_memory_init() {
+    // FROM DISASSEMBLY:
+    // $D939: 8E 49 E2  LDX #$49E2    ; Load X with 0x49E2
+    // $D93C: 86 00     LDA #$00      ; Load A with 0
+    // $D93E: A7 0D     STA ,X        ; Store A at address in X
+    // $D940: 30 0E     LEAX [0E],X   ; Add 0x0E to X
+    // $D942: 8C 4A 52  CMPX #$4A52   ; Compare X with 0x4A52
+    // $D945: 25 F5     BCS $D93C     ; Branch back if X < 0x4A52
+    // $D947: 39        RTS           ; Return
+    
+    // Initialize memory region 0x49E2 to 0x4A52 with stride 0x0E
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr += 0x0E) {
+        memory.write_byte(addr, 0x00);
+    }
+}
+
+// FROM DISASSEMBLY: $D98B - Object processing loop
+void StarWarsGame::rom_sub_d91a_object_loop() {
+    // FROM DISASSEMBLY:
+    // $D98B: 8E 49 E2  LDX #$49E2    ; Load X with 0x49E2
+    // $D98E: A6 0D     LDA ,X        ; Load A from address in X
+    // $D990: 27 0F     BEQ $D9A1     ; Branch if A == 0
+    // $D992: 6A 0D     DEC ,X        ; Decrement value at X
+    // ... (object processing logic)
+    // $D9A1: 30 0E     LEAX [0E],X   ; Add 0x0E to X
+    // $D9A3: 8C 4A 52  CMPX #$4A52   ; Compare X with 0x4A52
+    // $D9A6: 25 E6     BCS $D98E     ; Branch back if X < 0x4A52
+    
+    // Process objects in memory region 0x49E2 to 0x4A52 with stride 0x0E
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr += 0x0E) {
+        uint8_t object_value = memory.read_byte(addr);
+        
+        if (object_value != 0) {
+            // Object is active - decrement its counter
+            memory.write_byte(addr, object_value - 1);
+            
+            // TODO: Add object-specific processing logic here
+            // This would involve calling object handlers based on object type
+        }
+    }
+    
+    // TODO: Implement the second loop that checks for active objects and jumps to $B95C
+    // FROM DISASSEMBLY: $D9AB-$D9B8 - Check for active objects and jump if found
+}
+
 } // namespace StarWars
