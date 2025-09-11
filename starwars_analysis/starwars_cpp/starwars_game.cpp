@@ -69,7 +69,7 @@ void StarWarsGame::update() {
     // Update score and shields
     update_score();
     update_shields();
-    
+
     // Call main game loop (converted from 0x611e)
     // Original flow: mathbox -> data processing -> avg/vector
     mathbox_interface();
@@ -108,12 +108,12 @@ void StarWarsGame::run_vector_test_d91a() {
         if (memory.read_byte(addr) == 0x00) ++zero_count;
     }
     std::cout << "[TEST] zeroed(stride=0x0E) in [0x49E2..0x4A52): " << zero_count << "/" << total << std::endl;
-    
+
     auto read_word = [&](uint16_t a){ return static_cast<uint16_t>((memory.read_byte(a) << 8) | memory.read_byte(a+1)); };
     std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_A) << std::dec << std::endl;
     std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_B) << std::dec << std::endl;
     std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(ADDR_AVG_PARAM) << std::dec << std::endl;
-    
+
     // After the decrement loop, count nonzero residues to verify branch coverage
     int nonzero = 0;
     for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
@@ -259,7 +259,7 @@ void StarWarsGame::vector_graphics_control() {
 // TODO: Replace with a real translation of the AVG sequence from ROM $D91A.
 void StarWarsGame::vector_subroutine_d91a() {
     if (!graphics) return;
-    
+
     // TODO: Implement full translation of ROM subroutine at $D91A.
     // See analysis in: starwars_analysis/rom_disasm_d91a.md
 
@@ -267,14 +267,14 @@ void StarWarsGame::vector_subroutine_d91a() {
     // From disasm: "$D939: LDX #$49E2; $D93C: LDA #$00; $D93E: STA ,X"
     // Store 0 at memory 0x49E2 as per ROM behavior.
     memory.write_byte(0x49E2, 0x00);
-    
+
     // From pattern: 30 0E (LEAX $0E,X); 8C 4A 52 (CMPX #$4A52); 25 F5 (BCS back)
     // Interpreted as: zero a strided buffer from 0x49E2 up to (but not including) 0x4A52, step 0x000E.
     // TODO: Confirm exact stride and bounds against full 6809 spec and ROM flow.
     for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
         memory.write_byte(addr, 0x00);
     }
-    
+
     // TODO: Map these addresses to named registers/constants once hardware mapping is finalized.
     // From enhanced disasm:
     //   LDD #$14BD; STD $5022
@@ -290,7 +290,7 @@ void StarWarsGame::vector_subroutine_d91a() {
     memory.write_word(ADDR_MATH_PARAM_A, 0x0590);
     memory.write_word(ADDR_MATH_PARAM_B, 0x3FC2);
     memory.write_word(ADDR_AVG_PARAM,    0x0018);
-    
+
     // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
     // and conditionals affecting flow. These will be implemented as we translate
     // the full AVG instruction stream and hardware interactions.
@@ -318,6 +318,16 @@ void StarWarsGame::vector_subroutine_d91a() {
     // TODO: Translate calls at $D9BC: JSR $CDC3 and $D9CB/$D9DD: JSR $CD9E
     rom_sub_cdc3();
     rom_sub_cd9e();
+
+    // TODO: Handle conditional JMP $B95C at $D9AF when the loop finds nonzero entries
+    // For observability, trigger stub when any entry remains nonzero.
+    bool any_nonzero = false;
+    for (uint16_t addr = 0x49E2; addr < 0x4A52; addr = static_cast<uint16_t>(addr + 0x000E)) {
+        if (memory.read_byte(addr) != 0) { any_nonzero = true; break; }
+    }
+    if (any_nonzero) {
+        rom_jump_b95c(); // TODO: translate $B95C real behavior
+    }
 }
 
 // TODO: Implement $CDB5 behavior
@@ -343,6 +353,11 @@ void StarWarsGame::rom_sub_cdc3() {
 // TODO: Implement $CD9E behavior
 void StarWarsGame::rom_sub_cd9e() {
     // TODO: translate CD9E effects
+}
+
+// TODO: Implement $B95C behavior (control flow target)
+void StarWarsGame::rom_jump_b95c() {
+    // TODO: translate B95C effects
 }
 
 // Converted from 6809 assembly at 0xc6d4

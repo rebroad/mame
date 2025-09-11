@@ -93,6 +93,7 @@ public:
     void rom_sub_indirect_at_x(uint16_t addr); // TODO: placeholder for JSR ,X semantics
     void rom_sub_cdc3();            // 0xCDC3 - ROM subroutine stub
     void rom_sub_cd9e();            // 0xCD9E - ROM subroutine stub
+    void rom_jump_b95c();           // 0xB95C - ROM jump stub (control flow)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     
