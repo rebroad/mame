@@ -32,6 +32,11 @@ constexpr uint16_t MATH_RAM_END = 0x5FFF;
 constexpr uint16_t MAIN_ROM_START = 0x6000;
 constexpr uint16_t MAIN_ROM_END = 0xFFFF;
 
+// TODO: Verify precise semantics/naming for these addresses based on ROM analysis and MAME docs
+constexpr uint16_t ADDR_MATH_PARAM_A = 0x5022; // likely mathbox/AVG parameter (from $D91A sequences)
+constexpr uint16_t ADDR_MATH_PARAM_B = 0x5024; // likely mathbox/AVG parameter (from $D91A sequences)
+constexpr uint16_t ADDR_AVG_PARAM    = 0x4701; // likely AVG control/parameter port
+
 // I/O Port addresses
 constexpr uint16_t IN0_PORT = 0x4300;
 constexpr uint16_t IN1_PORT = 0x4320;

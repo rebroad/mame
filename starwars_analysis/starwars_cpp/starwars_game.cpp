@@ -110,9 +110,9 @@ void StarWarsGame::run_vector_test_d91a() {
     std::cout << "[TEST] zeroed(stride=0x0E) in [0x49E2..0x4A52): " << zero_count << "/" << total << std::endl;
     
     auto read_word = [&](uint16_t a){ return static_cast<uint16_t>((memory.read_byte(a) << 8) | memory.read_byte(a+1)); };
-    std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(0x5022) << std::dec << std::endl;
-    std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(0x5024) << std::dec << std::endl;
-    std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(0x4701) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x5022..0x5023] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_A) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x5024..0x5025] = 0x" << std::hex << read_word(ADDR_MATH_PARAM_B) << std::dec << std::endl;
+    std::cout << "[TEST] mem[0x4701..0x4702] = 0x" << std::hex << read_word(ADDR_AVG_PARAM) << std::dec << std::endl;
 }
 
 uint32_t StarWarsGame::checksum_region(uint16_t start, uint16_t end) const {
@@ -277,12 +277,12 @@ void StarWarsGame::vector_subroutine_d91a() {
     //   LDD #$0590; STD $5022
     //   LDD #$3FC2; STD $5024
     //   LDD #$0018; STD $4701
-    memory.write_word(0x5022, 0x14BD);
-    memory.write_word(0x5024, 0x3C8C);
-    memory.write_word(0x4701, 0x0018);
-    memory.write_word(0x5022, 0x0590);
-    memory.write_word(0x5024, 0x3FC2);
-    memory.write_word(0x4701, 0x0018);
+    memory.write_word(ADDR_MATH_PARAM_A, 0x14BD);
+    memory.write_word(ADDR_MATH_PARAM_B, 0x3C8C);
+    memory.write_word(ADDR_AVG_PARAM,    0x0018);
+    memory.write_word(ADDR_MATH_PARAM_A, 0x0590);
+    memory.write_word(ADDR_MATH_PARAM_B, 0x3FC2);
+    memory.write_word(ADDR_AVG_PARAM,    0x0018);
     
     // Other nearby operations reference subroutines (e.g., JSR $CDB5, JSR $CDBA)
     // and conditionals affecting flow. These will be implemented as we translate
