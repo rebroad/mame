@@ -251,8 +251,8 @@ void StarWarsGame::mathbox_interface() {
     // TODO: Implement faithful translation of ROM routine at $6161.
     // SOURCE: unidasm output and MAME trace analysis
 
-    // FROM DISASSEMBLY/MAME TRACE: $6161 interacts with mathbox, then updates PA/PB
-    // MAME trace shows writes to 0x5022/0x5024 at PCs 0x61D9/0x61DF
+    // FROM DISASSEMBLY: $6161 interacts with mathbox, then updates PA/PB
+    // ROM disassembly shows writes to 0x5022/0x5024 at PCs 0x61D3/0x61D9 (LDD #$021F; STD $5022; LDD #$3FF7; STD $5024)
     // TODO: Replace with real mathbox microcode execution
 
     // NEW TEMPORARY/TEST CODE (NOT FROM DISASSEMBLY):
@@ -287,11 +287,11 @@ void StarWarsGame::mathbox_interface() {
     uint16_t new_pa = static_cast<uint16_t>((base_pa + pa_variation) & 0xFFFF);
     uint16_t new_pb = static_cast<uint16_t>((base_pb + pb_variation) & 0xFFFF);
 
-    // FROM MAME TRACE: Write PA/PB values at the observed PC addresses
+    // FROM ROM DISASSEMBLY: Write PA/PB values at the actual PC addresses found in ROM
     memory.write_word(ADDR_MATH_PARAM_A, new_pa);
-    trace_params_pc("mathbox_pa", 0x61D9);  // FROM MAME TRACE: PC where PA is written
+    trace_params_pc("mathbox_pa", 0x61D3);  // FROM ROM DISASSEMBLY: PC where PA is written (LDD #$021F; STD $5022)
     memory.write_word(ADDR_MATH_PARAM_B, new_pb);
-    trace_params_pc("mathbox_pb", 0x61DF);  // FROM MAME TRACE: PC where PB is written
+    trace_params_pc("mathbox_pb", 0x61D9);  // FROM ROM DISASSEMBLY: PC where PB is written (LDD #$3FF7; STD $5024)
 
     // TODO: Add real mathbox command writes to 0x4700-0x4707
     memory.write_byte(ADDR_MATH_WRITE, 0x67); // TODO: Replace with real mathbox command
