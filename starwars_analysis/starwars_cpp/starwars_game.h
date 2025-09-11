@@ -94,6 +94,10 @@ public:
     void rom_sub_cdc3();            // 0xCDC3 - ROM subroutine stub
     void rom_sub_cd9e();            // 0xCD9E - ROM subroutine stub
     void rom_jump_b95c();           // 0xB95C - ROM jump stub (control flow)
+    void rom_sub_ce24();            // 0xCE24 - ROM subroutine stub (TODO)
+    void rom_sub_6ea2();            // 0x6EA2 - ROM subroutine stub (TODO)
+    void rom_sub_70bd();            // 0x70BD - ROM subroutine stub (TODO)
+    void rom_sub_70cc();            // 0x70CC - ROM subroutine stub (TODO)
     void graphics_initialization(); // 0xc6d4 - Graphics init
     void data_processing();      // 0x61b5 - Data processing
     

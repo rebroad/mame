@@ -347,17 +347,70 @@ void StarWarsGame::rom_sub_indirect_at_x(uint16_t addr) {
 
 // TODO: Implement $CDC3 behavior
 void StarWarsGame::rom_sub_cdc3() {
-    // TODO: translate CDC3 effects
+    // TODO: translate CDC3 effects precisely. Based on unidasm near $CDC3:
+    //   LDD $4B26; ADDD #$0080; STD $4B26; RTS
+    //   LDD <$89;  ADDD #$0080; STD <$89;  RTS
+    //   LDD $4B24; ADDD #$FF80; STD $4B24; RTS
+    auto add_word = [&](uint16_t addr, int16_t delta, bool direct_page) {
+        uint16_t val = (memory.read_byte(addr) << 8) | memory.read_byte(addr + 1);
+        int32_t sum = static_cast<int32_t>(static_cast<int16_t>(val)) + delta;
+        uint16_t res = static_cast<uint16_t>(sum);
+        memory.write_byte(addr, static_cast<uint8_t>(res >> 8));
+        memory.write_byte(addr + 1, static_cast<uint8_t>(res & 0xFF));
+        (void)direct_page; // TODO: DP addressing semantics if needed
+    };
+    // $4B26 += 0x0080
+    add_word(0x4B26, 0x0080, false);
+    // <$89 += 0x0080 (direct page)
+    add_word(0x0089, 0x0080, true);
+    // $4B24 += 0xFF80 (i.e., -0x80)
+    add_word(0x4B24, static_cast<int16_t>(0xFF80), false);
 }
 
 // TODO: Implement $CD9E behavior
 void StarWarsGame::rom_sub_cd9e() {
-    // TODO: translate CD9E effects
+    // TODO: translate CD9E effects precisely. From unidasm at $CD9E region:
+    //   if (<$63 != 0) {
+    //     if (<$63 > 0) { DEC <$63; LDD #$04FF; } else { INC <$63; LDD #$FB01; }
+    //     STD $5022; LDD #$3FCE; STD $5024; JSR $CE24;
+    //   }
+    //   JSR $6EA2; JSR $70BD; JSR $70CC; RTS
+    // Note: Additional math into <$A5 and combining <$7D follows in later block; TODO implement.
+    uint8_t val63 = memory.read_byte(0x0063);
+    if (val63 != 0) {
+        if (static_cast<int8_t>(val63) > 0) {
+            val63 = static_cast<uint8_t>(val63 - 1);
+            memory.write_word(ADDR_MATH_PARAM_A, 0x04FF);
+        } else {
+            val63 = static_cast<uint8_t>(val63 + 1);
+            memory.write_word(ADDR_MATH_PARAM_A, 0xFB01);
+        }
+        memory.write_byte(0x0063, val63);
+        memory.write_word(ADDR_MATH_PARAM_B, 0x3FCE);
+        rom_sub_ce24(); // TODO
+    }
+    rom_sub_6ea2(); // TODO
+    rom_sub_70bd(); // TODO
+    rom_sub_70cc(); // TODO
 }
 
 // TODO: Implement $B95C behavior (control flow target)
 void StarWarsGame::rom_jump_b95c() {
     // TODO: translate B95C effects
+}
+
+// TODO: Implement stubs for CE24/6EA2/70BD/70CC
+void StarWarsGame::rom_sub_ce24() {
+    // TODO: translate CE24 effects
+}
+void StarWarsGame::rom_sub_6ea2() {
+    // TODO: translate 6EA2 effects
+}
+void StarWarsGame::rom_sub_70bd() {
+    // TODO: translate 70BD effects
+}
+void StarWarsGame::rom_sub_70cc() {
+    // TODO: translate 70CC effects
 }
 
 // Converted from 6809 assembly at 0xc6d4
