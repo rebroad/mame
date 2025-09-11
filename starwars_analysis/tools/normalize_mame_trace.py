@@ -17,10 +17,10 @@ import sys
 def normalize_pc_address(pc: int) -> int:
     """
     Normalize PC address by subtracting 6 bytes for STD instructions
-    
+
     Args:
         pc: Current PC address from MAME trace
-        
+
     Returns:
         Normalized PC address (instruction start)
     """
@@ -36,15 +36,15 @@ def process_trace_line(line: str) -> str:
         prefix = match.group(1)
         pc_str = match.group(2)
         comment = match.group(3)  # Everything after the PC address
-        
+
         pc = int(pc_str, 16)
-        
+
         # Normalize PC address
         normalized_pc = normalize_pc_address(pc)
-        
+
         # Return normalized line with original formatting preserved
         return f"{prefix} @{normalized_pc:04X}{comment}\n"
-    
+
     # If we can't parse it, return original line
     return line
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     print(f"Processing {input_file} -> {output_file}")
     print("Applying 6-byte offset for STD instructions")
-    
+
     process_file(input_file, output_file)
-    
+
     print("Normalization complete")
