@@ -322,6 +322,43 @@ void StarWarsGame::vector_subroutine_d91a() {
     rom_sub_cdb5();  // TODO: Translate $CDB5
     rom_sub_cdba();  // TODO: Translate $CDBA
 
+    // FROM DISASSEMBLY: 0x6060..0x6073
+    //   LDD #$0050;      STD $5002
+    //   LDA #$86;        JSR $CDBA
+    //   LDD $5002; ADDD #$000A; STD <$01
+    memory.write_word(0x5002, 0x0050);
+    memory.write_byte(0x0000, 0x86); // A=0x86 passed implicitly to stubbed CDBA
+    rom_sub_cdba();
+    {
+        uint16_t d = static_cast<uint16_t>(memory.read_word(0x5002) + 0x000A);
+        memory.write_word(0x0001, d);
+    }
+
+    // FROM DISASSEMBLY: 0x6073..0x6093
+    //   D = <$D6 - <$B3; if (D<0) D = -D; STD <$05; STD <$03
+    //   D = <$D8 - <$B5; if (D<0) D = -D; STD <$07; <$03 += <$07; STD <$03
+    {
+        auto read_dp = [&](uint8_t dp) -> uint16_t {
+            return static_cast<uint16_t>((memory.read_byte(dp) << 8) | memory.read_byte(dp + 1));
+        };
+        auto write_dp = [&](uint8_t dp, uint16_t val) {
+            memory.write_byte(dp, static_cast<uint8_t>(val >> 8));
+            memory.write_byte(dp + 1, static_cast<uint8_t>(val & 0xFF));
+        };
+        int16_t d1 = static_cast<int16_t>(read_dp(0xD6)) - static_cast<int16_t>(read_dp(0xB3));
+        if (d1 < 0) d1 = static_cast<int16_t>(-d1);
+        write_dp(0x05, static_cast<uint16_t>(d1));
+        write_dp(0x03, static_cast<uint16_t>(d1));
+
+        int16_t d2 = static_cast<int16_t>(read_dp(0xD8)) - static_cast<int16_t>(read_dp(0xB5));
+        if (d2 < 0) d2 = static_cast<int16_t>(-d2);
+        write_dp(0x07, static_cast<uint16_t>(d2));
+
+        uint16_t dp03 = read_dp(0x03);
+        dp03 = static_cast<uint16_t>(dp03 + static_cast<uint16_t>(d2));
+        write_dp(0x03, dp03);
+    }
+
     // Next loop: $D98B..$D9A8 – decrement elements across stride until zero
     // Pseudocode per disasm:
     //   X = 0x49E2
