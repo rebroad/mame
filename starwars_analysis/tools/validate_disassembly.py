@@ -198,9 +198,9 @@ def main():
 
     if args.check_all:
         # Check all disassembly files in current directory
-        files = [f for f in os.listdir('.') if f.endswith('_unidasm.md')]
+        files = [f for f in os.listdir('.') if f.endswith('_unidasm.md') or (f.startswith('rom_disasm_') and f.endswith('.md'))]
         if not files:
-            print("No disassembly files found (*_unidasm.md)")
+            print("No disassembly files found (*_unidasm.md or rom_disasm_*.md)")
             return
 
         print(f"Validating {len(files)} disassembly files...")
