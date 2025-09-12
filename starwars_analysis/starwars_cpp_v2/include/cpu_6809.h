@@ -471,6 +471,14 @@ public:
     void routine_feff(void);
     void routine_ff24(void);
 
+
+
+
+
+
+
+
+
     void print_instruction(uint16_t address) const;
 
 protected:
@@ -485,6 +493,7 @@ protected:
     uint8_t m_b;                 // Accumulator B
     uint8_t m_dp;                // Direct page register
     uint8_t m_cc;                // Condition codes
+    uint8_t m_inv;               // Invalid register (used in some routines)
 
     // CPU state
     bool m_running;
@@ -543,8 +552,10 @@ public:
         uint16_t& y;
         uint16_t& u;
         uint16_t& sp;
+        uint16_t& s;              // Stack pointer alias
         uint8_t& dp;
         uint8_t& cc;
+        uint8_t& inv;
         uint16_t& pc;
 
         State(CPU6809& cpu);

@@ -150,9 +150,9 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     new_wrapper_functions = []
     for routine in sorted(routine_files, key=lambda x: int(x, 16)):
         new_wrapper_functions.extend([
-            f"void CPU6809::routine_{routine}() {{",
-            f"    StarWarsCPU wrapper(*this);",
-            f"    routine_{routine}_impl(wrapper);",
+            f"void StarWars::CPU6809::routine_{routine}() {{",
+            f"    StarWars::StarWarsCPU wrapper(*this);",
+            f"    StarWars::routine_{routine}_impl(wrapper);",
             f"}}",
             ""
         ])
@@ -176,82 +176,109 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     
     # Count existing wrapper functions
     for i, line in enumerate(lines):
-        if re.match(r'void CPU6809::routine_[a-f0-9]+\(\) \{', line):
+        if re.match(r'void StarWars::CPU6809::routine_[a-f0-9]+\(\) \{', line):
             existing_wrappers += 1
     
     # Find wrapper functions section (after the map)
     wrapper_start = -1
     for i in range(map_end, len(lines)):
-        if re.match(r'void CPU6809::routine_[a-f0-9]+\(\) \{', lines[i]):
+        if re.match(r'void StarWars::CPU6809::routine_[a-f0-9]+\(\) \{', lines[i]):
             wrapper_start = i
             break
     
-    # Reconstruct the file
+    # COMPLETE REGENERATION: Rebuild the entire file with correct structure
     updated_lines = []
     
-    # Add lines before declarations
-    if decl_start != -1:
-        updated_lines.extend(lines[:decl_start])
-    else:
-        # Find where to insert declarations (after includes, before first function)
-        insert_point = 0
-        for i, line in enumerate(lines):
-            if line.strip().startswith('#include') or line.strip().startswith('namespace') or line.strip().startswith('//'):
-                insert_point = i + 1
-            elif line.strip() and not line.strip().startswith('//'):
-                break
-        updated_lines.extend(lines[:insert_point])
-        if updated_lines and updated_lines[-1].strip():
-            updated_lines.append('')
+    # Add header includes and namespace
+    updated_lines.extend([
+        '#include "cpu_6809.h"',
+        '#include "starwars_hardware.h"',
+        '#include <iostream>',
+        '#include <map>',
+        '#include <functional>',
+        '',
+        'namespace StarWars {',
+        '',
+        '// Implementation of StarWarsCPU class (declared in header)',
+        'StarWarsCPU::State::State(CPU6809& cpu)',
+        '    : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),',
+        '      u(cpu.m_u), sp(cpu.m_sp), s(cpu.m_sp), dp(cpu.m_dp), cc(cpu.m_cc), inv(cpu.m_inv), pc(cpu.m_pc) {}',
+        '',
+        'StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {',
+        '    std::cout << "StarWarsCPU: Created wrapper, initial PC=0x" << std::hex << state_.pc << std::endl;',
+        '}',
+        '',
+        'uint16_t StarWarsCPU::read_memory_word(uint16_t address) {',
+        '    return (read_memory(address) << 8) | read_memory(address + 1);',
+        '}',
+        '',
+        'uint8_t StarWarsCPU::read_memory(uint16_t address) {',
+        '    return cpu_.m_hardware->read_memory(address);',
+        '}',
+        '',
+        'void StarWarsCPU::write_memory(uint16_t address, uint8_t value) {',
+        '    cpu_.m_hardware->write_memory(address, value);',
+        '}',
+        '',
+        'void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {',
+        '    write_memory(address, value >> 8);',
+        '    write_memory(address + 1, value & 0xFF);',
+        '}',
+        '',
+        'bool StarWarsCPU::negative_flag() const { return (state_.cc & 0x08) != 0; }',
+        'bool StarWarsCPU::overflow_flag() const { return (state_.cc & 0x02) != 0; }',
+        '',
+        'void StarWarsCPU::set_pc_debug(uint16_t new_pc, const std::string& reason) {',
+        '    std::cout << "StarWarsCPU: Setting PC from 0x" << std::hex << state_.pc << " to 0x" << new_pc << " (" << reason << ")" << std::endl;',
+        '    state_.pc = new_pc;',
+        '}',
+        '',
+        '// Function declarations',
+        ''
+    ])
     
-    # Add new declarations
+    # Add function declarations
     updated_lines.extend(new_declarations)
-    if new_declarations:
-        updated_lines.append('')
     
-    # Add lines between declarations and map
-    if decl_start != -1:
-        updated_lines.extend(lines[decl_end+1:map_start+1])
-    else:
-        # Find the routine_map line
-        for i, line in enumerate(lines):
-            if 'static const std::map' in line and 'routine_map' in line:
-                updated_lines.extend(lines[insert_point:i+1])
-                break
-    
-    # Add new map entries
+    # Add routine_map
+    updated_lines.extend([
+        'static const std::map<uint16_t, std::function<void(StarWarsCPU&)>> routine_map = {'
+    ])
     updated_lines.extend(new_map_entries)
+    updated_lines.extend([
+        '};',
+        '',
+        '// CPU6809 method implementations',
+        ''
+    ])
     
-    # Add lines between map and wrapper functions
-    if wrapper_start != -1:
-        updated_lines.extend(lines[map_end+1:wrapper_start])
-    else:
-        updated_lines.extend(lines[map_end+1:])
+    # Add execute_at_address function
+    updated_lines.extend([
+        'bool CPU6809::execute_at_address(uint16_t address) {',
+        '    std::cout << "CPU6809::execute_at_address(0x" << std::hex << address << ") - PC=0x" << m_pc << std::endl;',
+        '    ',
+        '    auto it = routine_map.find(address);',
+        '    if (it != routine_map.end()) {',
+        '        std::cout << "Found routine for address 0x" << std::hex << address << std::endl;',
+        '        StarWarsCPU wrapper(*this);',
+        '        it->second(wrapper);',
+        '        return true;',
+        '    }',
+        '    ',
+        '    std::cout << "No routine found for address 0x" << std::hex << address << ", tracking as unknown" << std::endl;',
+        '    track_unknown_address(address);',
+        '    return false;',
+        '}',
+        ''
+    ])
     
-    # Add new wrapper functions
-    if wrapper_start != -1:
-        updated_lines.extend(new_wrapper_functions)
-        
-        # Add remaining lines after wrapper functions
-        wrapper_end = wrapper_start
-        for i in range(wrapper_start, len(lines)):
-            if re.match(r'void CPU6809::routine_[a-f0-9]+\(\) \{', lines[i]):
-                # Find the end of this wrapper function
-                brace_count = 0
-                for j in range(i, len(lines)):
-                    if '{' in lines[j]:
-                        brace_count += lines[j].count('{')
-                    if '}' in lines[j]:
-                        brace_count -= lines[j].count('}')
-                    if brace_count == 0:
-                        wrapper_end = j + 1
-                        break
-        
-        # Skip the old wrapper functions and add any remaining content
-        updated_lines.extend(lines[wrapper_end:])
-    else:
-        # No existing wrapper functions, just add the new ones
-        updated_lines.extend(new_wrapper_functions)
+    # Add wrapper functions
+    updated_lines.extend(new_wrapper_functions)
+    
+    # Close namespace
+    updated_lines.extend([
+        '} // namespace StarWars'
+    ])
     
     # Write updated content
     with open(wrapper_file, 'w') as f:

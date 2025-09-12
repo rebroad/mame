@@ -325,7 +325,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // B945: BCS $00FD
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBA44;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB944;
 
     // B948: LDB <$A2
     cpu.state_.b = cpu.read_memory(0xA2);
@@ -334,7 +334,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x08);
 
     // B94D: BCS $0112
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBA61;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB961;
 
     // B94F: LDB #$00
     cpu.state_.b = 0x00;
@@ -406,7 +406,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $D,X
 
     // B990: BEQ $0162
-    if (cpu.zero_flag()) cpu.state_.pc = 0xBAF4;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xB9F4;
 
     // B992: DEC $D,X
     // TODO: Convert DEC $D,X
@@ -418,7 +418,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x09);
 
     // B998: BCS $015C
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBAF6;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB9F6;
 
     // B99B: LDU #$B748
     cpu.state_.u = 0xB748;
@@ -433,7 +433,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // B9A6: BCS $014F
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBAF7;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB9F7;
 
     // B9A8: LDX #$49E2
     cpu.state_.x = 0x49E2;
@@ -442,7 +442,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $D,X
 
     // B9AD: BEQ $0173
-    if (cpu.zero_flag()) cpu.state_.pc = 0xBB22;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xBA22;
 
     // B9AF: JMP $B95C
     cpu.state_.pc = 0xB95C;
@@ -454,7 +454,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // B9B7: BCS $016C
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBB25;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBA25;
 
     // B9B9: LDU #$50D0
     cpu.state_.u = 0x50D0;
@@ -520,7 +520,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     // TODO: Convert BVS $01B2
 
     // B9EA: BGE $01B0
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xBB9C;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xB99C;
 
     // B9EC: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -595,7 +595,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $D,X
 
     // BA23: BEQ $01E9
-    if (cpu.zero_flag()) cpu.state_.pc = 0xBC0E;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xBA0E;
 
     // BA25: JSR $BA32
     cpu.call_function(0xBA32);
@@ -610,7 +610,7 @@ void routine_b83f_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // BA2F: BCS $01E0
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBC11;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBA11;
 
     // BA32: LDD ,X
     // TODO: Complex indexed addressing: ,X

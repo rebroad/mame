@@ -46,7 +46,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$96
 
     // FB5B: BPL $FFCF
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x1FB2C;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xFB2C;
 
     // FB5E: NEG <$2A
     // TODO: Convert NEG <$2A
@@ -271,7 +271,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$6000
 
     // FC2D: BCS $00EA
-    if (cpu.carry_flag()) cpu.state_.pc = 0xFD19;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFC19;
 
     // FC2F: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -307,7 +307,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FC51: BNE $0113
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xFD66;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xFC66;
 
     // FC53: LDA #$5F
     cpu.state_.a = 0x5F;
@@ -319,7 +319,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU $5000
 
     // FC5D: BEQ $012A
-    if (cpu.zero_flag()) cpu.state_.pc = 0xFD89;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xFC89;
 
     // FC5F: JMP $FB73
     cpu.state_.pc = 0xFB73;
@@ -334,7 +334,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$0200
 
     // FC6A: BCS $010C
-    if (cpu.carry_flag()) cpu.state_.pc = 0xFD78;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFC78;
 
     // FC6C: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -451,7 +451,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     cpu.state_.b -= 0x00;
 
     // FCE1: BPL $0155
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xFE38;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xFD38;
 
     // FCE3: NEG <$00
     // TODO: Convert NEG <$00
@@ -514,7 +514,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0000
 
     // FD15: BEQ $01E2
-    if (cpu.zero_flag()) cpu.state_.pc = 0xFEF9;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xFCF9;
 
     // FD17: JMP $F720
     cpu.state_.pc = 0xF720;
@@ -544,7 +544,7 @@ void routine_fb38_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // FD31: BNE $0222
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xFF55;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xFD55;
 
     // FD33: STA $4620
     cpu.write_memory(0x4620, cpu.state_.a);

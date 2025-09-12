@@ -109,7 +109,7 @@ void routine_889f_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x92);
 
     // 88FC: BEQ $00B1
-    if (cpu.zero_flag()) cpu.state_.pc = 0x89AF;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x88AF;
 
     // 88FE: LDD <$93
     cpu.state_.d = cpu.read_memory_word(0x93);

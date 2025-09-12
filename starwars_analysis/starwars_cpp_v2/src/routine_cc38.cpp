@@ -145,7 +145,7 @@ void routine_cc38_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$87
 
     // CCA6: BCS $00C1
-    if (cpu.carry_flag()) cpu.state_.pc = 0xCD69;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCC69;
 
     // CCA8: NEG <$81
     // TODO: Convert NEG <$81
@@ -400,7 +400,7 @@ void routine_cc38_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $4320
 
     // CDC0: BMI $0185
-    if (cpu.negative_flag()) cpu.state_.pc = 0xCF47;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xCD47;
 
     // CDC3: LDD #$0000
     cpu.state_.d = 0x0000;

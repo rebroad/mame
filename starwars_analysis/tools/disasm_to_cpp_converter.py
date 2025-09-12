@@ -205,7 +205,15 @@ def convert_branch_instruction(mnemonic, operands, current_address):
     if operands.startswith('$'):
         offset_str = operands[1:]  # Remove $ prefix
         try:
-            offset = int(offset_str, 16)
+            # Parse as unsigned first
+            offset_unsigned = int(offset_str, 16)
+            # Convert to signed 8-bit value for 6809 branch instructions
+            # Take only the low 8 bits and convert to signed
+            offset_8bit = offset_unsigned & 0xFF
+            if offset_8bit > 0x7F:
+                offset = offset_8bit - 0x100  # Convert to negative
+            else:
+                offset = offset_8bit
         except ValueError:
             return f"    // TODO: Invalid branch offset: {operands}"
     else:

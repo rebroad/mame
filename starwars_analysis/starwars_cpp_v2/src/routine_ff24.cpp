@@ -202,13 +202,13 @@ void routine_ff24_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // FFE5: BRA $00F4
-    cpu.state_.pc = 0x100DB;
+    cpu.state_.pc = 0xFFDB;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // FFEA: BRA $0109
-    cpu.state_.pc = 0x100F5;
+    cpu.state_.pc = 0xFFF5;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

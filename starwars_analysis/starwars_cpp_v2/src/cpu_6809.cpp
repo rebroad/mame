@@ -19,6 +19,7 @@ CPU6809::CPU6809(StarWarsHardware* hardware)
     , m_b(0)
     , m_dp(0)
     , m_cc(0x50)    // Default condition codes
+    , m_inv(0)      // Invalid register
     , m_running(false)
     , m_initialized(false)
     , m_hardware(hardware)

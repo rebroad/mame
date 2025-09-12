@@ -604,7 +604,7 @@ void routine_98b0_impl(StarWarsCPU& cpu) {
     // TODO: Convert LBSR $61B8
 
     // 9A68: BRA $01BA
-    cpu.state_.pc = 0x9C24;
+    cpu.state_.pc = 0x9A24;
 
     // 9A6A: COM <$00
     // TODO: Convert COM <$00
@@ -691,7 +691,7 @@ void routine_98b0_impl(StarWarsCPU& cpu) {
     // TODO: Convert INC <$00
 
     // 9AA7: BRA $01F9
-    cpu.state_.pc = 0x9CA2;
+    cpu.state_.pc = 0x9AA2;
 
     // 9AA9: COM <$00
     // TODO: Convert COM <$00

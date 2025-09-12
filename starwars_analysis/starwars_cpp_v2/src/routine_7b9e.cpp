@@ -13,7 +13,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x82);
 
     // 7BA3: BNE $FF89
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x17B2E;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x7B2E;
 
     // 7BA5: EORB #$81
     cpu.state_.b ^= 0x81;
@@ -49,7 +49,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.state_.b = cpu.read_memory(0x83);
 
     // 7BBD: BCS $009F
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7C5E;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7B5E;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -91,7 +91,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.state_.pc = 0xD883;
 
     // 7BDD: BCS $00BF
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7C9E;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7B9E;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -100,7 +100,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x80);
 
     // 7BE3: BCS $FFC9
-    if (cpu.carry_flag()) cpu.state_.pc = 0x17BAE;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7BAE;
 
     // 7BE5: SUBB $7DE3
     cpu.state_.b -= 0x7DE3;
@@ -361,7 +361,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert COM <$80
 
     // 7CB3: BCS $0097
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7D4C;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7C4C;
 
     // 7CB5: ADDA <$80
     cpu.state_.a += 0x80;
@@ -412,7 +412,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$20
 
     // 7CDE: BRA $0143
-    cpu.state_.pc = 0x7E23;
+    cpu.state_.pc = 0x7D23;
 
     // 7CE0: COM <$30
     // TODO: Convert COM <$30
@@ -517,7 +517,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XANDCC #$01
 
     // 7D24: BRA $01A8
-    cpu.state_.pc = 0x7ECE;
+    cpu.state_.pc = 0x7CCE;
 
     // 7D26: NEG <$C0
     // TODO: Convert NEG <$C0
@@ -553,7 +553,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert ASL <$01
 
     // 7D3C: BRA $01C0
-    cpu.state_.pc = 0x7EFE;
+    cpu.state_.pc = 0x7CFE;
 
     // 7D3E: NEG <$80
     // TODO: Convert NEG <$80

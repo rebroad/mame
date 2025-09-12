@@ -223,13 +223,13 @@ void routine_8ed6_impl(StarWarsCPU& cpu) {
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8F7D: BEQ $00AD
-    if (cpu.zero_flag()) cpu.state_.pc = 0x902C;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8F2C;
 
     // 8F7F: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8F81: BNE $00DB
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x905E;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8F5E;
 
     // 8F83: INC <$DD
     // TODO: Convert INC <$DD
@@ -244,19 +244,19 @@ void routine_8ed6_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x907C);
 
     // 8F90: BCS $00CA
-    if (cpu.carry_flag()) cpu.state_.pc = 0x905C;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8F5C;
 
     // 8F92: LDA $4B14
     cpu.state_.a = cpu.read_memory(0x4B14);
 
     // 8F96: BCS $00C7
-    if (cpu.carry_flag()) cpu.state_.pc = 0x905F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8F5F;
 
     // 8F98: LDX #$9078
     cpu.state_.x = 0x9078;
 
     // 8F9B: BRA $00CA
-    cpu.state_.pc = 0x9067;
+    cpu.state_.pc = 0x8F67;
 
     // 8F9D: LDX #$907A
     cpu.state_.x = 0x907A;
@@ -295,7 +295,7 @@ void routine_8ed6_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // 8FB8: BEQ $00F0
-    if (cpu.zero_flag()) cpu.state_.pc = 0x90AA;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8FAA;
 
     // 8FBA: LDX <$5A
     cpu.state_.x = cpu.read_memory_word(0x5A);
@@ -307,22 +307,22 @@ void routine_8ed6_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 8FC2: BCS $00DE
-    if (cpu.carry_flag()) cpu.state_.pc = 0x90A2;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8FA2;
 
     // 8FC4: BRA $014D
-    cpu.state_.pc = 0x9113;
+    cpu.state_.pc = 0x9013;
 
     // 8FC6: LDU <$E4
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8FC8: BEQ $014D
-    if (cpu.zero_flag()) cpu.state_.pc = 0x9117;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x9017;
 
     // 8FCA: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8FCC: BEQ $014D
-    if (cpu.zero_flag()) cpu.state_.pc = 0x911B;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x901B;
 
     // 8FCE: INC <$E6
     // TODO: Convert INC <$E6

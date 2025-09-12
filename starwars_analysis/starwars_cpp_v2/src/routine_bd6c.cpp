@@ -232,7 +232,7 @@ void routine_bd6c_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x65);
 
     // BE28: BCS $00B6
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBEE0;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBDE0;
 
     // BE2A: LDA #$D3
     cpu.state_.a = 0xD3;
@@ -283,7 +283,7 @@ void routine_bd6c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xE7AD);
 
     // BE52: BPL $00E0
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xBF34;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xBE34;
 
     // BE54: LDD #$8040
     cpu.state_.d = 0x8040;
@@ -298,7 +298,7 @@ void routine_bd6c_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4554);
 
     // BE5F: BCS $00CE
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBF2F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBE2F;
 
     // BE61: LDD $C7C1
     cpu.state_.d = cpu.read_memory_word(0xC7C1);
@@ -553,7 +553,7 @@ void routine_bd6c_impl(StarWarsCPU& cpu) {
     cpu.state_.a |= 0x4AFD;
 
     // BF4C: BEQ $0210
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC15E;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xBF5E;
 
     // BF4E: LDX #$4554
     cpu.state_.x = 0x4554;
@@ -580,7 +580,7 @@ void routine_bd6c_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4AFA);
 
     // BF64: BCS $01FD
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC163;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBF63;
 
     // BF66: INC $4AFA
     // TODO: Convert INC $4AFA

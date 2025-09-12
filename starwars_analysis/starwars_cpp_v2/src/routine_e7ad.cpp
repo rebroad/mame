@@ -154,7 +154,7 @@ void routine_e7ad_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x82);
 
     // E833: BCS $008F
-    if (cpu.carry_flag()) cpu.state_.pc = 0xE8C4;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xE7C4;
 
     // E835: LDX #$3016
     cpu.state_.x = 0x3016;
@@ -163,103 +163,103 @@ void routine_e7ad_impl(StarWarsCPU& cpu) {
     cpu.state_.b &= 0x7F;
 
     // E83A: BRA $00DB
-    cpu.state_.pc = 0xE917;
+    cpu.state_.pc = 0xE817;
 
     // E83C: CMPB #$74
     cpu.compare_b(0x74);
 
     // E83E: BNE $0098
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE8D8;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE7D8;
 
     // E840: LDX #$2FDE
     cpu.state_.x = 0x2FDE;
 
     // E843: BRA $00DB
-    cpu.state_.pc = 0xE920;
+    cpu.state_.pc = 0xE820;
 
     // E845: CMPB #$80
     cpu.compare_b(0x80);
 
     // E847: BNE $00A2
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE8EB;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE7EB;
 
     // E849: LDX #$3058
     cpu.state_.x = 0x3058;
 
     // E84D: BRA $00DB
-    cpu.state_.pc = 0xE92A;
+    cpu.state_.pc = 0xE82A;
 
     // E84F: CMPB #$60
     cpu.compare_b(0x60);
 
     // E851: BCS $00AB
-    if (cpu.carry_flag()) cpu.state_.pc = 0xE8FE;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xE7FE;
 
     // E853: LDX #$2FA4
     cpu.state_.x = 0x2FA4;
 
     // E856: BRA $00DB
-    cpu.state_.pc = 0xE933;
+    cpu.state_.pc = 0xE833;
 
     // E858: CMPB #$40
     cpu.compare_b(0x40);
 
     // E85A: BNE $00B4
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE910;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE810;
 
     // E85C: LDX #$2FC2
     cpu.state_.x = 0x2FC2;
 
     // E85F: BRA $00DB
-    cpu.state_.pc = 0xE93C;
+    cpu.state_.pc = 0xE83C;
 
     // E861: CMPB #$4E
     cpu.compare_b(0x4E);
 
     // E863: BNE $00BD
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE922;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE822;
 
     // E865: LDX #$2FFE
     cpu.state_.x = 0x2FFE;
 
     // E868: BRA $00DB
-    cpu.state_.pc = 0xE945;
+    cpu.state_.pc = 0xE845;
 
     // E86A: CMPB #$58
     cpu.compare_b(0x58);
 
     // E86C: BNE $00C6
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE934;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE834;
 
     // E86E: LDX #$2FF6
     cpu.state_.x = 0x2FF6;
 
     // E871: BRA $00DB
-    cpu.state_.pc = 0xE94E;
+    cpu.state_.pc = 0xE84E;
 
     // E873: CMPB #$5A
     cpu.compare_b(0x5A);
 
     // E875: BNE $00CF
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE946;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE846;
 
     // E877: LDX #$3000
     cpu.state_.x = 0x3000;
 
     // E87A: BRA $00DB
-    cpu.state_.pc = 0xE957;
+    cpu.state_.pc = 0xE857;
 
     // E87C: CMPB #$4A
     cpu.compare_b(0x4A);
 
     // E87E: BNE $00D8
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xE958;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE858;
 
     // E880: LDX #$300C
     cpu.state_.x = 0x300C;
 
     // E883: BRA $00DB
-    cpu.state_.pc = 0xE960;
+    cpu.state_.pc = 0xE860;
 
     // E885: LDX #$2FF4
     cpu.state_.x = 0x2FF4;
@@ -544,10 +544,10 @@ void routine_e7ad_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR <$E2
 
     // E945: BRA $017C
-    cpu.state_.pc = 0xEAC3;
+    cpu.state_.pc = 0xE9C3;
 
     // E947: BNE $017E
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xEAC7;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE9C7;
 
     // E949: CWAI #$E2
     // TODO: Convert CWAI #$E2

@@ -46,7 +46,7 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STU $D,X
 
     // 8E5A: BRA $FFF8
-    cpu.state_.pc = 0x18E54;
+    cpu.state_.pc = 0x8E54;
 
     // 8E5C: LDU $D,X
     // TODO: Fix comma operator: LDU $D,X
@@ -55,7 +55,7 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // 8E60: BEQ $FFF8
-    if (cpu.zero_flag()) cpu.state_.pc = 0x18E5A;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8E5A;
 
     // 8E62: LEAU $3,U
     // TODO: Fix comma operator: LEAU $3,U
@@ -211,19 +211,19 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x907C);
 
     // 8EE4: BCS $00BA
-    if (cpu.carry_flag()) cpu.state_.pc = 0x8FA0;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8EA0;
 
     // 8EE6: LDA $4B14
     cpu.state_.a = cpu.read_memory(0x4B14);
 
     // 8EEA: BCS $00B7
-    if (cpu.carry_flag()) cpu.state_.pc = 0x8FA3;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8EA3;
 
     // 8EEC: LDX #$9078
     cpu.state_.x = 0x9078;
 
     // 8EEF: BRA $00BA
-    cpu.state_.pc = 0x8FAB;
+    cpu.state_.pc = 0x8EAB;
 
     // 8EF1: LDX #$907A
     cpu.state_.x = 0x907A;
@@ -265,13 +265,13 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8F0E: BEQ $00EF
-    if (cpu.zero_flag()) cpu.state_.pc = 0x8FFF;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8EFF;
 
     // 8F10: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8F12: BEQ $00EF
-    if (cpu.zero_flag()) cpu.state_.pc = 0x9003;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8F03;
 
     // 8F14: INC <$E6
     // TODO: Convert INC <$E6
@@ -313,7 +313,7 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 8F31: BCS $00CE
-    if (cpu.carry_flag()) cpu.state_.pc = 0x9001;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8F01;
 
     // 8F34: LDA #$01
     cpu.state_.a = 0x01;
@@ -415,13 +415,13 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8F7D: BEQ $0149
-    if (cpu.zero_flag()) cpu.state_.pc = 0x90C8;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8FC8;
 
     // 8F7F: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8F81: BNE $0177
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x90FA;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8FFA;
 
     // 8F83: INC <$DD
     // TODO: Convert INC <$DD
@@ -436,19 +436,19 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x907C);
 
     // 8F90: BCS $0166
-    if (cpu.carry_flag()) cpu.state_.pc = 0x90F8;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8FF8;
 
     // 8F92: LDA $4B14
     cpu.state_.a = cpu.read_memory(0x4B14);
 
     // 8F96: BCS $0163
-    if (cpu.carry_flag()) cpu.state_.pc = 0x90FB;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8FFB;
 
     // 8F98: LDX #$9078
     cpu.state_.x = 0x9078;
 
     // 8F9B: BRA $0166
-    cpu.state_.pc = 0x9103;
+    cpu.state_.pc = 0x9003;
 
     // 8F9D: LDX #$907A
     cpu.state_.x = 0x907A;
@@ -487,7 +487,7 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // 8FB8: BEQ $018C
-    if (cpu.zero_flag()) cpu.state_.pc = 0x9146;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8F46;
 
     // 8FBA: LDX <$5A
     cpu.state_.x = cpu.read_memory_word(0x5A);
@@ -499,22 +499,22 @@ void routine_8e3a_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 8FC2: BCS $017A
-    if (cpu.carry_flag()) cpu.state_.pc = 0x913E;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x903E;
 
     // 8FC4: BRA $01E9
-    cpu.state_.pc = 0x91AF;
+    cpu.state_.pc = 0x8FAF;
 
     // 8FC6: LDU <$E4
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8FC8: BEQ $01E9
-    if (cpu.zero_flag()) cpu.state_.pc = 0x91B3;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8FB3;
 
     // 8FCA: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8FCC: BEQ $01E9
-    if (cpu.zero_flag()) cpu.state_.pc = 0x91B7;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8FB7;
 
     // 8FCE: INC <$E6
     // TODO: Convert INC <$E6

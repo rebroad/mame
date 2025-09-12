@@ -208,7 +208,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x0F;
 
     // 6A2A: BNE $00C1
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6AED;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x69ED;
 
     // 6A2C: LDA $4B0E
     cpu.state_.a = cpu.read_memory(0x4B0E);
@@ -217,7 +217,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x0E);
 
     // 6A31: BNE $00BE
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6AF1;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x69F1;
 
     // 6A33: JSR $BD99
     cpu.call_function(0xBD99);
@@ -232,7 +232,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x05);
 
     // 6A3D: BCS $00D7
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6B16;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6A16;
 
     // 6A3F: LDA #$01
     cpu.state_.a = 0x01;
@@ -247,7 +247,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x80);
 
     // 6A49: BCC $00D7
-    if (!cpu.carry_flag()) cpu.state_.pc = 0x6B22;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x6A22;
 
     // 6A4B: LDA #$2B
     cpu.state_.a = 0x2B;
@@ -349,7 +349,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x0011;
 
     // 6AA4: BCS $0132
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6BD8;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6AD8;
 
     // 6AA6: LDA #$2D
     cpu.state_.a = 0x2D;
@@ -406,7 +406,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x0011;
 
     // 6ADA: BCS $0186
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6C62;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6A62;
 
     // 6ADC: LDX $5098
     cpu.state_.x = cpu.read_memory_word(0x5098);
@@ -553,7 +553,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x0F;
 
     // 6B5C: BNE $0221
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6D7F;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6B7F;
 
     // 6B5E: LDA $4B0E
     cpu.state_.a = cpu.read_memory(0x4B0E);
@@ -562,7 +562,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x02);
 
     // 6B63: BNE $01F0
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6D55;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6B55;
 
     // 6B65: JSR $BD9E
     cpu.call_function(0xBD9E);
@@ -571,7 +571,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4B12);
 
     // 6B6C: BCS $020B
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6D79;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6B79;
 
     // 6B6E: LDA $4B0E
     cpu.state_.a = cpu.read_memory(0x4B0E);
@@ -580,7 +580,7 @@ void routine_6978_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x10);
 
     // 6B73: BNE $0202
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6D77;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6B77;
 
     // 6B75: JSR $BD6C
     cpu.call_function(0xBD6C);

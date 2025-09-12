@@ -415,10 +415,10 @@ void routine_e821_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR <$E2
 
     // E945: BRA $0108
-    cpu.state_.pc = 0xEA4F;
+    cpu.state_.pc = 0xE94F;
 
     // E947: BNE $010A
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xEA53;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xE953;
 
     // E949: CWAI #$E2
     // TODO: Convert CWAI #$E2

@@ -94,7 +94,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.state_.b &= 0x80;
 
     // C535: BEQ $00B8
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC5EF;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC4EF;
 
     // C537: LDB $4AF5
     cpu.state_.b = cpu.read_memory(0x4AF5);
@@ -193,7 +193,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x45FF);
 
     // C598: BCS $00A6
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC640;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC540;
 
     // C59A: JSR $C3A7
     cpu.call_function(0xC3A7);
@@ -259,10 +259,10 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4AFA
 
     // C5DE: BMI $00F8
-    if (cpu.negative_flag()) cpu.state_.pc = 0xC6D8;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xC5D8;
 
     // C5E1: BRA $00F0
-    cpu.state_.pc = 0xC6D3;
+    cpu.state_.pc = 0xC5D3;
 
     // C5E3: ANDB ,U
     // TODO: Complex indexed addressing: ,U
@@ -298,7 +298,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C5FF: BCS $010D
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC70E;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC60E;
 
     // C601: LDX #$4500
     cpu.state_.x = 0x4500;
@@ -313,7 +313,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C60C: BCS $0119
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC727;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC627;
 
     // C60E: STA $46A0
     cpu.write_memory(0x46A0, cpu.state_.a);
@@ -340,7 +340,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C625: BCS $0132
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC759;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC659;
 
     // C627: STA $46A0
     cpu.write_memory(0x46A0, cpu.state_.a);
@@ -352,7 +352,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC641);
 
     // C630: BNE $0170
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC7A2;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC6A2;
 
     // C632: JSR $C67A
     cpu.call_function(0xC67A);
@@ -364,7 +364,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC641);
 
     // C63B: BEQ $0155
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC792;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC692;
 
     // C63D: JMP $C65B
     cpu.state_.pc = 0xC65B;
@@ -385,13 +385,13 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x0F;
 
     // C64D: BNE $016F
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC7BE;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC6BE;
 
     // C64F: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C652: BCS $015C
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC7B0;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC6B0;
 
     // C654: LDA #$01
     cpu.state_.a = 0x01;
@@ -430,7 +430,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C674: BCS $0182
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC7F8;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC5F8;
 
     // C676: TST $4AF7
     // TODO: Convert TST $4AF7
@@ -448,7 +448,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C685: BCS $0195
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC81C;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC61C;
 
     // C688: LDX #$07D0
     cpu.state_.x = 0x07D0;
@@ -457,25 +457,25 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAX -$1,X
 
     // C68D: BNE $01A0
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC82F;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC62F;
 
     // C690: LDA $4AF7
     cpu.state_.a = cpu.read_memory(0x4AF7);
 
     // C693: BEQ $01CC
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC861;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC661;
 
     // C695: CMPA #$01
     cpu.compare_a(0x01);
 
     // C697: BNE $01B2
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC84B;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC64B;
 
     // C699: LDB #$9C
     cpu.state_.b = 0x9C;
 
     // C69B: BRA $01C9
-    cpu.state_.pc = 0xC866;
+    cpu.state_.pc = 0xC666;
 
     // C69D: LDD #$1F6A
     cpu.state_.d = 0x1F6A;
@@ -535,7 +535,7 @@ void routine_c4eb_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$0020
 
     // C6D1: BCS $01DD
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC8B0;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC6B0;
 
     // C6D4: LDU #$4AFA
     cpu.state_.u = 0x4AFA;

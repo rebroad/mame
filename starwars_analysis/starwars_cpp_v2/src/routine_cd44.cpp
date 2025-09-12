@@ -265,10 +265,10 @@ void routine_cd44_impl(StarWarsCPU& cpu) {
     // TODO: Convert XSTX #$04C4
 
     // CE5A: BRA $015F
-    cpu.state_.pc = 0xCFBB;
+    cpu.state_.pc = 0xCEBB;
 
     // CE5E: BRA $0173
-    cpu.state_.pc = 0xCFD3;
+    cpu.state_.pc = 0xCED3;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y
@@ -376,13 +376,13 @@ void routine_cd44_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // CED3: BRA $01C2
-    cpu.state_.pc = 0xD097;
+    cpu.state_.pc = 0xCE97;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // CED8: BRA $01D7
-    cpu.state_.pc = 0xD0B1;
+    cpu.state_.pc = 0xCEB1;
 
     // CEDE: ORCC #$F6
     cpu.state_.cc |= 0xF6;

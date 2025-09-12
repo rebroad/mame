@@ -172,7 +172,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$0020
 
     // C6D1: BCS $0087
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC75A;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC65A;
 
     // C6D4: LDU #$4AFA
     cpu.state_.u = 0x4AFA;
@@ -205,7 +205,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4B02
 
     // C6EF: BPL $009B
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xC78C;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xC68C;
 
     // C6F1: LEAX -$8,X
     // TODO: Fix comma operator: LEAX -$8,X
@@ -232,7 +232,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4B02
 
     // C709: BPL $00BB
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xC7C6;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xC6C6;
 
     // C70B: LEAX -$6,X
     // TODO: Fix comma operator: LEAX -$6,X
@@ -250,7 +250,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x0A);
 
     // C71A: BCS $00DD
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC7F9;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC6F9;
 
     // C71C: LDA #$09
     cpu.state_.a = 0x09;
@@ -274,13 +274,13 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.b &= 0x0F;
 
     // C72C: BEQ $00F3
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC821;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC721;
 
     // C72E: ADDA #$04
     cpu.state_.a += 0x04;
 
     // C732: BNE $00ED
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC821;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC721;
 
     // C734: JMP $E790
     cpu.state_.pc = 0xE790;
@@ -454,7 +454,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.cc |= 0x20;
 
     // C7AA: BCS $0195
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC941;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC741;
 
     // C7AC: LEAX -$B,Y
     // TODO: Fix comma operator: LEAX -$B,Y
@@ -583,7 +583,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.d = 0xCA64;
 
     // C80F: BRA $01DD
-    cpu.state_.pc = 0xC9EE;
+    cpu.state_.pc = 0xC7EE;
 
     // C811: LDA #$3F
     cpu.state_.a = 0x3F;
@@ -637,7 +637,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_x(cpu.read_memory_word(0x4AEC));
 
     // C840: BNE $0201
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xCA43;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC843;
 
 }
 

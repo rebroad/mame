@@ -64,7 +64,7 @@ void routine_ce24_impl(StarWarsCPU& cpu) {
     cpu.state_.pc = 0xCEDB;
 
     // CE5E: BRA $0093
-    cpu.state_.pc = 0xCEF3;
+    cpu.state_.pc = 0xCDF3;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y
@@ -172,13 +172,13 @@ void routine_ce24_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // CED3: BRA $00E2
-    cpu.state_.pc = 0xCFB7;
+    cpu.state_.pc = 0xCEB7;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // CED8: BRA $00F7
-    cpu.state_.pc = 0xCFD1;
+    cpu.state_.pc = 0xCED1;
 
     // CEDE: ORCC #$F6
     cpu.state_.cc |= 0xF6;
@@ -514,7 +514,7 @@ void routine_ce24_impl(StarWarsCPU& cpu) {
     cpu.state_.a += 0x9A1F;
 
     // CFF5: BCC $01D2
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xD1C9;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCFC9;
 
     // CFF7: ORA >$00DC
     cpu.state_.a |= 0x00DC;
@@ -532,7 +532,7 @@ void routine_ce24_impl(StarWarsCPU& cpu) {
     cpu.state_.a |= 0x1F;
 
     // D003: BCC $01E0
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xD1E5;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCFE5;
 
     // D005: ORA >$00DC
     cpu.state_.a |= 0x00DC;

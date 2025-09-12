@@ -205,7 +205,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$6000
 
     // FC2D: BCS $00AF
-    if (cpu.carry_flag()) cpu.state_.pc = 0xFCDE;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFBDE;
 
     // FC2F: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -241,7 +241,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FC51: BNE $00D8
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xFD2B;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xFC2B;
 
     // FC53: LDA #$5F
     cpu.state_.a = 0x5F;
@@ -253,7 +253,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU $5000
 
     // FC5D: BEQ $00EF
-    if (cpu.zero_flag()) cpu.state_.pc = 0xFD4E;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xFC4E;
 
     // FC5F: JMP $FB73
     cpu.state_.pc = 0xFB73;
@@ -268,7 +268,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$0200
 
     // FC6A: BCS $00D1
-    if (cpu.carry_flag()) cpu.state_.pc = 0xFD3D;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFC3D;
 
     // FC6C: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -385,7 +385,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     cpu.state_.b -= 0x00;
 
     // FCE1: BPL $011A
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xFDFD;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xFCFD;
 
     // FCE3: NEG <$00
     // TODO: Convert NEG <$00
@@ -448,7 +448,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0000
 
     // FD15: BEQ $01A7
-    if (cpu.zero_flag()) cpu.state_.pc = 0xFEBE;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xFCBE;
 
     // FD17: JMP $F720
     cpu.state_.pc = 0xF720;
@@ -478,7 +478,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // FD31: BNE $01E7
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xFF1A;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xFD1A;
 
     // FD33: STA $4620
     cpu.write_memory(0x4620, cpu.state_.a);
@@ -529,7 +529,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$FDBC
 
     // FD60: BCS $01BC
-    if (cpu.carry_flag()) cpu.state_.pc = 0xFF1E;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFD1E;
 
     // FD62: LDB $4340
     cpu.state_.b = cpu.read_memory(0x4340);
@@ -547,7 +547,7 @@ void routine_fb73_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0xC0);
 
     // FD6E: BEQ $01FF
-    if (cpu.zero_flag()) cpu.state_.pc = 0xFF6F;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xFD6F;
 
     // FD70: CLR <$D1
     cpu.write_memory(0xD1, 0);

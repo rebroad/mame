@@ -169,7 +169,7 @@ void routine_9890_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$06
 
     // 990F: BRA $0081
-    cpu.state_.pc = 0x9992;
+    cpu.state_.pc = 0x9892;
 
     // 9912: NEG <$01
     // TODO: Convert NEG <$01
@@ -643,7 +643,7 @@ void routine_9890_impl(StarWarsCPU& cpu) {
     // TODO: Convert LBSR $61D8
 
     // 9A68: BRA $01DA
-    cpu.state_.pc = 0x9C44;
+    cpu.state_.pc = 0x9A44;
 
     // 9A6A: COM <$00
     // TODO: Convert COM <$00

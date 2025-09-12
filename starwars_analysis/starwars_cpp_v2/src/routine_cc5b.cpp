@@ -100,7 +100,7 @@ void routine_cc5b_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$87
 
     // CCA6: BCS $009E
-    if (cpu.carry_flag()) cpu.state_.pc = 0xCD46;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCC46;
 
     // CCA8: NEG <$81
     // TODO: Convert NEG <$81
@@ -355,7 +355,7 @@ void routine_cc5b_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $4320
 
     // CDC0: BMI $0162
-    if (cpu.negative_flag()) cpu.state_.pc = 0xCF24;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xCE24;
 
     // CDC3: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -523,7 +523,7 @@ void routine_cc5b_impl(StarWarsCPU& cpu) {
     // TODO: Convert XSTX #$04C4
 
     // CE5A: BRA $0201
-    cpu.state_.pc = 0xD05D;
+    cpu.state_.pc = 0xCE5D;
 
 }
 

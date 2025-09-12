@@ -169,7 +169,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $5,X
 
     // A877: BGT $0089
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA902;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA802;
 
     // A87A: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -178,7 +178,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB $5,X
 
     // A87E: BRA $00AF
-    cpu.state_.pc = 0xA92F;
+    cpu.state_.pc = 0xA82F;
 
     // A880: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -232,7 +232,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $5,X
 
     // A8A9: BGT $00BB
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA966;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA866;
 
     // A8AC: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -241,7 +241,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB $5,X
 
     // A8B0: BRA $00DE
-    cpu.state_.pc = 0xA990;
+    cpu.state_.pc = 0xA890;
 
     // A8B2: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -364,7 +364,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     cpu.state_.b -= 0x5098;
 
     // A911: BMI $0128
-    if (cpu.negative_flag()) cpu.state_.pc = 0xAA3B;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA93B;
 
     // A914: JSR $CDB5
     cpu.call_function(0xCDB5);
@@ -391,7 +391,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x508E;
 
     // A92C: BPL $013B
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xAA69;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xA969;
 
     // A92E: ADDD $2,U
     // TODO: Fix comma operator: ADDD $2,U
@@ -412,7 +412,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x508E;
 
     // A93F: BMI $014E
-    if (cpu.negative_flag()) cpu.state_.pc = 0xAA8F;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA98F;
 
     // A941: ADDD $2,U
     // TODO: Fix comma operator: ADDD $2,U
@@ -442,7 +442,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $6,U
 
     // A958: BNE $0167
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xAAC1;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xA9C1;
 
     // A95C: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -457,7 +457,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x0100;
 
     // A966: BMI $0181
-    if (cpu.negative_flag()) cpu.state_.pc = 0xAAE9;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA8E9;
 
     // A968: JSR $CDA2
     cpu.call_function(0xCDA2);
@@ -466,7 +466,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0180
 
     // A96F: BLE $017D
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xAAEE;
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA9EE;
 
     // A971: LDD #$0180
     cpu.state_.d = 0x0180;
@@ -475,7 +475,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A976: BRA $018F
-    cpu.state_.pc = 0xAB07;
+    cpu.state_.pc = 0xA907;
 
     // A978: JSR $CD9E
     cpu.call_function(0xCD9E);
@@ -484,7 +484,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$FE80
 
     // A97F: BGE $018D
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAB0E;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA90E;
 
     // A981: LDD #$FE80
     cpu.state_.d = 0xFE80;
@@ -505,7 +505,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: SUBD $4,U
 
     // A990: BMI $01AB
-    if (cpu.negative_flag()) cpu.state_.pc = 0xAB3D;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA93D;
 
     // A992: JSR $CDA2
     cpu.call_function(0xCDA2);
@@ -514,7 +514,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0200
 
     // A999: BLE $01A7
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xAB42;
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA942;
 
     // A99B: LDD #$0200
     cpu.state_.d = 0x0200;
@@ -547,7 +547,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $6,U
 
     // A9B5: BEQ $01C4
-    if (cpu.zero_flag()) cpu.state_.pc = 0xAB7B;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xA97B;
 
     // A9B9: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -562,7 +562,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: SUBD $2,U
 
     // A9C3: BMI $01DE
-    if (cpu.negative_flag()) cpu.state_.pc = 0xABA3;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA9A3;
 
     // A9C5: JSR $CD9E
     cpu.call_function(0xCD9E);
@@ -571,7 +571,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0180
 
     // A9CC: BLE $01DA
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xABA8;
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA9A8;
 
     // A9CE: LDD #$0180
     cpu.state_.d = 0x0180;
@@ -580,7 +580,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A9D3: BRA $01EC
-    cpu.state_.pc = 0xABC1;
+    cpu.state_.pc = 0xA9C1;
 
     // A9D5: JSR $CDA2
     cpu.call_function(0xCDA2);
@@ -589,7 +589,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$FE80
 
     // A9DC: BGE $01EA
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xABC8;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA9C8;
 
     // A9DE: LDD #$FE80
     cpu.state_.d = 0xFE80;
@@ -610,7 +610,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: SUBD $4,U
 
     // A9ED: BMI $0208
-    if (cpu.negative_flag()) cpu.state_.pc = 0xABF7;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA9F7;
 
     // A9EF: JSR $CDA2
     cpu.call_function(0xCDA2);
@@ -619,7 +619,7 @@ void routine_a7f7_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0200
 
     // A9F6: BLE $0201
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xABF9;
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA9F9;
 
 }
 

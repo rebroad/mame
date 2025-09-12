@@ -109,7 +109,7 @@ void routine_cd38_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $4320
 
     // CDC0: BMI $0085
-    if (cpu.negative_flag()) cpu.state_.pc = 0xCE47;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xCD47;
 
     // CDC3: LDD #$0000
     cpu.state_.d = 0x0000;
@@ -277,10 +277,10 @@ void routine_cd38_impl(StarWarsCPU& cpu) {
     // TODO: Convert XSTX #$04C4
 
     // CE5A: BRA $016B
-    cpu.state_.pc = 0xCFC7;
+    cpu.state_.pc = 0xCEC7;
 
     // CE5E: BRA $017F
-    cpu.state_.pc = 0xCFDF;
+    cpu.state_.pc = 0xCEDF;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y
@@ -388,13 +388,13 @@ void routine_cd38_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // CED3: BRA $01CE
-    cpu.state_.pc = 0xD0A3;
+    cpu.state_.pc = 0xCEA3;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // CED8: BRA $01E3
-    cpu.state_.pc = 0xD0BD;
+    cpu.state_.pc = 0xCEBD;
 
     // CEDE: ORCC #$F6
     cpu.state_.cc |= 0xF6;

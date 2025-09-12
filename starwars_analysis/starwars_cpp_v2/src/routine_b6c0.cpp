@@ -394,7 +394,7 @@ void routine_b6c0_impl(StarWarsCPU& cpu) {
     // TODO: Convert BVC $013E
 
     // B7FC: BRA $015C
-    cpu.state_.pc = 0xB95A;
+    cpu.state_.pc = 0xB85A;
 
     // B7FE: ASL $9,X
     // TODO: Convert ASL $9,X
@@ -412,7 +412,7 @@ void routine_b6c0_impl(StarWarsCPU& cpu) {
     // TODO: Convert ROR $9,X
 
     // B80A: BRA $015C
-    cpu.state_.pc = 0xB968;
+    cpu.state_.pc = 0xB868;
 
     // B80C: ASL $B,X
     // TODO: Convert ASL $B,X
@@ -517,7 +517,7 @@ void routine_b6c0_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x03, cpu.state_.d);
 
     // B85C: BRA $01A8
-    cpu.state_.pc = 0xBA06;
+    cpu.state_.pc = 0xB806;
 
     // B85E: LDD #$0304
     cpu.state_.d = 0x0304;

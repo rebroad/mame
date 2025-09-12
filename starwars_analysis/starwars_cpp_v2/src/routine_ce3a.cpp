@@ -148,13 +148,13 @@ void routine_ce3a_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // CED3: BRA $00CC
-    cpu.state_.pc = 0xCFA1;
+    cpu.state_.pc = 0xCEA1;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // CED8: BRA $00E1
-    cpu.state_.pc = 0xCFBB;
+    cpu.state_.pc = 0xCEBB;
 
     // CEDE: ORCC #$F6
     cpu.state_.cc |= 0xF6;
@@ -490,7 +490,7 @@ void routine_ce3a_impl(StarWarsCPU& cpu) {
     cpu.state_.a += 0x9A1F;
 
     // CFF5: BCC $01BC
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xD1B3;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCFB3;
 
     // CFF7: ORA >$00DC
     cpu.state_.a |= 0x00DC;
@@ -508,7 +508,7 @@ void routine_ce3a_impl(StarWarsCPU& cpu) {
     cpu.state_.a |= 0x1F;
 
     // D003: BCC $01CA
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xD1CF;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCFCF;
 
     // D005: ORA >$00DC
     cpu.state_.a |= 0x00DC;

@@ -247,13 +247,13 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // FFE5: BRA $0119
-    cpu.state_.pc = 0x10100;
+    cpu.state_.pc = 0x10000;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // FFEA: BRA $012E
-    cpu.state_.pc = 0x1011A;
+    cpu.state_.pc = 0x1001A;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

@@ -172,7 +172,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a -= 0x14;
 
     // 6141: BCS $0097
-    if (cpu.carry_flag()) cpu.state_.pc = 0x61DA;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x60DA;
 
     // 6143: JSR $611E
     cpu.call_function(0x611E);
@@ -211,7 +211,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a -= 0x4703;
 
     // 6167: BNE $00B3
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x621C;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x611C;
 
     // 6169: STA $4685
     cpu.write_memory(0x4685, cpu.state_.a);
@@ -256,7 +256,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 618C: BCS $00BF
-    if (cpu.carry_flag()) cpu.state_.pc = 0x624D;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x614D;
 
     // 618E: LDX #$494B
     cpu.state_.x = 0x494B;
@@ -289,7 +289,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x496F);
 
     // 61A5: BCS $00D8
-    if (cpu.carry_flag()) cpu.state_.pc = 0x627F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x617F;
 
     // 61A7: JSR $8ED6
     cpu.call_function(0x8ED6);
@@ -397,7 +397,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x5DF0);
 
     // 620C: BCS $0135
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6343;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6243;
 
     // 620F: LDX #$5C60
     cpu.state_.x = 0x5C60;
@@ -430,7 +430,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x5DF0);
 
     // 622A: BCS $0154
-    if (cpu.carry_flag()) cpu.state_.pc = 0x6380;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6280;
 
     // 622D: LDB <$7D
     cpu.state_.b = cpu.read_memory(0x7D);
@@ -439,7 +439,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0xA0);
 
     // 6231: BGT $0180
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x63B3;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x61B3;
 
     // 6233: LDA #$08
     cpu.state_.a = 0x08;
@@ -448,19 +448,19 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_a(cpu.read_memory(0x41));
 
     // 6237: BEQ $017E
-    if (cpu.zero_flag()) cpu.state_.pc = 0x63B7;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x62B7;
 
     // 623A: STA <$41
     cpu.write_memory(0x41, cpu.state_.a);
 
     // 623C: BRA $018D
-    cpu.state_.pc = 0x63CB;
+    cpu.state_.pc = 0x61CB;
 
     // 623E: CMPB #$60
     cpu.compare_b(0x60);
 
     // 6240: BLT $018D
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x63CF;
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x61CF;
 
     // 6242: LDA #$0C
     cpu.state_.a = 0x0C;
@@ -469,7 +469,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.compare_a(cpu.read_memory(0x41));
 
     // 6246: BEQ $018D
-    if (cpu.zero_flag()) cpu.state_.pc = 0x63D5;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x61D5;
 
     // 6249: STA <$41
     cpu.write_memory(0x41, cpu.state_.a);
@@ -481,7 +481,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x03;
 
     // 6250: BNE $0199
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x63EB;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x61EB;
 
     // 6252: LDA #$01
     cpu.state_.a = 0x01;
@@ -493,7 +493,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4814);
 
     // 625A: BEQ $01AB
-    if (cpu.zero_flag()) cpu.state_.pc = 0x6407;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x6207;
 
     // 625C: LDA <$AC
     cpu.state_.a = cpu.read_memory(0xAC);
@@ -502,7 +502,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0xF0;
 
     // 6260: BEQ $01AB
-    if (cpu.zero_flag()) cpu.state_.pc = 0x640D;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x620D;
 
     // 6262: LDA #$19
     cpu.state_.a = 0x19;
@@ -520,7 +520,7 @@ void routine_60be_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x10;
 
     // 626E: BNE $01B6
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x6426;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6226;
 
     // 6270: LDA #$01
     cpu.state_.a = 0x01;

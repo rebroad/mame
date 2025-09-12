@@ -151,7 +151,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // A70C: BEQ $008C
-    if (cpu.zero_flag()) cpu.state_.pc = 0xA79A;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xA69A;
 
     // A70E: LEAX $6,X
     // TODO: Fix comma operator: LEAX $6,X
@@ -205,13 +205,13 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x509A;
 
     // A73C: BMI $00B7
-    if (cpu.negative_flag()) cpu.state_.pc = 0xA7F5;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xA6F5;
 
     // A73E: LDA #$08
     cpu.state_.a = 0x08;
 
     // A740: BRA $00B9
-    cpu.state_.pc = 0xA7FB;
+    cpu.state_.pc = 0xA6FB;
 
     // A742: LDA #$07
     cpu.state_.a = 0x07;
@@ -262,7 +262,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STA $6,X
 
     // A765: BPL $00E0
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xA847;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xA747;
 
     // A769: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -289,7 +289,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4700);
 
     // A781: BCC $00F9
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xA87C;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xA77C;
 
     // A784: STA $7,X
     // TODO: Handle indexed addressing: STA $7,X
@@ -301,19 +301,19 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: EORA $6,X
 
     // A78A: BPL $0105
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xA891;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xA791;
 
     // A78C: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
 
     // A78E: BRA $0127
-    cpu.state_.pc = 0xA8B7;
+    cpu.state_.pc = 0xA7B7;
 
     // A790: LDA <$7D
     cpu.state_.a = cpu.read_memory(0x7D);
 
     // A792: BPL $010A
-    if (!cpu.negative_flag()) cpu.state_.pc = 0xA89E;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xA79E;
 
     // A796: CMPA $7,X
     // TODO: Fix comma operator: CMPA $7,X
@@ -325,7 +325,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: CLR $6,X
 
     // A79C: BRA $0127
-    cpu.state_.pc = 0xA8C5;
+    cpu.state_.pc = 0xA7C5;
 
     // A79E: LDA #$FF
     cpu.state_.a = 0xFF;
@@ -343,13 +343,13 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x08);
 
     // A7A8: BNE $0123
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xA8CD;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xA7CD;
 
     // A7AA: LDA #$07
     cpu.state_.a = 0x07;
 
     // A7AC: BRA $0125
-    cpu.state_.pc = 0xA8D3;
+    cpu.state_.pc = 0xA7D3;
 
     // A7AE: LDA #$08
     cpu.state_.a = 0x08;
@@ -370,7 +370,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STA $4,X
 
     // A7BD: BRA $0146
-    cpu.state_.pc = 0xA905;
+    cpu.state_.pc = 0xA805;
 
     // A7BF: JSR $A705
     cpu.call_function(0xA705);
@@ -382,7 +382,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STA $4,X
 
     // A7C6: BRA $0146
-    cpu.state_.pc = 0xA90E;
+    cpu.state_.pc = 0xA80E;
 
     // A7C8: JSR $A705
     cpu.call_function(0xA705);
@@ -394,7 +394,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STA $4,X
 
     // A7CF: BRA $0146
-    cpu.state_.pc = 0xA917;
+    cpu.state_.pc = 0xA817;
 
     // A7D1: LDA #$70
     cpu.state_.a = 0x70;
@@ -451,13 +451,13 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x95);
 
     // A7F9: BEQ $0175
-    if (cpu.zero_flag()) cpu.state_.pc = 0xA970;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xA870;
 
     // A7FB: JSR $A705
     cpu.call_function(0xA705);
 
     // A7FE: BRA $0178
-    cpu.state_.pc = 0xA978;
+    cpu.state_.pc = 0xA878;
 
     // A800: JSR $A6F4
     cpu.call_function(0xA6F4);
@@ -472,19 +472,19 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // A809: BRA $0194
-    cpu.state_.pc = 0xA99F;
+    cpu.state_.pc = 0xA79F;
 
     // A80B: LDA <$95
     cpu.state_.a = cpu.read_memory(0x95);
 
     // A80D: BEQ $0189
-    if (cpu.zero_flag()) cpu.state_.pc = 0xA998;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xA798;
 
     // A80F: JSR $A705
     cpu.call_function(0xA705);
 
     // A812: BRA $018C
-    cpu.state_.pc = 0xA9A0;
+    cpu.state_.pc = 0xA7A0;
 
     // A814: JSR $A6F4
     cpu.call_function(0xA6F4);
@@ -499,7 +499,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // A81D: BRA $0194
-    cpu.state_.pc = 0xA9B3;
+    cpu.state_.pc = 0xA7B3;
 
     // A81F: LDD $5078
     cpu.state_.d = cpu.read_memory_word(0x5078);
@@ -541,7 +541,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0xFC);
 
     // A83F: BLT $01B8
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA9F9;
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xA7F9;
 
     // A841: LDA #$00
     cpu.state_.a = 0x00;
@@ -562,7 +562,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // A850: BEQ $01D6
-    if (cpu.zero_flag()) cpu.state_.pc = 0xAA28;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xA828;
 
     // A852: LDB $4,X
     // TODO: Fix comma operator: LDB $4,X
@@ -571,7 +571,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x16);
 
     // A857: BCC $01D5
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xAA2E;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xA82E;
 
     // A859: LDU #$A675
     cpu.state_.u = 0xA675;
@@ -580,7 +580,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: [B,U]
 
     // A85E: BRA $01D6
-    cpu.state_.pc = 0xAA36;
+    cpu.state_.pc = 0xA836;
 
     // A861: LDX <$A8
     cpu.state_.x = cpu.read_memory_word(0xA8);
@@ -592,13 +592,13 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x496F);
 
     // A868: BCS $01C1
-    if (cpu.carry_flag()) cpu.state_.pc = 0xAA2B;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xA82B;
 
     // A86B: DEC $5,X
     // TODO: Convert DEC $5,X
 
     // A86D: BGT $01E9
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAA58;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA858;
 
     // A870: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -610,7 +610,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $5,X
 
     // A877: BGT $01F5
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAA6E;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xA86E;
 
     // A87A: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -619,7 +619,7 @@ void routine_a68b_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB $5,X
 
     // A87E: BRA $021B
-    cpu.state_.pc = 0xAA9B;
+    cpu.state_.pc = 0xA89B;
 
     // A880: LDU ,X
     // TODO: Complex indexed addressing: ,X

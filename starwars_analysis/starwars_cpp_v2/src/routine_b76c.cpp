@@ -196,7 +196,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Convert BVC $0092
 
     // B7FC: BRA $00B0
-    cpu.state_.pc = 0xB8AE;
+    cpu.state_.pc = 0xB7AE;
 
     // B7FE: ASL $9,X
     // TODO: Convert ASL $9,X
@@ -214,7 +214,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Convert ROR $9,X
 
     // B80A: BRA $00B0
-    cpu.state_.pc = 0xB8BC;
+    cpu.state_.pc = 0xB7BC;
 
     // B80C: ASL $B,X
     // TODO: Convert ASL $B,X
@@ -319,7 +319,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x03, cpu.state_.d);
 
     // B85C: BRA $00FC
-    cpu.state_.pc = 0xB95A;
+    cpu.state_.pc = 0xB85A;
 
     // B85E: LDD #$0304
     cpu.state_.d = 0x0304;
@@ -598,7 +598,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // B945: BCS $01D0
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBB17;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB917;
 
     // B948: LDB <$A2
     cpu.state_.b = cpu.read_memory(0xA2);
@@ -607,7 +607,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x08);
 
     // B94D: BCS $01E5
-    if (cpu.carry_flag()) cpu.state_.pc = 0xBB34;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xB934;
 
     // B94F: LDB #$00
     cpu.state_.b = 0x00;
