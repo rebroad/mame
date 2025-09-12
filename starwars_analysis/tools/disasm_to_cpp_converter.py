@@ -43,9 +43,9 @@ INSTRUCTION_MAP = {
     'BCC': 'if (!cpu.carry_flag()) cpu.state_.pc += {operand}',
     'BMI': 'if (cpu.negative_flag()) cpu.state_.pc += {operand}',
     'BPL': 'if (!cpu.negative_flag()) cpu.state_.pc += {operand}',
-    'CMPA': 'cpu.compare_a({operand})',
-    'CMPB': 'cpu.compare_b({operand})',
-    'CMPX': 'cpu.compare_x({operand})',
+    'CMPA': 'cpu.compare_a(cpu.read_memory({operand}))',
+    'CMPB': 'cpu.compare_b(cpu.read_memory({operand}))',
+    'CMPX': 'cpu.compare_x(cpu.read_memory_word({operand}))',
     'ANDA': 'cpu.state_.a &= {operand}',
     'ANDB': 'cpu.state_.b &= {operand}',
     'ORA': 'cpu.state_.a |= {operand}',
@@ -207,12 +207,16 @@ def convert_instruction(parsed):
     is_immediate = operands.startswith('#')
     
     # For immediate values, use direct assignment
-    if is_immediate and mnemonic in ['LDA', 'LDB', 'LDD', 'LDX', 'LDY', 'LDU', 'LDS']:
+    if is_immediate and mnemonic in ['LDA', 'LDB', 'LDD', 'LDX', 'LDY', 'LDU', 'LDS', 'CMPA', 'CMPB', 'CMPX']:
         cpp_operand = convert_operand(operands, mnemonic)
         if mnemonic in ['LDA', 'LDB']:
             return f"    cpu.state_.{mnemonic[2].lower()} = {cpp_operand};"
         elif mnemonic == 'LDS':
             return f"    cpu.state_.sp = {cpp_operand};"  # S register maps to sp
+        elif mnemonic in ['CMPA', 'CMPB']:
+            return f"    cpu.compare_{mnemonic[3].lower()}({cpp_operand});"
+        elif mnemonic == 'CMPX':
+            return f"    cpu.compare_x({cpp_operand});"
         else:  # LDD, LDX, LDY, LDU
             return f"    cpu.state_.{mnemonic[2:].lower()} = {cpp_operand};"
     

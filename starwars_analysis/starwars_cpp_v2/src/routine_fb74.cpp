@@ -412,7 +412,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.state_.b += 0x8FFB;
 
     // FCF8: CMPX <$FB
-    cpu.compare_x(0xFB);
+    cpu.compare_x(cpu.read_memory_word(0xFB));
 
     // FCFA: SUBD [D,S]
     // TODO: Complex indexed addressing: [D,S]
@@ -577,7 +577,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$FD
 
     // FD87: CMPX $80FD
-    cpu.compare_x(0x80FD);
+    cpu.compare_x(cpu.read_memory_word(0x80FD));
 
     // FD8A: STB <$C0
     cpu.write_memory(0xC0, cpu.state_.b);
@@ -982,7 +982,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.negative_flag()) cpu.state_.pc += 0xFF03;
 
     // FEEA: CMPA $4400
-    cpu.compare_a(0x4400);
+    cpu.compare_a(cpu.read_memory(0x4400));
 
     // FEED: BNE $FF03
     if (!cpu.zero_flag()) cpu.state_.pc += 0xFF03;
