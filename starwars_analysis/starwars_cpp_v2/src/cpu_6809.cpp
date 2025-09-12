@@ -432,4 +432,50 @@ void CPU6809::validate_pc() {
     }
 }
 
+void CPU6809::compare_a(uint8_t value) {
+    // CMPA instruction - compare accumulator A with value
+    uint8_t result = m_a - value;
+    // Update condition codes based on result
+    m_cc &= ~0x0F; // Clear N, Z, V, C flags
+    if (result == 0) m_cc |= 0x04; // Set Z flag
+    if (result & 0x80) m_cc |= 0x08; // Set N flag
+    if (m_a < value) m_cc |= 0x01; // Set C flag (borrow)
+    // V flag for overflow (simplified)
+    if (((m_a ^ value) & (m_a ^ result)) & 0x80) m_cc |= 0x02;
+}
+
+void CPU6809::compare_b(uint8_t value) {
+    // CMPB instruction - compare accumulator B with value
+    uint8_t result = m_b - value;
+    // Update condition codes based on result
+    m_cc &= ~0x0F; // Clear N, Z, V, C flags
+    if (result == 0) m_cc |= 0x04; // Set Z flag
+    if (result & 0x80) m_cc |= 0x08; // Set N flag
+    if (m_b < value) m_cc |= 0x01; // Set C flag (borrow)
+    // V flag for overflow (simplified)
+    if (((m_b ^ value) & (m_b ^ result)) & 0x80) m_cc |= 0x02;
+}
+
+void CPU6809::compare_x(uint16_t value) {
+    // CMPX instruction - compare index register X with value
+    uint16_t result = m_x - value;
+    // Update condition codes based on result
+    m_cc &= ~0x0F; // Clear N, Z, V, C flags
+    if (result == 0) m_cc |= 0x04; // Set Z flag
+    if (result & 0x8000) m_cc |= 0x08; // Set N flag
+    if (m_x < value) m_cc |= 0x01; // Set C flag (borrow)
+    // V flag for overflow (simplified)
+    if (((m_x ^ value) & (m_x ^ result)) & 0x8000) m_cc |= 0x02;
+}
+
+void CPU6809::call_function(uint16_t address) {
+    // JSR instruction - jump to subroutine
+    // Push return address onto stack
+    m_sp -= 2;
+    m_hardware->write_memory(m_sp, m_pc >> 8);
+    m_hardware->write_memory(m_sp + 1, m_pc & 0xFF);
+    // Jump to address
+    m_pc = address;
+}
+
 } // namespace StarWars

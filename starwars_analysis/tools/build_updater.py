@@ -138,7 +138,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     # Build new function declarations
     new_declarations = []
     for routine in sorted(routine_files, key=lambda x: int(x, 16)):
-        new_declarations.append(f"void routine_{routine}_impl(StarWarsCPU& cpu);")
+        new_declarations.append(f"void routine_{routine}_impl(CPU6809& cpu);")
     
     # Build new routine_map entries
     new_map_entries = []
@@ -146,16 +146,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
         addr = int(routine, 16)
         new_map_entries.append(f"    {{0x{addr:04X}, routine_{routine}_impl}},")
     
-    # Build new wrapper functions
-    new_wrapper_functions = []
-    for routine in sorted(routine_files, key=lambda x: int(x, 16)):
-        new_wrapper_functions.extend([
-            f"void StarWars::CPU6809::routine_{routine}() {{",
-            f"    StarWars::StarWarsCPU wrapper(*this);",
-            f"    StarWars::routine_{routine}_impl(wrapper);",
-            f"}}",
-            ""
-        ])
+    # No wrapper functions needed - routines are called directly
     
     # Count existing entries for reporting
     existing_declarations = 0
@@ -192,46 +183,11 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     # Add header includes and namespace
     updated_lines.extend([
         '#include "cpu_6809.h"',
-        '#include "starwars_hardware.h"',
         '#include <iostream>',
         '#include <map>',
         '#include <functional>',
         '',
         'namespace StarWars {',
-        '',
-        '// Implementation of StarWarsCPU class (declared in header)',
-        'StarWarsCPU::State::State(CPU6809& cpu)',
-        '    : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),',
-        '      u(cpu.m_u), sp(cpu.m_sp), s(cpu.m_sp), dp(cpu.m_dp), cc(cpu.m_cc), inv(cpu.m_inv), pc(cpu.m_pc) {}',
-        '',
-        'StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {',
-        '    std::cout << "StarWarsCPU: Created wrapper, initial PC=0x" << std::hex << state_.pc << std::endl;',
-        '}',
-        '',
-        'uint16_t StarWarsCPU::read_memory_word(uint16_t address) {',
-        '    return (read_memory(address) << 8) | read_memory(address + 1);',
-        '}',
-        '',
-        'uint8_t StarWarsCPU::read_memory(uint16_t address) {',
-        '    return cpu_.m_hardware->read_memory(address);',
-        '}',
-        '',
-        'void StarWarsCPU::write_memory(uint16_t address, uint8_t value) {',
-        '    cpu_.m_hardware->write_memory(address, value);',
-        '}',
-        '',
-        'void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {',
-        '    write_memory(address, value >> 8);',
-        '    write_memory(address + 1, value & 0xFF);',
-        '}',
-        '',
-        'bool StarWarsCPU::negative_flag() const { return (state_.cc & 0x08) != 0; }',
-        'bool StarWarsCPU::overflow_flag() const { return (state_.cc & 0x02) != 0; }',
-        '',
-        'void StarWarsCPU::set_pc_debug(uint16_t new_pc, const std::string& reason) {',
-        '    std::cout << "StarWarsCPU: Setting PC from 0x" << std::hex << state_.pc << " to 0x" << new_pc << " (" << reason << ")" << std::endl;',
-        '    state_.pc = new_pc;',
-        '}',
         '',
         '// Function declarations',
         ''
@@ -243,7 +199,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     
     # Add routine_map
     updated_lines.extend([
-        'static const std::map<uint16_t, std::function<void(StarWarsCPU&)>> routine_map = {'
+        'static const std::map<uint16_t, std::function<void(CPU6809&)>> routine_map = {'
     ])
     updated_lines.extend(new_map_entries)
     updated_lines.extend([
@@ -261,8 +217,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
         '    auto it = routine_map.find(address);',
         '    if (it != routine_map.end()) {',
         '        std::cout << "Found routine for address 0x" << std::hex << address << std::endl;',
-        '        StarWarsCPU wrapper(*this);',
-        '        it->second(wrapper);',
+        '        it->second(*this);',
         '        return true;',
         '    }',
         '    ',
@@ -273,8 +228,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
         ''
     ])
     
-    # Add wrapper functions
-    updated_lines.extend(new_wrapper_functions)
+    # No wrapper functions needed
     
     # Close namespace
     updated_lines.extend([
@@ -332,19 +286,27 @@ def update_header_file(project_path: Path, routine_files: List[str]) -> bool:
         print("    ❌ Could not find CPU6809 class or public section in cpu_6809.h")
         return False
     
-    # Find existing routine declarations in the public section
+    # Find ALL existing routine declarations in the public section
     existing_declarations = []
-    decl_start = -1
-    decl_end = -1
+    decl_ranges = []  # List of (start, end) tuples for each block of declarations
     
-    for i in range(public_start, private_start if private_start != -1 else len(lines)):
+    i = public_start + 1
+    while i < (private_start if private_start != -1 else len(lines)):
         if 'void routine_' in lines[i] and '(void);' in lines[i]:
-            match = re.search(r'void routine_([a-f0-9]+)\(void\);', lines[i])
-            if match:
-                if decl_start == -1:
-                    decl_start = i
-                decl_end = i
-                existing_declarations.append(lines[i])
+            # Found start of a routine declaration block
+            block_start = i
+            while i < (private_start if private_start != -1 else len(lines)):
+                if 'void routine_' in lines[i] and '(void);' in lines[i]:
+                    match = re.search(r'void routine_([a-f0-9]+)\(void\);', lines[i])
+                    if match:
+                        existing_declarations.append(lines[i])
+                    i += 1
+                else:
+                    break
+            block_end = i - 1
+            decl_ranges.append((block_start, block_end))
+        else:
+            i += 1
     
     # Build new routine declarations
     new_declarations = []
@@ -354,35 +316,52 @@ def update_header_file(project_path: Path, routine_files: List[str]) -> bool:
     # Count existing declarations for reporting
     existing_count = len(existing_declarations)
     
-    # Reconstruct the file
+    # Reconstruct the file by removing ALL existing declaration blocks
     updated_lines = []
     
-    # Add lines before routine declarations
-    if decl_start != -1:
-        updated_lines.extend(lines[:decl_start])
-    else:
-        # Find where to insert declarations (after other public methods)
+    if decl_ranges:
+        # Remove all existing declaration blocks
+        current_line = 0
+        for block_start, block_end in decl_ranges:
+            # Add lines before this block
+            updated_lines.extend(lines[current_line:block_start])
+            
+            # Skip the declaration block (but preserve any blank lines before it)
+            current_line = block_end + 1
+            
+        # Add remaining lines after the last block
+        updated_lines.extend(lines[current_line:])
+        
+        # Find insertion point (after other public methods, before the removed blocks)
         insert_point = public_start + 1
-        for i in range(public_start + 1, private_start if private_start != -1 else len(lines)):
+        for i in range(public_start + 1, len(updated_lines)):
+            if updated_lines[i].strip() and not updated_lines[i].strip().startswith('//') and 'void routine_' not in updated_lines[i]:
+                insert_point = i
+        
+        # Insert new declarations at the appropriate point
+        if insert_point < len(updated_lines):
+            # Insert before existing content
+            before = updated_lines[:insert_point]
+            after = updated_lines[insert_point:]
+            updated_lines = before + new_declarations + [''] + after
+        else:
+            # Append at the end
+            updated_lines.extend(new_declarations)
+            if new_declarations:
+                updated_lines.append('')
+    else:
+        # No existing declarations, find insertion point
+        insert_point = public_start + 1
+        for i in range(public_start + 1, len(lines)):
             if lines[i].strip() and not lines[i].strip().startswith('//'):
                 insert_point = i
+        
         updated_lines.extend(lines[:insert_point])
         if updated_lines and updated_lines[-1].strip():
             updated_lines.append('')
-    
-    # Add new declarations
-    updated_lines.extend(new_declarations)
-    if new_declarations:
-        updated_lines.append('')
-    
-    # Add remaining lines after declarations
-    if decl_start != -1:
-        remaining_lines = lines[decl_end+1:]
-        # Skip leading blank lines
-        while remaining_lines and not remaining_lines[0].strip():
-            remaining_lines = remaining_lines[1:]
-        updated_lines.extend(remaining_lines)
-    else:
+        updated_lines.extend(new_declarations)
+        if new_declarations:
+            updated_lines.append('')
         updated_lines.extend(lines[insert_point:])
     
     # Write updated content

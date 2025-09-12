@@ -2,7 +2,7 @@
 
 namespace StarWars {
 
-void routine_c24e_impl(StarWarsCPU& cpu) {
+void routine_c24e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c24e.md
     // Address: 0xC24E
 
@@ -10,46 +10,46 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x03);
 
     // C250: BCC $0065
-    if (!cpu.carry_flag()) cpu.state_.pc = 0xC2B7;
+    if (!cpu.carry_flag()) cpu.m_pc = 0xC2B7;
 
     // C252: CMPA #$02
     cpu.compare_a(0x02);
 
     // C254: BCS $0031
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC287;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC287;
 
     // C256: LDX #$C7B7
-    cpu.state_.x = 0xC7B7;
+    cpu.m_x = 0xC7B7;
 
     // C259: LDB A,X
     // TODO: Fix comma operator: LDB A,X
 
     // C25B: SUBB #$02
-    cpu.state_.b -= 0x02;
+    cpu.m_b -= 0x02;
 
     // C25D: STB $4AFB
-    cpu.write_memory(0x4AFB, cpu.state_.b);
+    cpu.write_memory(0x4AFB, cpu.m_b);
 
     // C260: LDB #$45
-    cpu.state_.b = 0x45;
+    cpu.m_b = 0x45;
 
     // C262: STB $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.b);
+    cpu.write_memory(0x4AFA, cpu.m_b);
 
     // C265: LDX #$C7B6
-    cpu.state_.x = 0xC7B6;
+    cpu.m_x = 0xC7B6;
 
     // C268: LDB A,X
     // TODO: Fix comma operator: LDB A,X
 
     // C26A: LDX #$C707
-    cpu.state_.x = 0xC707;
+    cpu.m_x = 0xC707;
 
     // C26E: TFR X,U
-    cpu.state_.u = cpu.state_.x;
+    cpu.m_u = cpu.m_x;
 
     // C270: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C274: LDB ,U+
     // TODO: Complex indexed addressing: ,U+
@@ -58,79 +58,79 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB ,X+
 
     // C278: CMPX $4AFA
-    cpu.compare_x(cpu.read_memory_word(0x4AFA));
+    cpu.compare_x(cpu.read_memory16(0x4AFA));
 
     // C27B: BCS $0026
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC2A3;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC2A3;
 
     // C27D: BRA $0065
-    cpu.state_.pc = 0xC2E4;
+    cpu.m_pc = 0xC2E4;
 
     // C27F: TFR A,B
-    cpu.state_.b = cpu.state_.a;
+    cpu.m_b = cpu.m_a;
 
     // C282: BNE $004D
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC2D1;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC2D1;
 
     // C284: LDA <$27
-    cpu.state_.a = cpu.read_memory(0x27);
+    cpu.m_a = cpu.read_memory(0x27);
 
     // C286: STA $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.a);
+    cpu.write_memory(0x4AFA, cpu.m_a);
 
     // C289: LDA <$24
-    cpu.state_.a = cpu.read_memory(0x24);
+    cpu.m_a = cpu.read_memory(0x24);
 
     // C28B: STA $4AFB
-    cpu.write_memory(0x4AFB, cpu.state_.a);
+    cpu.write_memory(0x4AFB, cpu.m_a);
 
     // C28E: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // C290: STA $4AFC
-    cpu.write_memory(0x4AFC, cpu.state_.a);
+    cpu.write_memory(0x4AFC, cpu.m_a);
 
     // C293: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C296: JSR $C6F4
     cpu.call_function(0xC6F4);
 
     // C299: BRA $0063
-    cpu.state_.pc = 0xC2FE;
+    cpu.m_pc = 0xC2FE;
 
     // C29B: LDX #$4508
-    cpu.state_.x = 0x4508;
+    cpu.m_x = 0x4508;
 
     // C29E: LDU #$CC98
-    cpu.state_.u = 0xCC98;
+    cpu.m_u = 0xCC98;
 
     // C2A1: LDA #$0B
-    cpu.state_.a = 0x0B;
+    cpu.m_a = 0x0B;
 
     // C2A3: JSR $C6F9
     cpu.call_function(0xC6F9);
 
     // C2A6: LDX #$4520
-    cpu.state_.x = 0x4520;
+    cpu.m_x = 0x4520;
 
     // C2A9: LDU #$CC7A
-    cpu.state_.u = 0xCC7A;
+    cpu.m_u = 0xCC7A;
 
     // C2AC: LDA #$08
-    cpu.state_.a = 0x08;
+    cpu.m_a = 0x08;
 
     // C2AE: JSR $C6F9
     cpu.call_function(0xC6F9);
 
     // C2B1: TFR B,A
-    cpu.state_.a = cpu.state_.b;
+    cpu.m_a = cpu.m_b;
 
     // C2B3: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C2B6: BEQ $0074
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC32C;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC32C;
 
     // C2B8: STB $1,X
     // TODO: Handle indexed addressing: STB $1,X
@@ -139,25 +139,25 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB ,X
 
     // C2C0: LDB #$FF
-    cpu.state_.b = 0xFF;
+    cpu.m_b = 0xFF;
 
     // C2C3: LEAS -$3,S
     // TODO: Fix comma operator: LEAS -$3,S
 
     // C2C5: LDX #$C7B7
-    cpu.state_.x = 0xC7B7;
+    cpu.m_x = 0xC7B7;
 
     // C2C8: LDB A,X
     // TODO: Fix comma operator: LDB A,X
 
     // C2CA: LDX #$C7B6
-    cpu.state_.x = 0xC7B6;
+    cpu.m_x = 0xC7B6;
 
     // C2CD: SUBB A,X
     // TODO: Fix comma operator: SUBB A,X
 
     // C2CF: SUBB #$02
-    cpu.state_.b -= 0x02;
+    cpu.m_b -= 0x02;
 
     // C2D1: STB ,S
     // TODO: Handle indexed addressing: STB ,S
@@ -166,22 +166,22 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDB A,X
 
     // C2D5: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C2D9: LDB #$00
-    cpu.state_.b = 0x00;
+    cpu.m_b = 0x00;
 
     // C2DB: STB $1,S
     // TODO: Handle indexed addressing: STB $1,S
 
     // C2DD: ORCC #$01
-    cpu.state_.cc |= 0x01;
+    cpu.m_cc |= 0x01;
 
     // C2DF: LDB ,X+
     // TODO: Complex indexed addressing: ,X+
 
     // C2E1: ANDB #$0F
-    cpu.state_.b &= 0x0F;
+    cpu.m_b &= 0x0F;
 
     // C2E3: ADCB $1,S
     // TODO: Convert ADCB $1,S
@@ -193,7 +193,7 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC ,S
 
     // C2E9: BNE $0091
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC27C;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC27C;
 
     // C2EB: ADCB #$00
     // TODO: Convert ADCB #$00
@@ -211,7 +211,7 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDB $1,X
 
     // C2F9: ANDB #$0F
-    cpu.state_.b &= 0x0F;
+    cpu.m_b &= 0x0F;
 
     // C2FB: ADDB $2,S
     // TODO: Fix comma operator: ADDB $2,S
@@ -229,64 +229,64 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAS $3,S
 
     // C306: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C309: LDU #$4C00
-    cpu.state_.u = 0x4C00;
+    cpu.m_u = 0x4C00;
 
     // C30C: LDD ,X++
-    cpu.state_.d = cpu.read_memory_word(cpu.state_.x++);
+    cpu.m_d = cpu.read_memory16(cpu.m_x++);
 
     // C30E: STD ,U++
-    cpu.write_memory(cpu.state_.u++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_u++, cpu.m_d);
 
     // C310: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C313: BCS $00BE
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC2D3;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC2D3;
 
     // C315: LDA #$FF
-    cpu.state_.a = 0xFF;
+    cpu.m_a = 0xFF;
 
     // C317: STA $4687
-    cpu.write_memory(0x4687, cpu.state_.a);
+    cpu.write_memory(0x4687, cpu.m_a);
 
     // C31A: LDX #$0100
-    cpu.state_.x = 0x0100;
+    cpu.m_x = 0x0100;
 
     // C31D: STA $4640
-    cpu.write_memory(0x4640, cpu.state_.a);
+    cpu.write_memory(0x4640, cpu.m_a);
 
     // C320: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
     // C322: BNE $00CF
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC2F3;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC2F3;
 
     // C324: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // C326: STA $4687
-    cpu.write_memory(0x4687, cpu.state_.a);
+    cpu.write_memory(0x4687, cpu.m_a);
 
     // C329: LDX #$A000
-    cpu.state_.x = 0xA000;
+    cpu.m_x = 0xA000;
 
     // C32C: STA $4640
-    cpu.write_memory(0x4640, cpu.state_.a);
+    cpu.write_memory(0x4640, cpu.m_a);
 
     // C32F: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
     // C331: BNE $00DE
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC311;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC311;
 
     // C333: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C336: LDY #$4C00
-    cpu.state_.y = 0x4C00;
+    cpu.m_y = 0x4C00;
 
     // C33A: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -295,40 +295,40 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,Y
 
     // C33E: STU ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.u);
+    cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
     // C340: STD ,X++
-    cpu.write_memory(cpu.state_.x++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_x++, cpu.m_d);
 
     // C342: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C345: BCS $00EC
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC333;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC333;
 
     // C347: LDA #$03
-    cpu.state_.a = 0x03;
+    cpu.m_a = 0x03;
 
     // C349: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C34C: BEQ $012E
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC37C;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC37C;
 
     // C34E: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // C350: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C353: BEQ $011E
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC373;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC373;
 
     // C355: JSR $C3EE
     cpu.call_function(0xC3EE);
 
     // C358: LDA #$03
-    cpu.state_.a = 0x03;
+    cpu.m_a = 0x03;
 
     // C35A: JSR $C3EE
     cpu.call_function(0xC3EE);
@@ -337,106 +337,106 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC2C3);
 
     // C360: BEQ $012E
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC390;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC390;
 
     // C362: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // C364: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C367: BEQ $011E
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC387;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC387;
 
     // C369: JSR $C24E
     cpu.call_function(0xC24E);
 
     // C36C: LDX #$C7B6
-    cpu.state_.x = 0xC7B6;
+    cpu.m_x = 0xC7B6;
 
     // C36F: LDB $0003,X
     // TODO: Fix comma operator: LDB $0003,X
 
     // C373: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C377: LDU #$4500
-    cpu.state_.u = 0x4500;
+    cpu.m_u = 0x4500;
 
     // C37A: BRA $0169
-    cpu.state_.pc = 0xC3E5;
+    cpu.m_pc = 0xC3E5;
 
     // C37C: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // C37E: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C381: BNE $0159
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC3DC;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC3DC;
 
     // C383: LDA $4596
-    cpu.state_.a = cpu.read_memory(0x4596);
+    cpu.m_a = cpu.read_memory(0x4596);
 
     // C386: ANDA #$0F
-    cpu.state_.a &= 0x0F;
+    cpu.m_a &= 0x0F;
 
     // C388: STA $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.a);
+    cpu.write_memory(0x4AFA, cpu.m_a);
 
     // C38B: LDA $4506
-    cpu.state_.a = cpu.read_memory(0x4506);
+    cpu.m_a = cpu.read_memory(0x4506);
 
     // C38E: ANDA #$0F
-    cpu.state_.a &= 0x0F;
+    cpu.m_a &= 0x0F;
 
     // C390: CMPA $4AFA
     cpu.compare_a(cpu.read_memory(0x4AFA));
 
     // C393: BNE $0157
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC3EC;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC3EC;
 
     // C395: LDA $4597
-    cpu.state_.a = cpu.read_memory(0x4597);
+    cpu.m_a = cpu.read_memory(0x4597);
 
     // C398: ANDA #$0F
-    cpu.state_.a &= 0x0F;
+    cpu.m_a &= 0x0F;
 
     // C39A: STA $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.a);
+    cpu.write_memory(0x4AFA, cpu.m_a);
 
     // C39D: LDA $4507
-    cpu.state_.a = cpu.read_memory(0x4507);
+    cpu.m_a = cpu.read_memory(0x4507);
 
     // C3A0: ANDA #$0F
-    cpu.state_.a &= 0x0F;
+    cpu.m_a &= 0x0F;
 
     // C3A2: CMPA $4AFA
     cpu.compare_a(cpu.read_memory(0x4AFA));
 
     // C3A5: BEQ $0178
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC41F;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC41F;
 
     // C3A7: LDX #$C7B6
-    cpu.state_.x = 0xC7B6;
+    cpu.m_x = 0xC7B6;
 
     // C3AA: LDB $0003,X
     // TODO: Fix comma operator: LDB $0003,X
 
     // C3AE: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C3B2: TFR X,U
-    cpu.state_.u = cpu.state_.x;
+    cpu.m_u = cpu.m_x;
 
     // C3B4: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C3B7: LDB $C7B7
-    cpu.state_.b = cpu.read_memory(0xC7B7);
+    cpu.m_b = cpu.read_memory(0xC7B7);
 
     // C3BA: STB $4B02
-    cpu.write_memory(0x4B02, cpu.state_.b);
+    cpu.write_memory(0x4B02, cpu.m_b);
 
     // C3BD: LDB ,U+
     // TODO: Complex indexed addressing: ,U+
@@ -448,16 +448,16 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4B02
 
     // C3C4: BNE $016F
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC435;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC435;
 
     // C3C6: LDA #$02
-    cpu.state_.a = 0x02;
+    cpu.m_a = 0x02;
 
     // C3C8: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C3CB: BEQ $018A
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC357;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC357;
 
     // C3CD: JSR $C3EE
     cpu.call_function(0xC3EE);
@@ -466,58 +466,58 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC2C3);
 
     // C3D3: BEQ $018A
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC35F;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC35F;
 
     // C3D5: JSR $C24E
     cpu.call_function(0xC24E);
 
     // C3D9: BNE $017A
-    if (!cpu.zero_flag()) cpu.state_.pc = 0xC455;
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC455;
 
     // C3DB: LDX #$455C
-    cpu.state_.x = 0x455C;
+    cpu.m_x = 0x455C;
 
     // C3DE: JSR $C6D4
     cpu.call_function(0xC6D4);
 
     // C3E1: LDD $4AFA
-    cpu.state_.d = cpu.read_memory_word(0x4AFA);
+    cpu.m_d = cpu.read_memory16(0x4AFA);
 
     // C3E4: STD $4B04
-    cpu.write_memory(0x4B04, cpu.state_.d);
+    cpu.write_memory16(0x4B04, cpu.m_d);
 
     // C3E7: LDD $4AFC
-    cpu.state_.d = cpu.read_memory_word(0x4AFC);
+    cpu.m_d = cpu.read_memory16(0x4AFC);
 
     // C3EA: STD $4B06
-    cpu.write_memory(0x4B06, cpu.state_.d);
+    cpu.write_memory16(0x4B06, cpu.m_d);
 
     // C3EE: LDX #$C7B7
-    cpu.state_.x = 0xC7B7;
+    cpu.m_x = 0xC7B7;
 
     // C3F1: LDB A,X
     // TODO: Fix comma operator: LDB A,X
 
     // C3F3: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C3F7: STX $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.x);
+    cpu.write_memory16(0x4AFA, cpu.m_x);
 
     // C3FA: LDX #$C7B6
-    cpu.state_.x = 0xC7B6;
+    cpu.m_x = 0xC7B6;
 
     // C3FD: LDB A,X
     // TODO: Fix comma operator: LDB A,X
 
     // C3FF: LDX #$4C00
-    cpu.state_.x = 0x4C00;
+    cpu.m_x = 0x4C00;
 
     // C403: TFR X,U
-    cpu.state_.u = cpu.state_.x;
+    cpu.m_u = cpu.m_x;
 
     // C405: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C409: LDB ,U+
     // TODO: Complex indexed addressing: ,U+
@@ -526,46 +526,46 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STB ,X+
 
     // C40D: CMPX $4AFA
-    cpu.compare_x(cpu.read_memory_word(0x4AFA));
+    cpu.compare_x(cpu.read_memory16(0x4AFA));
 
     // C410: BCS $01BB
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC3CD;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC3CD;
 
     // C413: JSR $C2C3
     cpu.call_function(0xC2C3);
 
     // C416: BEQ $0201
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC419;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC419;
 
     // C418: STA $4AFA
-    cpu.write_memory(0x4AFA, cpu.state_.a);
+    cpu.write_memory(0x4AFA, cpu.m_a);
 
     // C41B: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C41E: LDU #$4C00
-    cpu.state_.u = 0x4C00;
+    cpu.m_u = 0x4C00;
 
     // C421: LDD ,X++
-    cpu.state_.d = cpu.read_memory_word(cpu.state_.x++);
+    cpu.m_d = cpu.read_memory16(cpu.m_x++);
 
     // C423: STD ,U++
-    cpu.write_memory(cpu.state_.u++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_u++, cpu.m_d);
 
     // C425: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C428: BCS $01D3
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC3FD;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC3FD;
 
     // C42A: JSR $C6B8
     cpu.call_function(0xC6B8);
 
     // C42D: LDX #$4500
-    cpu.state_.x = 0x4500;
+    cpu.m_x = 0x4500;
 
     // C430: LDY #$4C00
-    cpu.state_.y = 0x4C00;
+    cpu.m_y = 0x4C00;
 
     // C434: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -574,19 +574,19 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,Y
 
     // C438: STU ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.u);
+    cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
     // C43A: STD ,X++
-    cpu.write_memory(cpu.state_.x++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_x++, cpu.m_d);
 
     // C43C: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C43F: BCS $01E6
-    if (cpu.carry_flag()) cpu.state_.pc = 0xC427;
+    if (cpu.carry_flag()) cpu.m_pc = 0xC427;
 
     // C441: LDA $4AFA
-    cpu.state_.a = cpu.read_memory(0x4AFA);
+    cpu.m_a = cpu.read_memory(0x4AFA);
 
     // C444: JSR $C3EE
     cpu.call_function(0xC3EE);
@@ -595,7 +595,7 @@ void routine_c24e_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC2C3);
 
     // C44A: BEQ $0201
-    if (cpu.zero_flag()) cpu.state_.pc = 0xC44D;
+    if (cpu.zero_flag()) cpu.m_pc = 0xC44D;
 
     // C44C: JSR $C200
     cpu.call_function(0xC200);

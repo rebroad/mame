@@ -38,6 +38,8 @@ def regenerate_all_routines():
     # Convert each file with logging to file
     success_count = 0
     error_count = 0
+    updated_count = 0
+    skipped_count = 0
 
     with open(log_file, 'w') as log:
         log.write(f"Regeneration started at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -64,9 +66,20 @@ def regenerate_all_routines():
 
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                log.write(f"✓ {disasm_file.name} -> {cpp_file.name}\n")
                 all_routine_names.add(addr)
                 success_count += 1
+                
+                # Check if file was updated or skipped based on converter output
+                if "Updated" in result.stdout:
+                    log.write(f"✓ Updated {disasm_file.name} -> {cpp_file.name}\n")
+                    updated_count += 1
+                elif "Skipped" in result.stdout:
+                    log.write(f"⏭️  Skipped {disasm_file.name} -> {cpp_file.name} (no changes)\n")
+                    skipped_count += 1
+                else:
+                    log.write(f"✓ {disasm_file.name} -> {cpp_file.name}\n")
+                    updated_count += 1
+                    
             except subprocess.CalledProcessError as e:
                 log.write(f"✗ {disasm_file.name} -> {cpp_file.name}\n")
                 log.write(f"  Error: {e}\n")
@@ -78,7 +91,9 @@ def regenerate_all_routines():
             if (i + 1) % 50 == 0:
                 print(f"📊 Progress: {i + 1}/{len(disasm_files)} files processed...")
 
-    print(f"\n📊 Conversion complete: {success_count}/{len(disasm_files)} files converted successfully")
+    print(f"\n📊 Conversion complete: {success_count}/{len(disasm_files)} files processed successfully")
+    print(f"   • {updated_count} files updated")
+    print(f"   • {skipped_count} files skipped (no changes)")
 
     if error_count > 0:
         print(f"⚠️  {error_count} files failed to convert (see {log_file} for details)")

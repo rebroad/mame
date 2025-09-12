@@ -2,7 +2,7 @@
 
 namespace StarWars {
 
-void routine_b76c_impl(StarWarsCPU& cpu) {
+void routine_b76c_impl(CPU6809& cpu) {
     // Converted from rom_disasm_b76c.md
     // Address: 0xB76C
 
@@ -13,19 +13,19 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xB948);
 
     // B771: LDA #$06
-    cpu.state_.a = 0x06;
+    cpu.m_a = 0x06;
 
     // B773: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B775: LDA #$18
-    cpu.state_.a = 0x18;
+    cpu.m_a = 0x18;
 
     // B777: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
 
     // B779: LDD #$0000
-    cpu.state_.d = 0x0000;
+    cpu.m_d = 0x0000;
 
     // B77C: SUBD -$E,U
     // TODO: Fix comma operator: SUBD -$E,U
@@ -43,7 +43,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STD ,X
 
     // B787: LDD #$0000
-    cpu.state_.d = 0x0000;
+    cpu.m_d = 0x0000;
 
     // B78A: SUBD -$6,U
     // TODO: Fix comma operator: SUBD -$6,U
@@ -61,7 +61,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STD $2,X
 
     // B795: LDD #$0000
-    cpu.state_.d = 0x0000;
+    cpu.m_d = 0x0000;
 
     // B798: SUBD $2,U
     // TODO: Fix comma operator: SUBD $2,U
@@ -85,13 +85,13 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xB948);
 
     // B7A9: LDA #$07
-    cpu.state_.a = 0x07;
+    cpu.m_a = 0x07;
 
     // B7AB: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B7AD: LDA #$18
-    cpu.state_.a = 0x18;
+    cpu.m_a = 0x18;
 
     // B7AF: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
@@ -148,13 +148,13 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xB948);
 
     // B7D8: LDA #$08
-    cpu.state_.a = 0x08;
+    cpu.m_a = 0x08;
 
     // B7DA: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B7DC: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // B7DE: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
@@ -190,13 +190,13 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $6,X
 
     // B7F4: LDB #$80
-    cpu.state_.b = 0x80;
+    cpu.m_b = 0x80;
 
     // B7F8: BVC $0092
     // TODO: Convert BVC $0092
 
     // B7FC: BRA $00B0
-    cpu.state_.pc = 0xB7AE;
+    cpu.m_pc = 0xB7AE;
 
     // B7FE: ASL $9,X
     // TODO: Convert ASL $9,X
@@ -214,7 +214,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Convert ROR $9,X
 
     // B80A: BRA $00B0
-    cpu.state_.pc = 0xB7BC;
+    cpu.m_pc = 0xB7BC;
 
     // B80C: ASL $B,X
     // TODO: Convert ASL $B,X
@@ -244,7 +244,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xCDA0);
 
     // B821: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B824: STD $6,X
     // TODO: Handle indexed addressing: STD $6,X
@@ -259,7 +259,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xCDA0);
 
     // B82D: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B830: STD $8,X
     // TODO: Handle indexed addressing: STD $8,X
@@ -274,7 +274,7 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xCDA0);
 
     // B839: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B83C: STD $A,X
     // TODO: Handle indexed addressing: STD $A,X
@@ -307,109 +307,109 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STD $A,X
 
     // B852: LDD #$0001
-    cpu.state_.d = 0x0001;
+    cpu.m_d = 0x0001;
 
     // B855: STD <$01
-    cpu.write_memory(0x01, cpu.state_.d);
+    cpu.write_memory16(0x01, cpu.m_d);
 
     // B857: LDD #$0203
-    cpu.state_.d = 0x0203;
+    cpu.m_d = 0x0203;
 
     // B85A: STD <$03
-    cpu.write_memory(0x03, cpu.state_.d);
+    cpu.write_memory16(0x03, cpu.m_d);
 
     // B85C: BRA $00FC
-    cpu.state_.pc = 0xB85A;
+    cpu.m_pc = 0xB85A;
 
     // B85E: LDD #$0304
-    cpu.state_.d = 0x0304;
+    cpu.m_d = 0x0304;
 
     // B861: STD <$01
-    cpu.write_memory(0x01, cpu.state_.d);
+    cpu.write_memory16(0x01, cpu.m_d);
 
     // B863: LDD #$0502
-    cpu.state_.d = 0x0502;
+    cpu.m_d = 0x0502;
 
     // B866: STD <$03
-    cpu.write_memory(0x03, cpu.state_.d);
+    cpu.write_memory16(0x03, cpu.m_d);
 
     // B868: JSR $B948
     cpu.call_function(0xB948);
 
     // B86B: LDA <$01
-    cpu.state_.a = cpu.read_memory(0x01);
+    cpu.m_a = cpu.read_memory(0x01);
 
     // B86D: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B86F: LDA #$20
-    cpu.state_.a = 0x20;
+    cpu.m_a = 0x20;
 
     // B871: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
 
     // B873: LDD $5018
-    cpu.state_.d = cpu.read_memory_word(0x5018);
+    cpu.m_d = cpu.read_memory16(0x5018);
 
     // B876: STD ,X
     // TODO: Handle indexed addressing: STD ,X
 
     // B878: LDD $501A
-    cpu.state_.d = cpu.read_memory_word(0x501A);
+    cpu.m_d = cpu.read_memory16(0x501A);
 
     // B87B: ADDA #$FE
-    cpu.state_.a += 0xFE;
+    cpu.m_a += 0xFE;
 
     // B87D: STD $2,X
     // TODO: Handle indexed addressing: STD $2,X
 
     // B87F: LDD $501C
-    cpu.state_.d = cpu.read_memory_word(0x501C);
+    cpu.m_d = cpu.read_memory16(0x501C);
 
     // B882: STD $4,X
     // TODO: Handle indexed addressing: STD $4,X
 
     // B884: LDD $5098
-    cpu.state_.d = cpu.read_memory_word(0x5098);
+    cpu.m_d = cpu.read_memory16(0x5098);
 
     // B887: ADDA #$7F
-    cpu.state_.a += 0x7F;
+    cpu.m_a += 0x7F;
 
     // B889: SUBD $5018
-    cpu.state_.d -= 0x5018;
+    cpu.m_d -= 0x5018;
 
     // B88C: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B88F: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B892: STD $6,X
     // TODO: Handle indexed addressing: STD $6,X
 
     // B894: LDD $509A
-    cpu.state_.d = cpu.read_memory_word(0x509A);
+    cpu.m_d = cpu.read_memory16(0x509A);
 
     // B897: ADDA #$C1
-    cpu.state_.a += 0xC1;
+    cpu.m_a += 0xC1;
 
     // B899: SUBD $501A
-    cpu.state_.d -= 0x501A;
+    cpu.m_d -= 0x501A;
 
     // B89C: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B89F: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B8A2: STD $8,X
     // TODO: Handle indexed addressing: STD $8,X
 
     // B8A4: LDA <$04
-    cpu.state_.a = cpu.read_memory(0x04);
+    cpu.m_a = cpu.read_memory(0x04);
 
     // B8A6: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B8A9: JSR $CDB5
     cpu.call_function(0xCDB5);
@@ -421,76 +421,76 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xB948);
 
     // B8B1: LDA <$02
-    cpu.state_.a = cpu.read_memory(0x02);
+    cpu.m_a = cpu.read_memory(0x02);
 
     // B8B3: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B8B5: LDA #$20
-    cpu.state_.a = 0x20;
+    cpu.m_a = 0x20;
 
     // B8B7: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
 
     // B8B9: LDD $5018
-    cpu.state_.d = cpu.read_memory_word(0x5018);
+    cpu.m_d = cpu.read_memory16(0x5018);
 
     // B8BC: ADDA #$02
-    cpu.state_.a += 0x02;
+    cpu.m_a += 0x02;
 
     // B8BE: STD ,X
     // TODO: Handle indexed addressing: STD ,X
 
     // B8C0: LDD $501A
-    cpu.state_.d = cpu.read_memory_word(0x501A);
+    cpu.m_d = cpu.read_memory16(0x501A);
 
     // B8C3: STD $2,X
     // TODO: Handle indexed addressing: STD $2,X
 
     // B8C5: LDD $501C
-    cpu.state_.d = cpu.read_memory_word(0x501C);
+    cpu.m_d = cpu.read_memory16(0x501C);
 
     // B8C8: STD $4,X
     // TODO: Handle indexed addressing: STD $4,X
 
     // B8CA: LDD $5098
-    cpu.state_.d = cpu.read_memory_word(0x5098);
+    cpu.m_d = cpu.read_memory16(0x5098);
 
     // B8CD: ADDA #$7F
-    cpu.state_.a += 0x7F;
+    cpu.m_a += 0x7F;
 
     // B8CF: SUBD $5018
-    cpu.state_.d -= 0x5018;
+    cpu.m_d -= 0x5018;
 
     // B8D2: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B8D5: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B8D8: STD $6,X
     // TODO: Handle indexed addressing: STD $6,X
 
     // B8DA: LDD $509A
-    cpu.state_.d = cpu.read_memory_word(0x509A);
+    cpu.m_d = cpu.read_memory16(0x509A);
 
     // B8DD: SUBD $501A
-    cpu.state_.d -= 0x501A;
+    cpu.m_d -= 0x501A;
 
     // B8E0: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B8E3: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B8E6: STD $8,X
     // TODO: Handle indexed addressing: STD $8,X
 
     // B8E8: LDA <$04
-    cpu.state_.a = cpu.read_memory(0x04);
+    cpu.m_a = cpu.read_memory(0x04);
 
     // B8EA: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B8ED: JSR $CDB5
     cpu.call_function(0xCDB5);
@@ -502,79 +502,79 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xB948);
 
     // B8F5: LDA <$03
-    cpu.state_.a = cpu.read_memory(0x03);
+    cpu.m_a = cpu.read_memory(0x03);
 
     // B8F7: STA $C,X
     // TODO: Handle indexed addressing: STA $C,X
 
     // B8F9: LDA #$20
-    cpu.state_.a = 0x20;
+    cpu.m_a = 0x20;
 
     // B8FB: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
 
     // B8FD: LDD $5018
-    cpu.state_.d = cpu.read_memory_word(0x5018);
+    cpu.m_d = cpu.read_memory16(0x5018);
 
     // B900: STD ,X
     // TODO: Handle indexed addressing: STD ,X
 
     // B902: LDD $501A
-    cpu.state_.d = cpu.read_memory_word(0x501A);
+    cpu.m_d = cpu.read_memory16(0x501A);
 
     // B905: ADDA #$02
-    cpu.state_.a += 0x02;
+    cpu.m_a += 0x02;
 
     // B907: STD $2,X
     // TODO: Handle indexed addressing: STD $2,X
 
     // B909: LDD $501C
-    cpu.state_.d = cpu.read_memory_word(0x501C);
+    cpu.m_d = cpu.read_memory16(0x501C);
 
     // B90C: STD $4,X
     // TODO: Handle indexed addressing: STD $4,X
 
     // B90E: LDD $5098
-    cpu.state_.d = cpu.read_memory_word(0x5098);
+    cpu.m_d = cpu.read_memory16(0x5098);
 
     // B911: ADDA #$7F
-    cpu.state_.a += 0x7F;
+    cpu.m_a += 0x7F;
 
     // B913: SUBD $5018
-    cpu.state_.d -= 0x5018;
+    cpu.m_d -= 0x5018;
 
     // B916: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B919: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B91C: STD $6,X
     // TODO: Handle indexed addressing: STD $6,X
 
     // B91E: LDD $509A
-    cpu.state_.d = cpu.read_memory_word(0x509A);
+    cpu.m_d = cpu.read_memory16(0x509A);
 
     // B921: ADDA #$3F
-    cpu.state_.a += 0x3F;
+    cpu.m_a += 0x3F;
 
     // B923: SUBD $501A
-    cpu.state_.d -= 0x501A;
+    cpu.m_d -= 0x501A;
 
     // B926: JSR $CD9E
     cpu.call_function(0xCD9E);
 
     // B929: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B92C: STD $8,X
     // TODO: Handle indexed addressing: STD $8,X
 
     // B92E: LDA <$04
-    cpu.state_.a = cpu.read_memory(0x04);
+    cpu.m_a = cpu.read_memory(0x04);
 
     // B930: LDB $4703
-    cpu.state_.b = cpu.read_memory(0x4703);
+    cpu.m_b = cpu.read_memory(0x4703);
 
     // B933: JSR $CDB5
     cpu.call_function(0xCDB5);
@@ -583,10 +583,10 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STD $A,X
 
     // B939: LDX #$49E2
-    cpu.state_.x = 0x49E2;
+    cpu.m_x = 0x49E2;
 
     // B93C: LDA #$00
-    cpu.state_.a = 0x00;
+    cpu.m_a = 0x00;
 
     // B93E: STA $D,X
     // TODO: Handle indexed addressing: STA $D,X
@@ -598,49 +598,49 @@ void routine_b76c_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // B945: BCS $01D0
-    if (cpu.carry_flag()) cpu.state_.pc = 0xB917;
+    if (cpu.carry_flag()) cpu.m_pc = 0xB917;
 
     // B948: LDB <$A2
-    cpu.state_.b = cpu.read_memory(0xA2);
+    cpu.m_b = cpu.read_memory(0xA2);
 
     // B94B: CMPB #$08
     cpu.compare_b(0x08);
 
     // B94D: BCS $01E5
-    if (cpu.carry_flag()) cpu.state_.pc = 0xB934;
+    if (cpu.carry_flag()) cpu.m_pc = 0xB934;
 
     // B94F: LDB #$00
-    cpu.state_.b = 0x00;
+    cpu.m_b = 0x00;
 
     // B951: STB <$A2
-    cpu.write_memory(0xA2, cpu.state_.b);
+    cpu.write_memory(0xA2, cpu.m_b);
 
     // B953: LDA #$0E
-    cpu.state_.a = 0x0E;
+    cpu.m_a = 0x0E;
 
     // B956: LDX #$49E2
-    cpu.state_.x = 0x49E2;
+    cpu.m_x = 0x49E2;
 
     // B959: LEAX D,X
     // TODO: Fix comma operator: LEAX D,X
 
     // B95C: LDD #$14BD
-    cpu.state_.d = 0x14BD;
+    cpu.m_d = 0x14BD;
 
     // B95F: STD $5022
-    cpu.write_memory(0x5022, cpu.state_.d);
+    cpu.write_memory16(0x5022, cpu.m_d);
 
     // B962: LDD #$3C8C
-    cpu.state_.d = 0x3C8C;
+    cpu.m_d = 0x3C8C;
 
     // B965: STD $5024
-    cpu.write_memory(0x5024, cpu.state_.d);
+    cpu.write_memory16(0x5024, cpu.m_d);
 
     // B968: LDD #$0018
-    cpu.state_.d = 0x0018;
+    cpu.m_d = 0x0018;
 
     // B96B: STD >$0000
-    cpu.write_memory(0x0000, cpu.state_.d);
+    cpu.write_memory16(0x0000, cpu.m_d);
 
 }
 

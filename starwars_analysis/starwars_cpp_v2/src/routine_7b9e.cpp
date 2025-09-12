@@ -2,21 +2,21 @@
 
 namespace StarWars {
 
-void routine_7b9e_impl(StarWarsCPU& cpu) {
+void routine_7b9e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7b9e.md
     // Address: 0x7B9E
 
     // 7B9E: JMP $0882
-    cpu.state_.pc = 0x0882;
+    cpu.m_pc = 0x0882;
 
     // 7BA1: LDD <$82
-    cpu.state_.d = cpu.read_memory_word(0x82);
+    cpu.m_d = cpu.read_memory16(0x82);
 
     // 7BA3: BNE $FF89
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x7B2E;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7B2E;
 
     // 7BA5: EORB #$81
-    cpu.state_.b ^= 0x81;
+    cpu.m_b ^= 0x81;
 
     // 7BA7: DEC <$82
     // TODO: Convert DEC <$82
@@ -28,13 +28,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCA #$BE
 
     // 7BAE: SUBA #$66
-    cpu.state_.a -= 0x66;
+    cpu.m_a -= 0x66;
 
     // 7BB0: SBCA #$E6
     // TODO: Convert SBCA #$E6
 
     // 7BB2: JMP $3D82
-    cpu.state_.pc = 0x3D82;
+    cpu.m_pc = 0x3D82;
 
     // 7BB5: SBCB <$7E
     // TODO: Convert SBCB <$7E
@@ -46,16 +46,16 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCB <$7C
 
     // 7BBB: LDB <$83
-    cpu.state_.b = cpu.read_memory(0x83);
+    cpu.m_b = cpu.read_memory(0x83);
 
     // 7BBD: BCS $009F
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7B5E;
+    if (cpu.carry_flag()) cpu.m_pc = 0x7B5E;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
 
     // 7BC1: LDD <$7D
-    cpu.state_.d = cpu.read_memory_word(0x7D);
+    cpu.m_d = cpu.read_memory16(0x7D);
 
     // 7BC4: SBCA #$C8
     // TODO: Convert SBCA #$C8
@@ -70,7 +70,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0xB982, 0);
 
     // 7BCD: EORB #$81
-    cpu.state_.b ^= 0x81;
+    cpu.m_b ^= 0x81;
 
     // 7BCF: PULS A,PC
     // TODO: Convert PULS A,PC
@@ -82,28 +82,28 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR $82D2
 
     // 7BD6: SUBA #$C6
-    cpu.state_.a -= 0xC6;
+    cpu.m_a -= 0xC6;
 
     // 7BD8: SBCA #$C8
     // TODO: Convert SBCA #$C8
 
     // 7BDA: JMP $D883
-    cpu.state_.pc = 0xD883;
+    cpu.m_pc = 0xD883;
 
     // 7BDD: BCS $00BF
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7B9E;
+    if (cpu.carry_flag()) cpu.m_pc = 0x7B9E;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
 
     // 7BE1: LDD <$80
-    cpu.state_.d = cpu.read_memory_word(0x80);
+    cpu.m_d = cpu.read_memory16(0x80);
 
     // 7BE3: BCS $FFC9
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7BAE;
+    if (cpu.carry_flag()) cpu.m_pc = 0x7BAE;
 
     // 7BE5: SUBB $7DE3
-    cpu.state_.b -= 0x7DE3;
+    cpu.m_b -= 0x7DE3;
 
     // 7BE8: SBCA #$E6
     // TODO: Convert SBCA #$E6
@@ -112,13 +112,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x1682, 0);
 
     // 7BED: EORB #$7F
-    cpu.state_.b ^= 0x7F;
+    cpu.m_b ^= 0x7F;
 
     // 7BEF: ADCA $82C8
     // TODO: Convert ADCA $82C8
 
     // 7BF2: SUBA #$EE
-    cpu.state_.a -= 0xEE;
+    cpu.m_a -= 0xEE;
 
     // 7BF4: SBCA #$BE
     // TODO: Convert SBCA #$BE
@@ -130,7 +130,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCA #$C8
 
     // 7BFA: JMP $5680
-    cpu.state_.pc = 0x5680;
+    cpu.m_pc = 0x5680;
 
     // 7BFD: CLR $7E08
     cpu.write_memory(0x7E08, 0);
@@ -151,7 +151,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDB -$3,S
 
     // 7C0B: SUBA #$82
-    cpu.state_.a -= 0x82;
+    cpu.m_a -= 0x82;
 
     // 7C0D: LDB ,X+
     // TODO: Complex indexed addressing: ,X+
@@ -175,22 +175,22 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     cpu.compare_b(cpu.read_memory(0x807F));
 
     // 7C1E: JMP $0882
-    cpu.state_.pc = 0x0882;
+    cpu.m_pc = 0x0882;
 
     // 7C21: LDD <$7E
-    cpu.state_.d = cpu.read_memory_word(0x7E);
+    cpu.m_d = cpu.read_memory16(0x7E);
 
     // 7C23: JSR <$82
     cpu.call_function(0x82);
 
     // 7C25: SUBB $7FD2
-    cpu.state_.b -= 0x7FD2;
+    cpu.m_b -= 0x7FD2;
 
     // 7C28: SBCA #$F0
     // TODO: Convert SBCA #$F0
 
     // 7C2A: SUBA #$9B
-    cpu.state_.a -= 0x9B;
+    cpu.m_a -= 0x9B;
 
     // 7C2C: SBCA #$F0
     // TODO: Convert SBCA #$F0
@@ -217,22 +217,22 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCA #$01
 
     // 7C3C: SUBA #$7F
-    cpu.state_.a -= 0x7F;
+    cpu.m_a -= 0x7F;
 
     // 7C3E: JMP $0882
-    cpu.state_.pc = 0x0882;
+    cpu.m_pc = 0x0882;
 
     // 7C41: LDD <$7D
-    cpu.state_.d = cpu.read_memory_word(0x7D);
+    cpu.m_d = cpu.read_memory16(0x7D);
 
     // 7C44: SBCA #$C8
     // TODO: Convert SBCA #$C8
 
     // 7C46: JMP $D882
-    cpu.state_.pc = 0xD882;
+    cpu.m_pc = 0xD882;
 
     // 7C49: SUBB $7FD2
-    cpu.state_.b -= 0x7FD2;
+    cpu.m_b -= 0x7FD2;
 
     // 7C4C: SBCA #$F0
     // TODO: Convert SBCA #$F0
@@ -247,28 +247,28 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $8082
 
     // 7C55: LDB ,X++
-    cpu.state_.b = cpu.read_memory(cpu.state_.x++);
+    cpu.m_b = cpu.read_memory(cpu.m_x++);
 
     // 7C57: CMPA ,-X
     // TODO: Complex indexed addressing: ,-X
 
     // 7C59: SUBB $8176
-    cpu.state_.b -= 0x8176;
+    cpu.m_b -= 0x8176;
 
     // 7C5C: SUBA #$7F
-    cpu.state_.a -= 0x7F;
+    cpu.m_a -= 0x7F;
 
     // 7C5E: JMP $0882
-    cpu.state_.pc = 0x0882;
+    cpu.m_pc = 0x0882;
 
     // 7C61: LDD <$7E
-    cpu.state_.d = cpu.read_memory_word(0x7E);
+    cpu.m_d = cpu.read_memory16(0x7E);
 
     // 7C63: JSR <$82
     cpu.call_function(0x82);
 
     // 7C65: SUBB $7FD2
-    cpu.state_.b -= 0x7FD2;
+    cpu.m_b -= 0x7FD2;
 
     // 7C68: SBCA #$F0
     // TODO: Convert SBCA #$F0
@@ -280,7 +280,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCA #$C8
 
     // 7C6E: JMP $B982
-    cpu.state_.pc = 0xB982;
+    cpu.m_pc = 0xB982;
 
     // 7C71: SBCB <$7F
     // TODO: Convert SBCB <$7F
@@ -289,31 +289,31 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCA #$D2
 
     // 7C76: JMP $F182
-    cpu.state_.pc = 0xF182;
+    cpu.m_pc = 0xF182;
 
     // 7C79: LDX $7D80
-    cpu.state_.x = cpu.read_memory_word(0x7D80);
+    cpu.m_x = cpu.read_memory16(0x7D80);
 
     // 7C7C: SUBA #$7F
-    cpu.state_.a -= 0x7F;
+    cpu.m_a -= 0x7F;
 
     // 7C7E: JMP $0882
-    cpu.state_.pc = 0x0882;
+    cpu.m_pc = 0x0882;
 
     // 7C81: LDD <$7C
-    cpu.state_.d = cpu.read_memory_word(0x7C);
+    cpu.m_d = cpu.read_memory16(0x7C);
 
     // 7C83: LDX <$82
-    cpu.state_.x = cpu.read_memory_word(0x82);
+    cpu.m_x = cpu.read_memory16(0x82);
 
     // 7C85: SBCB <$7C
     // TODO: Convert SBCB <$7C
 
     // 7C87: LDX <$82
-    cpu.state_.x = cpu.read_memory_word(0x82);
+    cpu.m_x = cpu.read_memory16(0x82);
 
     // 7C89: SUBB $7C9E
-    cpu.state_.b -= 0x7C9E;
+    cpu.m_b -= 0x7C9E;
 
     // 7C8C: SBCA #$D2
     // TODO: Convert SBCA #$D2
@@ -322,7 +322,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert INC $9E82
 
     // 7C91: SUBB $7C9E
-    cpu.state_.b -= 0x7C9E;
+    cpu.m_b -= 0x7C9E;
 
     // 7C94: SBCA #$D2
     // TODO: Convert SBCA #$D2
@@ -331,16 +331,16 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert INC $9E82
 
     // 7C99: SUBB $7C9E
-    cpu.state_.b -= 0x7C9E;
+    cpu.m_b -= 0x7C9E;
 
     // 7C9C: SUBA #$7F
-    cpu.state_.a -= 0x7F;
+    cpu.m_a -= 0x7F;
 
     // 7C9E: TST $117D
     // TODO: Convert TST $117D
 
     // 7CA1: SUBA #$7D
-    cpu.state_.a -= 0x7D;
+    cpu.m_a -= 0x7D;
 
     // 7CA3: ADDD -$2,S
     // TODO: Fix comma operator: ADDD -$2,S
@@ -352,7 +352,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR $7EB9
 
     // 7CAA: JMP $F17F
-    cpu.state_.pc = 0xF17F;
+    cpu.m_pc = 0xF17F;
 
     // 7CAE: CLR $D280
     cpu.write_memory(0xD280, 0);
@@ -361,13 +361,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert COM <$80
 
     // 7CB3: BCS $0097
-    if (cpu.carry_flag()) cpu.state_.pc = 0x7C4C;
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C4C;
 
     // 7CB5: ADDA <$80
-    cpu.state_.a += 0x80;
+    cpu.m_a += 0x80;
 
     // 7CB7: LDU ,X++
-    cpu.state_.u = cpu.read_memory_word(cpu.state_.x++);
+    cpu.m_u = cpu.read_memory16(cpu.m_x++);
 
     // 7CBA: CMPA #$76
     cpu.compare_a(0x76);
@@ -385,16 +385,16 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XDEC $5E7B
 
     // 7CC7: JMP $7B9E
-    cpu.state_.pc = 0x7B9E;
+    cpu.m_pc = 0x7B9E;
 
     // 7CCA: XDEC $BE7B
     // TODO: Convert XDEC $BE7B
 
     // 7CCD: LDU <$7B
-    cpu.state_.u = cpu.read_memory_word(0x7B);
+    cpu.m_u = cpu.read_memory16(0x7B);
 
     // 7CCF: LDU $7C1E
-    cpu.state_.u = cpu.read_memory_word(0x7C1E);
+    cpu.m_u = cpu.read_memory16(0x7C1E);
 
     // 7CD2: INC $3E7C
     // TODO: Convert INC $3E7C
@@ -412,7 +412,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$20
 
     // 7CDE: BRA $0143
-    cpu.state_.pc = 0x7D23;
+    cpu.m_pc = 0x7D23;
 
     // 7CE0: COM <$30
     // TODO: Convert COM <$30
@@ -424,7 +424,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$02
 
     // 7CE6: SUBA #$8C
-    cpu.state_.a -= 0x8C;
+    cpu.m_a -= 0x8C;
 
     // 7CE8: XNC <$38
     // TODO: Convert XNC <$38
@@ -442,13 +442,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert SBCB #$01
 
     // 7CF2: SUBB #$00
-    cpu.state_.b -= 0x00;
+    cpu.m_b -= 0x00;
 
     // 7CF4: XNC <$80
     // TODO: Convert XNC <$80
 
     // 7CF6: SUBA #$05
-    cpu.state_.a -= 0x05;
+    cpu.m_a -= 0x05;
 
     // 7CF8: XNC <$00
     // TODO: Convert XNC <$00
@@ -466,7 +466,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert COM <$02
 
     // 7D02: SUBA #$B0
-    cpu.state_.a -= 0xB0;
+    cpu.m_a -= 0xB0;
 
     // 7D04: XNC <$0C
     // TODO: Convert XNC <$0C
@@ -517,13 +517,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert XANDCC #$01
 
     // 7D24: BRA $01A8
-    cpu.state_.pc = 0x7CCE;
+    cpu.m_pc = 0x7CCE;
 
     // 7D26: NEG <$C0
     // TODO: Convert NEG <$C0
 
     // 7D28: SUBB #$01
-    cpu.state_.b -= 0x01;
+    cpu.m_b -= 0x01;
 
     // 7D2A: NEG <$00
     // TODO: Convert NEG <$00
@@ -535,7 +535,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$01
 
     // 7D30: JMP <$0E
-    cpu.state_.pc = 0x0E;
+    cpu.m_pc = 0x0E;
 
     // 7D32: NEG <$08
     // TODO: Convert NEG <$08
@@ -553,13 +553,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert ASL <$01
 
     // 7D3C: BRA $01C0
-    cpu.state_.pc = 0x7CFE;
+    cpu.m_pc = 0x7CFE;
 
     // 7D3E: NEG <$80
     // TODO: Convert NEG <$80
 
     // 7D40: SUBA #$05
-    cpu.state_.a -= 0x05;
+    cpu.m_a -= 0x05;
 
     // 7D42: XNC <$00
     // TODO: Convert XNC <$00
@@ -577,13 +577,13 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert COM <$02
 
     // 7D4C: SUBB #$00
-    cpu.state_.b -= 0x00;
+    cpu.m_b -= 0x00;
 
     // 7D4E: XNC <$00
     // TODO: Convert XNC <$00
 
     // 7D50: SUBB #$02
-    cpu.state_.b -= 0x02;
+    cpu.m_b -= 0x02;
 
     // 7D52: COM <$00
     // TODO: Convert COM <$00
@@ -628,7 +628,7 @@ void routine_7b9e_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$01
 
     // 7D6E: SUBB #$C0
-    cpu.state_.b -= 0xC0;
+    cpu.m_b -= 0xC0;
 
     // 7D70: XNC <$A0
     // TODO: Convert XNC <$A0

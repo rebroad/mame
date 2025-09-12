@@ -2,7 +2,7 @@
 
 namespace StarWars {
 
-void routine_7eaf_impl(StarWarsCPU& cpu) {
+void routine_7eaf_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7eaf.md
     // Address: 0x7EAF
 
@@ -79,7 +79,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$2A
 
     // 7EE0: BPL $0035
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x7F17;
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F17;
 
     // 7EE2: NEG <$00
     // TODO: Convert NEG <$00
@@ -97,7 +97,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$2A
 
     // 7EEC: BPL $0041
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x7F2F;
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F2F;
 
     // 7EEE: NEG <$00
     // TODO: Convert NEG <$00
@@ -106,7 +106,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR <$02
 
     // 7EF2: EORA #$88
-    cpu.state_.a ^= 0x88;
+    cpu.m_a ^= 0x88;
 
     // 7EF4: NEG <$22
     // TODO: Convert NEG <$22
@@ -121,7 +121,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$CC
 
     // 7EFC: LDD #$0282
-    cpu.state_.d = 0x0282;
+    cpu.m_d = 0x0282;
 
     // 7EFF: SBCA #$01
     // TODO: Convert SBCA #$01
@@ -154,7 +154,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: EORA $1,X
 
     // 7F13: BPL $0090
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x7EA5;
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7EA5;
 
     // 7F15: LSR <$01
     // TODO: Convert LSR <$01
@@ -184,7 +184,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$03
 
     // 7F27: SUBB #$01
-    cpu.state_.b -= 0x01;
+    cpu.m_b -= 0x01;
 
     // 7F29: BVC $00A4
     // TODO: Convert BVC $00A4
@@ -196,7 +196,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$01
 
     // 7F2F: SUBA #$80
-    cpu.state_.a -= 0x80;
+    cpu.m_a -= 0x80;
 
     // 7F31: NEG <$30
     // TODO: Convert NEG <$30
@@ -235,10 +235,10 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$80
 
     // 7F49: SUBA #$01
-    cpu.state_.a -= 0x01;
+    cpu.m_a -= 0x01;
 
     // 7F4B: BRA $00BE
-    cpu.state_.pc = 0x7F0B;
+    cpu.m_pc = 0x7F0B;
 
     // 7F4D: NEG <$08
     // TODO: Convert NEG <$08
@@ -253,16 +253,16 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$2A
 
     // 7F55: BPL $00A9
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x7F00;
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F00;
 
     // 7F57: SUBB #$C0
-    cpu.state_.b -= 0xC0;
+    cpu.m_b -= 0xC0;
 
     // 7F59: NEG <$20
     // TODO: Convert NEG <$20
 
     // 7F5B: BRA $00AF
-    cpu.state_.pc = 0x7F0C;
+    cpu.m_pc = 0x7F0C;
 
     // 7F5D: NEG <$00
     // TODO: Convert NEG <$00
@@ -271,19 +271,19 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$20
 
     // 7F61: BRA $00B5
-    cpu.state_.pc = 0x7F18;
+    cpu.m_pc = 0x7F18;
 
     // 7F63: SUBB #$C0
-    cpu.state_.b -= 0xC0;
+    cpu.m_b -= 0xC0;
 
     // 7F65: NEG <$20
     // TODO: Convert NEG <$20
 
     // 7F67: BRA $00BB
-    cpu.state_.pc = 0x7F24;
+    cpu.m_pc = 0x7F24;
 
     // 7F69: SUBB #$C0
-    cpu.state_.b -= 0xC0;
+    cpu.m_b -= 0xC0;
 
     // 7F6B: NEG <$A8
     // TODO: Convert NEG <$A8
@@ -370,7 +370,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$02
 
     // 7FA4: SUBA $B001
-    cpu.state_.a -= 0xB001;
+    cpu.m_a -= 0xB001;
 
     // 7FA7: XNC <$02
     // TODO: Convert XNC <$02
@@ -385,7 +385,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$02
 
     // 7FB0: SUBA $B001
-    cpu.state_.a -= 0xB001;
+    cpu.m_a -= 0xB001;
 
     // 7FB3: XNC <$02
     // TODO: Convert XNC <$02
@@ -394,7 +394,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$80
 
     // 7FB7: SUBA #$05
-    cpu.state_.a -= 0x05;
+    cpu.m_a -= 0x05;
 
     // 7FB9: XNC <$0A
     // TODO: Convert XNC <$0A
@@ -403,10 +403,10 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC <$02
 
     // 7FBD: SUBA $B002
-    cpu.state_.a -= 0xB002;
+    cpu.m_a -= 0xB002;
 
     // 7FC0: BGE $013F
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x8001;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8001;
 
     // 7FC2: XNC <$0B
     // TODO: Convert XNC <$0B
@@ -421,7 +421,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$0E
 
     // 7FCA: JMP <$02
-    cpu.state_.pc = 0x02;
+    cpu.m_pc = 0x02;
 
     // 7FCC: XANDCC #$38
     // TODO: Convert XANDCC #$38
@@ -508,10 +508,10 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert LSR <$01
 
     // 8004: SUBA $B001
-    cpu.state_.a -= 0xB001;
+    cpu.m_a -= 0xB001;
 
     // 8007: BGE $0186
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x7F8F;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x7F8F;
 
     // 8009: NEG <$08
     // TODO: Convert NEG <$08
@@ -544,10 +544,10 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$B0
 
     // 801D: SUBA $012C
-    cpu.state_.a -= 0x012C;
+    cpu.m_a -= 0x012C;
 
     // 8020: BGE $0174
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x8096;
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8096;
 
     // 8022: ASL <$08
     // TODO: Convert ASL <$08
@@ -622,7 +622,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$32
 
     // 8052: JMP <$02
-    cpu.state_.pc = 0x02;
+    cpu.m_pc = 0x02;
 
     // 8054: XNC <$02
     // TODO: Convert XNC <$02
@@ -634,16 +634,16 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert ASL <$02
 
     // 805A: EORB #$C8
-    cpu.state_.b ^= 0xC8;
+    cpu.m_b ^= 0xC8;
 
     // 805C: XNC <$20
     // TODO: Convert XNC <$20
 
     // 805E: BRA $01B3
-    cpu.state_.pc = 0x8013;
+    cpu.m_pc = 0x8013;
 
     // 8060: BRA $01D3
-    cpu.state_.pc = 0x8035;
+    cpu.m_pc = 0x8035;
 
     // 8062: XNC <$00
     // TODO: Convert XNC <$00
@@ -661,7 +661,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x8C02);
 
     // 806D: SUBA #$80
-    cpu.state_.a -= 0x80;
+    cpu.m_a -= 0x80;
 
     // 806F: XNC <$23
     // TODO: Convert XNC <$23
@@ -670,7 +670,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert BLS $01C6
 
     // 8073: BRA $01E6
-    cpu.state_.pc = 0x805B;
+    cpu.m_pc = 0x805B;
 
     // 8075: XNC <$08
     // TODO: Convert XNC <$08
@@ -694,16 +694,16 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$02
 
     // 8083: BPL $0200
-    if (!cpu.negative_flag()) cpu.state_.pc = 0x8085;
+    if (!cpu.negative_flag()) cpu.m_pc = 0x8085;
 
     // 8085: NEG <$20
     // TODO: Convert NEG <$20
 
     // 8087: BRA $01DC
-    cpu.state_.pc = 0x8065;
+    cpu.m_pc = 0x8065;
 
     // 8089: SUBB #$C0
-    cpu.state_.b -= 0xC0;
+    cpu.m_b -= 0xC0;
 
     // 808B: XNC <$30
     // TODO: Convert XNC <$30
@@ -712,7 +712,7 @@ void routine_7eaf_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAX $2,X
 
     // 808F: LDD #$CC02
-    cpu.state_.d = 0xCC02;
+    cpu.m_d = 0xCC02;
 
     // 8092: LEAU -$D,Y
     // TODO: Fix comma operator: LEAU -$D,Y

@@ -12,76 +12,76 @@ from pathlib import Path
 
 # 6809 instruction to C++ mapping (robust)
 INSTRUCTION_MAP = {
-    'ORCC': 'cpu.state_.cc |= {operand}',
+    'ORCC': 'cpu.m_cc |= {operand}',
     'CLR': 'cpu.write_memory({operand}, 0)',
-    'LDA': 'cpu.state_.a = cpu.read_memory({operand})',
-    'STA': 'cpu.write_memory({operand}, cpu.state_.a)',
-    'LDB': 'cpu.state_.b = cpu.read_memory({operand})',
-    'STB': 'cpu.write_memory({operand}, cpu.state_.b)',
-    'LDD': 'cpu.state_.d = cpu.read_memory_word({operand})',
-    'STD': 'cpu.write_memory({operand}, cpu.state_.d)',
-    'LDX': 'cpu.state_.x = cpu.read_memory_word({operand})',
-    'STX': 'cpu.write_memory({operand}, cpu.state_.x)',
-    'LDY': 'cpu.state_.y = cpu.read_memory_word({operand})',
-    'STY': 'cpu.write_memory({operand}, cpu.state_.y)',
-    'LDU': 'cpu.state_.u = cpu.read_memory_word({operand})',
-    'STU': 'cpu.write_memory({operand}, cpu.state_.u)',
-    'LDS': 'cpu.state_.sp = cpu.read_memory_word({operand})',
-    'STS': 'cpu.write_memory({operand}, cpu.state_.sp)',
-    'TFR': 'cpu.state_.{dest} = cpu.state_.{src}',
-    'LEAX': 'cpu.state_.x += {operand}',
-    'LEAY': 'cpu.state_.y += {operand}',
-    'LEAS': 'cpu.state_.sp += {operand}',
-    'LEAU': 'cpu.state_.u += {operand}',
-    'JMP': 'cpu.state_.pc = {operand}',
+    'LDA': 'cpu.m_a = cpu.read_memory({operand})',
+    'STA': 'cpu.write_memory({operand}, cpu.m_a)',
+    'LDB': 'cpu.m_b = cpu.read_memory({operand})',
+    'STB': 'cpu.write_memory({operand}, cpu.m_b)',
+    'LDD': 'cpu.m_d = cpu.read_memory16({operand})',
+    'STD': 'cpu.write_memory16({operand}, cpu.m_d)',
+    'LDX': 'cpu.m_x = cpu.read_memory16({operand})',
+    'STX': 'cpu.write_memory16({operand}, cpu.m_x)',
+    'LDY': 'cpu.m_y = cpu.read_memory16({operand})',
+    'STY': 'cpu.write_memory16({operand}, cpu.m_y)',
+    'LDU': 'cpu.m_u = cpu.read_memory16({operand})',
+    'STU': 'cpu.write_memory16({operand}, cpu.m_u)',
+    'LDS': 'cpu.m_sp = cpu.read_memory16({operand})',
+    'STS': 'cpu.write_memory16({operand}, cpu.m_sp)',
+    'TFR': 'cpu.m_{dest} = cpu.m_{src}',
+    'LEAX': 'cpu.m_x += {operand}',
+    'LEAY': 'cpu.m_y += {operand}',
+    'LEAS': 'cpu.m_sp += {operand}',
+    'LEAU': 'cpu.m_u += {operand}',
+    'JMP': 'cpu.m_pc = {operand}',
     'JSR': 'cpu.call_function({operand})',
     'RTS': 'cpu.return_from_function()',
-    'BRA': 'cpu.state_.pc = {operand}',
-    'BNE': 'if (!cpu.zero_flag()) cpu.state_.pc = {operand}',
-    'BEQ': 'if (cpu.zero_flag()) cpu.state_.pc = {operand}',
-    'BCS': 'if (cpu.carry_flag()) cpu.state_.pc = {operand}',
-    'BCC': 'if (!cpu.carry_flag()) cpu.state_.pc = {operand}',
-    'BMI': 'if (cpu.negative_flag()) cpu.state_.pc = {operand}',
-    'BPL': 'if (!cpu.negative_flag()) cpu.state_.pc = {operand}',
-    'BLE': 'if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = {operand}',
-    'BGT': 'if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = {operand}',
-    'BGE': 'if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = {operand}',
-    'BLT': 'if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = {operand}',
+    'BRA': 'cpu.m_pc = {operand}',
+    'BNE': 'if (!cpu.zero_flag()) cpu.m_pc = {operand}',
+    'BEQ': 'if (cpu.zero_flag()) cpu.m_pc = {operand}',
+    'BCS': 'if (cpu.carry_flag()) cpu.m_pc = {operand}',
+    'BCC': 'if (!cpu.carry_flag()) cpu.m_pc = {operand}',
+    'BMI': 'if (cpu.negative_flag()) cpu.m_pc = {operand}',
+    'BPL': 'if (!cpu.negative_flag()) cpu.m_pc = {operand}',
+    'BLE': 'if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = {operand}',
+    'BGT': 'if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = {operand}',
+    'BGE': 'if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = {operand}',
+    'BLT': 'if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = {operand}',
     'CMPA': 'cpu.compare_a(cpu.read_memory({operand}))',
     'CMPB': 'cpu.compare_b(cpu.read_memory({operand}))',
-    'CMPX': 'cpu.compare_x(cpu.read_memory_word({operand}))',
-    'ANDA': 'cpu.state_.a &= {operand}',
-    'ANDB': 'cpu.state_.b &= {operand}',
-    'ORA': 'cpu.state_.a |= {operand}',
-    'ORB': 'cpu.state_.b |= {operand}',
-    'EORA': 'cpu.state_.a ^= {operand}',
-    'EORB': 'cpu.state_.b ^= {operand}',
-    'ADDA': 'cpu.state_.a += {operand}',
-    'ADDB': 'cpu.state_.b += {operand}',
-    'ADDD': 'cpu.state_.d += {operand}',
-    'SUBA': 'cpu.state_.a -= {operand}',
-    'SUBB': 'cpu.state_.b -= {operand}',
-    'SUBD': 'cpu.state_.d -= {operand}',
-    'INCA': 'cpu.state_.a++',
-    'INCB': 'cpu.state_.b++',
-    'DECA': 'cpu.state_.a--',
-    'DECB': 'cpu.state_.b--',
-    'LSRA': 'cpu.state_.a >>= 1',
-    'LSRB': 'cpu.state_.b >>= 1',
-    'ASLA': 'cpu.state_.a <<= 1',
-    'ASLB': 'cpu.state_.b <<= 1',
-    'ROLA': 'cpu.state_.a = (cpu.state_.a << 1) | (cpu.carry_flag() ? 1 : 0)',
-    'ROLB': 'cpu.state_.b = (cpu.state_.b << 1) | (cpu.carry_flag() ? 1 : 0)',
-    'RORA': 'cpu.state_.a = (cpu.state_.a >> 1) | (cpu.carry_flag() ? 0x80 : 0)',
-    'RORB': 'cpu.state_.b = (cpu.state_.b >> 1) | (cpu.carry_flag() ? 0x80 : 0)',
-    'COMA': 'cpu.state_.a = ~cpu.state_.a',
-    'COMB': 'cpu.state_.b = ~cpu.state_.b',
-    'NEGA': 'cpu.state_.a = -cpu.state_.a',
-    'NEGB': 'cpu.state_.b = -cpu.state_.b',
+    'CMPX': 'cpu.compare_x(cpu.read_memory16({operand}))',
+    'ANDA': 'cpu.m_a &= {operand}',
+    'ANDB': 'cpu.m_b &= {operand}',
+    'ORA': 'cpu.m_a |= {operand}',
+    'ORB': 'cpu.m_b |= {operand}',
+    'EORA': 'cpu.m_a ^= {operand}',
+    'EORB': 'cpu.m_b ^= {operand}',
+    'ADDA': 'cpu.m_a += {operand}',
+    'ADDB': 'cpu.m_b += {operand}',
+    'ADDD': 'cpu.m_d += {operand}',
+    'SUBA': 'cpu.m_a -= {operand}',
+    'SUBB': 'cpu.m_b -= {operand}',
+    'SUBD': 'cpu.m_d -= {operand}',
+    'INCA': 'cpu.m_a++',
+    'INCB': 'cpu.m_b++',
+    'DECA': 'cpu.m_a--',
+    'DECB': 'cpu.m_b--',
+    'LSRA': 'cpu.m_a >>= 1',
+    'LSRB': 'cpu.m_b >>= 1',
+    'ASLA': 'cpu.m_a <<= 1',
+    'ASLB': 'cpu.m_b <<= 1',
+    'ROLA': 'cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0)',
+    'ROLB': 'cpu.m_b = (cpu.m_b << 1) | (cpu.carry_flag() ? 1 : 0)',
+    'RORA': 'cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0)',
+    'RORB': 'cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0)',
+    'COMA': 'cpu.m_a = ~cpu.m_a',
+    'COMB': 'cpu.m_b = ~cpu.m_b',
+    'NEGA': 'cpu.m_a = -cpu.m_a',
+    'NEGB': 'cpu.m_b = -cpu.m_b',
     'TSTA': 'cpu.test_a()',
     'TSTB': 'cpu.test_b()',
-    'CLRA': 'cpu.state_.a = 0',
-    'CLRB': 'cpu.state_.b = 0',
+    'CLRA': 'cpu.m_a = 0',
+    'CLRB': 'cpu.m_b = 0',
     'NOP': '// NOP',
 }
 
@@ -147,33 +147,37 @@ def convert_operand(operands, mnemonic):
             
             # Handle register-to-register transfers
             if reg1 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S'] and reg2 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S']:
-                return f"cpu.state_.{reg1.lower()},cpu.state_.{reg2.lower()}"
+                return f"cpu.m_{reg1.lower()},cpu.m_{reg2.lower()}"
             
             # Handle indexed addressing with offset
             if reg1.startswith('$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[1:]  # Remove $ prefix
                 if reg2 == 'S':
-                    return f"0x{offset.upper()},cpu.state_.sp"
-                return f"0x{offset.upper()},cpu.state_.{reg2.lower()}"
+                    return f"0x{offset.upper()},cpu.m_sp"
+                return f"0x{offset.upper()},cpu.m_{reg2.lower()}"
             
             # Handle negative offsets
             if reg1.startswith('-$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[2:]  # Remove -$ prefix
                 if reg2 == 'S':
-                    return f"-0x{offset.upper()},cpu.state_.sp"
-                return f"-0x{offset.upper()},cpu.state_.{reg2.lower()}"
+                    return f"-0x{offset.upper()},cpu.m_sp"
+                return f"-0x{offset.upper()},cpu.m_{reg2.lower()}"
             
             # Handle post-increment
             if reg2.endswith('++') or reg2.endswith('--'):
                 reg = reg2[:-2]
                 if reg in ['X', 'Y', 'U', 'S']:
-                    return f"cpu.state_.{reg.lower()}{reg2[-2:]}"
+                    if reg == 'S':
+                        return f"cpu.m_sp{reg2[-2:]}"
+                    return f"cpu.m_{reg.lower()}{reg2[-2:]}"
             
             # Handle pre-increment
             if reg1.endswith('++') or reg1.endswith('--'):
                 reg = reg1[:-2]
                 if reg in ['X', 'Y', 'U', 'S']:
-                    return f"cpu.state_.{reg.lower()}{reg1[-2:]}"
+                    if reg == 'S':
+                        return f"cpu.m_sp{reg1[-2:]}"
+                    return f"cpu.m_{reg.lower()}{reg1[-2:]}"
         
         # For complex cases, return TODO
         return f"// TODO: Complex indexed addressing: {operands}"
@@ -181,10 +185,10 @@ def convert_operand(operands, mnemonic):
     # Handle register names
     if operands in ['A', 'B', 'D', 'X', 'Y', 'U', 'S', 'PC', 'CC', 'DP']:
         if operands == 'S':
-            return "cpu.state_.sp"  # S is the same as SP
+            return "cpu.m_sp"  # S is the same as SP
         elif operands == 'DP':
-            return "cpu.state_.dp"  # DP is direct page register
-        return f"cpu.state_.{operands.lower()}"
+            return "cpu.m_dp"  # DP is direct page register
+        return f"cpu.m_{operands.lower()}"
     
     # Handle numeric values
     if operands.isdigit() or (operands.startswith('0x') and all(c in '0123456789ABCDEFabcdef' for c in operands[2:])):
@@ -194,7 +198,9 @@ def convert_operand(operands, mnemonic):
     if operands.endswith('++') or operands.endswith('--'):
         reg = operands[:-2]
         if reg in ['X', 'Y', 'U', 'S']:
-            return f"cpu.state_.{reg.lower()}{operands[-2:]}"
+            if reg == 'S':
+                return f"cpu.m_sp{operands[-2:]}"
+            return f"cpu.m_{reg.lower()}{operands[-2:]}"
     
     # For unrecognized cases, return TODO
     return f"// TODO: Unrecognized operand: {operands}"
@@ -234,27 +240,27 @@ def convert_branch_instruction(mnemonic, operands, current_address):
     
     # Generate the appropriate branch code
     if mnemonic == 'BRA':
-        return f"    cpu.state_.pc = 0x{target_address:04X};"
+        return f"    cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BNE':
-        return f"    if (!cpu.zero_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (!cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BEQ':
-        return f"    if (cpu.zero_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BCS':
-        return f"    if (cpu.carry_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.carry_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BCC':
-        return f"    if (!cpu.carry_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (!cpu.carry_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BMI':
-        return f"    if (cpu.negative_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.negative_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BPL':
-        return f"    if (!cpu.negative_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (!cpu.negative_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BLE':
-        return f"    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BGT':
-        return f"    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BGE':
-        return f"    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
     elif mnemonic == 'BLT':
-        return f"    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+        return f"    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
     else:
         return f"    // TODO: Unsupported branch instruction: {mnemonic}"
 
@@ -279,15 +285,15 @@ def convert_instruction(parsed):
     if is_immediate and mnemonic in ['LDA', 'LDB', 'LDD', 'LDX', 'LDY', 'LDU', 'LDS', 'CMPA', 'CMPB', 'CMPX']:
         cpp_operand = convert_operand(operands, mnemonic)
         if mnemonic in ['LDA', 'LDB']:
-            return f"    cpu.state_.{mnemonic[2].lower()} = {cpp_operand};"
+            return f"    cpu.m_{mnemonic[2].lower()} = {cpp_operand};"
         elif mnemonic == 'LDS':
-            return f"    cpu.state_.sp = {cpp_operand};"  # S register maps to sp
+            return f"    cpu.m_sp = {cpp_operand};"  # S register maps to sp
         elif mnemonic in ['CMPA', 'CMPB']:
             return f"    cpu.compare_{mnemonic[3].lower()}({cpp_operand});"
         elif mnemonic == 'CMPX':
             return f"    cpu.compare_x({cpp_operand});"
         else:  # LDD, LDX, LDY, LDU
-            return f"    cpu.state_.{mnemonic[2:].lower()} = {cpp_operand};"
+            return f"    cpu.m_{mnemonic[2:].lower()} = {cpp_operand};"
     
     cpp_template = INSTRUCTION_MAP[mnemonic]
     cpp_operand = convert_operand(operands, mnemonic)
@@ -302,7 +308,7 @@ def convert_instruction(parsed):
             src = 'sp'
         if dest == 'S':
             dest = 'sp'
-        return f"    cpu.state_.{dest.lower()} = cpu.state_.{src.lower()};"
+        return f"    cpu.m_{dest.lower()} = cpu.m_{src.lower()};"
     
     # Handle indexed addressing for memory operations
     if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
@@ -334,7 +340,7 @@ def convert_disassembly_file(input_file, output_file, function_name):
     cpp_lines.append('')
     cpp_lines.append('namespace StarWars {')
     cpp_lines.append('')
-    cpp_lines.append(f'void {function_name}_impl(StarWarsCPU& cpu) {{')
+    cpp_lines.append(f'void {function_name}_impl(CPU6809& cpu) {{')
     cpp_lines.append(f'    // Converted from {input_file.name}')
     cpp_lines.append(f'    // Address: 0x{function_name.upper().replace("ROUTINE_", "")}')
     cpp_lines.append('')
@@ -360,10 +366,24 @@ def convert_disassembly_file(input_file, output_file, function_name):
     cpp_lines.append('')
     cpp_lines.append('} // namespace StarWars')
     
-    with open(output_file, 'w') as f:
-        f.write('\n'.join(cpp_lines))
+    # Generate new content
+    new_content = '\n'.join(cpp_lines)
     
-    print(f"✓ Converted {input_file} -> {output_file}")
+    # Check if file exists and read existing content
+    existing_content = None
+    if output_file.exists():
+        with open(output_file, 'r') as f:
+            existing_content = f.read()
+    
+    # Only write if content has changed
+    if existing_content != new_content:
+        with open(output_file, 'w') as f:
+            f.write(new_content)
+        print(f"✓ Updated {input_file} -> {output_file}")
+        return True  # File was updated
+    else:
+        print(f"⏭️  Skipped {input_file} -> {output_file} (no changes)")
+        return False  # File was not updated
 
 def main():
     parser = argparse.ArgumentParser(description="Convert disassembly files to C++ functions")

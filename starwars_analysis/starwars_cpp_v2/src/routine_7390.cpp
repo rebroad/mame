@@ -2,7 +2,7 @@
 
 namespace StarWars {
 
-void routine_7390_impl(StarWarsCPU& cpu) {
+void routine_7390_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7390.md
     // Address: 0x7390
 
@@ -10,7 +10,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 7393: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 7395: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -61,7 +61,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 73C6: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 73C8: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -100,7 +100,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 73ED: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 73EF: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -115,7 +115,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x76D3);
 
     // 73FB: LDB #$4F
-    cpu.state_.b = 0x4F;
+    cpu.m_b = 0x4F;
 
     // 73FD: JSR $E7C7
     cpu.call_function(0xE7C7);
@@ -142,7 +142,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 7416: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 7418: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -157,7 +157,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x76D3);
 
     // 7424: LDB #$4F
-    cpu.state_.b = 0x4F;
+    cpu.m_b = 0x4F;
 
     // 7426: JSR $E7C7
     cpu.call_function(0xE7C7);
@@ -184,7 +184,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 743F: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 7441: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -196,7 +196,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x761D);
 
     // 744A: LDA $4B0E
-    cpu.state_.a = cpu.read_memory(0x4B0E);
+    cpu.m_a = cpu.read_memory(0x4B0E);
 
     // 744D: CMPA #$04
     cpu.compare_a(0x04);
@@ -205,37 +205,37 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     // TODO: Convert BHI $00D4
 
     // 7451: LDA <$98
-    cpu.state_.a = cpu.read_memory(0x98);
+    cpu.m_a = cpu.read_memory(0x98);
 
     // 7453: BNE $00CA
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x741F;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x741F;
 
     // 7455: JSR $76D3
     cpu.call_function(0x76D3);
 
     // 7458: BRA $00D4
-    cpu.state_.pc = 0x742E;
+    cpu.m_pc = 0x742E;
 
     // 745A: LDD #$7100
-    cpu.state_.d = 0x7100;
+    cpu.m_d = 0x7100;
 
     // 745D: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 745F: LDB #$46
-    cpu.state_.b = 0x46;
+    cpu.m_b = 0x46;
 
     // 7461: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 7464: LDA $4B2D
-    cpu.state_.a = cpu.read_memory(0x4B2D);
+    cpu.m_a = cpu.read_memory(0x4B2D);
 
     // 7467: BNE $0101
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x746A;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x746A;
 
     // 7469: LDA $4B0E
-    cpu.state_.a = cpu.read_memory(0x4B0E);
+    cpu.m_a = cpu.read_memory(0x4B0E);
 
     // 746C: CMPA #$08
     cpu.compare_a(0x08);
@@ -244,91 +244,91 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     // TODO: Convert BHI $0101
 
     // 7470: LDA <$98
-    cpu.state_.a = cpu.read_memory(0x98);
+    cpu.m_a = cpu.read_memory(0x98);
 
     // 7472: BNE $0101
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x7475;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7475;
 
     // 7474: LDA $4B35
-    cpu.state_.a = cpu.read_memory(0x4B35);
+    cpu.m_a = cpu.read_memory(0x4B35);
 
     // 7477: BNE $0101
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x747A;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x747A;
 
     // 7479: LDA $4B12
-    cpu.state_.a = cpu.read_memory(0x4B12);
+    cpu.m_a = cpu.read_memory(0x4B12);
 
     // 747C: BNE $00F2
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x7470;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7470;
 
     // 747E: LDB #$4C
-    cpu.state_.b = 0x4C;
+    cpu.m_b = 0x4C;
 
     // 7480: BRA $00FE
-    cpu.state_.pc = 0x7480;
+    cpu.m_pc = 0x7480;
 
     // 7482: LDA <$43
-    cpu.state_.a = cpu.read_memory(0x43);
+    cpu.m_a = cpu.read_memory(0x43);
 
     // 7484: ANDA #$10
-    cpu.state_.a &= 0x10;
+    cpu.m_a &= 0x10;
 
     // 7486: BNE $00FC
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x7484;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7484;
 
     // 7488: LDB #$4C
-    cpu.state_.b = 0x4C;
+    cpu.m_b = 0x4C;
 
     // 748A: BRA $00FE
-    cpu.state_.pc = 0x748A;
+    cpu.m_pc = 0x748A;
 
     // 748C: LDB #$4E
-    cpu.state_.b = 0x4E;
+    cpu.m_b = 0x4E;
 
     // 748E: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 7491: LDA $4B2D
-    cpu.state_.a = cpu.read_memory(0x4B2D);
+    cpu.m_a = cpu.read_memory(0x4B2D);
 
     // 7494: BNE $0115
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x74AB;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x74AB;
 
     // 7496: LDA $4895
-    cpu.state_.a = cpu.read_memory(0x4895);
+    cpu.m_a = cpu.read_memory(0x4895);
 
     // 7499: BEQ $0115
-    if (cpu.zero_flag()) cpu.state_.pc = 0x74B0;
+    if (cpu.zero_flag()) cpu.m_pc = 0x74B0;
 
     // 749B: LDD #$7100
-    cpu.state_.d = 0x7100;
+    cpu.m_d = 0x7100;
 
     // 749E: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 74A0: LDB #$44
-    cpu.state_.b = 0x44;
+    cpu.m_b = 0x44;
 
     // 74A2: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 74A5: LDA $4B36
-    cpu.state_.a = cpu.read_memory(0x4B36);
+    cpu.m_a = cpu.read_memory(0x4B36);
 
     // 74A8: BLT $0126
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x74D0;
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x74D0;
 
     // 74AA: BNE $0123
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x74CF;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x74CF;
 
     // 74AC: LDB #$4F
-    cpu.state_.b = 0x4F;
+    cpu.m_b = 0x4F;
 
     // 74AE: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 74B1: BRA $0126
-    cpu.state_.pc = 0x74D9;
+    cpu.m_pc = 0x74D9;
 
     // 74B3: JSR $97C2
     cpu.call_function(0x97C2);
@@ -367,7 +367,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 74D8: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 74DA: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -379,19 +379,19 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x761D);
 
     // 74E3: LDA $4B3E
-    cpu.state_.a = cpu.read_memory(0x4B3E);
+    cpu.m_a = cpu.read_memory(0x4B3E);
 
     // 74E6: BEQ $0162
-    if (cpu.zero_flag()) cpu.state_.pc = 0x754A;
+    if (cpu.zero_flag()) cpu.m_pc = 0x754A;
 
     // 74E8: LDD #$7100
-    cpu.state_.d = 0x7100;
+    cpu.m_d = 0x7100;
 
     // 74EB: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 74ED: LDB #$46
-    cpu.state_.b = 0x46;
+    cpu.m_b = 0x46;
 
     // 74EF: JSR $E7C7
     cpu.call_function(0xE7C7);
@@ -406,25 +406,25 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xAAE4);
 
     // 74FB: LDA $4B2D
-    cpu.state_.a = cpu.read_memory(0x4B2D);
+    cpu.m_a = cpu.read_memory(0x4B2D);
 
     // 74FE: BNE $017F
-    if (!cpu.zero_flag()) cpu.state_.pc = 0x757F;
+    if (!cpu.zero_flag()) cpu.m_pc = 0x757F;
 
     // 7500: LDA $4895
-    cpu.state_.a = cpu.read_memory(0x4895);
+    cpu.m_a = cpu.read_memory(0x4895);
 
     // 7503: BEQ $017F
-    if (cpu.zero_flag()) cpu.state_.pc = 0x7584;
+    if (cpu.zero_flag()) cpu.m_pc = 0x7584;
 
     // 7505: LDD #$7100
-    cpu.state_.d = 0x7100;
+    cpu.m_d = 0x7100;
 
     // 7508: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 750A: LDB #$44
-    cpu.state_.b = 0x44;
+    cpu.m_b = 0x44;
 
     // 750C: JSR $E7C7
     cpu.call_function(0xE7C7);
@@ -442,7 +442,7 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0x6112);
 
     // 751C: LDA #$10
-    cpu.state_.a = 0x10;
+    cpu.m_a = 0x10;
 
     // 751E: JSR $CE0C
     cpu.call_function(0xCE0C);
@@ -463,88 +463,88 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xCD80);
 
     // 7530: LDB #$45
-    cpu.state_.b = 0x45;
+    cpu.m_b = 0x45;
 
     // 7532: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 7535: LDA $4B0E
-    cpu.state_.a = cpu.read_memory(0x4B0E);
+    cpu.m_a = cpu.read_memory(0x4B0E);
 
     // 7538: CMPA #$02
     cpu.compare_a(0x02);
 
     // 753A: BGT $01CA
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x7506;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x7506;
 
     // 753C: LDB #$47
-    cpu.state_.b = 0x47;
+    cpu.m_b = 0x47;
 
     // 753E: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 7541: LDB #$48
-    cpu.state_.b = 0x48;
+    cpu.m_b = 0x48;
 
     // 7543: JSR $E7C7
     cpu.call_function(0xE7C7);
 
     // 7546: LDD #$0090
-    cpu.state_.d = 0x0090;
+    cpu.m_d = 0x0090;
 
     // 7549: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 754B: LDD #$0070
-    cpu.state_.d = 0x0070;
+    cpu.m_d = 0x0070;
 
     // 754E: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 7550: LDA <$8E
-    cpu.state_.a = cpu.read_memory(0x8E);
+    cpu.m_a = cpu.read_memory(0x8E);
 
     // 7552: JSR $E7AD
     cpu.call_function(0xE7AD);
 
     // 7555: LDD #$8040
-    cpu.state_.d = 0x8040;
+    cpu.m_d = 0x8040;
 
     // 7558: STD ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.d);
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 755A: LDA $4B0E
-    cpu.state_.a = cpu.read_memory(0x4B0E);
+    cpu.m_a = cpu.read_memory(0x4B0E);
 
     // 755D: CMPA #$01
     cpu.compare_a(0x01);
 
     // 755F: BGT $020C
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x756D;
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x756D;
 
     // 7561: LDA $4845
-    cpu.state_.a = cpu.read_memory(0x4845);
+    cpu.m_a = cpu.read_memory(0x4845);
 
     // 7564: BEQ $020C
-    if (cpu.zero_flag()) cpu.state_.pc = 0x7572;
+    if (cpu.zero_flag()) cpu.m_pc = 0x7572;
 
     // 7566: LDA $4592
-    cpu.state_.a = cpu.read_memory(0x4592);
+    cpu.m_a = cpu.read_memory(0x4592);
 
     // 7569: ANDA #$03
-    cpu.state_.a &= 0x03;
+    cpu.m_a &= 0x03;
 
     // 756B: BEQ $020C
-    if (cpu.zero_flag()) cpu.state_.pc = 0x7579;
+    if (cpu.zero_flag()) cpu.m_pc = 0x7579;
 
     // 756D: LDB $4593
-    cpu.state_.b = cpu.read_memory(0x4593);
+    cpu.m_b = cpu.read_memory(0x4593);
 
     // 7570: ANDB #$03
-    cpu.state_.b &= 0x03;
+    cpu.m_b &= 0x03;
 
     // 7572: ADDB #$06
-    cpu.state_.b += 0x06;
+    cpu.m_b += 0x06;
 
     // 7574: CMPB <$60
     cpu.compare_b(cpu.read_memory(0x60));
@@ -553,34 +553,34 @@ void routine_7390_impl(StarWarsCPU& cpu) {
     // TODO: Convert BHI $01EC
 
     // 7578: LDB #$4A
-    cpu.state_.b = 0x4A;
+    cpu.m_b = 0x4A;
 
     // 757A: BRA $0209
-    cpu.state_.pc = 0x7585;
+    cpu.m_pc = 0x7585;
 
     // 757C: LDU #$A01A
-    cpu.state_.u = 0xA01A;
+    cpu.m_u = 0xA01A;
 
     // 757F: STU ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.u);
+    cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
     // 7581: LDU #$0048
-    cpu.state_.u = 0x0048;
+    cpu.m_u = 0x0048;
 
     // 7584: STU ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.u);
+    cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
     // 7586: LDU #$1EC0
-    cpu.state_.u = 0x1EC0;
+    cpu.m_u = 0x1EC0;
 
     // 7589: STU ,Y++
-    cpu.write_memory(cpu.state_.y++, cpu.state_.u);
+    cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
     // 758B: LDB #$01
-    cpu.state_.b = 0x01;
+    cpu.m_b = 0x01;
 
     // 758D: STB <$AD
-    cpu.write_memory(0xAD, cpu.state_.b);
+    cpu.write_memory(0xAD, cpu.m_b);
 
     // 758F: JSR >$0000
     cpu.call_function(0x0000);
