@@ -299,49 +299,19 @@ class AutomatedDisassembler:
 
         meaningful_routines = 0
         
-        # Capture output to a temporary file first
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_file:
-            temp_filename = temp_file.name
-            
-            # Redirect stdout to capture all output
-            original_stdout = sys.stdout
-            sys.stdout = temp_file
-            
-            try:
-                for pattern, (start, end) in all_candidates.items():
-                    if start and end and start != end:
-                        # Calculate size
-                        start_int = int(start, 16)
-                        end_int = int(end, 16)
-                        size = end_int - start_int + 1
+        for pattern, (start, end) in all_candidates.items():
+            if start and end and start != end:
+                # Calculate size
+                start_int = int(start, 16)
+                end_int = int(end, 16)
+                size = end_int - start_int + 1
 
-                        # Only disassemble routines of reasonable size
-                        if 5 <= size <= 200:  # 5-200 bytes
-                            routine_name = f"auto_{start}"
-                            print(f"Disassembling routine at {start} (size: {size} bytes)")
-                            if self.disassemble_routine(start, end, routine_name, verbose=False):
-                                meaningful_routines += 1
-            finally:
-                # Restore stdout
-                sys.stdout = original_stdout
-        
-        # Now check file size and display appropriately
-        with open(temp_filename, 'r') as f:
-            lines = f.readlines()
-        
-        if len(lines) <= 100:
-            # Show full output
-            print("".join(lines))
-        else:
-            # Show summary
-            print(f"Processing output ({len(lines)} lines) - showing summary:")
-            print("".join(lines[:50]))  # First 50 lines
-            print(f"... ({len(lines) - 100} lines omitted) ...")
-            print("".join(lines[-50:]))  # Last 50 lines
-        
-        # Clean up temp file
-        os.unlink(temp_filename)
+                # Only disassemble routines of reasonable size
+                if 5 <= size <= 200:  # 5-200 bytes
+                    routine_name = f"auto_{start}"
+                    print(f"Disassembling routine at {start} (size: {size} bytes)")
+                    if self.disassemble_routine(start, end, routine_name, verbose=False):
+                        meaningful_routines += 1
 
         print(f"\n=== AUTOMATION COMPLETE ===")
         print(f"Found and disassembled {meaningful_routines} meaningful routines")
@@ -436,7 +406,32 @@ def main():
         disassembler.disassemble_known_routines()
 
     elif args.full_auto:
-        disassembler.fully_automated_disassembly()
+        # Capture all output to limit console display
+        import tempfile
+        import io
+        
+        # Capture stdout to a string buffer
+        original_stdout = sys.stdout
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+        
+        try:
+            disassembler.fully_automated_disassembly()
+        finally:
+            # Restore stdout
+            sys.stdout = original_stdout
+        
+        # Get captured output and limit display
+        output_lines = captured_output.getvalue().split('\n')
+        
+        if len(output_lines) <= 100:
+            # Show full output
+            print('\n'.join(output_lines))
+        else:
+            # Show summary
+            print('\n'.join(output_lines[:50]))
+            print(f"... ({len(output_lines) - 100} lines omitted) ...")
+            print('\n'.join(output_lines[-50:]))
 
     else:
         print("No action specified. Use --search, --known, --full-auto, or --addr")
