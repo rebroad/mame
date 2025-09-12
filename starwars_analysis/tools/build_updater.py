@@ -239,6 +239,7 @@ def update_routine_map(project_path: Path, routine_files: List[str]) -> bool:
     
     # Add function declarations
     updated_lines.extend(new_declarations)
+    updated_lines.append('')
     
     # Add routine_map
     updated_lines.extend([
@@ -376,7 +377,11 @@ def update_header_file(project_path: Path, routine_files: List[str]) -> bool:
     
     # Add remaining lines after declarations
     if decl_start != -1:
-        updated_lines.extend(lines[decl_end+1:])
+        remaining_lines = lines[decl_end+1:]
+        # Skip leading blank lines
+        while remaining_lines and not remaining_lines[0].strip():
+            remaining_lines = remaining_lines[1:]
+        updated_lines.extend(remaining_lines)
     else:
         updated_lines.extend(lines[insert_point:])
     

@@ -471,14 +471,6 @@ public:
     void routine_feff(void);
     void routine_ff24(void);
 
-
-
-
-
-
-
-
-
     void print_instruction(uint16_t address) const;
 
 protected:
