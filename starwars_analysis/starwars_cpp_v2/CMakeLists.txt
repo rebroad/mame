@@ -26,6 +26,20 @@ set(SOURCES
     src/starwars_hardware.cpp
     src/cpu_6809.cpp
     src/cpu_6809_hardware.cpp
+    # Generated ROM routines
+    src/routine_e790.cpp
+    src/routine_e7c7.cpp
+    src/routine_f261.cpp
+    src/routine_f36f.cpp
+    src/routine_f70d.cpp
+    src/routine_f714.cpp
+    src/routine_f720.cpp
+    src/routine_f86c.cpp
+    src/routine_fb38.cpp
+    src/routine_fb74.cpp
+    src/routine_fd07.cpp
+    src/routine_feff.cpp
+    src/routine_ff24.cpp
 )
 
 # Create executable
