@@ -266,113 +266,36 @@ def update_header_file(project_path: Path, routine_files: List[str]) -> bool:
         content = f.read()
     
     lines = content.split('\n')
-    expected_routines = set(routine_files)
-    
-    # Find the CPU6809 class definition and the public section
-    class_start = -1
-    public_start = -1
-    private_start = -1
-    
-    for i, line in enumerate(lines):
-        if 'class CPU6809' in line:
-            class_start = i
-        elif class_start != -1 and 'public:' in line:
-            public_start = i
-        elif public_start != -1 and ('private:' in line or 'protected:' in line):
-            private_start = i
-            break
-    
-    if class_start == -1 or public_start == -1:
-        print("    ❌ Could not find CPU6809 class or public section in cpu_6809.h")
-        return False
-    
-    # Find ALL existing routine declarations in the public section
-    existing_declarations = []
-    decl_ranges = []  # List of (start, end) tuples for each block of declarations
-    
-    i = public_start + 1
-    while i < (private_start if private_start != -1 else len(lines)):
-        if 'void routine_' in lines[i] and '(void);' in lines[i]:
-            # Found start of a routine declaration block
-            block_start = i
-            while i < (private_start if private_start != -1 else len(lines)):
-                if 'void routine_' in lines[i] and '(void);' in lines[i]:
-                    match = re.search(r'void routine_([a-f0-9]+)\(void\);', lines[i])
-                    if match:
-                        existing_declarations.append(lines[i])
-                    i += 1
-                else:
-                    break
-            block_end = i - 1
-            decl_ranges.append((block_start, block_end))
-        else:
-            i += 1
     
     # Build new routine declarations
     new_declarations = []
     for routine in sorted(routine_files, key=lambda x: int(x, 16)):
         new_declarations.append(f"    void routine_{routine}(void);")
     
-    # Count existing declarations for reporting
-    existing_count = len(existing_declarations)
-    
-    # Reconstruct the file by removing ALL existing declaration blocks
+    # SIMPLE APPROACH: Remove ALL lines that contain routine declarations and rebuild
     updated_lines = []
+    declarations_added = False
     
-    if decl_ranges:
-        # Remove all existing declaration blocks
-        current_line = 0
-        for block_start, block_end in decl_ranges:
-            # Add lines before this block
-            updated_lines.extend(lines[current_line:block_start])
-            
-            # Skip the declaration block (but preserve any blank lines before it)
-            current_line = block_end + 1
-            
-        # Add remaining lines after the last block
-        updated_lines.extend(lines[current_line:])
-        
-        # Find insertion point (after other public methods, before the removed blocks)
-        insert_point = public_start + 1
-        for i in range(public_start + 1, len(updated_lines)):
-            if updated_lines[i].strip() and not updated_lines[i].strip().startswith('//') and 'void routine_' not in updated_lines[i]:
-                insert_point = i
-        
-        # Insert new declarations at the appropriate point
-        if insert_point < len(updated_lines):
-            # Insert before existing content
-            before = updated_lines[:insert_point]
-            after = updated_lines[insert_point:]
-            updated_lines = before + new_declarations + [''] + after
+    for line in lines:
+        # Skip any line that contains a routine declaration
+        if 'void routine_' in line and '(void);' in line:
+            if not declarations_added:
+                # First routine declaration - add new declarations here
+                updated_lines.extend(new_declarations)
+                if new_declarations:
+                    updated_lines.append('')
+                declarations_added = True
+            # Skip this line (don't add the old declaration)
+            continue
         else:
-            # Append at the end
-            updated_lines.extend(new_declarations)
-            if new_declarations:
-                updated_lines.append('')
-    else:
-        # No existing declarations, find insertion point
-        insert_point = public_start + 1
-        for i in range(public_start + 1, len(lines)):
-            if lines[i].strip() and not lines[i].strip().startswith('//'):
-                insert_point = i
-        
-        updated_lines.extend(lines[:insert_point])
-        if updated_lines and updated_lines[-1].strip():
-            updated_lines.append('')
-        updated_lines.extend(new_declarations)
-        if new_declarations:
-            updated_lines.append('')
-        updated_lines.extend(lines[insert_point:])
+            # Not a routine declaration line - keep it
+            updated_lines.append(line)
     
     # Write updated content
     with open(header_file, 'w') as f:
         f.write('\n'.join(updated_lines))
     
-    removed_count = max(0, existing_count - len(routine_files))
-    
-    if removed_count > 0:
-        print(f"    🗑️  Removed {removed_count} stale routine declarations from header")
-    print(f"    📊 Total routine declarations in header: {len(expected_routines)}")
+    print(f"    📊 Total routine declarations in header: {len(routine_files)}")
     return True
 
 def update_build_files(project_path: Path, routine_files: List[str]) -> bool:

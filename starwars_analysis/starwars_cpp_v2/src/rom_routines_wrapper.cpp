@@ -1,442 +1,407 @@
 #include "cpu_6809.h"
-#include "starwars_hardware.h"
 #include <iostream>
 #include <map>
 #include <functional>
 
 namespace StarWars {
 
-// Implementation of StarWarsCPU class (declared in header)
-StarWarsCPU::State::State(CPU6809& cpu)
-    : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),
-      u(cpu.m_u), sp(cpu.m_sp), s(cpu.m_sp), dp(cpu.m_dp), cc(cpu.m_cc), inv(cpu.m_inv), pc(cpu.m_pc) {}
-
-StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {
-    std::cout << "StarWarsCPU: Created wrapper, initial PC=0x" << std::hex << state_.pc << std::endl;
-}
-
-uint16_t StarWarsCPU::read_memory_word(uint16_t address) {
-    return (read_memory(address) << 8) | read_memory(address + 1);
-}
-
-uint8_t StarWarsCPU::read_memory(uint16_t address) {
-    return cpu_.m_hardware->read_memory(address);
-}
-
-void StarWarsCPU::write_memory(uint16_t address, uint8_t value) {
-    cpu_.m_hardware->write_memory(address, value);
-}
-
-void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {
-    write_memory(address, value >> 8);
-    write_memory(address + 1, value & 0xFF);
-}
-
-bool StarWarsCPU::negative_flag() const { return (state_.cc & 0x08) != 0; }
-bool StarWarsCPU::overflow_flag() const { return (state_.cc & 0x02) != 0; }
-
-void StarWarsCPU::set_pc_debug(uint16_t new_pc, const std::string& reason) {
-    std::cout << "StarWarsCPU: Setting PC from 0x" << std::hex << state_.pc << " to 0x" << new_pc << " (" << reason << ")" << std::endl;
-    state_.pc = new_pc;
-}
-
 // Function declarations
 
-void routine_6005_impl(StarWarsCPU& cpu);
-void routine_6036_impl(StarWarsCPU& cpu);
-void routine_60be_impl(StarWarsCPU& cpu);
-void routine_6112_impl(StarWarsCPU& cpu);
-void routine_611e_impl(StarWarsCPU& cpu);
-void routine_612f_impl(StarWarsCPU& cpu);
-void routine_615a_impl(StarWarsCPU& cpu);
-void routine_6161_impl(StarWarsCPU& cpu);
-void routine_61b5_impl(StarWarsCPU& cpu);
-void routine_61ec_impl(StarWarsCPU& cpu);
-void routine_620f_impl(StarWarsCPU& cpu);
-void routine_622d_impl(StarWarsCPU& cpu);
-void routine_62d5_impl(StarWarsCPU& cpu);
-void routine_6368_impl(StarWarsCPU& cpu);
-void routine_63d5_impl(StarWarsCPU& cpu);
-void routine_64cd_impl(StarWarsCPU& cpu);
-void routine_670d_impl(StarWarsCPU& cpu);
-void routine_6724_impl(StarWarsCPU& cpu);
-void routine_6726_impl(StarWarsCPU& cpu);
-void routine_6761_impl(StarWarsCPU& cpu);
-void routine_6782_impl(StarWarsCPU& cpu);
-void routine_67aa_impl(StarWarsCPU& cpu);
-void routine_67d2_impl(StarWarsCPU& cpu);
-void routine_67d4_impl(StarWarsCPU& cpu);
-void routine_6819_impl(StarWarsCPU& cpu);
-void routine_6864_impl(StarWarsCPU& cpu);
-void routine_68c7_impl(StarWarsCPU& cpu);
-void routine_692d_impl(StarWarsCPU& cpu);
-void routine_6978_impl(StarWarsCPU& cpu);
-void routine_6a0c_impl(StarWarsCPU& cpu);
-void routine_6aa0_impl(StarWarsCPU& cpu);
-void routine_6da5_impl(StarWarsCPU& cpu);
-void routine_6db6_impl(StarWarsCPU& cpu);
-void routine_6dc0_impl(StarWarsCPU& cpu);
-void routine_6dca_impl(StarWarsCPU& cpu);
-void routine_6dd2_impl(StarWarsCPU& cpu);
-void routine_6dfa_impl(StarWarsCPU& cpu);
-void routine_6e22_impl(StarWarsCPU& cpu);
-void routine_6e70_impl(StarWarsCPU& cpu);
-void routine_6ea1_impl(StarWarsCPU& cpu);
-void routine_6ea2_impl(StarWarsCPU& cpu);
-void routine_6ecb_impl(StarWarsCPU& cpu);
-void routine_6ef7_impl(StarWarsCPU& cpu);
-void routine_6f5f_impl(StarWarsCPU& cpu);
-void routine_6f67_impl(StarWarsCPU& cpu);
-void routine_6f6f_impl(StarWarsCPU& cpu);
-void routine_6fe0_impl(StarWarsCPU& cpu);
-void routine_6ff1_impl(StarWarsCPU& cpu);
-void routine_703b_impl(StarWarsCPU& cpu);
-void routine_70bd_impl(StarWarsCPU& cpu);
-void routine_70cc_impl(StarWarsCPU& cpu);
-void routine_70db_impl(StarWarsCPU& cpu);
-void routine_70f0_impl(StarWarsCPU& cpu);
-void routine_7100_impl(StarWarsCPU& cpu);
-void routine_7111_impl(StarWarsCPU& cpu);
-void routine_7160_impl(StarWarsCPU& cpu);
-void routine_71c4_impl(StarWarsCPU& cpu);
-void routine_72c7_impl(StarWarsCPU& cpu);
-void routine_7315_impl(StarWarsCPU& cpu);
-void routine_733c_impl(StarWarsCPU& cpu);
-void routine_736f_impl(StarWarsCPU& cpu);
-void routine_7390_impl(StarWarsCPU& cpu);
-void routine_73ea_impl(StarWarsCPU& cpu);
-void routine_7413_impl(StarWarsCPU& cpu);
-void routine_743c_impl(StarWarsCPU& cpu);
-void routine_7519_impl(StarWarsCPU& cpu);
-void routine_761d_impl(StarWarsCPU& cpu);
-void routine_768d_impl(StarWarsCPU& cpu);
-void routine_76d3_impl(StarWarsCPU& cpu);
-void routine_7707_impl(StarWarsCPU& cpu);
-void routine_7720_impl(StarWarsCPU& cpu);
-void routine_7765_impl(StarWarsCPU& cpu);
-void routine_77a4_impl(StarWarsCPU& cpu);
-void routine_77d4_impl(StarWarsCPU& cpu);
-void routine_785b_impl(StarWarsCPU& cpu);
-void routine_7863_impl(StarWarsCPU& cpu);
-void routine_786a_impl(StarWarsCPU& cpu);
-void routine_7881_impl(StarWarsCPU& cpu);
-void routine_7a48_impl(StarWarsCPU& cpu);
-void routine_7a5a_impl(StarWarsCPU& cpu);
-void routine_7b9e_impl(StarWarsCPU& cpu);
-void routine_7bbd_impl(StarWarsCPU& cpu);
-void routine_7d9a_impl(StarWarsCPU& cpu);
-void routine_7eaf_impl(StarWarsCPU& cpu);
-void routine_8341_impl(StarWarsCPU& cpu);
-void routine_83a4_impl(StarWarsCPU& cpu);
-void routine_83ce_impl(StarWarsCPU& cpu);
-void routine_8408_impl(StarWarsCPU& cpu);
-void routine_8434_impl(StarWarsCPU& cpu);
-void routine_8495_impl(StarWarsCPU& cpu);
-void routine_84c6_impl(StarWarsCPU& cpu);
-void routine_859b_impl(StarWarsCPU& cpu);
-void routine_85f9_impl(StarWarsCPU& cpu);
-void routine_868a_impl(StarWarsCPU& cpu);
-void routine_86ae_impl(StarWarsCPU& cpu);
-void routine_8735_impl(StarWarsCPU& cpu);
-void routine_87cb_impl(StarWarsCPU& cpu);
-void routine_87f5_impl(StarWarsCPU& cpu);
-void routine_889f_impl(StarWarsCPU& cpu);
-void routine_88f5_impl(StarWarsCPU& cpu);
-void routine_8951_impl(StarWarsCPU& cpu);
-void routine_8959_impl(StarWarsCPU& cpu);
-void routine_8961_impl(StarWarsCPU& cpu);
-void routine_8969_impl(StarWarsCPU& cpu);
-void routine_8971_impl(StarWarsCPU& cpu);
-void routine_8979_impl(StarWarsCPU& cpu);
-void routine_8981_impl(StarWarsCPU& cpu);
-void routine_8993_impl(StarWarsCPU& cpu);
-void routine_89c8_impl(StarWarsCPU& cpu);
-void routine_89d3_impl(StarWarsCPU& cpu);
-void routine_89de_impl(StarWarsCPU& cpu);
-void routine_89e9_impl(StarWarsCPU& cpu);
-void routine_8a00_impl(StarWarsCPU& cpu);
-void routine_8a05_impl(StarWarsCPU& cpu);
-void routine_8a21_impl(StarWarsCPU& cpu);
-void routine_8a3d_impl(StarWarsCPU& cpu);
-void routine_8a59_impl(StarWarsCPU& cpu);
-void routine_8a7e_impl(StarWarsCPU& cpu);
-void routine_8ab6_impl(StarWarsCPU& cpu);
-void routine_8acf_impl(StarWarsCPU& cpu);
-void routine_8b6d_impl(StarWarsCPU& cpu);
-void routine_8b86_impl(StarWarsCPU& cpu);
-void routine_8be1_impl(StarWarsCPU& cpu);
-void routine_8c44_impl(StarWarsCPU& cpu);
-void routine_8d9d_impl(StarWarsCPU& cpu);
-void routine_8de3_impl(StarWarsCPU& cpu);
-void routine_8e1c_impl(StarWarsCPU& cpu);
-void routine_8e23_impl(StarWarsCPU& cpu);
-void routine_8e32_impl(StarWarsCPU& cpu);
-void routine_8e3a_impl(StarWarsCPU& cpu);
-void routine_8ed6_impl(StarWarsCPU& cpu);
-void routine_8f34_impl(StarWarsCPU& cpu);
-void routine_8f7b_impl(StarWarsCPU& cpu);
-void routine_9500_impl(StarWarsCPU& cpu);
-void routine_953b_impl(StarWarsCPU& cpu);
-void routine_9558_impl(StarWarsCPU& cpu);
-void routine_95a7_impl(StarWarsCPU& cpu);
-void routine_9604_impl(StarWarsCPU& cpu);
-void routine_960f_impl(StarWarsCPU& cpu);
-void routine_962a_impl(StarWarsCPU& cpu);
-void routine_96a1_impl(StarWarsCPU& cpu);
-void routine_9722_impl(StarWarsCPU& cpu);
-void routine_973a_impl(StarWarsCPU& cpu);
-void routine_9775_impl(StarWarsCPU& cpu);
-void routine_97ac_impl(StarWarsCPU& cpu);
-void routine_97c2_impl(StarWarsCPU& cpu);
-void routine_97e3_impl(StarWarsCPU& cpu);
-void routine_97e8_impl(StarWarsCPU& cpu);
-void routine_97ed_impl(StarWarsCPU& cpu);
-void routine_97f2_impl(StarWarsCPU& cpu);
-void routine_97f7_impl(StarWarsCPU& cpu);
-void routine_97fc_impl(StarWarsCPU& cpu);
-void routine_9801_impl(StarWarsCPU& cpu);
-void routine_9806_impl(StarWarsCPU& cpu);
-void routine_9810_impl(StarWarsCPU& cpu);
-void routine_9874_impl(StarWarsCPU& cpu);
-void routine_987f_impl(StarWarsCPU& cpu);
-void routine_9886_impl(StarWarsCPU& cpu);
-void routine_9890_impl(StarWarsCPU& cpu);
-void routine_9898_impl(StarWarsCPU& cpu);
-void routine_98b0_impl(StarWarsCPU& cpu);
-void routine_a1ce_impl(StarWarsCPU& cpu);
-void routine_a214_impl(StarWarsCPU& cpu);
-void routine_a2f8_impl(StarWarsCPU& cpu);
-void routine_a40a_impl(StarWarsCPU& cpu);
-void routine_a459_impl(StarWarsCPU& cpu);
-void routine_a54b_impl(StarWarsCPU& cpu);
-void routine_a591_impl(StarWarsCPU& cpu);
-void routine_a68b_impl(StarWarsCPU& cpu);
-void routine_a6e0_impl(StarWarsCPU& cpu);
-void routine_a6f4_impl(StarWarsCPU& cpu);
-void routine_a705_impl(StarWarsCPU& cpu);
-void routine_a728_impl(StarWarsCPU& cpu);
-void routine_a7b6_impl(StarWarsCPU& cpu);
-void routine_a7bf_impl(StarWarsCPU& cpu);
-void routine_a7c8_impl(StarWarsCPU& cpu);
-void routine_a7f7_impl(StarWarsCPU& cpu);
-void routine_a80b_impl(StarWarsCPU& cpu);
-void routine_a849_impl(StarWarsCPU& cpu);
-void routine_a90c_impl(StarWarsCPU& cpu);
-void routine_a920_impl(StarWarsCPU& cpu);
-void routine_a933_impl(StarWarsCPU& cpu);
-void routine_aa7d_impl(StarWarsCPU& cpu);
-void routine_aae4_impl(StarWarsCPU& cpu);
-void routine_ac34_impl(StarWarsCPU& cpu);
-void routine_ac52_impl(StarWarsCPU& cpu);
-void routine_acb1_impl(StarWarsCPU& cpu);
-void routine_ace0_impl(StarWarsCPU& cpu);
-void routine_ad20_impl(StarWarsCPU& cpu);
-void routine_ad3e_impl(StarWarsCPU& cpu);
-void routine_ad6c_impl(StarWarsCPU& cpu);
-void routine_adaf_impl(StarWarsCPU& cpu);
-void routine_adbd_impl(StarWarsCPU& cpu);
-void routine_add4_impl(StarWarsCPU& cpu);
-void routine_ae60_impl(StarWarsCPU& cpu);
-void routine_aebd_impl(StarWarsCPU& cpu);
-void routine_af87_impl(StarWarsCPU& cpu);
-void routine_afef_impl(StarWarsCPU& cpu);
-void routine_b000_impl(StarWarsCPU& cpu);
-void routine_b071_impl(StarWarsCPU& cpu);
-void routine_b095_impl(StarWarsCPU& cpu);
-void routine_b261_impl(StarWarsCPU& cpu);
-void routine_b29c_impl(StarWarsCPU& cpu);
-void routine_b2d2_impl(StarWarsCPU& cpu);
-void routine_b32b_impl(StarWarsCPU& cpu);
-void routine_b3e4_impl(StarWarsCPU& cpu);
-void routine_b43f_impl(StarWarsCPU& cpu);
-void routine_b579_impl(StarWarsCPU& cpu);
-void routine_b6b9_impl(StarWarsCPU& cpu);
-void routine_b6c0_impl(StarWarsCPU& cpu);
-void routine_b6c7_impl(StarWarsCPU& cpu);
-void routine_b6cc_impl(StarWarsCPU& cpu);
-void routine_b6d7_impl(StarWarsCPU& cpu);
-void routine_b739_impl(StarWarsCPU& cpu);
-void routine_b76c_impl(StarWarsCPU& cpu);
-void routine_b83f_impl(StarWarsCPU& cpu);
-void routine_b852_impl(StarWarsCPU& cpu);
-void routine_b85e_impl(StarWarsCPU& cpu);
-void routine_b939_impl(StarWarsCPU& cpu);
-void routine_b948_impl(StarWarsCPU& cpu);
-void routine_b95c_impl(StarWarsCPU& cpu);
-void routine_b982_impl(StarWarsCPU& cpu);
-void routine_b98b_impl(StarWarsCPU& cpu);
-void routine_ba12_impl(StarWarsCPU& cpu);
-void routine_ba32_impl(StarWarsCPU& cpu);
-void routine_bb85_impl(StarWarsCPU& cpu);
-void routine_bcae_impl(StarWarsCPU& cpu);
-void routine_bcc8_impl(StarWarsCPU& cpu);
-void routine_bce9_impl(StarWarsCPU& cpu);
-void routine_bd00_impl(StarWarsCPU& cpu);
-void routine_bd03_impl(StarWarsCPU& cpu);
-void routine_bd08_impl(StarWarsCPU& cpu);
-void routine_bd12_impl(StarWarsCPU& cpu);
-void routine_bd17_impl(StarWarsCPU& cpu);
-void routine_bd1c_impl(StarWarsCPU& cpu);
-void routine_bd21_impl(StarWarsCPU& cpu);
-void routine_bd2b_impl(StarWarsCPU& cpu);
-void routine_bd30_impl(StarWarsCPU& cpu);
-void routine_bd35_impl(StarWarsCPU& cpu);
-void routine_bd3a_impl(StarWarsCPU& cpu);
-void routine_bd3f_impl(StarWarsCPU& cpu);
-void routine_bd44_impl(StarWarsCPU& cpu);
-void routine_bd4e_impl(StarWarsCPU& cpu);
-void routine_bd53_impl(StarWarsCPU& cpu);
-void routine_bd58_impl(StarWarsCPU& cpu);
-void routine_bd5d_impl(StarWarsCPU& cpu);
-void routine_bd62_impl(StarWarsCPU& cpu);
-void routine_bd67_impl(StarWarsCPU& cpu);
-void routine_bd6c_impl(StarWarsCPU& cpu);
-void routine_bd71_impl(StarWarsCPU& cpu);
-void routine_bd76_impl(StarWarsCPU& cpu);
-void routine_bd80_impl(StarWarsCPU& cpu);
-void routine_bd85_impl(StarWarsCPU& cpu);
-void routine_bd8a_impl(StarWarsCPU& cpu);
-void routine_bd94_impl(StarWarsCPU& cpu);
-void routine_bd99_impl(StarWarsCPU& cpu);
-void routine_bd9e_impl(StarWarsCPU& cpu);
-void routine_bda3_impl(StarWarsCPU& cpu);
-void routine_bda8_impl(StarWarsCPU& cpu);
-void routine_bdad_impl(StarWarsCPU& cpu);
-void routine_bdb2_impl(StarWarsCPU& cpu);
-void routine_bdb7_impl(StarWarsCPU& cpu);
-void routine_bdbc_impl(StarWarsCPU& cpu);
-void routine_bdc6_impl(StarWarsCPU& cpu);
-void routine_bdcb_impl(StarWarsCPU& cpu);
-void routine_bdd0_impl(StarWarsCPU& cpu);
-void routine_bdd5_impl(StarWarsCPU& cpu);
-void routine_bdda_impl(StarWarsCPU& cpu);
-void routine_bddf_impl(StarWarsCPU& cpu);
-void routine_bde4_impl(StarWarsCPU& cpu);
-void routine_bde9_impl(StarWarsCPU& cpu);
-void routine_bdee_impl(StarWarsCPU& cpu);
-void routine_bdf3_impl(StarWarsCPU& cpu);
-void routine_bdf8_impl(StarWarsCPU& cpu);
-void routine_bdfd_impl(StarWarsCPU& cpu);
-void routine_be00_impl(StarWarsCPU& cpu);
-void routine_be02_impl(StarWarsCPU& cpu);
-void routine_be07_impl(StarWarsCPU& cpu);
-void routine_be0c_impl(StarWarsCPU& cpu);
-void routine_be11_impl(StarWarsCPU& cpu);
-void routine_be16_impl(StarWarsCPU& cpu);
-void routine_be20_impl(StarWarsCPU& cpu);
-void routine_c02f_impl(StarWarsCPU& cpu);
-void routine_c087_impl(StarWarsCPU& cpu);
-void routine_c200_impl(StarWarsCPU& cpu);
-void routine_c20c_impl(StarWarsCPU& cpu);
-void routine_c24e_impl(StarWarsCPU& cpu);
-void routine_c2b3_impl(StarWarsCPU& cpu);
-void routine_c2c3_impl(StarWarsCPU& cpu);
-void routine_c306_impl(StarWarsCPU& cpu);
-void routine_c369_impl(StarWarsCPU& cpu);
-void routine_c3a7_impl(StarWarsCPU& cpu);
-void routine_c3ee_impl(StarWarsCPU& cpu);
-void routine_c413_impl(StarWarsCPU& cpu);
-void routine_c450_impl(StarWarsCPU& cpu);
-void routine_c4eb_impl(StarWarsCPU& cpu);
-void routine_c5a4_impl(StarWarsCPU& cpu);
-void routine_c5f2_impl(StarWarsCPU& cpu);
-void routine_c600_impl(StarWarsCPU& cpu);
-void routine_c641_impl(StarWarsCPU& cpu);
-void routine_c65b_impl(StarWarsCPU& cpu);
-void routine_c67a_impl(StarWarsCPU& cpu);
-void routine_c688_impl(StarWarsCPU& cpu);
-void routine_c690_impl(StarWarsCPU& cpu);
-void routine_c6b8_impl(StarWarsCPU& cpu);
-void routine_c6d4_impl(StarWarsCPU& cpu);
-void routine_c6d7_impl(StarWarsCPU& cpu);
-void routine_c6d9_impl(StarWarsCPU& cpu);
-void routine_c6f4_impl(StarWarsCPU& cpu);
-void routine_c6f7_impl(StarWarsCPU& cpu);
-void routine_c6f9_impl(StarWarsCPU& cpu);
-void routine_c70e_impl(StarWarsCPU& cpu);
-void routine_c7fd_impl(StarWarsCPU& cpu);
-void routine_caf3_impl(StarWarsCPU& cpu);
-void routine_cc00_impl(StarWarsCPU& cpu);
-void routine_cc18_impl(StarWarsCPU& cpu);
-void routine_cc38_impl(StarWarsCPU& cpu);
-void routine_cc5b_impl(StarWarsCPU& cpu);
-void routine_ccc0_impl(StarWarsCPU& cpu);
-void routine_cccc_impl(StarWarsCPU& cpu);
-void routine_ccd8_impl(StarWarsCPU& cpu);
-void routine_cce4_impl(StarWarsCPU& cpu);
-void routine_ccf0_impl(StarWarsCPU& cpu);
-void routine_ccfc_impl(StarWarsCPU& cpu);
-void routine_cd00_impl(StarWarsCPU& cpu);
-void routine_cd08_impl(StarWarsCPU& cpu);
-void routine_cd14_impl(StarWarsCPU& cpu);
-void routine_cd20_impl(StarWarsCPU& cpu);
-void routine_cd2c_impl(StarWarsCPU& cpu);
-void routine_cd38_impl(StarWarsCPU& cpu);
-void routine_cd44_impl(StarWarsCPU& cpu);
-void routine_cd50_impl(StarWarsCPU& cpu);
-void routine_cd5c_impl(StarWarsCPU& cpu);
-void routine_cd68_impl(StarWarsCPU& cpu);
-void routine_cd74_impl(StarWarsCPU& cpu);
-void routine_cd80_impl(StarWarsCPU& cpu);
-void routine_cd8c_impl(StarWarsCPU& cpu);
-void routine_cd9c_impl(StarWarsCPU& cpu);
-void routine_cd9e_impl(StarWarsCPU& cpu);
-void routine_cda0_impl(StarWarsCPU& cpu);
-void routine_cda2_impl(StarWarsCPU& cpu);
-void routine_cda9_impl(StarWarsCPU& cpu);
-void routine_cdab_impl(StarWarsCPU& cpu);
-void routine_cdb1_impl(StarWarsCPU& cpu);
-void routine_cdb5_impl(StarWarsCPU& cpu);
-void routine_cdba_impl(StarWarsCPU& cpu);
-void routine_cdc3_impl(StarWarsCPU& cpu);
-void routine_cde7_impl(StarWarsCPU& cpu);
-void routine_ce0c_impl(StarWarsCPU& cpu);
-void routine_ce18_impl(StarWarsCPU& cpu);
-void routine_ce24_impl(StarWarsCPU& cpu);
-void routine_ce2f_impl(StarWarsCPU& cpu);
-void routine_ce3a_impl(StarWarsCPU& cpu);
-void routine_ce45_impl(StarWarsCPU& cpu);
-void routine_d800_impl(StarWarsCPU& cpu);
-void routine_d882_impl(StarWarsCPU& cpu);
-void routine_d883_impl(StarWarsCPU& cpu);
-void routine_d8df_impl(StarWarsCPU& cpu);
-void routine_d91a_impl(StarWarsCPU& cpu);
-void routine_d923_impl(StarWarsCPU& cpu);
-void routine_d942_impl(StarWarsCPU& cpu);
-void routine_d95e_impl(StarWarsCPU& cpu);
-void routine_d971_impl(StarWarsCPU& cpu);
-void routine_d985_impl(StarWarsCPU& cpu);
-void routine_d9dc_impl(StarWarsCPU& cpu);
-void routine_d9fa_impl(StarWarsCPU& cpu);
-void routine_e000_impl(StarWarsCPU& cpu);
-void routine_e700_impl(StarWarsCPU& cpu);
-void routine_e764_impl(StarWarsCPU& cpu);
-void routine_e772_impl(StarWarsCPU& cpu);
-void routine_e790_impl(StarWarsCPU& cpu);
-void routine_e7ad_impl(StarWarsCPU& cpu);
-void routine_e7c7_impl(StarWarsCPU& cpu);
-void routine_e7d3_impl(StarWarsCPU& cpu);
-void routine_e7dd_impl(StarWarsCPU& cpu);
-void routine_e7fc_impl(StarWarsCPU& cpu);
-void routine_e821_impl(StarWarsCPU& cpu);
-void routine_f17f_impl(StarWarsCPU& cpu);
-void routine_f182_impl(StarWarsCPU& cpu);
-void routine_f1c6_impl(StarWarsCPU& cpu);
-void routine_f1fd_impl(StarWarsCPU& cpu);
-void routine_f261_impl(StarWarsCPU& cpu);
-void routine_f36e_impl(StarWarsCPU& cpu);
-void routine_f70d_impl(StarWarsCPU& cpu);
-void routine_f714_impl(StarWarsCPU& cpu);
-void routine_f720_impl(StarWarsCPU& cpu);
-void routine_f86c_impl(StarWarsCPU& cpu);
-void routine_fb38_impl(StarWarsCPU& cpu);
-void routine_fb73_impl(StarWarsCPU& cpu);
-void routine_fd00_impl(StarWarsCPU& cpu);
-void routine_fd07_impl(StarWarsCPU& cpu);
-void routine_feff_impl(StarWarsCPU& cpu);
-void routine_ff24_impl(StarWarsCPU& cpu);
+void routine_6005_impl(CPU6809& cpu);
+void routine_6036_impl(CPU6809& cpu);
+void routine_60be_impl(CPU6809& cpu);
+void routine_6112_impl(CPU6809& cpu);
+void routine_611e_impl(CPU6809& cpu);
+void routine_612f_impl(CPU6809& cpu);
+void routine_615a_impl(CPU6809& cpu);
+void routine_6161_impl(CPU6809& cpu);
+void routine_61b5_impl(CPU6809& cpu);
+void routine_61ec_impl(CPU6809& cpu);
+void routine_620f_impl(CPU6809& cpu);
+void routine_622d_impl(CPU6809& cpu);
+void routine_62d5_impl(CPU6809& cpu);
+void routine_6368_impl(CPU6809& cpu);
+void routine_63d5_impl(CPU6809& cpu);
+void routine_64cd_impl(CPU6809& cpu);
+void routine_670d_impl(CPU6809& cpu);
+void routine_6724_impl(CPU6809& cpu);
+void routine_6726_impl(CPU6809& cpu);
+void routine_6761_impl(CPU6809& cpu);
+void routine_6782_impl(CPU6809& cpu);
+void routine_67aa_impl(CPU6809& cpu);
+void routine_67d2_impl(CPU6809& cpu);
+void routine_67d4_impl(CPU6809& cpu);
+void routine_6819_impl(CPU6809& cpu);
+void routine_6864_impl(CPU6809& cpu);
+void routine_68c7_impl(CPU6809& cpu);
+void routine_692d_impl(CPU6809& cpu);
+void routine_6978_impl(CPU6809& cpu);
+void routine_6a0c_impl(CPU6809& cpu);
+void routine_6aa0_impl(CPU6809& cpu);
+void routine_6da5_impl(CPU6809& cpu);
+void routine_6db6_impl(CPU6809& cpu);
+void routine_6dc0_impl(CPU6809& cpu);
+void routine_6dca_impl(CPU6809& cpu);
+void routine_6dd2_impl(CPU6809& cpu);
+void routine_6dfa_impl(CPU6809& cpu);
+void routine_6e22_impl(CPU6809& cpu);
+void routine_6e70_impl(CPU6809& cpu);
+void routine_6ea1_impl(CPU6809& cpu);
+void routine_6ea2_impl(CPU6809& cpu);
+void routine_6ecb_impl(CPU6809& cpu);
+void routine_6ef7_impl(CPU6809& cpu);
+void routine_6f5f_impl(CPU6809& cpu);
+void routine_6f67_impl(CPU6809& cpu);
+void routine_6f6f_impl(CPU6809& cpu);
+void routine_6fe0_impl(CPU6809& cpu);
+void routine_6ff1_impl(CPU6809& cpu);
+void routine_703b_impl(CPU6809& cpu);
+void routine_70bd_impl(CPU6809& cpu);
+void routine_70cc_impl(CPU6809& cpu);
+void routine_70db_impl(CPU6809& cpu);
+void routine_70f0_impl(CPU6809& cpu);
+void routine_7100_impl(CPU6809& cpu);
+void routine_7111_impl(CPU6809& cpu);
+void routine_7160_impl(CPU6809& cpu);
+void routine_71c4_impl(CPU6809& cpu);
+void routine_72c7_impl(CPU6809& cpu);
+void routine_7315_impl(CPU6809& cpu);
+void routine_733c_impl(CPU6809& cpu);
+void routine_736f_impl(CPU6809& cpu);
+void routine_7390_impl(CPU6809& cpu);
+void routine_73ea_impl(CPU6809& cpu);
+void routine_7413_impl(CPU6809& cpu);
+void routine_743c_impl(CPU6809& cpu);
+void routine_7519_impl(CPU6809& cpu);
+void routine_761d_impl(CPU6809& cpu);
+void routine_768d_impl(CPU6809& cpu);
+void routine_76d3_impl(CPU6809& cpu);
+void routine_7707_impl(CPU6809& cpu);
+void routine_7720_impl(CPU6809& cpu);
+void routine_7765_impl(CPU6809& cpu);
+void routine_77a4_impl(CPU6809& cpu);
+void routine_77d4_impl(CPU6809& cpu);
+void routine_785b_impl(CPU6809& cpu);
+void routine_7863_impl(CPU6809& cpu);
+void routine_786a_impl(CPU6809& cpu);
+void routine_7881_impl(CPU6809& cpu);
+void routine_7a48_impl(CPU6809& cpu);
+void routine_7a5a_impl(CPU6809& cpu);
+void routine_7b9e_impl(CPU6809& cpu);
+void routine_7bbd_impl(CPU6809& cpu);
+void routine_7d9a_impl(CPU6809& cpu);
+void routine_7eaf_impl(CPU6809& cpu);
+void routine_8341_impl(CPU6809& cpu);
+void routine_83a4_impl(CPU6809& cpu);
+void routine_83ce_impl(CPU6809& cpu);
+void routine_8408_impl(CPU6809& cpu);
+void routine_8434_impl(CPU6809& cpu);
+void routine_8495_impl(CPU6809& cpu);
+void routine_84c6_impl(CPU6809& cpu);
+void routine_859b_impl(CPU6809& cpu);
+void routine_85f9_impl(CPU6809& cpu);
+void routine_868a_impl(CPU6809& cpu);
+void routine_86ae_impl(CPU6809& cpu);
+void routine_8735_impl(CPU6809& cpu);
+void routine_87cb_impl(CPU6809& cpu);
+void routine_87f5_impl(CPU6809& cpu);
+void routine_889f_impl(CPU6809& cpu);
+void routine_88f5_impl(CPU6809& cpu);
+void routine_8951_impl(CPU6809& cpu);
+void routine_8959_impl(CPU6809& cpu);
+void routine_8961_impl(CPU6809& cpu);
+void routine_8969_impl(CPU6809& cpu);
+void routine_8971_impl(CPU6809& cpu);
+void routine_8979_impl(CPU6809& cpu);
+void routine_8981_impl(CPU6809& cpu);
+void routine_8993_impl(CPU6809& cpu);
+void routine_89c8_impl(CPU6809& cpu);
+void routine_89d3_impl(CPU6809& cpu);
+void routine_89de_impl(CPU6809& cpu);
+void routine_89e9_impl(CPU6809& cpu);
+void routine_8a00_impl(CPU6809& cpu);
+void routine_8a05_impl(CPU6809& cpu);
+void routine_8a21_impl(CPU6809& cpu);
+void routine_8a3d_impl(CPU6809& cpu);
+void routine_8a59_impl(CPU6809& cpu);
+void routine_8a7e_impl(CPU6809& cpu);
+void routine_8ab6_impl(CPU6809& cpu);
+void routine_8acf_impl(CPU6809& cpu);
+void routine_8b6d_impl(CPU6809& cpu);
+void routine_8b86_impl(CPU6809& cpu);
+void routine_8be1_impl(CPU6809& cpu);
+void routine_8c44_impl(CPU6809& cpu);
+void routine_8d9d_impl(CPU6809& cpu);
+void routine_8de3_impl(CPU6809& cpu);
+void routine_8e1c_impl(CPU6809& cpu);
+void routine_8e23_impl(CPU6809& cpu);
+void routine_8e32_impl(CPU6809& cpu);
+void routine_8e3a_impl(CPU6809& cpu);
+void routine_8ed6_impl(CPU6809& cpu);
+void routine_8f34_impl(CPU6809& cpu);
+void routine_8f7b_impl(CPU6809& cpu);
+void routine_9500_impl(CPU6809& cpu);
+void routine_953b_impl(CPU6809& cpu);
+void routine_9558_impl(CPU6809& cpu);
+void routine_95a7_impl(CPU6809& cpu);
+void routine_9604_impl(CPU6809& cpu);
+void routine_960f_impl(CPU6809& cpu);
+void routine_962a_impl(CPU6809& cpu);
+void routine_96a1_impl(CPU6809& cpu);
+void routine_9722_impl(CPU6809& cpu);
+void routine_973a_impl(CPU6809& cpu);
+void routine_9775_impl(CPU6809& cpu);
+void routine_97ac_impl(CPU6809& cpu);
+void routine_97c2_impl(CPU6809& cpu);
+void routine_97e3_impl(CPU6809& cpu);
+void routine_97e8_impl(CPU6809& cpu);
+void routine_97ed_impl(CPU6809& cpu);
+void routine_97f2_impl(CPU6809& cpu);
+void routine_97f7_impl(CPU6809& cpu);
+void routine_97fc_impl(CPU6809& cpu);
+void routine_9801_impl(CPU6809& cpu);
+void routine_9806_impl(CPU6809& cpu);
+void routine_9810_impl(CPU6809& cpu);
+void routine_9874_impl(CPU6809& cpu);
+void routine_987f_impl(CPU6809& cpu);
+void routine_9886_impl(CPU6809& cpu);
+void routine_9890_impl(CPU6809& cpu);
+void routine_9898_impl(CPU6809& cpu);
+void routine_98b0_impl(CPU6809& cpu);
+void routine_a1ce_impl(CPU6809& cpu);
+void routine_a214_impl(CPU6809& cpu);
+void routine_a2f8_impl(CPU6809& cpu);
+void routine_a40a_impl(CPU6809& cpu);
+void routine_a459_impl(CPU6809& cpu);
+void routine_a54b_impl(CPU6809& cpu);
+void routine_a591_impl(CPU6809& cpu);
+void routine_a68b_impl(CPU6809& cpu);
+void routine_a6e0_impl(CPU6809& cpu);
+void routine_a6f4_impl(CPU6809& cpu);
+void routine_a705_impl(CPU6809& cpu);
+void routine_a728_impl(CPU6809& cpu);
+void routine_a7b6_impl(CPU6809& cpu);
+void routine_a7bf_impl(CPU6809& cpu);
+void routine_a7c8_impl(CPU6809& cpu);
+void routine_a7f7_impl(CPU6809& cpu);
+void routine_a80b_impl(CPU6809& cpu);
+void routine_a849_impl(CPU6809& cpu);
+void routine_a90c_impl(CPU6809& cpu);
+void routine_a920_impl(CPU6809& cpu);
+void routine_a933_impl(CPU6809& cpu);
+void routine_aa7d_impl(CPU6809& cpu);
+void routine_aae4_impl(CPU6809& cpu);
+void routine_ac34_impl(CPU6809& cpu);
+void routine_ac52_impl(CPU6809& cpu);
+void routine_acb1_impl(CPU6809& cpu);
+void routine_ace0_impl(CPU6809& cpu);
+void routine_ad20_impl(CPU6809& cpu);
+void routine_ad3e_impl(CPU6809& cpu);
+void routine_ad6c_impl(CPU6809& cpu);
+void routine_adaf_impl(CPU6809& cpu);
+void routine_adbd_impl(CPU6809& cpu);
+void routine_add4_impl(CPU6809& cpu);
+void routine_ae60_impl(CPU6809& cpu);
+void routine_aebd_impl(CPU6809& cpu);
+void routine_af87_impl(CPU6809& cpu);
+void routine_afef_impl(CPU6809& cpu);
+void routine_b000_impl(CPU6809& cpu);
+void routine_b071_impl(CPU6809& cpu);
+void routine_b095_impl(CPU6809& cpu);
+void routine_b261_impl(CPU6809& cpu);
+void routine_b29c_impl(CPU6809& cpu);
+void routine_b2d2_impl(CPU6809& cpu);
+void routine_b32b_impl(CPU6809& cpu);
+void routine_b3e4_impl(CPU6809& cpu);
+void routine_b43f_impl(CPU6809& cpu);
+void routine_b579_impl(CPU6809& cpu);
+void routine_b6b9_impl(CPU6809& cpu);
+void routine_b6c0_impl(CPU6809& cpu);
+void routine_b6c7_impl(CPU6809& cpu);
+void routine_b6cc_impl(CPU6809& cpu);
+void routine_b6d7_impl(CPU6809& cpu);
+void routine_b739_impl(CPU6809& cpu);
+void routine_b76c_impl(CPU6809& cpu);
+void routine_b83f_impl(CPU6809& cpu);
+void routine_b852_impl(CPU6809& cpu);
+void routine_b85e_impl(CPU6809& cpu);
+void routine_b939_impl(CPU6809& cpu);
+void routine_b948_impl(CPU6809& cpu);
+void routine_b95c_impl(CPU6809& cpu);
+void routine_b982_impl(CPU6809& cpu);
+void routine_b98b_impl(CPU6809& cpu);
+void routine_ba12_impl(CPU6809& cpu);
+void routine_ba32_impl(CPU6809& cpu);
+void routine_bb85_impl(CPU6809& cpu);
+void routine_bcae_impl(CPU6809& cpu);
+void routine_bcc8_impl(CPU6809& cpu);
+void routine_bce9_impl(CPU6809& cpu);
+void routine_bd00_impl(CPU6809& cpu);
+void routine_bd03_impl(CPU6809& cpu);
+void routine_bd08_impl(CPU6809& cpu);
+void routine_bd12_impl(CPU6809& cpu);
+void routine_bd17_impl(CPU6809& cpu);
+void routine_bd1c_impl(CPU6809& cpu);
+void routine_bd21_impl(CPU6809& cpu);
+void routine_bd2b_impl(CPU6809& cpu);
+void routine_bd30_impl(CPU6809& cpu);
+void routine_bd35_impl(CPU6809& cpu);
+void routine_bd3a_impl(CPU6809& cpu);
+void routine_bd3f_impl(CPU6809& cpu);
+void routine_bd44_impl(CPU6809& cpu);
+void routine_bd4e_impl(CPU6809& cpu);
+void routine_bd53_impl(CPU6809& cpu);
+void routine_bd58_impl(CPU6809& cpu);
+void routine_bd5d_impl(CPU6809& cpu);
+void routine_bd62_impl(CPU6809& cpu);
+void routine_bd67_impl(CPU6809& cpu);
+void routine_bd6c_impl(CPU6809& cpu);
+void routine_bd71_impl(CPU6809& cpu);
+void routine_bd76_impl(CPU6809& cpu);
+void routine_bd80_impl(CPU6809& cpu);
+void routine_bd85_impl(CPU6809& cpu);
+void routine_bd8a_impl(CPU6809& cpu);
+void routine_bd94_impl(CPU6809& cpu);
+void routine_bd99_impl(CPU6809& cpu);
+void routine_bd9e_impl(CPU6809& cpu);
+void routine_bda3_impl(CPU6809& cpu);
+void routine_bda8_impl(CPU6809& cpu);
+void routine_bdad_impl(CPU6809& cpu);
+void routine_bdb2_impl(CPU6809& cpu);
+void routine_bdb7_impl(CPU6809& cpu);
+void routine_bdbc_impl(CPU6809& cpu);
+void routine_bdc6_impl(CPU6809& cpu);
+void routine_bdcb_impl(CPU6809& cpu);
+void routine_bdd0_impl(CPU6809& cpu);
+void routine_bdd5_impl(CPU6809& cpu);
+void routine_bdda_impl(CPU6809& cpu);
+void routine_bddf_impl(CPU6809& cpu);
+void routine_bde4_impl(CPU6809& cpu);
+void routine_bde9_impl(CPU6809& cpu);
+void routine_bdee_impl(CPU6809& cpu);
+void routine_bdf3_impl(CPU6809& cpu);
+void routine_bdf8_impl(CPU6809& cpu);
+void routine_bdfd_impl(CPU6809& cpu);
+void routine_be00_impl(CPU6809& cpu);
+void routine_be02_impl(CPU6809& cpu);
+void routine_be07_impl(CPU6809& cpu);
+void routine_be0c_impl(CPU6809& cpu);
+void routine_be11_impl(CPU6809& cpu);
+void routine_be16_impl(CPU6809& cpu);
+void routine_be20_impl(CPU6809& cpu);
+void routine_c02f_impl(CPU6809& cpu);
+void routine_c087_impl(CPU6809& cpu);
+void routine_c200_impl(CPU6809& cpu);
+void routine_c20c_impl(CPU6809& cpu);
+void routine_c24e_impl(CPU6809& cpu);
+void routine_c2b3_impl(CPU6809& cpu);
+void routine_c2c3_impl(CPU6809& cpu);
+void routine_c306_impl(CPU6809& cpu);
+void routine_c369_impl(CPU6809& cpu);
+void routine_c3a7_impl(CPU6809& cpu);
+void routine_c3ee_impl(CPU6809& cpu);
+void routine_c413_impl(CPU6809& cpu);
+void routine_c450_impl(CPU6809& cpu);
+void routine_c4eb_impl(CPU6809& cpu);
+void routine_c5a4_impl(CPU6809& cpu);
+void routine_c5f2_impl(CPU6809& cpu);
+void routine_c600_impl(CPU6809& cpu);
+void routine_c641_impl(CPU6809& cpu);
+void routine_c65b_impl(CPU6809& cpu);
+void routine_c67a_impl(CPU6809& cpu);
+void routine_c688_impl(CPU6809& cpu);
+void routine_c690_impl(CPU6809& cpu);
+void routine_c6b8_impl(CPU6809& cpu);
+void routine_c6d4_impl(CPU6809& cpu);
+void routine_c6d7_impl(CPU6809& cpu);
+void routine_c6d9_impl(CPU6809& cpu);
+void routine_c6f4_impl(CPU6809& cpu);
+void routine_c6f7_impl(CPU6809& cpu);
+void routine_c6f9_impl(CPU6809& cpu);
+void routine_c70e_impl(CPU6809& cpu);
+void routine_c7fd_impl(CPU6809& cpu);
+void routine_caf3_impl(CPU6809& cpu);
+void routine_cc00_impl(CPU6809& cpu);
+void routine_cc18_impl(CPU6809& cpu);
+void routine_cc38_impl(CPU6809& cpu);
+void routine_cc5b_impl(CPU6809& cpu);
+void routine_ccc0_impl(CPU6809& cpu);
+void routine_cccc_impl(CPU6809& cpu);
+void routine_ccd8_impl(CPU6809& cpu);
+void routine_cce4_impl(CPU6809& cpu);
+void routine_ccf0_impl(CPU6809& cpu);
+void routine_ccfc_impl(CPU6809& cpu);
+void routine_cd00_impl(CPU6809& cpu);
+void routine_cd08_impl(CPU6809& cpu);
+void routine_cd14_impl(CPU6809& cpu);
+void routine_cd20_impl(CPU6809& cpu);
+void routine_cd2c_impl(CPU6809& cpu);
+void routine_cd38_impl(CPU6809& cpu);
+void routine_cd44_impl(CPU6809& cpu);
+void routine_cd50_impl(CPU6809& cpu);
+void routine_cd5c_impl(CPU6809& cpu);
+void routine_cd68_impl(CPU6809& cpu);
+void routine_cd74_impl(CPU6809& cpu);
+void routine_cd80_impl(CPU6809& cpu);
+void routine_cd8c_impl(CPU6809& cpu);
+void routine_cd9c_impl(CPU6809& cpu);
+void routine_cd9e_impl(CPU6809& cpu);
+void routine_cda0_impl(CPU6809& cpu);
+void routine_cda2_impl(CPU6809& cpu);
+void routine_cda9_impl(CPU6809& cpu);
+void routine_cdab_impl(CPU6809& cpu);
+void routine_cdb1_impl(CPU6809& cpu);
+void routine_cdb5_impl(CPU6809& cpu);
+void routine_cdba_impl(CPU6809& cpu);
+void routine_cdc3_impl(CPU6809& cpu);
+void routine_cde7_impl(CPU6809& cpu);
+void routine_ce0c_impl(CPU6809& cpu);
+void routine_ce18_impl(CPU6809& cpu);
+void routine_ce24_impl(CPU6809& cpu);
+void routine_ce2f_impl(CPU6809& cpu);
+void routine_ce3a_impl(CPU6809& cpu);
+void routine_ce45_impl(CPU6809& cpu);
+void routine_d800_impl(CPU6809& cpu);
+void routine_d882_impl(CPU6809& cpu);
+void routine_d883_impl(CPU6809& cpu);
+void routine_d8df_impl(CPU6809& cpu);
+void routine_d91a_impl(CPU6809& cpu);
+void routine_d923_impl(CPU6809& cpu);
+void routine_d942_impl(CPU6809& cpu);
+void routine_d95e_impl(CPU6809& cpu);
+void routine_d971_impl(CPU6809& cpu);
+void routine_d985_impl(CPU6809& cpu);
+void routine_d9dc_impl(CPU6809& cpu);
+void routine_d9fa_impl(CPU6809& cpu);
+void routine_e000_impl(CPU6809& cpu);
+void routine_e700_impl(CPU6809& cpu);
+void routine_e764_impl(CPU6809& cpu);
+void routine_e772_impl(CPU6809& cpu);
+void routine_e790_impl(CPU6809& cpu);
+void routine_e7ad_impl(CPU6809& cpu);
+void routine_e7c7_impl(CPU6809& cpu);
+void routine_e7d3_impl(CPU6809& cpu);
+void routine_e7dd_impl(CPU6809& cpu);
+void routine_e7fc_impl(CPU6809& cpu);
+void routine_e821_impl(CPU6809& cpu);
+void routine_f17f_impl(CPU6809& cpu);
+void routine_f182_impl(CPU6809& cpu);
+void routine_f1c6_impl(CPU6809& cpu);
+void routine_f1fd_impl(CPU6809& cpu);
+void routine_f261_impl(CPU6809& cpu);
+void routine_f36e_impl(CPU6809& cpu);
+void routine_f70d_impl(CPU6809& cpu);
+void routine_f714_impl(CPU6809& cpu);
+void routine_f720_impl(CPU6809& cpu);
+void routine_f86c_impl(CPU6809& cpu);
+void routine_fb38_impl(CPU6809& cpu);
+void routine_fb73_impl(CPU6809& cpu);
+void routine_fd00_impl(CPU6809& cpu);
+void routine_fd07_impl(CPU6809& cpu);
+void routine_feff_impl(CPU6809& cpu);
+void routine_ff24_impl(CPU6809& cpu);
 
-static const std::map<uint16_t, std::function<void(StarWarsCPU&)>> routine_map = {
+static const std::map<uint16_t, std::function<void(CPU6809&)>> routine_map = {
     {0x6005, routine_6005_impl},
     {0x6036, routine_6036_impl},
     {0x60BE, routine_60be_impl},
@@ -840,1979 +805,13 @@ bool CPU6809::execute_at_address(uint16_t address) {
     auto it = routine_map.find(address);
     if (it != routine_map.end()) {
         std::cout << "Found routine for address 0x" << std::hex << address << std::endl;
-        StarWarsCPU wrapper(*this);
-        it->second(wrapper);
+        it->second(*this);
         return true;
     }
     
     std::cout << "No routine found for address 0x" << std::hex << address << ", tracking as unknown" << std::endl;
     track_unknown_address(address);
     return false;
-}
-
-void StarWars::CPU6809::routine_6005() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6005_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6036() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6036_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_60be() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_60be_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6112() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6112_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_611e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_611e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_612f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_612f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_615a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_615a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6161() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6161_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_61b5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_61b5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_61ec() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_61ec_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_620f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_620f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_622d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_622d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_62d5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_62d5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6368() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6368_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_63d5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_63d5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_64cd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_64cd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_670d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_670d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6724() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6724_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6726() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6726_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6761() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6761_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6782() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6782_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_67aa() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_67aa_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_67d2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_67d2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_67d4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_67d4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6819() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6819_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6864() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6864_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_68c7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_68c7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_692d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_692d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6978() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6978_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6a0c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6a0c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6aa0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6aa0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6da5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6da5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6db6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6db6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6dc0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6dc0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6dca() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6dca_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6dd2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6dd2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6dfa() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6dfa_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6e22() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6e22_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6e70() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6e70_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6ea1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6ea1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6ea2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6ea2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6ecb() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6ecb_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6ef7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6ef7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6f5f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6f5f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6f67() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6f67_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6f6f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6f6f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6fe0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6fe0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_6ff1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_6ff1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_703b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_703b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_70bd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_70bd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_70cc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_70cc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_70db() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_70db_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_70f0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_70f0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7100() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7100_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7111() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7111_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7160() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7160_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_71c4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_71c4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_72c7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_72c7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7315() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7315_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_733c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_733c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_736f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_736f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7390() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7390_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_73ea() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_73ea_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7413() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7413_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_743c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_743c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7519() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7519_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_761d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_761d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_768d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_768d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_76d3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_76d3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7707() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7707_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7720() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7720_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7765() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7765_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_77a4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_77a4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_77d4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_77d4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_785b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_785b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7863() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7863_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_786a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_786a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7881() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7881_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7a48() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7a48_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7a5a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7a5a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7b9e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7b9e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7bbd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7bbd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7d9a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7d9a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_7eaf() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_7eaf_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8341() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8341_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_83a4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_83a4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_83ce() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_83ce_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8408() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8408_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8434() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8434_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8495() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8495_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_84c6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_84c6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_859b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_859b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_85f9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_85f9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_868a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_868a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_86ae() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_86ae_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8735() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8735_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_87cb() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_87cb_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_87f5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_87f5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_889f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_889f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_88f5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_88f5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8951() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8951_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8959() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8959_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8961() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8961_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8969() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8969_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8971() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8971_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8979() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8979_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8981() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8981_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8993() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8993_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_89c8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_89c8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_89d3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_89d3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_89de() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_89de_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_89e9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_89e9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a05() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a05_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a21() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a21_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a3d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a3d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a59() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a59_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8a7e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8a7e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8ab6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8ab6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8acf() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8acf_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8b6d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8b6d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8b86() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8b86_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8be1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8be1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8c44() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8c44_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8d9d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8d9d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8de3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8de3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8e1c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8e1c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8e23() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8e23_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8e32() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8e32_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8e3a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8e3a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8ed6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8ed6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8f34() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8f34_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_8f7b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_8f7b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9500() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9500_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_953b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_953b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9558() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9558_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_95a7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_95a7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9604() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9604_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_960f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_960f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_962a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_962a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_96a1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_96a1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9722() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9722_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_973a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_973a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9775() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9775_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97ac() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97ac_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97c2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97c2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97e3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97e3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97e8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97e8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97ed() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97ed_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97f2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97f2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97f7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97f7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_97fc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_97fc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9801() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9801_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9806() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9806_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9810() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9810_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9874() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9874_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_987f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_987f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9886() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9886_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9890() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9890_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_9898() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_9898_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_98b0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_98b0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a1ce() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a1ce_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a214() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a214_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a2f8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a2f8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a40a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a40a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a459() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a459_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a54b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a54b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a591() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a591_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a68b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a68b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a6e0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a6e0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a6f4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a6f4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a705() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a705_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a728() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a728_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a7b6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a7b6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a7bf() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a7bf_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a7c8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a7c8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a7f7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a7f7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a80b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a80b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a849() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a849_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a90c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a90c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a920() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a920_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_a933() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_a933_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_aa7d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_aa7d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_aae4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_aae4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ac34() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ac34_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ac52() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ac52_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_acb1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_acb1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ace0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ace0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ad20() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ad20_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ad3e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ad3e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ad6c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ad6c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_adaf() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_adaf_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_adbd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_adbd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_add4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_add4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ae60() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ae60_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_aebd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_aebd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_af87() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_af87_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_afef() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_afef_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b000() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b000_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b071() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b071_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b095() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b095_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b261() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b261_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b29c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b29c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b2d2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b2d2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b32b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b32b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b3e4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b3e4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b43f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b43f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b579() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b579_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b6b9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b6b9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b6c0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b6c0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b6c7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b6c7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b6cc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b6cc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b6d7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b6d7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b739() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b739_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b76c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b76c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b83f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b83f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b852() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b852_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b85e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b85e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b939() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b939_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b948() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b948_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b95c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b95c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b982() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b982_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_b98b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_b98b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ba12() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ba12_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ba32() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ba32_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bb85() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bb85_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bcae() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bcae_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bcc8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bcc8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bce9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bce9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd03() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd03_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd08() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd08_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd12() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd12_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd17() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd17_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd1c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd1c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd21() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd21_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd2b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd2b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd30() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd30_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd35() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd35_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd3a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd3a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd3f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd3f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd44() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd44_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd4e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd4e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd53() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd53_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd58() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd58_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd5d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd5d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd62() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd62_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd67() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd67_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd6c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd6c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd71() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd71_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd76() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd76_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd80() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd80_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd85() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd85_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd8a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd8a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd94() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd94_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd99() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd99_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bd9e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bd9e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bda3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bda3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bda8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bda8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdad() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdad_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdb2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdb2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdb7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdb7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdbc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdbc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdc6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdc6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdcb() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdcb_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdd0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdd0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdd5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdd5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdda() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdda_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bddf() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bddf_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bde4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bde4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bde9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bde9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdee() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdee_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdf3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdf3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdf8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdf8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_bdfd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_bdfd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be02() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be02_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be07() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be07_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be0c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be0c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be11() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be11_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be16() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be16_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_be20() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_be20_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c02f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c02f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c087() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c087_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c200() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c200_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c20c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c20c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c24e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c24e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c2b3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c2b3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c2c3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c2c3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c306() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c306_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c369() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c369_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c3a7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c3a7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c3ee() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c3ee_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c413() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c413_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c450() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c450_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c4eb() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c4eb_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c5a4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c5a4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c5f2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c5f2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c600() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c600_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c641() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c641_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c65b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c65b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c67a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c67a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c688() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c688_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c690() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c690_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6b8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6b8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6d4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6d4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6d7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6d7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6d9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6d9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6f4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6f4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6f7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6f7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c6f9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c6f9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c70e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c70e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_c7fd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_c7fd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_caf3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_caf3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cc00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cc00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cc18() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cc18_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cc38() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cc38_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cc5b() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cc5b_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ccc0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ccc0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cccc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cccc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ccd8() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ccd8_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cce4() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cce4_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ccf0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ccf0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ccfc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ccfc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd08() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd08_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd14() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd14_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd20() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd20_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd2c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd2c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd38() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd38_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd44() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd44_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd50() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd50_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd5c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd5c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd68() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd68_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd74() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd74_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd80() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd80_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd8c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd8c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd9c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd9c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cd9e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cd9e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cda0() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cda0_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cda2() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cda2_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cda9() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cda9_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cdab() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cdab_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cdb1() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cdb1_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cdb5() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cdb5_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cdba() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cdba_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cdc3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cdc3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_cde7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_cde7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce0c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce0c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce18() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce18_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce24() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce24_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce2f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce2f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce3a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce3a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ce45() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ce45_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d800() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d800_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d882() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d882_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d883() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d883_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d8df() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d8df_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d91a() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d91a_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d923() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d923_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d942() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d942_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d95e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d95e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d971() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d971_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d985() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d985_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d9dc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d9dc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_d9fa() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_d9fa_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e000() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e000_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e700() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e700_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e764() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e764_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e772() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e772_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e790() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e790_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e7ad() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e7ad_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e7c7() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e7c7_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e7d3() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e7d3_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e7dd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e7dd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e7fc() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e7fc_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_e821() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_e821_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f17f() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f17f_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f182() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f182_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f1c6() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f1c6_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f1fd() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f1fd_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f261() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f261_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f36e() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f36e_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f70d() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f70d_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f714() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f714_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f720() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f720_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_f86c() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_f86c_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_fb38() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_fb38_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_fb73() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_fb73_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_fd00() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_fd00_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_fd07() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_fd07_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_feff() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_feff_impl(wrapper);
-}
-
-void StarWars::CPU6809::routine_ff24() {
-    StarWars::StarWarsCPU wrapper(*this);
-    StarWars::routine_ff24_impl(wrapper);
 }
 
 } // namespace StarWars
