@@ -56,8 +56,8 @@ bool StarWarsHardware::initialize() {
     m_cpu = std::make_unique<CPU6809>(this);
     m_cpu->reset();
 
-    // Set PC to our validated main loop routine
-    m_cpu->set_pc(0xA261);
+    // Set PC to the reset vector (0xF261)
+    m_cpu->set_pc(0xF261);
 
     // Reset system to known state
     reset_system();
@@ -347,8 +347,7 @@ bool StarWarsHardware::is_math_ram_address(uint16_t address) const {
 }
 
 bool StarWarsHardware::is_main_rom_address(uint16_t address) const {
-    return (address >= 0x6000 && address < 0x8000) ||
-           (address >= 0x8000 && address < 0xC000);
+    return (address >= 0x6000 && address < 0x10000);
 }
 
 bool StarWarsHardware::is_io_port_address(uint16_t address) const {

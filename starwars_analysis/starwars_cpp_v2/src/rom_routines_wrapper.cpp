@@ -101,16 +101,16 @@ static const std::map<uint16_t, std::function<void(StarWarsCPU&)>> routine_map =
 };
 
 // CPU6809 method implementations
-void CPU6809::execute_at_address(uint16_t address) {
+bool CPU6809::execute_at_address(uint16_t address) {
     auto it = routine_map.find(address);
     if (it != routine_map.end()) {
         // Use native C++ implementation
         StarWarsCPU wrapper(*this);
         it->second(wrapper);
+        return true;
     } else {
-        // Fall back to 6809 emulation
-        m_pc = address;
-        execute_instruction();
+        // Not a known routine
+        return false;
     }
 }
 

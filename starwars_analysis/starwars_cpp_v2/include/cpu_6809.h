@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <array>
+#include <set>
 
 // Forward declaration
 namespace StarWars {
@@ -25,7 +26,7 @@ class CPU6809 {
 public:
     // Constructor/Destructor
     explicit CPU6809(StarWarsHardware* hardware);
-    ~CPU6809() = default;
+    ~CPU6809();
 
     // Core CPU methods
     void reset();
@@ -55,7 +56,11 @@ public:
     void write_memory(uint16_t address, uint8_t value);
     
     // Native routine execution (address-perfect C++ implementations)
-    void execute_at_address(uint16_t address);
+    bool execute_at_address(uint16_t address);
+    
+    // Track unknown addresses for future disassembly
+    void track_unknown_address(uint16_t address);
+    void write_unknown_addresses_to_file();
     
     // ROM routine implementations (generated from disassembly)
     void routine_e790();  // Address 0xE790
@@ -95,6 +100,9 @@ protected:
     
     // Hardware reference
     StarWarsHardware* m_hardware;
+    
+    // Track unknown addresses for future disassembly
+    std::set<uint16_t> m_unknown_addresses;
     
     // Instruction execution
     uint8_t fetch_byte();

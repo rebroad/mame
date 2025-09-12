@@ -2,6 +2,9 @@
 #include "starwars_hardware.h"
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+
+// Routine implementations are compiled separately
 
 namespace StarWars {
 
@@ -20,6 +23,11 @@ CPU6809::CPU6809(StarWarsHardware* hardware)
     , m_initialized(false)
     , m_hardware(hardware)
 {
+}
+
+CPU6809::~CPU6809() {
+    // Write unknown addresses before cleanup
+    write_unknown_addresses_to_file();
 }
 
 uint8_t CPU6809::read_memory(uint16_t address) {
@@ -58,8 +66,16 @@ void CPU6809::step() {
         return;
     }
 
+    // Check if we're at a known routine address
+    if (execute_at_address(m_pc)) {
+        return; // Routine was executed successfully
+    }
+
+    // Track unknown address and fall back to normal instruction execution
+    track_unknown_address(m_pc);
     execute_instruction();
 }
+
 
 void CPU6809::execute_instruction() {
     // Fetch and decode instruction
@@ -149,6 +165,7 @@ void CPU6809::execute_instruction() {
                       << static_cast<int>(opcode) << " at PC=0x" << std::setw(4) << (m_pc - 1) << std::endl;
             std::cout << "CPU simulation stopped due to unknown instruction." << std::endl;
             m_running = false;
+            write_unknown_addresses_to_file();
             break;
     }
 }
@@ -321,6 +338,36 @@ void CPU6809::print_state() const {
 void CPU6809::print_instruction(uint16_t address) const {
     std::cout << "Instruction at 0x" << std::hex << std::setw(4) << std::setfill('0') << address << ": ";
     // TODO: Implement instruction disassembly
+}
+
+void CPU6809::track_unknown_address(uint16_t address) {
+    if (m_unknown_addresses.find(address) == m_unknown_addresses.end()) {
+        m_unknown_addresses.insert(address);
+        std::cout << "Unknown routine at address 0x" << std::hex << address 
+                  << " - needs disassembly! (Total unknown: " << m_unknown_addresses.size() << ")" << std::endl;
+    }
+}
+
+void CPU6809::write_unknown_addresses_to_file() {
+    if (m_unknown_addresses.empty()) {
+        return;
+    }
+    
+    std::ofstream file("/home/rebroad/src/mame/starwars_analysis/unknown_addresses.txt");
+    if (file.is_open()) {
+        file << "# Unknown addresses discovered during execution\n";
+        file << "# These should be added to entry_points.txt for disassembly\n\n";
+        
+        for (uint16_t addr : m_unknown_addresses) {
+            file << "0x" << std::hex << std::uppercase << addr << "\n";
+        }
+        
+        file.close();
+        std::cout << "Wrote " << m_unknown_addresses.size() 
+                  << " unknown addresses to unknown_addresses.txt" << std::endl;
+    } else {
+        std::cerr << "Failed to write unknown_addresses.txt" << std::endl;
+    }
 }
 
 } // namespace StarWars
