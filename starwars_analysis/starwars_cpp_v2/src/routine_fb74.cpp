@@ -82,7 +82,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FBB6: LDD $5002
-    cpu.state_.d = 0x5002;
+    cpu.state_.d = cpu.read_memory_word(0x5002);
 
     // FBB9: CMPD #$5555
     // TODO: Convert CMPD #$5555
@@ -103,7 +103,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FBCB: LDD $5002
-    cpu.state_.d = 0x5002;
+    cpu.state_.d = cpu.read_memory_word(0x5002);
 
     // FBCE: CMPD #$AAAA
     // TODO: Convert CMPD #$AAAA
@@ -136,7 +136,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FBEC: LDD $5000
-    cpu.state_.d = 0x5000;
+    cpu.state_.d = cpu.read_memory_word(0x5000);
 
     // FBEF: CMPD #$0B6A
     // TODO: Convert CMPD #$0B6A
@@ -178,7 +178,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FC16: LDD $5000
-    cpu.state_.d = 0x5000;
+    cpu.state_.d = cpu.read_memory_word(0x5000);
 
     // FC19: JMP $FB73
     cpu.state_.pc = 0xFB73;
@@ -322,7 +322,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FCA2: LDD $5000
-    cpu.state_.d = 0x5000;
+    cpu.state_.d = cpu.read_memory_word(0x5000);
 
     // FCA5: CMPD #$3496
     // TODO: Convert CMPD #$3496
@@ -361,7 +361,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4700, cpu.state_.a);
 
     // FCC8: LDD $5000
-    cpu.state_.d = 0x5000;
+    cpu.state_.d = cpu.read_memory_word(0x5000);
 
     // FCCB: CMPD $6,U
     // TODO: Convert CMPD $6,U
@@ -424,19 +424,19 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0xFCAC, cpu.state_.x);
 
     // FD01: LDD $ACFC
-    cpu.state_.d = 0xACFC;
+    cpu.state_.d = cpu.read_memory_word(0xACFC);
 
     // FD04: CMPX [$FCB3,PCR]
     // TODO: Complex indexed addressing: [$FCB3,PCR]
 
     // FD07: LDA $4300
-    cpu.state_.a = 0x4300;
+    cpu.state_.a = cpu.read_memory(0x4300);
 
     // FD0A: ANDA #$10
     cpu.state_.a &= 0x10;
 
     // FD0C: LDB $4320
-    cpu.state_.b = 0x4320;
+    cpu.state_.b = cpu.read_memory(0x4320);
 
     // FD0F: ANDB #$04
     cpu.state_.b &= 0x04;
@@ -466,7 +466,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4682, cpu.state_.a);
 
     // FD28: LDB $4340
-    cpu.state_.b = 0x4340;
+    cpu.state_.b = cpu.read_memory(0x4340);
 
     // FD2C: LDU #$FD9A
     cpu.state_.u = 0xFD9A;
@@ -499,7 +499,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // FD46: LDS #$4FFF
-    cpu.state_.sp = 0x4FFF;
+    cpu.state_.s = 0x4FFF;
 
     // FD4A: JSR $E790
     cpu.call_function(0xE790);
@@ -529,7 +529,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xFD2F;
 
     // FD62: LDB $4340
-    cpu.state_.b = 0x4340;
+    cpu.state_.b = cpu.read_memory(0x4340);
 
     // FD66: TFR B,A
     cpu.state_.a = cpu.state_.b;
@@ -586,16 +586,16 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0xF2E0, cpu.state_.d);
 
     // FD8F: LDU $4FE8
-    cpu.state_.u = 0x4FE8;
+    cpu.state_.u = cpu.read_memory_word(0x4FE8);
 
     // FD92: LDU $4FF0
-    cpu.state_.u = 0x4FF0;
+    cpu.state_.u = cpu.read_memory_word(0x4FF0);
 
     // FD95: LDU $7CF8
-    cpu.state_.u = 0x7CF8;
+    cpu.state_.u = cpu.read_memory_word(0x7CF8);
 
     // FD98: LDU $A7E0
-    cpu.state_.u = 0xA7E0;
+    cpu.state_.u = cpu.read_memory_word(0xA7E0);
 
     // FD9B: CMPB -$F,X
     // TODO: Fix comma operator: CMPB -$F,X
@@ -817,7 +817,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.state_.pc += 0xFDDE;
 
     // FE50: LDD $F158
-    cpu.state_.d = 0xF158;
+    cpu.state_.d = cpu.read_memory_word(0xF158);
 
     // FE54: LDY #$0000
     cpu.state_.y = 0x0000;
@@ -844,13 +844,13 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xFE71;
 
     // FE6B: LDS #$FD07
-    cpu.state_.sp = 0xFD07;
+    cpu.state_.s = 0xFD07;
 
     // FE6F: BRA $FE75
     cpu.state_.pc += 0xFE75;
 
     // FE71: LDS #$FE58
-    cpu.state_.sp = 0xFE58;
+    cpu.state_.s = 0xFE58;
 
     // FE75: TFR X,D
     cpu.state_.d = cpu.state_.x;
@@ -889,13 +889,13 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xFEA0;
 
     // FE9A: LDS #$FD07
-    cpu.state_.sp = 0xFD07;
+    cpu.state_.s = 0xFD07;
 
     // FE9E: BRA $FEA4
     cpu.state_.pc += 0xFEA4;
 
     // FEA0: LDS #$FE87
-    cpu.state_.sp = 0xFE87;
+    cpu.state_.s = 0xFE87;
 
     // FEA4: JMP $FB38
     cpu.state_.pc = 0xFB38;
@@ -919,10 +919,10 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.state_.u = cpu.state_.x;
 
     // FEB5: LDB $4400
-    cpu.state_.b = 0x4400;
+    cpu.state_.b = cpu.read_memory(0x4400);
 
     // FEB8: LDB $4401
-    cpu.state_.b = 0x4401;
+    cpu.state_.b = cpu.read_memory(0x4401);
 
     // FEBB: ANDB #$40
     cpu.state_.b &= 0x40;
@@ -949,7 +949,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4400, cpu.state_.a);
 
     // FECF: LDB $4401
-    cpu.state_.b = 0x4401;
+    cpu.state_.b = cpu.read_memory(0x4401);
 
     // FED2: BPL $FF03
     if (!cpu.negative_flag()) cpu.state_.pc += 0xFF03;
@@ -967,7 +967,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4640, cpu.state_.a);
 
     // FEDE: LDB $4401
-    cpu.state_.b = 0x4401;
+    cpu.state_.b = cpu.read_memory(0x4401);
 
     // FEE1: ANDB #$40
     cpu.state_.b &= 0x40;
@@ -988,7 +988,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (!cpu.zero_flag()) cpu.state_.pc += 0xFF03;
 
     // FEEF: LDB $4401
-    cpu.state_.b = 0x4401;
+    cpu.state_.b = cpu.read_memory(0x4401);
 
     // FEF2: ANDB #$40
     cpu.state_.b &= 0x40;
@@ -1111,7 +1111,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     // TODO: Unrecognized operand: [$C840]
 
     // FF5B: LDA <$1F
-    cpu.state_.a = 0x1F;
+    cpu.state_.a = cpu.read_memory(0x1F);
 
     // FF5D: LSR -$10,X
     // TODO: Convert LSR -$10,X

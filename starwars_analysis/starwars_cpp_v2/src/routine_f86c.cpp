@@ -13,13 +13,13 @@ void routine_f86c_impl(StarWarsCPU& cpu) {
     if (!cpu.carry_flag()) cpu.state_.pc += 0xF876;
 
     // F871: LDX $3022
-    cpu.state_.x = 0x3022;
+    cpu.state_.x = cpu.read_memory_word(0x3022);
 
     // F874: BRA $F879
     cpu.state_.pc += 0xF879;
 
     // F876: LDX $3032
-    cpu.state_.x = 0x3032;
+    cpu.state_.x = cpu.read_memory_word(0x3032);
 
     // F879: STX ,Y++
     cpu.write_memory(cpu.state_.y++, cpu.state_.x);

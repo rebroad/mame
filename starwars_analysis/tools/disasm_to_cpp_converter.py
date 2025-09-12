@@ -14,19 +14,19 @@ from pathlib import Path
 INSTRUCTION_MAP = {
     'ORCC': 'cpu.state_.cc |= {operand}',
     'CLR': 'cpu.write_memory({operand}, 0)',
-    'LDA': 'cpu.state_.a = {operand}',
+    'LDA': 'cpu.state_.a = cpu.read_memory({operand})',
     'STA': 'cpu.write_memory({operand}, cpu.state_.a)',
-    'LDB': 'cpu.state_.b = {operand}',
+    'LDB': 'cpu.state_.b = cpu.read_memory({operand})',
     'STB': 'cpu.write_memory({operand}, cpu.state_.b)',
-    'LDD': 'cpu.state_.d = {operand}',
+    'LDD': 'cpu.state_.d = cpu.read_memory_word({operand})',
     'STD': 'cpu.write_memory({operand}, cpu.state_.d)',
-    'LDX': 'cpu.state_.x = {operand}',
+    'LDX': 'cpu.state_.x = cpu.read_memory_word({operand})',
     'STX': 'cpu.write_memory({operand}, cpu.state_.x)',
-    'LDY': 'cpu.state_.y = {operand}',
+    'LDY': 'cpu.state_.y = cpu.read_memory_word({operand})',
     'STY': 'cpu.write_memory({operand}, cpu.state_.y)',
-    'LDU': 'cpu.state_.u = {operand}',
+    'LDU': 'cpu.state_.u = cpu.read_memory_word({operand})',
     'STU': 'cpu.write_memory({operand}, cpu.state_.u)',
-    'LDS': 'cpu.state_.sp = {operand}',
+    'LDS': 'cpu.state_.sp = cpu.read_memory_word({operand})',
     'STS': 'cpu.write_memory({operand}, cpu.state_.sp)',
     'TFR': 'cpu.state_.{dest} = cpu.state_.{src}',
     'LEAX': 'cpu.state_.x += {operand}',
@@ -202,6 +202,17 @@ def convert_instruction(parsed):
     
     if mnemonic not in INSTRUCTION_MAP:
         return f"    // TODO: Convert {mnemonic} {operands}"
+    
+    # Handle immediate values differently from memory addressing
+    is_immediate = operands.startswith('#')
+    
+    # For immediate values, use direct assignment
+    if is_immediate and mnemonic in ['LDA', 'LDB', 'LDD', 'LDX', 'LDY', 'LDU', 'LDS']:
+        cpp_operand = convert_operand(operands, mnemonic)
+        if mnemonic in ['LDA', 'LDB']:
+            return f"    cpu.state_.{mnemonic[2].lower()} = {cpp_operand};"
+        else:  # LDD, LDX, LDY, LDU, LDS
+            return f"    cpu.state_.{mnemonic[2:].lower()} = {cpp_operand};"
     
     cpp_template = INSTRUCTION_MAP[mnemonic]
     cpp_operand = convert_operand(operands, mnemonic)

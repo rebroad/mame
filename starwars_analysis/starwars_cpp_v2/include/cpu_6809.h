@@ -148,6 +148,7 @@ public:
     // Memory access methods
     void write_memory(uint16_t address, uint8_t value);
     uint8_t read_memory(uint16_t address);
+    uint16_t read_memory_word(uint16_t address);
     void write_memory16(uint16_t address, uint16_t value);
     uint16_t read_memory16(uint16_t address);
     

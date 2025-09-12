@@ -254,81 +254,26 @@ void StarWarsHardware::execute_main_loop() {
 bool StarWarsHardware::load_rom_files() {
     std::cout << "Loading ROM files..." << std::endl;
 
-    // Load ROM files according to MAME's memory map
-    // 0x6000-0x7FFF: 136021.214.1f (ROM 0 bank pages 0 and 1)
-    std::ifstream rom0("../../136021.214.1f", std::ios::binary);
-    if (!rom0) {
-        std::cerr << "Failed to open ROM 0 file!" << std::endl;
+    // Load our processed complete memory map (CPU address space)
+    std::ifstream memory_map("../complete_memory_map.bin", std::ios::binary);
+    if (!memory_map) {
+        std::cerr << "Failed to open complete_memory_map.bin!" << std::endl;
         return false;
     }
-    rom0.read(reinterpret_cast<char*>(m_main_rom.data() + 0x0000), 0x2000);
-    if (rom0.gcount() != 0x2000) {
-        std::cerr << "ROM 0 file size mismatch! Expected 0x2000, got " << rom0.gcount() << std::endl;
-        return false;
-    }
-
-    // 0x8000-0x9FFF: 136021.102.1hj (ROM 1 bank)
-    std::ifstream rom1("../../136021.102.1hj", std::ios::binary);
-    if (!rom1) {
-        std::cerr << "Failed to open ROM 1 file!" << std::endl;
-        return false;
-    }
-    rom1.read(reinterpret_cast<char*>(m_main_rom.data() + 0x2000), 0x2000);
-    if (rom1.gcount() != 0x2000) {
-        std::cerr << "ROM 1 file size mismatch! Expected 0x2000, got " << rom1.gcount() << std::endl;
+    
+    // Read the complete memory map (64KB)
+    memory_map.read(reinterpret_cast<char*>(m_main_rom.data()), MAIN_ROM_SIZE);
+    if (memory_map.gcount() != MAIN_ROM_SIZE) {
+        std::cerr << "Memory map file size mismatch! Expected " << MAIN_ROM_SIZE 
+                  << ", got " << memory_map.gcount() << std::endl;
         return false;
     }
 
-    // 0xA000-0xBFFF: 136021.203.1jk (ROM 2 bank)
-    std::ifstream rom2("../../136021.203.1jk", std::ios::binary);
-    if (!rom2) {
-        std::cerr << "Failed to open ROM 2 file!" << std::endl;
-        return false;
-    }
-    rom2.read(reinterpret_cast<char*>(m_main_rom.data() + 0x4000), 0x2000);
-    if (rom2.gcount() != 0x2000) {
-        std::cerr << "ROM 2 file size mismatch! Expected 0x2000, got " << rom2.gcount() << std::endl;
-        return false;
-    }
+    // Load vector ROM (we'll use a placeholder for now)
+    // TODO: Extract vector ROM from the original ROM set if needed
+    m_vector_rom.fill(0);
 
-    // 0xC000-0xDFFF: 136021.104.1kl (ROM 3 bank)
-    std::ifstream rom3("../../136021.104.1kl", std::ios::binary);
-    if (!rom3) {
-        std::cerr << "Failed to open ROM 3 file!" << std::endl;
-        return false;
-    }
-    rom3.read(reinterpret_cast<char*>(m_main_rom.data() + 0x6000), 0x2000);
-    if (rom3.gcount() != 0x2000) {
-        std::cerr << "ROM 3 file size mismatch! Expected 0x2000, got " << rom3.gcount() << std::endl;
-        return false;
-    }
-
-    // 0xE000-0xFFFF: 136021.206.1m (ROM 4 bank)
-    std::ifstream rom4("../../136021.206.1m", std::ios::binary);
-    if (!rom4) {
-        std::cerr << "Failed to open ROM 4 file!" << std::endl;
-        return false;
-    }
-    rom4.read(reinterpret_cast<char*>(m_main_rom.data() + 0x8000), 0x2000);
-    if (rom4.gcount() != 0x2000) {
-        std::cerr << "ROM 4 file size mismatch! Expected 0x2000, got " << rom4.gcount() << std::endl;
-        return false;
-    }
-
-    // Load vector ROM
-    std::ifstream vector_rom("../../136021-105.1l", std::ios::binary);
-    if (!vector_rom) {
-        std::cerr << "Failed to open vector ROM file!" << std::endl;
-        return false;
-    }
-
-    vector_rom.read(reinterpret_cast<char*>(m_vector_rom.data()), VECTOR_ROM_SIZE);
-    if (vector_rom.gcount() != VECTOR_ROM_SIZE) {
-        std::cerr << "Vector ROM file size mismatch! Expected " << VECTOR_ROM_SIZE << ", got " << vector_rom.gcount() << std::endl;
-        return false;
-    }
-
-    std::cout << "ROM files loaded successfully" << std::endl;
+    std::cout << "Complete memory map loaded successfully!" << std::endl;
     return true;
 }
 

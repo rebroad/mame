@@ -67,7 +67,7 @@ void routine_ff24_impl(StarWarsCPU& cpu) {
     // TODO: Unrecognized operand: [$C840]
 
     // FF5B: LDA <$1F
-    cpu.state_.a = 0x1F;
+    cpu.state_.a = cpu.read_memory(0x1F);
 
     // FF5D: LSR -$10,X
     // TODO: Convert LSR -$10,X

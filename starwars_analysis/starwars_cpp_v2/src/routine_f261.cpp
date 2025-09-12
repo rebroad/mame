@@ -55,7 +55,7 @@ void routine_f261_impl(StarWarsCPU& cpu) {
     if (!cpu.zero_flag()) cpu.state_.pc += 0xF281;
 
     // F28C: LDS #$4FFF
-    cpu.state_.sp = 0x4FFF;
+    cpu.state_.s = 0x4FFF;
 
     // F290: LDA #$48
     cpu.state_.a = 0x48;
@@ -127,7 +127,7 @@ void routine_f261_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xF2C2;
 
     // F2CC: LDA $4300
-    cpu.state_.a = 0x4300;
+    cpu.state_.a = cpu.read_memory(0x4300);
 
     // F2CF: ANDA #$10
     cpu.state_.a &= 0x10;

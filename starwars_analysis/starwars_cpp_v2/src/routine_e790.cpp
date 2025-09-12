@@ -22,7 +22,7 @@ void routine_e790_impl(StarWarsCPU& cpu) {
     // TODO: Convert BLE $E7A2
 
     // E79D: LDU $3002
-    cpu.state_.u = 0x3002;
+    cpu.state_.u = cpu.read_memory_word(0x3002);
 
     // E7A0: BRA $E7A9
     cpu.state_.pc += 0xE7A9;
@@ -55,7 +55,7 @@ void routine_e790_impl(StarWarsCPU& cpu) {
     // TODO: Convert BLE $E7BB
 
     // E7B6: LDU $3002
-    cpu.state_.u = 0x3002;
+    cpu.state_.u = cpu.read_memory_word(0x3002);
 
     // E7B9: BRA $E7C2
     cpu.state_.pc += 0xE7C2;
