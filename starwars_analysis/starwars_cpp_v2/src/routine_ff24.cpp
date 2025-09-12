@@ -1,145 +1,209 @@
-#include "cpu_0x6809.h"
+#include "cpu_6809.h"
 
 namespace StarWars {
 
-void routine_0xFF24_impl(StarWarsCPU& cpu) {
-    // Converted from rom_disasm_auto_0xFF24.md
-    // Address: 0x0xFF24
+void routine_ff24_impl(StarWarsCPU& cpu) {
+    // Converted from rom_disasm_auto_ff24.md
+    // Address: 0xFF24
 
-    // Converted from rom_disasm_auto_0xFF24.md
-    // Address: 0xROUTINE_0xFF24
-    // 0xFF24: LDA 0x00
+    // FF24: LDA #$00
     cpu.state_.a = 0x00;
-    // 0xFF26: STA 0x0x4686
-    cpu.cpu.write_memory(0x4686,  cpu.state_.a);
-    // 0xFF29: STA 0x0x4683
-    cpu.cpu.write_memory(0x4683,  cpu.state_.a);
-    // 0xFF2C: STA 0x0x4682
-    cpu.cpu.write_memory(0x4682,  cpu.state_.a);
-    // 0xFF2F: LDX 0x0x0000
+
+    // FF26: STA $4686
+    cpu.write_memory(0x4686, cpu.state_.a);
+
+    // FF29: STA $4683
+    cpu.write_memory(0x4683, cpu.state_.a);
+
+    // FF2C: STA $4682
+    cpu.write_memory(0x4682, cpu.state_.a);
+
+    // FF2F: LDX #$0000
     cpu.state_.x = 0x0000;
-    // 0xFF32: STA 0x0x4640
-    cpu.cpu.write_memory(0x4640,  cpu.state_.a);
-    // 0xFF35: LEAX 0x1,cpu.state_.x
-    cpu.state_.x += 0x1,cpu.state_.x;
-    // 0xFF37: CMPX 0x0x5600
-    cpu.cpu.compare_x(0x5600);
-    // 0xFF3A: BCS 0x0xFF32
-    if (cpu.cpu.carry_flag()) cpu.state_.pc += 0xFF32;
-    // 0xFF3C: LDA 0xFF
+
+    // FF32: STA $4640
+    cpu.write_memory(0x4640, cpu.state_.a);
+
+    // FF35: LEAX $1,X
+    // TODO: Fix comma operator: LEAX $1,X
+
+    // FF37: CMPX #$5600
+    cpu.compare_x(0x5600);
+
+    // FF3A: BCS $FF32
+    if (cpu.carry_flag()) cpu.state_.pc += 0xFF32;
+
+    // FF3C: LDA #$FF
     cpu.state_.a = 0xFF;
-    // 0xFF3E: STA 0x0x4686
-    cpu.cpu.write_memory(0x4686,  cpu.state_.a);
-    // 0xFF41: STA 0x0x4683
-    cpu.cpu.write_memory(0x4683,  cpu.state_.a);
-    // 0xFF44: STA 0x0x4682
-    cpu.cpu.write_memory(0x4682,  cpu.state_.a);
-    // 0xFF47: LDX 0x0x0000
+
+    // FF3E: STA $4686
+    cpu.write_memory(0x4686, cpu.state_.a);
+
+    // FF41: STA $4683
+    cpu.write_memory(0x4683, cpu.state_.a);
+
+    // FF44: STA $4682
+    cpu.write_memory(0x4682, cpu.state_.a);
+
+    // FF47: LDX #$0000
     cpu.state_.x = 0x0000;
-    // 0xFF4A: STA 0x0x4640
-    cpu.cpu.write_memory(0x4640,  cpu.state_.a);
-    // 0xFF4D: LEAX 0x1,cpu.state_.x
-    cpu.state_.x += 0x1,cpu.state_.x;
-    // 0xFF4F: CMPX 0x0x5600
-    cpu.cpu.compare_x(0x5600);
-    // 0xFF52: BCS 0x0xFF4A
-    if (cpu.cpu.carry_flag()) cpu.state_.pc += 0xFF4A;
-    // 0xFF54: JMP 0x0xFD07
+
+    // FF4A: STA $4640
+    cpu.write_memory(0x4640, cpu.state_.a);
+
+    // FF4D: LEAX $1,X
+    // TODO: Fix comma operator: LEAX $1,X
+
+    // FF4F: CMPX #$5600
+    cpu.compare_x(0x5600);
+
+    // FF52: BCS $FF4A
+    if (cpu.carry_flag()) cpu.state_.pc += 0xFF4A;
+
+    // FF54: JMP $FD07
     cpu.state_.pc = 0xFD07;
-    // 0xFF57: LDA [0x0xC840]
-    cpu.state_.a = [0x0xC840];
-    // 0xFF5B: LDA <0x1F
+
+    // FF57: LDA [$C840]
+    // TODO: Unrecognized operand: [$C840]
+
+    // FF5B: LDA <$1F
     cpu.state_.a = 0x1F;
-    // 0xFF5D: LSR -0x10,cpu.state_.x
-    // TODO: Convert LSR -0x10,cpu.state_.x
-    // 0xFF60: SUBA -0xC,cpu.state_.sp
-    cpu.state_.a -= -0xC,cpu.state_.sp;
-    // 0xFF62: LDA 0x0,cpu.state_.y
-    cpu.state_.a = 0x0,cpu.state_.y;
-    // 0xFF64: XDEC 0x0x6EE0
-    // TODO: Convert XDEC 0x0x6EE0
-    // 0xFF67: TST 0x0xE8AE
-    // TODO: Convert TST 0x0xE8AE
-    // 0xFF6B: ASL 0x0x9207
-    // TODO: Convert ASL 0x0x9207
-    // 0xFF6E: ANDB >0x0x0018
-    cpu.state_.b &= 0x0x0018;
-    // 0xFF71: 0xADCB 0x0,cpu.state_.u
-    // TODO: Convert 0xADCB 0x0,cpu.state_.u
-    // 0xFF73: ORA <0xF5
+
+    // FF5D: LSR -$10,X
+    // TODO: Convert LSR -$10,X
+
+    // FF60: SUBA -$C,S
+    // TODO: Fix comma operator: SUBA -$C,S
+
+    // FF62: LDA $0,Y
+    // TODO: Fix comma operator: LDA $0,Y
+
+    // FF64: XDEC $6EE0
+    // TODO: Convert XDEC $6EE0
+
+    // FF67: TST $E8AE
+    // TODO: Convert TST $E8AE
+
+    // FF6B: ASL $9207
+    // TODO: Convert ASL $9207
+
+    // FF6E: ANDB >$0018
+    cpu.state_.b &= 0x0018;
+
+    // FF71: ADCB $0,U
+    // TODO: Convert ADCB $0,U
+
+    // FF73: ORA <$F5
     cpu.state_.a |= 0xF5;
-    // 0xFF75: SUBA 0x0x3807
+
+    // FF75: SUBA $3807
     cpu.state_.a -= 0x3807;
-    // 0xFF78: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF7B: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF7E: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF81: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF84: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF87: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF8A: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF8D: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF90: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF93: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF96: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF99: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF9C: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFF9F: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFA2: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFA5: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFA8: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFAB: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFAE: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFB1: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFB4: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFB7: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFBA: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFBD: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFC0: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFC3: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFC6: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFC9: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFCC: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFCF: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFD2: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFD5: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFD8: STU 0x0xFFFF
-    cpu.cpu.write_memory(0xFFFF,  cpu.state_.u);
-    // 0xFFDB: STU 0x0x434F
-    cpu.cpu.write_memory(0x434F,  cpu.state_.u);
-    // 0xFFE5: BRA 0x0x0018
+
+    // FF78: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF7B: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF7E: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF81: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF84: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF87: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF8A: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF8D: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF90: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF93: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF96: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF99: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF9C: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FF9F: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFA2: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFA5: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFA8: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFAB: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFAE: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFB1: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFB4: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFB7: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFBA: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFBD: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFC0: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFC3: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFC6: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFC9: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFCC: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFCF: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFD2: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFD5: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFD8: STU $FFFF
+    cpu.write_memory(0xFFFF, cpu.state_.u);
+
+    // FFDB: STU $434F
+    cpu.write_memory(0x434F, cpu.state_.u);
+
+    // FFE5: BRA $0018
     cpu.state_.pc += 0x0018;
+
 }
 
 } // namespace StarWars

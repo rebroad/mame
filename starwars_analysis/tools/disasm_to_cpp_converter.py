@@ -113,16 +113,25 @@ def convert_operand(operands, mnemonic):
     # Handle direct page addressing
     if operands.startswith('<'):
         value = operands[1:]  # Remove < prefix
+        # Handle cases like <$AD -> 0xAD
+        if value.startswith('$'):
+            value = value[1:]  # Remove $ prefix
         return f"0x{value.upper()}"
     
     # Handle extended addressing
     if operands.startswith('>'):
         value = operands[1:]  # Remove > prefix
+        # Handle cases like >$4706 -> 0x4706
+        if value.startswith('$'):
+            value = value[1:]  # Remove $ prefix
         return f"0x{value.upper()}"
     
     # Handle simple $ prefix
     if operands.startswith('$') and not operands.startswith('$x'):
         value = operands[1:]  # Remove $ prefix
+        # Handle cases like $AD -> 0xAD
+        if value.startswith('$'):
+            value = value[1:]  # Remove second $ if present
         return f"0x{value.upper()}"
     
     # Handle indexed addressing - complex cases
@@ -139,11 +148,15 @@ def convert_operand(operands, mnemonic):
             # Handle indexed addressing with offset
             if reg1.startswith('$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[1:]  # Remove $ prefix
+                if reg2 == 'S':
+                    return f"0x{offset.upper()},cpu.state_.sp"
                 return f"0x{offset.upper()},cpu.state_.{reg2.lower()}"
             
             # Handle negative offsets
             if reg1.startswith('-$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[2:]  # Remove -$ prefix
+                if reg2 == 'S':
+                    return f"-0x{offset.upper()},cpu.state_.sp"
                 return f"-0x{offset.upper()},cpu.state_.{reg2.lower()}"
             
             # Handle post-increment
@@ -163,6 +176,10 @@ def convert_operand(operands, mnemonic):
     
     # Handle register names
     if operands in ['A', 'B', 'D', 'X', 'Y', 'U', 'S', 'PC', 'CC', 'DP']:
+        if operands == 'S':
+            return "cpu.state_.sp"  # S is the same as SP
+        elif operands == 'DP':
+            return "cpu.state_.dp"  # DP is direct page register
         return f"cpu.state_.{operands.lower()}"
     
     # Handle numeric values
@@ -192,14 +209,24 @@ def convert_instruction(parsed):
     # Handle special cases
     if mnemonic == 'TFR' and ',' in operands:
         src, dest = operands.split(',')
-        src = src.strip().lower()
-        dest = dest.strip().lower()
-        return f"    cpu.state_.{dest} = cpu.state_.{src};"
+        src = src.strip()
+        dest = dest.strip()
+        # Handle S register mapping
+        if src == 'S':
+            src = 'sp'
+        if dest == 'S':
+            dest = 'sp'
+        return f"    cpu.state_.{dest.lower()} = cpu.state_.{src.lower()};"
     
     # Handle indexed addressing for memory operations
     if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
         # For now, simplify indexed addressing
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
+    
+    # Handle comma operator issues (e.g., "cpu.state_.u += -0x1,cpu.state_.u")
+    if ',' in cpp_operand and not cpp_operand.startswith('// TODO:'):
+        # This is likely a malformed expression, convert to TODO
+        return f"    // TODO: Fix comma operator: {mnemonic} {operands}"
     
     # Handle complex addressing modes
     if cpp_operand.startswith('// TODO:'):

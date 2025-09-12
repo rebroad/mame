@@ -133,6 +133,7 @@ public:
         uint16_t& y;
         uint16_t& u;
         uint16_t& sp;
+        uint8_t& dp;
         uint8_t& cc;
         uint16_t& pc;
         

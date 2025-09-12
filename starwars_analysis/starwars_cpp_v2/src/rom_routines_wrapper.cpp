@@ -5,9 +5,9 @@
 namespace StarWars {
 
 // Implementation of StarWarsCPU class (declared in header)
-StarWarsCPU::State::State(CPU6809& cpu) 
+StarWarsCPU::State::State(CPU6809& cpu)
     : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),
-      u(cpu.m_u), sp(cpu.m_sp), cc(cpu.m_cc), pc(cpu.m_pc) {}
+      u(cpu.m_u), sp(cpu.m_sp), dp(cpu.m_dp), cc(cpu.m_cc), pc(cpu.m_pc) {}
 
 StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {}
 
