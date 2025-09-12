@@ -12,7 +12,7 @@ def regenerate_all_routines():
     
     disasm_dir = Path("/home/rebroad/src/mame/starwars_analysis/disassembly")
     output_dir = Path("/home/rebroad/src/mame/starwars_analysis/starwars_cpp_v2/src")
-    converter = Path("/home/rebroad/src/mame/starwars_analysis/tools/improved_disasm_to_cpp_converter.py")
+    converter = Path("/home/rebroad/src/mame/starwars_analysis/tools/disasm_to_cpp_converter.py")
     
     # Find all rom_disasm_auto_*.md files
     disasm_files = list(disasm_dir.glob("rom_disasm_auto_*.md"))
