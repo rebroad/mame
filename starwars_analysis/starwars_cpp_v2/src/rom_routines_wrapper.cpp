@@ -390,6 +390,7 @@ void routine_f1c6_impl(CPU6809& cpu);
 void routine_f1fd_impl(CPU6809& cpu);
 void routine_f261_impl(CPU6809& cpu);
 void routine_f36e_impl(CPU6809& cpu);
+void routine_f448_impl(CPU6809& cpu);
 void routine_f70d_impl(CPU6809& cpu);
 void routine_f714_impl(CPU6809& cpu);
 void routine_f720_impl(CPU6809& cpu);
@@ -785,6 +786,7 @@ static const std::map<uint16_t, std::function<void(CPU6809&)>> routine_map = {
     {0xF1FD, routine_f1fd_impl},
     {0xF261, routine_f261_impl},
     {0xF36E, routine_f36e_impl},
+    {0xF448, routine_f448_impl},
     {0xF70D, routine_f70d_impl},
     {0xF714, routine_f714_impl},
     {0xF720, routine_f720_impl},

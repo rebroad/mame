@@ -537,11 +537,13 @@ protected:
     void execute_ldx_immediate(uint16_t value);
     void execute_ldd_immediate(uint16_t value);
     void execute_lda_immediate(uint8_t value);
-    void execute_tfr_a_dp();
     void execute_lsr_direct(uint8_t address);
     void execute_bcc(uint16_t address);
     void execute_cmps_immediate(uint16_t value);
     void execute_beq(uint16_t address);
+    void execute_std_indexed(uint8_t postbyte);
+    void execute_tfr(uint8_t postbyte);
+    void execute_lsrb();
     void execute_stu_indexed(int8_t offset);
 
     // Addressing modes
@@ -553,6 +555,7 @@ protected:
     // Condition code helpers (protected for wrapper access)
     void set_zero_flag(bool zero);
     void set_carry_flag(bool carry);
+    void set_negative_flag(bool negative);
     bool get_zero_flag() const;
     bool get_carry_flag() const;
 };

@@ -473,7 +473,7 @@ def main():
     args = parser.parse_args()
     
     # Determine ROM file path
-    rom_file = args.input or args.rom_file
+    rom_file = args.input or args.rom
     
     # Determine address (positional argument takes precedence over --addr)
     address = args.address or args.addr
