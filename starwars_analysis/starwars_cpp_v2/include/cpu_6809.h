@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <array>
 
+// Forward declaration
+class StarWarsHardware;
+
 namespace StarWars {
 
 /**
@@ -19,7 +22,7 @@ class CPU6809 {
     friend class StarWarsCPU;
 public:
     // Constructor/Destructor
-    CPU6809();
+    explicit CPU6809(StarWarsHardware* hardware);
     ~CPU6809() = default;
 
     // Core CPU methods
@@ -46,6 +49,10 @@ public:
 
     // Instruction execution
     void execute_instruction();
+    
+    // Memory access (delegates to hardware)
+    uint8_t read_memory(uint16_t address);
+    void write_memory(uint16_t address, uint8_t value);
     
     // Native routine execution (address-perfect C++ implementations)
     void execute_at_address(uint16_t address);
@@ -85,6 +92,9 @@ protected:
     // CPU state
     bool m_running;
     bool m_initialized;
+    
+    // Hardware reference
+    StarWarsHardware* m_hardware;
     
     // Instruction execution
     uint8_t fetch_byte();

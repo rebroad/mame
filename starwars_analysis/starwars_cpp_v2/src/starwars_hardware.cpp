@@ -53,7 +53,7 @@ bool StarWarsHardware::initialize() {
     setup_io_ports();
 
     // Initialize CPU simulation
-    m_cpu = std::make_unique<CPU6809Hardware>(this);
+    m_cpu = std::make_unique<CPU6809>(this);
     m_cpu->reset();
 
     // Set PC to our validated main loop routine
@@ -255,7 +255,7 @@ bool StarWarsHardware::load_rom_files() {
     std::cout << "Loading ROM files..." << std::endl;
 
     // Load our processed complete memory map (CPU address space)
-    std::ifstream memory_map("../complete_memory_map.bin", std::ios::binary);
+    std::ifstream memory_map("/home/rebroad/src/mame/starwars_analysis/complete_memory_map.bin", std::ios::binary);
     if (!memory_map) {
         std::cerr << "Failed to open complete_memory_map.bin!" << std::endl;
         return false;
@@ -356,14 +356,9 @@ uint16_t StarWarsHardware::translate_rom_address(uint16_t address) const {
     // MAME loads ROMs starting at ROM region offset 0x6000
     // Then maps 0x8000-0xFFFF to the ROM region
     
-    if (address >= 0x6000 && address < 0x8000) {
-        // Map 0x6000-0x7FFF to ROM file offset 0x0000-0x1FFF (ROM 0)
-        return address - 0x6000;
-    }
-    else if (address >= 0x8000) {
-        // Map 0x8000-0xFFFF to ROM file offset (address - 0x6000)
-        // This accounts for MAME's ROM loading starting at 0x6000
-        return address - 0x6000;
+    if (address >= 0x6000) {
+        // Map 0x6000-0xFFFF to ROM file offset 0x6000-0xFFFF (both banked and main ROM)
+        return address;
     }
     
     return 0; // Default fallback

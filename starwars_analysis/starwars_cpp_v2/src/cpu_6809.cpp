@@ -4,7 +4,7 @@
 
 namespace StarWars {
 
-CPU6809::CPU6809()
+CPU6809::CPU6809(StarWarsHardware* hardware)
     : m_pc(0)
     , m_sp(0x3000)  // Stack at top of RAM
     , m_u(0x3000)
@@ -17,7 +17,16 @@ CPU6809::CPU6809()
     , m_cc(0x50)    // Default condition codes
     , m_running(false)
     , m_initialized(false)
+    , m_hardware(hardware)
 {
+}
+
+uint8_t CPU6809::read_memory(uint16_t address) {
+    return m_hardware->read_memory(address);
+}
+
+void CPU6809::write_memory(uint16_t address, uint8_t value) {
+    m_hardware->write_memory(address, value);
 }
 
 void CPU6809::reset() {

@@ -21,7 +21,7 @@ uint8_t StarWarsCPU::read_memory(uint16_t address) {
 }
 
 uint16_t StarWarsCPU::read_memory_word(uint16_t address) {
-    return (static_cast<uint16_t>(cpu_.read_memory(address)) << 8) | cpu_.read_memory(address + 1);
+    return cpu_.read_memory16(address);
 }
 
 void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {
