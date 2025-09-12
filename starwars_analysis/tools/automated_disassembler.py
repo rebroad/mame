@@ -348,15 +348,15 @@ class AutomatedDisassembler:
 
             if start and end:
                 name = f"auto_{start}"
+                # Save only if the routine looks valid (not fallback-only)
                 if self.disassemble_routine(start, end, name, verbose=False):
                     disassembled += 1
-                    # After saving, get lines again to discover new targets inside this routine
                     lines = self._disassemble_lines(start, self.calculate_byte_count(start, end))
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
             else:
-                # Fallback: scan a small window to find new targets so traversal can continue
+                # Fallback window: do NOT save; only extract targets to continue traversal
                 lines = self._disassemble_lines(addr, 256)
                 if lines:
                     for t in self._extract_call_targets(lines):
@@ -374,39 +374,11 @@ class AutomatedDisassembler:
         print("This will find and disassemble all meaningful routines automatically.")
         print("")
 
-        # Preferred: entry-point-driven traversal like MAME (reset vector)
+        # Strict mode: traverse only from reset vector (no heuristic scanning)
         traversed = self.graph_disassemble_from_reset()
 
-        # Step 5: Analyze and disassemble meaningful routines
-        print("\nStep 5: Analyzing and disassembling meaningful routines...")
-
-        all_candidates = {}
-        rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
-        jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
-        jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
-
-        all_candidates.update(rts_routines)
-        all_candidates.update(jmp_routines)
-        all_candidates.update(jsr_routines)
-
-        heuristic_disassembled = 0
-        for pattern, (start, end) in all_candidates.items():
-            if start and end and start != end:
-                # Calculate size
-                start_int = int(start, 16)
-                end_int = int(end, 16)
-                size = end_int - start_int + 1
-
-                # Only disassemble routines of reasonable size
-                if 5 <= size <= 200:  # 5-200 bytes
-                    routine_name = f"auto_{start}"
-                    print(f"Disassembling routine at {start} (size: {size} bytes)")
-                    if self.disassemble_routine(start, end, routine_name, verbose=False):
-                        heuristic_disassembled += 1
-
-        total_disassembled = traversed + heuristic_disassembled
         print(f"\n=== AUTOMATION COMPLETE ===")
-        print(f"Disassembled {total_disassembled} routines (reset traversal: {traversed}, heuristic: {heuristic_disassembled})")
+        print(f"Disassembled {traversed} routines (reset traversal only)")
         print(f"All routines saved in: {self.disassembly_dir}")
         print(f"Use 'python3 validate_disassembly.py --check-all' to validate all routines")
 
