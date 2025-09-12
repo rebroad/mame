@@ -11,6 +11,7 @@ import sys
 import time
 import subprocess
 from pathlib import Path
+from build_updater import update_build_files
 
 def process_unknown_addresses(project_root):
     """Process all unknown addresses and generate new routines"""
@@ -93,11 +94,8 @@ def process_unknown_addresses(project_root):
         for routine in new_routines:
             print(f"  - routine_{routine}.cpp")
 
-        # Automatically update CMakeLists.txt
-        update_cmake_lists(project_path, new_routines)
-
-        # Automatically update routine_map
-        update_routine_map(project_path, new_routines)
+        # Update build files using shared function
+        update_build_files(project_path, new_routines)
 
         print(f"\n✅ All files updated automatically!")
         print(f"Ready to rebuild the simulator with new routines.")
@@ -106,77 +104,7 @@ def process_unknown_addresses(project_root):
     unknown_file.unlink()
     print(f"\nCleared unknown_addresses.txt")
 
-def update_cmake_lists(project_path, new_routines):
-    """Update CMakeLists.txt to include new routine source files"""
-    cmake_file = project_path / "starwars_cpp_v2" / "CMakeLists.txt"
-
-    if not cmake_file.exists():
-        print("    ❌ CMakeLists.txt not found")
-        return
-
-    with open(cmake_file, 'r') as f:
-        content = f.read()
-
-    # Find the SOURCES section
-    lines = content.split('\n')
-    in_sources = False
-    sources_end = -1
-
-    for i, line in enumerate(lines):
-        if 'set(SOURCES' in line:
-            in_sources = True
-        elif in_sources and line.strip() == ')':
-            sources_end = i
-            break
-
-    if sources_end == -1:
-        print("    ❌ Could not find SOURCES section in CMakeLists.txt")
-        return
-
-    # Add new source files before the closing parenthesis
-    for routine in new_routines:
-        new_line = f"    src/routine_{routine}.cpp"
-        if new_line not in content:
-            lines.insert(sources_end, new_line)
-            print(f"    ✅ Added {new_line} to CMakeLists.txt")
-
-    with open(cmake_file, 'w') as f:
-        f.write('\n'.join(lines))
-
-def update_routine_map(project_path, new_routines):
-    """Update rom_routines_wrapper.cpp to add new routines to routine_map"""
-    wrapper_file = project_path / "starwars_cpp_v2" / "src" / "rom_routines_wrapper.cpp"
-
-    if not wrapper_file.exists():
-        print("    ❌ rom_routines_wrapper.cpp not found")
-        return
-
-    with open(wrapper_file, 'r') as f:
-        content = f.read()
-
-    # Find the routine_map definition
-    lines = content.split('\n')
-    map_end = -1
-
-    for i, line in enumerate(lines):
-        if '};' in line and 'routine_map' in content[max(0, content.rfind('routine_map', 0, content.find(line))):content.find(line)]:
-            map_end = i
-            break
-
-    if map_end == -1:
-        print("    ❌ Could not find routine_map in rom_routines_wrapper.cpp")
-        return
-
-    # Add new routine entries before the closing brace
-    for routine in new_routines:
-        addr = int(routine, 16)
-        new_entry = f"    {{0x{addr:04X}, routine_{routine}_impl}},"
-        if new_entry not in content:
-            lines.insert(map_end, new_entry)
-            print(f"    ✅ Added {new_entry} to routine_map")
-
-    with open(wrapper_file, 'w') as f:
-        f.write('\n'.join(lines))
+# Build update functions moved to shared build_updater.py module
 
 def main():
     # Auto-detect project root by looking for starwars_cpp_v2 directory
