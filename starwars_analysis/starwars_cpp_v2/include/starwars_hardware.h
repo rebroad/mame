@@ -53,7 +53,7 @@ private:
     static constexpr size_t RAM_SIZE = 0x3000;           // 12KB RAM
     static constexpr size_t VECTOR_ROM_SIZE = 256;       // 256 bytes AVG PROM
     static constexpr size_t MATH_RAM_SIZE = 0x1000;      // 4KB Math RAM
-    static constexpr size_t MAIN_ROM_SIZE = 0xA000;      // 40KB Main ROM (5 × 8KB ROMs)
+    static constexpr size_t MAIN_ROM_SIZE = 0x10000;     // 64KB Complete memory map
 
     // Memory arrays
     std::array<uint8_t, RAM_SIZE> m_ram;

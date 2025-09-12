@@ -23,7 +23,9 @@ CPU6809::CPU6809(StarWarsHardware* hardware)
 }
 
 uint8_t CPU6809::read_memory(uint16_t address) {
-    return m_hardware->read_memory(address);
+    uint8_t value = m_hardware->read_memory(address);
+    std::cout << "CPU6809::read_memory(" << std::hex << address << ") = 0x" << (int)value << std::endl;
+    return value;
 }
 
 void CPU6809::write_memory(uint16_t address, uint8_t value) {

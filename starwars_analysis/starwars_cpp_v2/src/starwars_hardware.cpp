@@ -93,24 +93,29 @@ void StarWarsHardware::shutdown() {
 }
 
 uint8_t StarWarsHardware::read_memory(uint16_t address) {
+    std::cout << "StarWarsHardware::read_memory(0x" << std::hex << address << ") - ";
+
     if (is_ram_address(address)) {
+        std::cout << "RAM" << std::endl;
         return m_ram[address];
     }
     else if (is_vector_rom_address(address)) {
+        std::cout << "Vector ROM" << std::endl;
         uint16_t rom_addr = address - 0x3000;
         return m_vector_rom[rom_addr];
     }
     else if (is_math_ram_address(address)) {
+        std::cout << "Math RAM" << std::endl;
         uint16_t ram_addr = translate_math_ram_address(address);
         return m_math_ram[ram_addr];
     }
     else if (is_main_rom_address(address)) {
         uint16_t rom_addr = translate_rom_address(address);
-        std::cout << "ROM read: 6809 addr=0x" << std::hex << std::setw(4) << std::setfill('0')
-                  << address << " -> ROM offset=0x" << std::setw(4) << rom_addr << std::endl;
+        std::cout << "Main ROM -> offset 0x" << rom_addr << " (size=" << m_main_rom.size() << ") = 0x" << (int)m_main_rom[rom_addr] << std::endl;
         return m_main_rom[rom_addr];
     }
     else if (is_io_port_address(address)) {
+        std::cout << "I/O port" << std::endl;
         return read_port(address);
     }
 
@@ -260,11 +265,11 @@ bool StarWarsHardware::load_rom_files() {
         std::cerr << "Failed to open complete_memory_map.bin!" << std::endl;
         return false;
     }
-    
+
     // Read the complete memory map (64KB)
     memory_map.read(reinterpret_cast<char*>(m_main_rom.data()), MAIN_ROM_SIZE);
     if (memory_map.gcount() != MAIN_ROM_SIZE) {
-        std::cerr << "Memory map file size mismatch! Expected " << MAIN_ROM_SIZE 
+        std::cerr << "Memory map file size mismatch! Expected " << MAIN_ROM_SIZE
                   << ", got " << memory_map.gcount() << std::endl;
         return false;
     }
@@ -355,12 +360,12 @@ uint16_t StarWarsHardware::translate_rom_address(uint16_t address) const {
     // Translate 6809 memory address to ROM file offset based on MAME's memory map
     // MAME loads ROMs starting at ROM region offset 0x6000
     // Then maps 0x8000-0xFFFF to the ROM region
-    
+
     if (address >= 0x6000) {
         // Map 0x6000-0xFFFF to ROM file offset 0x6000-0xFFFF (both banked and main ROM)
         return address;
     }
-    
+
     return 0; // Default fallback
 }
 
