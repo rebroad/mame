@@ -16,7 +16,7 @@ fb55: 40           NEGA
 fb56: 00 55        NEG    <$55
 fb58: 55           LSRB
 fb59: 00 96        NEG    <$96
-fb5b: 2a aa        BPL    $FFCF
+fb5b: 2a aa        BPL    $FB07
 fb5d: 40           NEGA
 fb5e: 00 2a        NEG    <$2A
 fb60: aa 00        ORA    $0,X
@@ -31,28 +31,28 @@ fb6e: 55           LSRB
 fb6f: 40           NEGA
 fb70: 00 00        NEG    <$00
 fb72: 00 6e        NEG    <$6E
-fb74: e4 cc 55     ANDB   $0094,PCR
+fb74: e4 cc 55     ANDB   $FBCC,PCR
 fb77: 55           LSRB
 fb78: fd 50 1e     STD    $501E
 fb7b: 86 57        LDA    #$57
 fb7d: b7 47 00     STA    $4700
-fb80: 20 f1        BRA    $003B
+fb80: 20 f1        BRA    $FB73
 fb82: cc aa aa     LDD    #$AAAA
 fb85: fd 50 1e     STD    $501E
 fb88: 86 58        LDA    #$58
 fb8a: b7 47 00     STA    $4700
-fb8d: 20 e4        BRA    $003B
+fb8d: 20 e4        BRA    $FB73
 fb8f: cc 55 55     LDD    #$5555
 fb92: fd 50 1e     STD    $501E
 fb95: 86 59        LDA    #$59
 fb97: b7 47 00     STA    $4700
-fb9a: 20 d7        BRA    $003B
+fb9a: 20 d7        BRA    $FB73
 fb9c: 86 5a        LDA    #$5A
 fb9e: b7 47 00     STA    $4700
-fba1: 20 d0        BRA    $003B
+fba1: 20 d0        BRA    $FB73
 fba3: 86 5b        LDA    #$5B
 fba5: b7 47 00     STA    $4700
-fba8: 20 c9        BRA    $003B
+fba8: 20 c9        BRA    $FB73
 fbaa: cc 55 55     LDD    #$5555
 fbad: fd 50 00     STD    $5000
 fbb0: 86 5c        LDA    #$5C
@@ -60,7 +60,7 @@ fbb2: b7 47 00     STA    $4700
 fbb5: 12           NOP
 fbb6: fc 50 02     LDD    $5002
 fbb9: 10 83 55 55  CMPD   #$5555
-fbbd: 20 b4        BRA    $003B
+fbbd: 20 b4        BRA    $FB73
 fbbf: cc aa aa     LDD    #$AAAA
 fbc2: fd 50 00     STD    $5000
 fbc5: 86 5c        LDA    #$5C
@@ -68,7 +68,7 @@ fbc7: b7 47 00     STA    $4700
 fbca: 12           NOP
 fbcb: fc 50 02     LDD    $5002
 fbce: 10 83 aa aa  CMPD   #$AAAA
-fbd2: 20 9f        BRA    $003B
+fbd2: 20 9f        BRA    $FB73
 fbd4: cc 26 96     LDD    #$2696
 fbd7: fd 50 18     STD    $5018
 fbda: cc 1b 2c     LDD    #$1B2C
@@ -101,7 +101,7 @@ fc22: ed c4        STD    ,U
 fc24: c3 00 01     ADDD   #$0001
 fc27: 33 48        LEAU   $8,U
 fc29: 11 83 60 00  CMPU   #$6000
-fc2d: 25 f3        BCS    $00EA
+fc2d: 25 f3        BCS    $FC22
 fc2f: cc 00 00     LDD    #$0000
 fc32: fd 50 1e     STD    $501E
 fc35: cc 40 00     LDD    #$4000
@@ -116,17 +116,17 @@ fc4a: 56           RORB
 fc4b: 86 5b        LDA    #$5B
 fc4d: b7 47 00     STA    $4700
 fc50: 5a           DECB
-fc51: 26 f8        BNE    $0113
+fc51: 26 f8        BNE    $FC4B
 fc53: 86 5f        LDA    #$5F
 fc55: b7 47 00     STA    $4700
 fc58: 3d           MUL
 fc59: 11 b3 50 00  CMPU   $5000
-fc5d: 27 03        BEQ    $012A
+fc5d: 27 03        BEQ    $FC62
 fc5f: 7e fb 73     JMP    $FB73
 fc62: 1f 30        TFR    U,D
 fc64: 33 cb        LEAU   D,U
 fc66: 11 83 02 00  CMPU   #$0200
-fc6a: 25 d8        BCS    $010C
+fc6a: 25 d8        BCS    $FC44
 fc6c: cc 00 00     LDD    #$0000
 fc6f: 7e fb 73     JMP    $FB73
 fc72: cc 1b 2c     LDD    #$1B2C
@@ -178,7 +178,7 @@ fcdc: 55           LSRB
 fcdd: c0 00        SUBB   #$00
 fcdf: 55           LSRB
 fce0: 55           LSRB
-fce1: 2a aa        BPL    $0155
+fce1: 2a aa        BPL    $FC8D
 fce3: 00 00        NEG    <$00
 fce5: 40           NEGA
 fce6: 00 2a        NEG    <$2A
@@ -194,13 +194,13 @@ fcfa: a3 fb        SUBD   [D,S]
 fcfc: aa fb        ORA    [D,S]
 fcfe: bf fc ac     STX    $FCAC
 fd01: fc ac fc     LDD    $ACFC
-fd04: ac fc ac     CMPX   [$017B,PCR]
+fd04: ac fc ac     CMPX   [$FCB3,PCR]
 fd07: b6 43 00     LDA    $4300
 fd0a: 84 10        ANDA   #$10
 fd0c: f6 43 20     LDB    $4320
 fd0f: c4 04        ANDB   #$04
 fd11: 10 83 00 00  CMPD   #$0000
-fd15: 27 03        BEQ    $01E2
+fd15: 27 03        BEQ    $FD1A
 fd17: 7e f7 20     JMP    $F720
 fd1a: b7 46 40     STA    $4640
 fd1d: 86 ff        LDA    #$FF
@@ -211,6 +211,6 @@ fd28: f6 43 40     LDB    $4340
 fd2b: 53           COMB
 fd2c: ce fd 9a     LDU    #$FD9A
 fd2f: e1 c0        CMPB   ,U+
-fd31: 26 27        BNE    $0222
+fd31: 26 27        BNE    $FD5A
 fd33: b7 46 20     STA    $4620
-fd36: 10 8e ec 84  LDY    #$0000
+fd36: 10 8e 00 00  LDY    #$0000

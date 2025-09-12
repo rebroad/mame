@@ -6,8 +6,8 @@ void routine_71c4_impl(CPU6809& cpu) {
     // Converted from rom_disasm_71c4.md
     // Address: 0x71C4
 
-    // 71C4: BPL $0003
-    if (!cpu.negative_flag()) cpu.m_pc = 0x71C9;
+    // 71C4: BPL $71C7
+    if (!cpu.negative_flag()) cpu.m_pc = 0x71C7;
 
     // 71C7: LDB #$03
     cpu.m_b = 0x03;
@@ -36,8 +36,8 @@ void routine_71c4_impl(CPU6809& cpu) {
     // 71DF: NEG <$00
     // TODO: Convert NEG <$00
 
-    // 71E1: BCS $001F
-    if (cpu.carry_flag()) cpu.m_pc = 0x7202;
+    // 71E1: BCS $71E3
+    if (cpu.carry_flag()) cpu.m_pc = 0x71E3;
 
     // 71E3: NEG <$37
     // TODO: Convert NEG <$37
@@ -171,8 +171,8 @@ void routine_71c4_impl(CPU6809& cpu) {
     // 725D: STD $3,X
     // TODO: Handle indexed addressing: STD $3,X
 
-    // 725F: BCC $0089
-    if (!cpu.carry_flag()) cpu.m_pc = 0x71EA;
+    // 725F: BCC $724D
+    if (!cpu.carry_flag()) cpu.m_pc = 0x724D;
 
     // 7261: COM <$36
     // TODO: Convert COM <$36
@@ -225,8 +225,8 @@ void routine_71c4_impl(CPU6809& cpu) {
     // 7286: STU <$04
     cpu.write_memory16(0x04, cpu.m_u);
 
-    // 7289: BLS $00A5
-    // TODO: Convert BLS $00A5
+    // 7289: BLS $7269
+    // TODO: Convert BLS $7269
 
     // 728B: LSR <$36
     // TODO: Convert LSR <$36
@@ -324,8 +324,8 @@ void routine_71c4_impl(CPU6809& cpu) {
     // 72D5: LDA $4B2D
     cpu.m_a = cpu.read_memory(0x4B2D);
 
-    // 72D8: BNE $012C
-    if (!cpu.zero_flag()) cpu.m_pc = 0x7306;
+    // 72D8: BNE $72F0
+    if (!cpu.zero_flag()) cpu.m_pc = 0x72F0;
 
     // 72DA: LDD $4B0E
     cpu.m_d = cpu.read_memory16(0x4B0E);
@@ -333,20 +333,20 @@ void routine_71c4_impl(CPU6809& cpu) {
     // 72DD: CMPD #$00A0
     // TODO: Convert CMPD #$00A0
 
-    // 72E1: BCC $012C
-    if (!cpu.carry_flag()) cpu.m_pc = 0x730F;
+    // 72E1: BCC $72F0
+    if (!cpu.carry_flag()) cpu.m_pc = 0x72F0;
 
     // 72E3: ANDB #$10
     cpu.m_b &= 0x10;
 
-    // 72E5: BNE $0127
-    if (!cpu.zero_flag()) cpu.m_pc = 0x730E;
+    // 72E5: BNE $72EB
+    if (!cpu.zero_flag()) cpu.m_pc = 0x72EB;
 
     // 72E7: LDB #$4C
     cpu.m_b = 0x4C;
 
-    // 72E9: BRA $0129
-    cpu.m_pc = 0x7314;
+    // 72E9: BRA $72ED
+    cpu.m_pc = 0x72ED;
 
     // 72EB: LDB #$4D
     cpu.m_b = 0x4D;

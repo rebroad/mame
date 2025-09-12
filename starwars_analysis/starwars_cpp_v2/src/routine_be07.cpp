@@ -45,8 +45,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BE26: CMPA #$65
     cpu.compare_a(0x65);
 
-    // BE28: BCS $001B
-    if (cpu.carry_flag()) cpu.m_pc = 0xBE45;
+    // BE28: BCS $BE22
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE22;
 
     // BE2A: LDA #$D3
     cpu.m_a = 0xD3;
@@ -96,8 +96,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BE4E: JSR $E7AD
     cpu.call_function(0xE7AD);
 
-    // BE52: BPL $0045
-    if (!cpu.negative_flag()) cpu.m_pc = 0xBE99;
+    // BE52: BPL $BE4C
+    if (!cpu.negative_flag()) cpu.m_pc = 0xBE4C;
 
     // BE54: LDD #$8040
     cpu.m_d = 0x8040;
@@ -111,8 +111,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BE5C: CMPX #$4554
     cpu.compare_x(0x4554);
 
-    // BE5F: BCS $0033
-    if (cpu.carry_flag()) cpu.m_pc = 0xBE94;
+    // BE5F: BCS $BE3A
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE3A;
 
     // BE61: LDD $C7C1
     cpu.m_d = cpu.read_memory16(0xC7C1);
@@ -366,8 +366,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BF49: ORA $4AFD
     cpu.m_a |= 0x4AFD;
 
-    // BF4C: BEQ $0175
-    if (cpu.zero_flag()) cpu.m_pc = 0xBFC3;
+    // BF4C: BEQ $BF7C
+    if (cpu.zero_flag()) cpu.m_pc = 0xBF7C;
 
     // BF4E: LDX #$4554
     cpu.m_x = 0x4554;
@@ -393,8 +393,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BF61: LDA $4AFA
     cpu.m_a = cpu.read_memory(0x4AFA);
 
-    // BF64: BCS $0162
-    if (cpu.carry_flag()) cpu.m_pc = 0xBFC8;
+    // BF64: BCS $BF69
+    if (cpu.carry_flag()) cpu.m_pc = 0xBF69;
 
     // BF66: INC $4AFA
     // TODO: Convert INC $4AFA
@@ -411,8 +411,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BF75: CMPA #$0F
     cpu.compare_a(0x0F);
 
-    // BF77: BCS $0175
-    if (cpu.carry_flag()) cpu.m_pc = 0xBFEE;
+    // BF77: BCS $BF7C
+    if (cpu.carry_flag()) cpu.m_pc = 0xBF7C;
 
     // BF79: INC $4AFA
     // TODO: Convert INC $4AFA
@@ -459,8 +459,8 @@ void routine_be07_impl(CPU6809& cpu) {
     // BFA0: ORA $4AFD
     cpu.m_a |= 0x4AFD;
 
-    // BFA3: BEQ $01AD
-    if (cpu.zero_flag()) cpu.m_pc = 0xBF52;
+    // BFA3: BEQ $BFB4
+    if (cpu.zero_flag()) cpu.m_pc = 0xBFB4;
 
     // BFA5: LDX #$4556
     cpu.m_x = 0x4556;
@@ -540,14 +540,14 @@ void routine_be07_impl(CPU6809& cpu) {
     // BFE9: CMPU #$C7E1
     // TODO: Convert CMPU #$C7E1
 
-    // BFED: BCS $01ED
-    if (cpu.carry_flag()) cpu.m_pc = 0xBFDC;
+    // BFED: BCS $BFF4
+    if (cpu.carry_flag()) cpu.m_pc = 0xBFF4;
 
     // BFEF: LDD #$1ED4
     cpu.m_d = 0x1ED4;
 
-    // BFF2: BRA $01F0
-    cpu.m_pc = 0xBFE4;
+    // BFF2: BRA $BFF7
+    cpu.m_pc = 0xBFF7;
 
     // BFF4: LDD #$0064
     cpu.m_d = 0x0064;

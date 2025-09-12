@@ -165,8 +165,8 @@ void routine_cd00_impl(CPU6809& cpu) {
     // CDBD: TST $4320
     // TODO: Convert TST $4320
 
-    // CDC0: BMI $00BD
-    if (cpu.negative_flag()) cpu.m_pc = 0xCD7F;
+    // CDC0: BMI $CDBD
+    if (cpu.negative_flag()) cpu.m_pc = 0xCDBD;
 
     // CDC3: LDD #$0000
     cpu.m_d = 0x0000;
@@ -333,11 +333,11 @@ void routine_cd00_impl(CPU6809& cpu) {
     // CE52: XSTX #$04C4
     // TODO: Convert XSTX #$04C4
 
-    // CE5A: BRA $01A3
-    cpu.m_pc = 0xCDFF;
+    // CE5A: BRA $CEA3
+    cpu.m_pc = 0xCEA3;
 
-    // CE5E: BRA $01B7
-    cpu.m_pc = 0xCE17;
+    // CE5E: BRA $CEB7
+    cpu.m_pc = 0xCEB7;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y
@@ -444,14 +444,14 @@ void routine_cd00_impl(CPU6809& cpu) {
     // CEC9: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
 
-    // CED3: BRA $0206
-    cpu.m_pc = 0xCEDB;
+    // CED3: BRA $CF06
+    cpu.m_pc = 0xCF06;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // CED8: BRA $021B
-    cpu.m_pc = 0xCEF5;
+    // CED8: BRA $CF1B
+    cpu.m_pc = 0xCF1B;
 
     // CEDE: ORCC #$F6
     cpu.m_cc |= 0xF6;

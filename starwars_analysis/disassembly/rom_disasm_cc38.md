@@ -1,31 +1,31 @@
 cc38: 8e 4a b6  LDX    #$4AB6
 cc3b: a6 80     LDA    ,X+
 cc3d: 81 1b     CMPA   #$1B
-cc3f: 24 1a     BCC    $0023
+cc3f: 24 1a     BCC    $CC5B
 cc41: 8c 4a d4  CMPX   #$4AD4
-cc44: 25 f5     BCS    $0003
+cc44: 25 f5     BCS    $CC3B
 cc46: 8e 4a 8e  LDX    #$4A8E
 cc49: a6 80     LDA    ,X+
 cc4b: 81 a0     CMPA   #$A0
-cc4d: 24 0c     BCC    $0023
+cc4d: 24 0c     BCC    $CC5B
 cc4f: 84 0f     ANDA   #$0F
 cc51: 81 0a     CMPA   #$0A
-cc53: 24 06     BCC    $0023
+cc53: 24 06     BCC    $CC5B
 cc55: 8c 4a b6  CMPX   #$4AB6
-cc58: 25 ef     BCS    $0011
+cc58: 25 ef     BCS    $CC49
 cc5a: 39        RTS
 cc5b: 8e 4a b6  LDX    #$4AB6
 cc5e: ce cc 7a  LDU    #$CC7A
 cc61: ec c1     LDD    ,U++
 cc63: ed 81     STD    ,X++
 cc65: 8c 4a d4  CMPX   #$4AD4
-cc68: 25 f7     BCS    $0029
+cc68: 25 f7     BCS    $CC61
 cc6a: 8e 4a 8e  LDX    #$4A8E
 cc6d: ce cc 98  LDU    #$CC98
 cc70: ec c1     LDD    ,U++
 cc72: ed 81     STD    ,X++
 cc74: 8c 4a b6  CMPX   #$4AB6
-cc77: 25 f7     BCS    $0038
+cc77: 25 f7     BCS    $CC70
 cc79: 39        RTS
 cc7a: 0f 02     CLR    <$02
 cc7c: 09 17     ROL    <$17
@@ -52,7 +52,7 @@ cca0: 01 02     NEG    <$02
 cca2: 46        RORA
 cca3: 50        NEGB
 cca4: 00 87     NEG    <$87
-cca6: 25 51     BCS    $00C1
+cca6: 25 51     BCS    $CCF9
 cca8: 00 81     NEG    <$81
 ccaa: 35 53     PULS   CC,A,X,U
 ccac: 00 70     NEG    <$70
@@ -61,7 +61,7 @@ ccaf: 99 00     ADCA   <$00
 ccb1: 51        NEGB
 ccb2: 80 00     SUBA   #$00
 ccb4: 00 49     NEG    <$49
-ccb6: 21 59     BRN    $00D9
+ccb6: 21 59     BRN    $CD11
 ccb8: 00 38     NEG    <$38
 ccba: 47        ASRA
 ccbb: 66 00     ROR    $0,X
@@ -193,7 +193,7 @@ cdb8: 49        ROLA
 cdb9: 39        RTS
 cdba: b7 47 00  STA    $4700
 cdbd: 7d 43 20  TST    $4320
-cdc0: 2b fb     BMI    $0185
+cdc0: 2b fb     BMI    $CDBD
 cdc2: 39        RTS
 cdc3: cc 00 00  LDD    #$0000
 cdc6: ed 56     STD    -$A,U
@@ -243,4 +243,4 @@ ce2c: 7e cd ba  JMP    $CDBA
 ce2f: cc 00 10  LDD    #$0010
 ce32: fd 47 01  STD    $4701
 ce35: 86 0e     LDA    #$0E
-ce37: 7e 8e 4a  JMP    >$0000
+ce37: 7e 00 00  JMP    >$0000

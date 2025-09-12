@@ -91,12 +91,12 @@ b93c: 86 00     LDA    #$00
 b93e: a7 0d     STA    $D,X
 b940: 30 0e     LEAX   $E,X
 b942: 8c 4a 52  CMPX   #$4A52
-b945: 25 f5     BCS    $00DE
+b945: 25 f5     BCS    $B93C
 b947: 39        RTS
 b948: d6 a2     LDB    <$A2
 b94a: 5c        INCB
 b94b: c1 08     CMPB   #$08
-b94d: 25 02     BCS    $00F3
+b94d: 25 02     BCS    $B951
 b94f: c6 00     LDB    #$00
 b951: d7 a2     STB    <$A2
 b953: 86 0e     LDA    #$0E
@@ -123,25 +123,25 @@ b987: bd cd ba  JSR    $CDBA
 b98a: 39        RTS
 b98b: 8e 49 e2  LDX    #$49E2
 b98e: a6 0d     LDA    $D,X
-b990: 27 0f     BEQ    $0143
+b990: 27 0f     BEQ    $B9A1
 b992: 6a 0d     DEC    $D,X
 b994: e6 0c     LDB    $C,X
 b996: c1 09     CMPB   #$09
-b998: 25 01     BCS    $013D
+b998: 25 01     BCS    $B99B
 b99a: 3f        SWI
 b99b: ce b7 48  LDU    #$B748
 b99e: 58        ASLB
 b99f: ad d5     JSR    [B,U]
 b9a1: 30 0e     LEAX   $E,X
 b9a3: 8c 4a 52  CMPX   #$4A52
-b9a6: 25 e6     BCS    $0130
+b9a6: 25 e6     BCS    $B98E
 b9a8: 8e 49 e2  LDX    #$49E2
 b9ab: a6 0d     LDA    $D,X
-b9ad: 27 03     BEQ    $0154
+b9ad: 27 03     BEQ    $B9B2
 b9af: 7e b9 5c  JMP    $B95C
 b9b2: 30 0e     LEAX   $E,X
 b9b4: 8c 4a 52  CMPX   #$4A52
-b9b7: 25 f2     BCS    $014D
+b9b7: 25 f2     BCS    $B9AB
 b9b9: ce 50 d0  LDU    #$50D0
 b9bc: bd cd c3  JSR    $CDC3
 b9bf: 39        RTS
@@ -163,8 +163,8 @@ b9e0: e3 08     ADDD   $8,X
 b9e2: ed 08     STD    $8,X
 b9e4: ec 04     LDD    $4,X
 b9e6: e3 0a     ADDD   $A,X
-b9e8: 29 07     BVS    $0193
-b9ea: 2c 03     BGE    $0191
+b9e8: 29 07     BVS    $B9F1
+b9ea: 2c 03     BGE    $B9EF
 b9ec: cc 00 00  LDD    #$0000
 b9ef: ed 04     STD    $4,X
 b9f1: ec 0a     LDD    $A,X
@@ -173,15 +173,15 @@ b9f6: ed 0a     STD    $A,X
 b9f8: 39        RTS
 b9f9: ec 06     LDD    $6,X
 b9fb: e3 84     ADDD   ,X
-b9fd: 29 02     BVS    $01A3
+b9fd: 29 02     BVS    $BA01
 b9ff: ed 84     STD    ,X
 ba01: ec 08     LDD    $8,X
 ba03: e3 02     ADDD   $2,X
-ba05: 29 02     BVS    $01AB
+ba05: 29 02     BVS    $BA09
 ba07: ed 02     STD    $2,X
 ba09: ec 0a     LDD    $A,X
 ba0b: e3 04     ADDD   $4,X
-ba0d: 29 02     BVS    $01B3
+ba0d: 29 02     BVS    $BA11
 ba0f: ed 04     STD    $4,X
 ba11: 39        RTS
 ba12: 86 18     LDA    #$18
@@ -191,12 +191,12 @@ ba19: bd cd ba  JSR    $CDBA
 ba1c: 8e 49 e2  LDX    #$49E2
 ba1f: 9f 64     STX    <$64
 ba21: a6 0d     LDA    $D,X
-ba23: 27 03     BEQ    $01CA
+ba23: 27 03     BEQ    $BA28
 ba25: bd ba 32  JSR    $BA32
 ba28: 9e 64     LDX    <$64
 ba2a: 30 0e     LEAX   $E,X
 ba2c: 8c 4a 52  CMPX   #$4A52
-ba2f: 25 ee     BCS    $01C1
+ba2f: 25 ee     BCS    $BA1F
 ba31: 39        RTS
 ba32: ec 84     LDD    ,X
 ba34: fd 50 78  STD    $5078
@@ -209,9 +209,9 @@ ba44: fd 47 01  STD    $4701
 ba47: 86 67     LDA    #$67
 ba49: bd cd ba  JSR    $CDBA
 ba4c: fc 50 00  LDD    $5000
-ba4f: 2b 4c     BMI    $023F
+ba4f: 2b 4c     BMI    $BA9D
 ba51: fd 50 18  STD    $5018
 ba54: fd 47 04  STD    $4704
 ba57: fc 50 02  LDD    $5002
 ba5a: fd 50 1a  STD    $501A
-ba5d: 2a cc     BPL    $0201
+ba5d: 2a 00     BPL    $BA5F

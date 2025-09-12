@@ -12,8 +12,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B29E: ANDA ,X
     // TODO: Complex indexed addressing: ,X
 
-    // B2A0: BEQ $0035
-    if (cpu.zero_flag()) cpu.m_pc = 0xB2D7;
+    // B2A0: BEQ $B2D1
+    if (cpu.zero_flag()) cpu.m_pc = 0xB2D1;
 
     // B2A2: STA <$02
     cpu.write_memory(0x02, cpu.m_a);
@@ -27,11 +27,11 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B2A9: CMPA <$02
     cpu.compare_a(cpu.read_memory(0x02));
 
-    // B2AB: BEQ $0035
-    if (cpu.zero_flag()) cpu.m_pc = 0xB2E2;
+    // B2AB: BEQ $B2D1
+    if (cpu.zero_flag()) cpu.m_pc = 0xB2D1;
 
-    // B2AD: BLS $0025
-    // TODO: Convert BLS $0025
+    // B2AD: BLS $B2C1
+    // TODO: Convert BLS $B2C1
 
     // B2AF: LDA #$04
     cpu.m_a = 0x04;
@@ -54,8 +54,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B2BC: JSR $BDFD
     cpu.call_function(0xBDFD);
 
-    // B2BF: BRA $0035
-    cpu.m_pc = 0xB2F6;
+    // B2BF: BRA $B2D1
+    cpu.m_pc = 0xB2D1;
 
     // B2C1: LDA #$04
     cpu.m_a = 0x04;
@@ -81,14 +81,14 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B2D2: LDA <$BC
     cpu.m_a = cpu.read_memory(0xBC);
 
-    // B2D4: BEQ $0047
-    if (cpu.zero_flag()) cpu.m_pc = 0xB31D;
+    // B2D4: BEQ $B2E3
+    if (cpu.zero_flag()) cpu.m_pc = 0xB2E3;
 
     // B2D6: LDD <$CC
     cpu.m_d = cpu.read_memory16(0xCC);
 
-    // B2D8: BMI $0045
-    if (cpu.negative_flag()) cpu.m_pc = 0xB31F;
+    // B2D8: BMI $B2E1
+    if (cpu.negative_flag()) cpu.m_pc = 0xB2E1;
 
     // B2DA: LDA #$04
     cpu.m_a = 0x04;
@@ -99,26 +99,26 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B2DE: JSR $AD20
     cpu.call_function(0xAD20);
 
-    // B2E1: BRA $0048
-    cpu.m_pc = 0xB32B;
+    // B2E1: BRA $B2E4
+    cpu.m_pc = 0xB2E4;
 
     // B2E4: LDD <$C4
     cpu.m_d = cpu.read_memory16(0xC4);
 
-    // B2E6: BMI $005C
-    if (cpu.negative_flag()) cpu.m_pc = 0xB344;
+    // B2E6: BMI $B2F8
+    if (cpu.negative_flag()) cpu.m_pc = 0xB2F8;
 
     // B2E8: CMPD <$C8
     // TODO: Convert CMPD <$C8
 
-    // B2EB: BHI $005C
-    // TODO: Convert BHI $005C
+    // B2EB: BHI $B2F8
+    // TODO: Convert BHI $B2F8
 
     // B2ED: SUBD <$D0
     cpu.m_d -= 0xD0;
 
-    // B2EF: BHI $006B
-    // TODO: Convert BHI $006B
+    // B2EF: BHI $B307
+    // TODO: Convert BHI $B307
 
     // B2F1: LDA #$04
     cpu.m_a = 0x04;
@@ -132,14 +132,14 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B2F8: LDD <$C8
     cpu.m_d = cpu.read_memory16(0xC8);
 
-    // B2FA: BMI $006B
-    if (cpu.negative_flag()) cpu.m_pc = 0xB367;
+    // B2FA: BMI $B307
+    if (cpu.negative_flag()) cpu.m_pc = 0xB307;
 
     // B2FC: SUBD <$D0
     cpu.m_d -= 0xD0;
 
-    // B2FE: BHI $006B
-    // TODO: Convert BHI $006B
+    // B2FE: BHI $B307
+    // TODO: Convert BHI $B307
 
     // B300: LDA #$04
     cpu.m_a = 0x04;
@@ -153,8 +153,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B307: LDD <$D0
     cpu.m_d = cpu.read_memory16(0xD0);
 
-    // B309: BMI $008E
-    if (cpu.negative_flag()) cpu.m_pc = 0xB299;
+    // B309: BMI $B32A
+    if (cpu.negative_flag()) cpu.m_pc = 0xB32A;
 
     // B30B: LDA #$FF
     cpu.m_a = 0xFF;
@@ -177,8 +177,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B319: CMPD #$00E0
     // TODO: Convert CMPD #$00E0
 
-    // B31D: BCS $0085
-    if (cpu.carry_flag()) cpu.m_pc = 0xB2A4;
+    // B31D: BCS $B321
+    if (cpu.carry_flag()) cpu.m_pc = 0xB321;
 
     // B31F: LDB #$E0
     cpu.m_b = 0xE0;
@@ -195,29 +195,29 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B32B: LDA <$BC
     cpu.m_a = cpu.read_memory(0xBC);
 
-    // B32D: BEQ $00A1
-    if (cpu.zero_flag()) cpu.m_pc = 0xB2D0;
+    // B32D: BEQ $B33D
+    if (cpu.zero_flag()) cpu.m_pc = 0xB33D;
 
     // B32F: LDD <$CC
     cpu.m_d = cpu.read_memory16(0xCC);
 
-    // B331: BMI $009D
-    if (cpu.negative_flag()) cpu.m_pc = 0xB2D0;
+    // B331: BMI $B339
+    if (cpu.negative_flag()) cpu.m_pc = 0xB339;
 
     // B333: SUBD <$C4
     cpu.m_d -= 0xC4;
 
-    // B335: BCS $00A2
-    if (cpu.carry_flag()) cpu.m_pc = 0xB2D9;
+    // B335: BCS $B33E
+    if (cpu.carry_flag()) cpu.m_pc = 0xB33E;
 
-    // B337: BRA $00A9
-    cpu.m_pc = 0xB2E2;
+    // B337: BRA $B345
+    cpu.m_pc = 0xB345;
 
     // B339: LDA <$C4
     cpu.m_a = cpu.read_memory(0xC4);
 
-    // B33B: BGE $00A9
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xB2E6;
+    // B33B: BGE $B345
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xB345;
 
     // B33E: LDA #$04
     cpu.m_a = 0x04;
@@ -339,14 +339,14 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B3AF: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
-    // B3BB: BRA $0152
-    cpu.m_pc = 0xB40F;
+    // B3BB: BRA $B3EE
+    cpu.m_pc = 0xB3EE;
 
     // B3BE: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // B3C0: BRA $0167
-    cpu.m_pc = 0xB429;
+    // B3C0: BRA $B403
+    cpu.m_pc = 0xB403;
 
     // B3C6: LSR <$BC
     // TODO: Convert LSR <$BC
@@ -354,17 +354,17 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B3C8: LDA <$FA
     cpu.m_a = cpu.read_memory(0xFA);
 
-    // B3CB: BVC $0172
-    // TODO: Convert BVC $0172
+    // B3CB: BVC $B40E
+    // TODO: Convert BVC $B40E
 
-    // B3D0: BRA $018D
-    cpu.m_pc = 0xB35F;
+    // B3D0: BRA $B429
+    cpu.m_pc = 0xB429;
 
-    // B3D4: BRA $018E
-    cpu.m_pc = 0xB364;
+    // B3D4: BRA $B42A
+    cpu.m_pc = 0xB42A;
 
-    // B3D8: BRA $0195
-    cpu.m_pc = 0xB36F;
+    // B3D8: BRA $B431
+    cpu.m_pc = 0xB431;
 
     // B3E4: LDA $49C0
     cpu.m_a = cpu.read_memory(0x49C0);
@@ -372,8 +372,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B3E7: CMPA #$03
     cpu.compare_a(0x03);
 
-    // B3E9: BCS $0154
-    if (cpu.carry_flag()) cpu.m_pc = 0xB43F;
+    // B3E9: BCS $B3F0
+    if (cpu.carry_flag()) cpu.m_pc = 0xB3F0;
 
     // B3EB: LDA #$00
     cpu.m_a = 0x00;
@@ -543,8 +543,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B477: CMPX #$4999
     cpu.compare_x(0x4999);
 
-    // B47A: BCS $01E3
-    if (cpu.carry_flag()) cpu.m_pc = 0xB45F;
+    // B47A: BCS $B47F
+    if (cpu.carry_flag()) cpu.m_pc = 0xB47F;
 
     // B47C: LEAX -$10,X
     // TODO: Fix comma operator: LEAX -$10,X
@@ -564,8 +564,8 @@ void routine_b29c_impl(CPU6809& cpu) {
     // B487: CMPA <$9C
     cpu.compare_a(cpu.read_memory(0x9C));
 
-    // B489: LBNE $027A
-    // TODO: Convert LBNE $027A
+    // B489: LBNE $B516
+    // TODO: Convert LBNE $B516
 
     // B48D: LDA <$9D
     cpu.m_a = cpu.read_memory(0x9D);

@@ -18,8 +18,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9617: TST <$61
     // TODO: Convert TST <$61
 
-    // 9619: BEQ $000E
-    if (cpu.zero_flag()) cpu.m_pc = 0x9629;
+    // 9619: BEQ $961D
+    if (cpu.zero_flag()) cpu.m_pc = 0x961D;
 
     // 961B: ORB #$FF
     cpu.m_b |= 0xFF;
@@ -42,8 +42,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 962A: LDA <$91
     cpu.m_a = cpu.read_memory(0x91);
 
-    // 962C: BNE $003C
-    if (!cpu.zero_flag()) cpu.m_pc = 0x966A;
+    // 962C: BNE $964B
+    if (!cpu.zero_flag()) cpu.m_pc = 0x964B;
 
     // 962E: LDU #$A018
     cpu.m_u = 0xA018;
@@ -69,20 +69,20 @@ void routine_960f_impl(CPU6809& cpu) {
     // 963F: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 9641: BNE $003A
-    if (!cpu.zero_flag()) cpu.m_pc = 0x967D;
+    // 9641: BNE $9649
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9649;
 
     // 9643: INC <$8D
     // TODO: Convert INC <$8D
 
-    // 9645: BLT $003A
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x9681;
+    // 9645: BLT $9649
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x9649;
 
     // 9647: INC <$91
     // TODO: Convert INC <$91
 
-    // 9649: BRA $0091
-    cpu.m_pc = 0x95DC;
+    // 9649: BRA $96A0
+    cpu.m_pc = 0x96A0;
 
     // 964B: JSR $96A1
     cpu.call_function(0x96A1);
@@ -96,8 +96,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9653: LDA <$90
     cpu.m_a = cpu.read_memory(0x90);
 
-    // 9655: BNE $0065
-    if (!cpu.zero_flag()) cpu.m_pc = 0x96BC;
+    // 9655: BNE $9674
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9674;
 
     // 9657: LDB <$8E
     cpu.m_b = cpu.read_memory(0x8E);
@@ -117,8 +117,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9663: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 9665: BNE $0063
-    if (!cpu.zero_flag()) cpu.m_pc = 0x96CA;
+    // 9665: BNE $9672
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9672;
 
     // 9667: INC <$90
     // TODO: Convert INC <$90
@@ -135,14 +135,14 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9670: STA <$8D
     cpu.write_memory(0x8D, cpu.m_a);
 
-    // 9672: BRA $0091
-    cpu.m_pc = 0x9605;
+    // 9672: BRA $96A0
+    cpu.m_pc = 0x96A0;
 
     // 9674: LDA <$8F
     cpu.m_a = cpu.read_memory(0x8F);
 
-    // 9676: BNE $0081
-    if (!cpu.zero_flag()) cpu.m_pc = 0x95F9;
+    // 9676: BNE $9690
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9690;
 
     // 9678: LDB <$8D
     cpu.m_b = cpu.read_memory(0x8D);
@@ -162,20 +162,20 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9684: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 9686: BNE $007F
-    if (!cpu.zero_flag()) cpu.m_pc = 0x9707;
+    // 9686: BNE $968E
+    if (!cpu.zero_flag()) cpu.m_pc = 0x968E;
 
     // 9688: DEC <$8D
     // TODO: Convert DEC <$8D
 
-    // 968A: BGT $007F
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x970B;
+    // 968A: BGT $968E
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x968E;
 
     // 968C: INC <$8F
     // TODO: Convert INC <$8F
 
-    // 968E: BRA $0091
-    cpu.m_pc = 0x9621;
+    // 968E: BRA $96A0
+    cpu.m_pc = 0x96A0;
 
     // 9690: LDA <$43
     cpu.m_a = cpu.read_memory(0x43);
@@ -183,8 +183,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9692: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 9694: BNE $0091
-    if (!cpu.zero_flag()) cpu.m_pc = 0x9627;
+    // 9694: BNE $96A0
+    if (!cpu.zero_flag()) cpu.m_pc = 0x96A0;
 
     // 9696: LDA #$00
     cpu.m_a = 0x00;
@@ -369,14 +369,14 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9722: LDA $4B2D
     cpu.m_a = cpu.read_memory(0x4B2D);
 
-    // 9725: BNE $012A
-    if (!cpu.zero_flag()) cpu.m_pc = 0x9751;
+    // 9725: BNE $9739
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9739;
 
     // 9727: LDB $4B15
     cpu.m_b = cpu.read_memory(0x4B15);
 
-    // 972A: BEQ $012A
-    if (cpu.zero_flag()) cpu.m_pc = 0x9756;
+    // 972A: BEQ $9739
+    if (cpu.zero_flag()) cpu.m_pc = 0x9739;
 
     // 972D: ADDB $4B15
     cpu.m_b += 0x4B15;
@@ -429,8 +429,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 975E: LDA $4B1A
     cpu.m_a = cpu.read_memory(0x4B1A);
 
-    // 9761: BEQ $0165
-    if (cpu.zero_flag()) cpu.m_pc = 0x97C8;
+    // 9761: BEQ $9774
+    if (cpu.zero_flag()) cpu.m_pc = 0x9774;
 
     // 9763: ADDA #$99
     cpu.m_a += 0x99;
@@ -438,8 +438,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9766: STA $4B1A
     cpu.write_memory(0x4B1A, cpu.m_a);
 
-    // 9769: BNE $0165
-    if (!cpu.zero_flag()) cpu.m_pc = 0x97D0;
+    // 9769: BNE $9774
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9774;
 
     // 976B: LDU #$9862
     cpu.m_u = 0x9862;
@@ -453,8 +453,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 9775: LDB <$60
     cpu.m_b = cpu.read_memory(0x60);
 
-    // 9777: BEQ $019C
-    if (cpu.zero_flag()) cpu.m_pc = 0x9715;
+    // 9777: BEQ $97AB
+    if (cpu.zero_flag()) cpu.m_pc = 0x97AB;
 
     // 9779: LDU #$9865
     cpu.m_u = 0x9865;
@@ -498,8 +498,8 @@ void routine_960f_impl(CPU6809& cpu) {
     // 979F: STA $4B29
     cpu.write_memory(0x4B29, cpu.m_a);
 
-    // 97A3: BNE $0178
-    if (!cpu.zero_flag()) cpu.m_pc = 0x981D;
+    // 97A3: BNE $9787
+    if (!cpu.zero_flag()) cpu.m_pc = 0x9787;
 
     // 97A5: LDU #$4B29
     cpu.m_u = 0x4B29;
@@ -513,14 +513,14 @@ void routine_960f_impl(CPU6809& cpu) {
     // 97AF: CMPB #$05
     cpu.compare_b(0x05);
 
-    // 97B1: BCS $01A9
-    if (cpu.carry_flag()) cpu.m_pc = 0x975C;
+    // 97B1: BCS $97B8
+    if (cpu.carry_flag()) cpu.m_pc = 0x97B8;
 
     // 97B3: LDU #$9847
     cpu.m_u = 0x9847;
 
-    // 97B6: BRA $01B2
-    cpu.m_pc = 0x976A;
+    // 97B6: BRA $97C1
+    cpu.m_pc = 0x97C1;
 
     // 97B9: ADDB $4B15
     cpu.m_b += 0x4B15;
@@ -573,56 +573,56 @@ void routine_960f_impl(CPU6809& cpu) {
     // 97E3: JSR $97AC
     cpu.call_function(0x97AC);
 
-    // 97E6: BRA $0201
-    cpu.m_pc = 0x97E9;
+    // 97E6: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97E8: LDU #$984A
     cpu.m_u = 0x984A;
 
-    // 97EB: BRA $0201
-    cpu.m_pc = 0x97EE;
+    // 97EB: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97ED: LDU #$984D
     cpu.m_u = 0x984D;
 
-    // 97F0: BRA $0201
-    cpu.m_pc = 0x97F3;
+    // 97F0: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97F2: LDU #$9850
     cpu.m_u = 0x9850;
 
-    // 97F5: BRA $0201
-    cpu.m_pc = 0x97F8;
+    // 97F5: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97F7: LDU #$9859
     cpu.m_u = 0x9859;
 
-    // 97FA: BRA $0201
-    cpu.m_pc = 0x97FD;
+    // 97FA: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97FC: LDU #$9853
     cpu.m_u = 0x9853;
 
-    // 97FF: BRA $0201
-    cpu.m_pc = 0x9802;
+    // 97FF: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 9801: LDU #$985C
     cpu.m_u = 0x985C;
 
-    // 9804: BRA $0201
-    cpu.m_pc = 0x9807;
+    // 9804: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 9806: LDU #$985F
     cpu.m_u = 0x985F;
 
-    // 9809: BRA $0201
-    cpu.m_pc = 0x980C;
+    // 9809: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 980B: LDU #$9862
     cpu.m_u = 0x9862;
 
-    // 980E: BRA $0201
-    cpu.m_pc = 0x9811;
+    // 980E: BRA $9810
+    cpu.m_pc = 0x9810;
 
 }
 

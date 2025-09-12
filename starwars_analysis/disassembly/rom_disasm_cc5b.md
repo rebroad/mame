@@ -3,13 +3,13 @@ cc5e: ce cc 7a  LDU    #$CC7A
 cc61: ec c1     LDD    ,U++
 cc63: ed 81     STD    ,X++
 cc65: 8c 4a d4  CMPX   #$4AD4
-cc68: 25 f7     BCS    $0006
+cc68: 25 f7     BCS    $CC61
 cc6a: 8e 4a 8e  LDX    #$4A8E
 cc6d: ce cc 98  LDU    #$CC98
 cc70: ec c1     LDD    ,U++
 cc72: ed 81     STD    ,X++
 cc74: 8c 4a b6  CMPX   #$4AB6
-cc77: 25 f7     BCS    $0015
+cc77: 25 f7     BCS    $CC70
 cc79: 39        RTS
 cc7a: 0f 02     CLR    <$02
 cc7c: 09 17     ROL    <$17
@@ -36,7 +36,7 @@ cca0: 01 02     NEG    <$02
 cca2: 46        RORA
 cca3: 50        NEGB
 cca4: 00 87     NEG    <$87
-cca6: 25 51     BCS    $009E
+cca6: 25 51     BCS    $CCF9
 cca8: 00 81     NEG    <$81
 ccaa: 35 53     PULS   CC,A,X,U
 ccac: 00 70     NEG    <$70
@@ -45,7 +45,7 @@ ccaf: 99 00     ADCA   <$00
 ccb1: 51        NEGB
 ccb2: 80 00     SUBA   #$00
 ccb4: 00 49     NEG    <$49
-ccb6: 21 59     BRN    $00B6
+ccb6: 21 59     BRN    $CD11
 ccb8: 00 38     NEG    <$38
 ccba: 47        ASRA
 ccbb: 66 00     ROR    $0,X
@@ -177,7 +177,7 @@ cdb8: 49        ROLA
 cdb9: 39        RTS
 cdba: b7 47 00  STA    $4700
 cdbd: 7d 43 20  TST    $4320
-cdc0: 2b fb     BMI    $0162
+cdc0: 2b fb     BMI    $CDBD
 cdc2: 39        RTS
 cdc3: cc 00 00  LDD    #$0000
 cdc6: ed 56     STD    -$A,U
@@ -245,4 +245,4 @@ ce56: 52        XNCB
 ce57: 46        RORA
 ce58: 45        LSRA
 ce59: 59        ROLB
-ce5a: 20 8e     BRA    $0201
+ce5a: 20 00     BRA    $CE5C

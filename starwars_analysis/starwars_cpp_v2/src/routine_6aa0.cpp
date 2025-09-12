@@ -12,8 +12,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6AA2: NEG <$11
     // TODO: Convert NEG <$11
 
-    // 6AA4: BCS $000A
-    if (cpu.carry_flag()) cpu.m_pc = 0x6AB0;
+    // 6AA4: BCS $6AAA
+    if (cpu.carry_flag()) cpu.m_pc = 0x6AAA;
 
     // 6AA6: LDA #$2D
     cpu.m_a = 0x2D;
@@ -69,8 +69,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6AD7: SUBD #$0011
     cpu.m_d -= 0x0011;
 
-    // 6ADA: BCS $005E
-    if (cpu.carry_flag()) cpu.m_pc = 0x6B3A;
+    // 6ADA: BCS $6AFE
+    if (cpu.carry_flag()) cpu.m_pc = 0x6AFE;
 
     // 6ADC: LDX $5098
     cpu.m_x = cpu.read_memory16(0x5098);
@@ -138,8 +138,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B14: CMPA #$0F
     cpu.compare_a(0x0F);
 
-    // 6B16: BLS $007A
-    // TODO: Convert BLS $007A
+    // 6B16: BLS $6B1A
+    // TODO: Convert BLS $6B1A
 
     // 6B18: LDA #$0F
     cpu.m_a = 0x0F;
@@ -177,8 +177,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B35: LDA <$60
     cpu.m_a = cpu.read_memory(0x60);
 
-    // 6B37: LBMI $0241
-    // TODO: Convert LBMI $0241
+    // 6B37: LBMI $6CE1
+    // TODO: Convert LBMI $6CE1
 
     // 6B3B: JSR $A849
     cpu.call_function(0xA849);
@@ -216,8 +216,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B5A: ANDA #$0F
     cpu.m_a &= 0x0F;
 
-    // 6B5C: BNE $00F9
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B57;
+    // 6B5C: BNE $6B99
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B99;
 
     // 6B5E: LDA $4B0E
     cpu.m_a = cpu.read_memory(0x4B0E);
@@ -225,8 +225,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B61: CMPA #$02
     cpu.compare_a(0x02);
 
-    // 6B63: BNE $00C8
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B2D;
+    // 6B63: BNE $6B68
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B68;
 
     // 6B65: JSR $BD9E
     cpu.call_function(0xBD9E);
@@ -234,8 +234,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B68: LDA $4B12
     cpu.m_a = cpu.read_memory(0x4B12);
 
-    // 6B6C: BCS $00E3
-    if (cpu.carry_flag()) cpu.m_pc = 0x6B51;
+    // 6B6C: BCS $6B83
+    if (cpu.carry_flag()) cpu.m_pc = 0x6B83;
 
     // 6B6E: LDA $4B0E
     cpu.m_a = cpu.read_memory(0x4B0E);
@@ -243,26 +243,26 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B71: CMPA #$10
     cpu.compare_a(0x10);
 
-    // 6B73: BNE $00DA
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B4F;
+    // 6B73: BNE $6B7A
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B7A;
 
     // 6B75: JSR $BD6C
     cpu.call_function(0xBD6C);
 
-    // 6B78: BRA $00E1
-    cpu.m_pc = 0x6B5B;
+    // 6B78: BRA $6B81
+    cpu.m_pc = 0x6B81;
 
     // 6B7A: CMPA #$18
     cpu.compare_a(0x18);
 
-    // 6B7C: BNE $00E1
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B5F;
+    // 6B7C: BNE $6B81
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B81;
 
     // 6B7E: JSR $BD76
     cpu.call_function(0xBD76);
 
-    // 6B81: BRA $00F6
-    cpu.m_pc = 0x6B79;
+    // 6B81: BRA $6B96
+    cpu.m_pc = 0x6B96;
 
     // 6B83: LDA $4B0E
     cpu.m_a = cpu.read_memory(0x4B0E);
@@ -270,20 +270,20 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B86: CMPA #$10
     cpu.compare_a(0x10);
 
-    // 6B88: BNE $00EF
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B79;
+    // 6B88: BNE $6B8F
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B8F;
 
     // 6B8A: JSR $BD30
     cpu.call_function(0xBD30);
 
-    // 6B8D: BRA $00F6
-    cpu.m_pc = 0x6B85;
+    // 6B8D: BRA $6B96
+    cpu.m_pc = 0x6B96;
 
     // 6B8F: CMPA #$16
     cpu.compare_a(0x16);
 
-    // 6B91: BNE $00F6
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B89;
+    // 6B91: BNE $6B96
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6B96;
 
     // 6B93: JSR $BD62
     cpu.call_function(0xBD62);
@@ -294,8 +294,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6B99: LDA <$92
     cpu.m_a = cpu.read_memory(0x92);
 
-    // 6B9B: BEQ $013A
-    if (cpu.zero_flag()) cpu.m_pc = 0x6BD7;
+    // 6B9B: BEQ $6BDA
+    if (cpu.zero_flag()) cpu.m_pc = 0x6BDA;
 
     // 6B9D: LDD <$93
     cpu.m_d = cpu.read_memory16(0x93);
@@ -306,14 +306,14 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BA2: SUBD #$0800
     cpu.m_d -= 0x0800;
 
-    // 6BA5: BHI $013A
-    // TODO: Convert BHI $013A
+    // 6BA5: BHI $6BDA
+    // TODO: Convert BHI $6BDA
 
     // 6BA7: LDA $4845
     cpu.m_a = cpu.read_memory(0x4845);
 
-    // 6BAA: BNE $0126
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6BD2;
+    // 6BAA: BNE $6BC6
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6BC6;
 
     // 6BAC: LDA #$01
     cpu.m_a = 0x01;
@@ -330,8 +330,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BB7: LDA <$60
     cpu.m_a = cpu.read_memory(0x60);
 
-    // 6BB9: LBLE $0241
-    // TODO: Convert LBLE $0241
+    // 6BB9: LBLE $6CE1
+    // TODO: Convert LBLE $6CE1
 
     // 6BBD: LDA #$31
     cpu.m_a = 0x31;
@@ -342,8 +342,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BC1: JSR $BD3A
     cpu.call_function(0xBD3A);
 
-    // 6BC4: BRA $013A
-    cpu.m_pc = 0x6C00;
+    // 6BC4: BRA $6BDA
+    cpu.m_pc = 0x6BDA;
 
     // 6BC6: LDA #$11
     cpu.m_a = 0x11;
@@ -357,20 +357,20 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BCD: CMPA #$03
     cpu.compare_a(0x03);
 
-    // 6BCF: BLT $013A
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x6C0B;
+    // 6BCF: BLT $6BDA
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x6BDA;
 
     // 6BD1: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // 6BD3: BEQ $013A
-    if (cpu.zero_flag()) cpu.m_pc = 0x6C0F;
+    // 6BD3: BEQ $6BDA
+    if (cpu.zero_flag()) cpu.m_pc = 0x6BDA;
 
     // 6BD5: JSR $BD17
     cpu.call_function(0xBD17);
 
-    // 6BD8: BRA $013A
-    cpu.m_pc = 0x6C14;
+    // 6BD8: BRA $6BDA
+    cpu.m_pc = 0x6BDA;
 
     // 6BDB: JSR $61B5
     cpu.call_function(0x61B5);
@@ -402,8 +402,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BF3: ANDA #$0F
     cpu.m_a &= 0x0F;
 
-    // 6BF5: BNE $018C
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B83;
+    // 6BF5: BNE $6C2C
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C2C;
 
     // 6BF7: DEC $4B0E
     // TODO: Convert DEC $4B0E
@@ -414,14 +414,14 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6BFD: CMPA #$03
     cpu.compare_a(0x03);
 
-    // 6BFF: BNE $0169
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6C6A;
+    // 6BFF: BNE $6C09
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C09;
 
     // 6C01: LDA $4845
     cpu.m_a = cpu.read_memory(0x4845);
 
-    // 6C04: BEQ $0169
-    if (cpu.zero_flag()) cpu.m_pc = 0x6C6F;
+    // 6C04: BEQ $6C09
+    if (cpu.zero_flag()) cpu.m_pc = 0x6C09;
 
     // 6C06: JSR $9806
     cpu.call_function(0x9806);
@@ -432,8 +432,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C0C: CMPA #$02
     cpu.compare_a(0x02);
 
-    // 6C0E: BNE $0173
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6C83;
+    // 6C0E: BNE $6C13
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C13;
 
     // 6C10: JSR $9775
     cpu.call_function(0x9775);
@@ -444,14 +444,14 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C16: CMPA #$01
     cpu.compare_a(0x01);
 
-    // 6C18: BNE $0182
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6B9C;
+    // 6C18: BNE $6C22
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C22;
 
     // 6C1A: LDA $4845
     cpu.m_a = cpu.read_memory(0x4845);
 
-    // 6C1D: BEQ $0182
-    if (cpu.zero_flag()) cpu.m_pc = 0x6BA1;
+    // 6C1D: BEQ $6C22
+    if (cpu.zero_flag()) cpu.m_pc = 0x6C22;
 
     // 6C1F: JSR $953B
     cpu.call_function(0x953B);
@@ -462,8 +462,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C25: CMPA #$00
     cpu.compare_a(0x00);
 
-    // 6C27: BNE $018C
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6BB5;
+    // 6C27: BNE $6C2C
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C2C;
 
     // 6C29: JSR $9722
     cpu.call_function(0x9722);
@@ -483,8 +483,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C38: CMPA #$FE
     cpu.compare_a(0xFE);
 
-    // 6C3A: BNE $01D5
-    if (!cpu.zero_flag()) cpu.m_pc = 0x6C11;
+    // 6C3A: BNE $6C75
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6C75;
 
     // 6C3C: LDA $4B15
     cpu.m_a = cpu.read_memory(0x4B15);
@@ -492,8 +492,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C40: CMPA #$62
     cpu.compare_a(0x62);
 
-    // 6C42: BLS $01A6
-    // TODO: Convert BLS $01A6
+    // 6C42: BLS $6C46
+    // TODO: Convert BLS $6C46
 
     // 6C44: LDA #$62
     cpu.m_a = 0x62;
@@ -507,8 +507,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C4C: CMPA #$05
     cpu.compare_a(0x05);
 
-    // 6C4E: BCC $01BD
-    if (!cpu.carry_flag()) cpu.m_pc = 0x6C0D;
+    // 6C4E: BCC $6C5D
+    if (!cpu.carry_flag()) cpu.m_pc = 0x6C5D;
 
     // 6C50: LDA $4B17
     cpu.m_a = cpu.read_memory(0x4B17);
@@ -516,8 +516,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C54: CMPA #$04
     cpu.compare_a(0x04);
 
-    // 6C56: BLS $01BA
-    // TODO: Convert BLS $01BA
+    // 6C56: BLS $6C5A
+    // TODO: Convert BLS $6C5A
 
     // 6C58: LDA #$04
     cpu.m_a = 0x04;
@@ -534,8 +534,8 @@ void routine_6aa0_impl(CPU6809& cpu) {
     // 6C63: CMPA #$0F
     cpu.compare_a(0x0F);
 
-    // 6C65: BLS $01C9
-    // TODO: Convert BLS $01C9
+    // 6C65: BLS $6C69
+    // TODO: Convert BLS $6C69
 
     // 6C67: LDA #$0F
     cpu.m_a = 0x0F;

@@ -33,20 +33,20 @@
 7ddb: 08 02     ASL    <$02
 7ddd: e0 e0     SUBB   ,S+
 7ddf: 02 20     XNC    <$20
-7de1: 20 05     BRA    $004E
+7de1: 20 05     BRA    $7DE8
 7de3: 01 22     NEG    <$22
 7de5: 88 01     EORA   #$01
 7de7: 00 00     NEG    <$00
 7de9: 01 88     NEG    <$88
-7deb: 22 01     BHI    $0054
-7ded: 33 cc 01  LEAU   $0057,PCR
+7deb: 22 01     BHI    $7DEE
+7ded: 33 cc 01  LEAU   $7DF1,PCR
 7df0: a0 0a     SUBA   $A,X
 7df2: 01 00     NEG    <$00
 7df4: 00 01     NEG    <$01
 7df6: 0a a0     DEC    <$A0
 7df8: 01 c0     NEG    <$C0
 7dfa: 03 02     COM    <$02
-7dfc: 28 82     BVC    $FFE6
+7dfc: 28 82     BVC    $7D80
 7dfe: 02 00     XNC    <$00
 7e00: 00 02     NEG    <$02
 7e02: 88 28     EORA   #$28
@@ -87,7 +87,7 @@
 7e44: 30 30     LEAX   -$10,Y
 7e46: 02 00     XNC    <$00
 7e48: 00 02     NEG    <$02
-7e4a: 2b 2b     BMI    $00DD
+7e4a: 2b 2b     BMI    $7E77
 7e4c: 02 00     XNC    <$00
 7e4e: 00 02     NEG    <$02
 7e50: c0 c0     SUBB   #$C0
@@ -128,7 +128,7 @@
 7e98: 03 01     COM    <$01
 7e9a: 00 00     NEG    <$00
 7e9c: 05 02     LSR    <$02
-7e9e: 2a aa     BPL    $00B0
+7e9e: 2a aa     BPL    $7E4A
 7ea0: 01 00     NEG    <$00
 7ea2: 00 02     NEG    <$02
 7ea4: aa a8 02  ORA    $02,Y
@@ -149,7 +149,7 @@
 7ec3: 03 03     COM    <$03
 7ec5: 01 0a     NEG    <$0A
 7ec7: 0a 01     DEC    <$01
-7ec9: 28 28     BVC    $0159
+7ec9: 28 28     BVC    $7EF3
 7ecb: 01 0a     NEG    <$0A
 7ecd: 0a 02     DEC    <$02
 7ecf: a0 a0     SUBA   ,Y+
@@ -160,23 +160,23 @@
 7ed9: a8 a8 02  EORA   $02,Y
 7edc: 00 00     NEG    <$00
 7ede: 02 2a     XNC    <$2A
-7ee0: 2a 02     BPL    $014A
+7ee0: 2a 02     BPL    $7EE4
 7ee2: 00 00     NEG    <$00
 7ee4: 02 a8     XNC    <$A8
 7ee6: a8 02     EORA   $2,X
 7ee8: 00 00     NEG    <$00
 7eea: 02 2a     XNC    <$2A
-7eec: 2a 02     BPL    $0156
+7eec: 2a 02     BPL    $7EF0
 7eee: 00 00     NEG    <$00
 7ef0: 05 02     LSR    <$02
 7ef2: 88 88     EORA   #$88
 7ef4: 01 22     NEG    <$22
-7ef6: 22 01     BHI    $015F
+7ef6: 22 01     BHI    $7EF9
 7ef8: 00 00     NEG    <$00
 7efa: 02 cc     XNC    <$CC
 7efc: cc 02 82  LDD    #$0282
 7eff: 82 01     SBCA   #$01
-7f01: 28 28     BVC    $0191
+7f01: 28 28     BVC    $7F2B
 7f03: 01 00     NEG    <$00
 7f05: 00 01     NEG    <$01
 7f07: aa 00     ORA    $0,X
@@ -185,7 +185,7 @@
 7f0d: 00 00     NEG    <$00
 7f0f: 02 a8     XNC    <$A8
 7f11: a8 01     EORA   $1,X
-7f13: 2a 2a     BPL    $01A5
+7f13: 2a 2a     BPL    $7F3F
 7f15: 05 01     LSR    <$01
 7f17: 0a a0     DEC    <$A0
 7f19: 01 c0     NEG    <$C0
@@ -193,10 +193,10 @@
 7f1d: a0 0a     SUBA   $A,X
 7f1f: 01 00     NEG    <$00
 7f21: 00 01     NEG    <$01
-7f23: 28 00     BVC    $018B
+7f23: 28 00     BVC    $7F25
 7f25: 01 03     NEG    <$03
 7f27: c0 01     SUBB   #$01
-7f29: 28 28     BVC    $01B9
+7f29: 28 28     BVC    $7F53
 7f2b: 01 00     NEG    <$00
 7f2d: 00 01     NEG    <$01
 7f2f: 80 80     SUBA   #$80
@@ -205,7 +205,7 @@
 7f35: 02 02     XNC    <$02
 7f37: 01 0c     NEG    <$0C
 7f39: 00 01     NEG    <$01
-7f3b: 28 00     BVC    $01A3
+7f3b: 28 00     BVC    $7F3D
 7f3d: 01 00     NEG    <$00
 7f3f: 30 01     LEAX   $1,X
 7f41: 82 28     SBCA   #$28
@@ -213,21 +213,21 @@
 7f45: 00 05     NEG    <$05
 7f47: 01 80     NEG    <$80
 7f49: 80 01     SUBA   #$01
-7f4b: 20 20     BRA    $01D3
+7f4b: 20 20     BRA    $7F6D
 7f4d: 01 08     NEG    <$08
 7f4f: 08 01     ASL    <$01
 7f51: 30 0c     LEAX   $C,X
 7f53: 01 2a     NEG    <$2A
-7f55: 2a 01     BPL    $01BE
+7f55: 2a 01     BPL    $7F58
 7f57: c0 c0     SUBB   #$C0
 7f59: 01 20     NEG    <$20
-7f5b: 20 01     BRA    $01C4
+7f5b: 20 01     BRA    $7F5E
 7f5d: 00 00     NEG    <$00
 7f5f: 01 20     NEG    <$20
-7f61: 20 01     BRA    $01CA
+7f61: 20 01     BRA    $7F64
 7f63: c0 c0     SUBB   #$C0
 7f65: 01 20     NEG    <$20
-7f67: 20 01     BRA    $01D0
+7f67: 20 01     BRA    $7F6A
 7f69: c0 c0     SUBB   #$C0
 7f6b: 01 a8     NEG    <$A8
 7f6d: a8 01     EORA   $1,X
@@ -252,4 +252,4 @@
 7f93: 02 00     XNC    <$00
 7f95: 00 05     NEG    <$05
 7f97: 01 00     NEG    <$00
-7f99: 00 0a     NEG    <$00
+7f99: 00 00     NEG    <$00

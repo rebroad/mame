@@ -84,11 +84,11 @@ void routine_ce0c_impl(CPU6809& cpu) {
     // CE52: XSTX #$04C4
     // TODO: Convert XSTX #$04C4
 
-    // CE5A: BRA $0097
-    cpu.m_pc = 0xCDF3;
+    // CE5A: BRA $CEA3
+    cpu.m_pc = 0xCEA3;
 
-    // CE5E: BRA $00AB
-    cpu.m_pc = 0xCE0B;
+    // CE5E: BRA $CEB7
+    cpu.m_pc = 0xCEB7;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y
@@ -195,14 +195,14 @@ void routine_ce0c_impl(CPU6809& cpu) {
     // CEC9: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
 
-    // CED3: BRA $00FA
-    cpu.m_pc = 0xCECF;
+    // CED3: BRA $CF06
+    cpu.m_pc = 0xCF06;
 
     // CED6: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // CED8: BRA $010F
-    cpu.m_pc = 0xCEE9;
+    // CED8: BRA $CF1B
+    cpu.m_pc = 0xCF1B;
 
     // CEDE: ORCC #$F6
     cpu.m_cc |= 0xF6;
@@ -537,8 +537,8 @@ void routine_ce0c_impl(CPU6809& cpu) {
     // CFF2: ADDA $9A1F
     cpu.m_a += 0x9A1F;
 
-    // CFF5: BCC $01EA
-    if (!cpu.carry_flag()) cpu.m_pc = 0xCFE1;
+    // CFF5: BCC $CFF6
+    if (!cpu.carry_flag()) cpu.m_pc = 0xCFF6;
 
     // CFF7: ORA >$00DC
     cpu.m_a |= 0x00DC;
@@ -549,14 +549,14 @@ void routine_ce0c_impl(CPU6809& cpu) {
     // CFFC: NEG <$00
     // TODO: Convert NEG <$00
 
-    // CFFE: SUBB $01B0,PCR
-    // TODO: Fix comma operator: SUBB $01B0,PCR
+    // CFFE: SUBB $CFBC,PCR
+    // TODO: Fix comma operator: SUBB $CFBC,PCR
 
     // D001: ORA <$1F
     cpu.m_a |= 0x1F;
 
-    // D003: BCC $01F8
-    if (!cpu.carry_flag()) cpu.m_pc = 0xCFFD;
+    // D003: BCC $D004
+    if (!cpu.carry_flag()) cpu.m_pc = 0xD004;
 
     // D005: ORA >$00DC
     cpu.m_a |= 0x00DC;

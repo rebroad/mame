@@ -1,10 +1,10 @@
 b6d7: 96 7d     LDA    <$7D
-b6d9: 2a 01     BPL    $0005
+b6d9: 2a 01     BPL    $B6DC
 b6db: 40        NEGA
 b6dc: c6 6e     LDB    #$6E
 b6de: 3d        MUL
 b6df: d6 7d     LDB    <$7D
-b6e1: 2a 01     BPL    $000D
+b6e1: 2a 01     BPL    $B6E4
 b6e3: 40        NEGA
 b6e4: 1f 89     TFR    A,B
 b6e6: 1d        SEX
@@ -16,12 +16,12 @@ b6f0: ed 2e     STD    $E,Y
 b6f2: ed a8 14  STD    $14,Y
 b6f5: ed a8 1a  STD    $1A,Y
 b6f8: 96 7f     LDA    <$7F
-b6fa: 2a 01     BPL    $0026
+b6fa: 2a 01     BPL    $B6FD
 b6fc: 40        NEGA
 b6fd: c6 50     LDB    #$50
 b6ff: 3d        MUL
 b700: d6 7f     LDB    <$7F
-b702: 2a 01     BPL    $002E
+b702: 2a 01     BPL    $B705
 b704: 40        NEGA
 b705: 1f 89     TFR    A,B
 b707: 1d        SEX
@@ -66,7 +66,7 @@ b761: ac ba     CMPX   [F,Y]
 b763: b0 ba b4  SUBA   $BAB4
 b766: bb 1a bb  ADDA   $1ABB
 b769: 1e bb     EXG    DP,DP
-b76b: 16 ee 84  LBRA   $EF1B
+b76b: 16 ee 84  LBRA   $A5F2
 b76e: bd b9 48  JSR    $B948
 b771: 86 06     LDA    #$06
 b773: a7 0c     STA    $C,X
@@ -130,21 +130,21 @@ b7f2: a6 06     LDA    $6,X
 b7f4: c6 80     LDB    #$80
 b7f6: 58        ASLB
 b7f7: 49        ROLA
-b7f8: 28 04     BVC    $0127
+b7f8: 28 04     BVC    $B7FE
 b7fa: 46        RORA
 b7fb: 56        RORB
-b7fc: 20 1e     BRA    $0145
+b7fc: 20 1e     BRA    $B81C
 b7fe: 68 09     ASL    $9,X
 b800: 69 08     ROL    $8,X
-b802: 28 08     BVC    $0135
+b802: 28 08     BVC    $B80C
 b804: 66 08     ROR    $8,X
 b806: 66 09     ROR    $9,X
 b808: 47        ASRA
 b809: 56        RORB
-b80a: 20 10     BRA    $0145
+b80a: 20 10     BRA    $B81C
 b80c: 68 0b     ASL    $B,X
 b80e: 69 0a     ROL    $A,X
-b810: 28 e4     BVC    $011F
+b810: 28 e4     BVC    $B7F6
 b812: 66 0a     ROR    $A,X
 b814: 66 0b     ROR    $B,X
 b816: 67 08     ASR    $8,X
@@ -180,7 +180,7 @@ b852: cc 00 01  LDD    #$0001
 b855: dd 01     STD    <$01
 b857: cc 02 03  LDD    #$0203
 b85a: dd 03     STD    <$03
-b85c: 20 0a     BRA    $0191
+b85c: 20 0a     BRA    $B868
 b85e: cc 03 04  LDD    #$0304
 b861: dd 01     STD    <$01
 b863: cc 05 02  LDD    #$0502
@@ -229,4 +229,4 @@ b8ca: fc 50 98  LDD    $5098
 b8cd: 8b 7f     ADDA   #$7F
 b8cf: b3 50 18  SUBD   $5018
 b8d2: bd cd 9e  JSR    $CD9E
-b8d5: f6 47 96  LDB    $4700
+b8d5: f6 47 00  LDB    $4700

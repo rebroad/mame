@@ -1,8 +1,8 @@
 bce9: c6 0e     LDB    #$0E
 bceb: 7d 44 01  TST    $4401
-bcee: 2a 05     BPL    $000C
+bcee: 2a 05     BPL    $BCF5
 bcf0: 5a        DECB
-bcf1: 26 f8     BNE    $0002
+bcf1: 26 f8     BNE    $BCEB
 bcf3: 86 00     LDA    #$00
 bcf5: b7 44 00  STA    $4400
 bcf8: 39        RTS
@@ -128,7 +128,7 @@ be20: 86 59     LDA    #$59
 be22: bd d8 df  JSR    $D8DF
 be25: 4c        INCA
 be26: 81 65     CMPA   #$65
-be28: 25 f8     BCS    $0139
+be28: 25 f8     BCS    $BE22
 be2a: 86 d3     LDA    #$D3
 be2c: bd d8 df  JSR    $D8DF
 be2f: cc 64 80  LDD    #$6480
@@ -146,12 +146,12 @@ be4a: c6 05     LDB    #$05
 be4c: a6 80     LDA    ,X+
 be4e: bd e7 ad  JSR    $E7AD
 be51: 5a        DECB
-be52: 2a f8     BPL    $0163
+be52: 2a f8     BPL    $BE4C
 be54: cc 80 40  LDD    #$8040
 be57: ed a1     STD    ,Y++
 be59: fe 4a fa  LDU    $4AFA
 be5c: 8c 45 54  CMPX   #$4554
-be5f: 25 d9     BCS    $0151
+be5f: 25 d9     BCS    $BE3A
 be61: fc c7 c1  LDD    $C7C1
 be64: ed a1     STD    ,Y++
 be66: cc 01 3c  LDD    #$013C

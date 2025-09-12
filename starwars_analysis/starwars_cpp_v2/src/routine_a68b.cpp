@@ -30,20 +30,20 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A699: LDA $4B3C
     cpu.m_a = cpu.read_memory(0x4B3C);
 
-    // A69C: BLE $0020
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xA6BE;
+    // A69C: BLE $A6AB
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xA6AB;
 
     // A69E: CMPX $4B32
     cpu.compare_x(cpu.read_memory16(0x4B32));
 
-    // A6A1: BNE $0020
-    if (!cpu.zero_flag()) cpu.m_pc = 0xA6C3;
+    // A6A1: BNE $A6AB
+    if (!cpu.zero_flag()) cpu.m_pc = 0xA6AB;
 
     // A6A3: DEC $4B3C
     // TODO: Convert DEC $4B3C
 
-    // A6A6: BNE $0020
-    if (!cpu.zero_flag()) cpu.m_pc = 0xA6C8;
+    // A6A6: BNE $A6AB
+    if (!cpu.zero_flag()) cpu.m_pc = 0xA6AB;
 
     // A6A8: JSR $BD4E
     cpu.call_function(0xBD4E);
@@ -102,14 +102,14 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A6E3: CMPB #$0C
     cpu.compare_b(0x0C);
 
-    // A6E5: BCS $0061
-    if (cpu.carry_flag()) cpu.m_pc = 0xA748;
+    // A6E5: BCS $A6EC
+    if (cpu.carry_flag()) cpu.m_pc = 0xA6EC;
 
     // A6E7: LDX #$A6DE
     cpu.m_x = 0xA6DE;
 
-    // A6EA: BRA $0067
-    cpu.m_pc = 0xA753;
+    // A6EA: BRA $A6F2
+    cpu.m_pc = 0xA6F2;
 
     // A6ED: LDX #$A6C8
     cpu.m_x = 0xA6C8;
@@ -117,8 +117,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A6F0: LDX B,X
     // TODO: Fix comma operator: LDX B,X
 
-    // A6F2: BRA $007D
-    cpu.m_pc = 0xA771;
+    // A6F2: BRA $A708
+    cpu.m_pc = 0xA708;
 
     // A6F4: LDB $4B19
     cpu.m_b = cpu.read_memory(0x4B19);
@@ -126,8 +126,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A6F7: CMPB #$07
     cpu.compare_b(0x07);
 
-    // A6F9: BLS $0072
-    // TODO: Convert BLS $0072
+    // A6F9: BLS $A6FD
+    // TODO: Convert BLS $A6FD
 
     // A6FB: LDB #$07
     cpu.m_b = 0x07;
@@ -138,8 +138,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A701: LDX B,X
     // TODO: Fix comma operator: LDX B,X
 
-    // A703: BRA $007D
-    cpu.m_pc = 0xA782;
+    // A703: BRA $A708
+    cpu.m_pc = 0xA708;
 
     // A705: LDX #$494B
     cpu.m_x = 0x494B;
@@ -150,8 +150,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A70A: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
-    // A70C: BEQ $008C
-    if (cpu.zero_flag()) cpu.m_pc = 0xA69A;
+    // A70C: BEQ $A717
+    if (cpu.zero_flag()) cpu.m_pc = 0xA717;
 
     // A70E: LEAX $6,X
     // TODO: Fix comma operator: LEAX $6,X
@@ -159,8 +159,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A710: CMPX #$496F
     cpu.compare_x(0x496F);
 
-    // A713: BCS $007D
-    if (cpu.carry_flag()) cpu.m_pc = 0xA792;
+    // A713: BCS $A708
+    if (cpu.carry_flag()) cpu.m_pc = 0xA708;
 
     // A715: LEAS $2,S
     // TODO: Fix comma operator: LEAS $2,S
@@ -204,14 +204,14 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A739: SUBD $509A
     cpu.m_d -= 0x509A;
 
-    // A73C: BMI $00B7
-    if (cpu.negative_flag()) cpu.m_pc = 0xA6F5;
+    // A73C: BMI $A742
+    if (cpu.negative_flag()) cpu.m_pc = 0xA742;
 
     // A73E: LDA #$08
     cpu.m_a = 0x08;
 
-    // A740: BRA $00B9
-    cpu.m_pc = 0xA6FB;
+    // A740: BRA $A744
+    cpu.m_pc = 0xA744;
 
     // A742: LDA #$07
     cpu.m_a = 0x07;
@@ -261,8 +261,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A763: STA $6,X
     // TODO: Handle indexed addressing: STA $6,X
 
-    // A765: BPL $00E0
-    if (!cpu.negative_flag()) cpu.m_pc = 0xA747;
+    // A765: BPL $A76B
+    if (!cpu.negative_flag()) cpu.m_pc = 0xA76B;
 
     // A769: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -288,8 +288,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A77C: LDA $4700
     cpu.m_a = cpu.read_memory(0x4700);
 
-    // A781: BCC $00F9
-    if (!cpu.carry_flag()) cpu.m_pc = 0xA77C;
+    // A781: BCC $A784
+    if (!cpu.carry_flag()) cpu.m_pc = 0xA784;
 
     // A784: STA $7,X
     // TODO: Handle indexed addressing: STA $7,X
@@ -300,32 +300,32 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A788: EORA $6,X
     // TODO: Fix comma operator: EORA $6,X
 
-    // A78A: BPL $0105
-    if (!cpu.negative_flag()) cpu.m_pc = 0xA791;
+    // A78A: BPL $A790
+    if (!cpu.negative_flag()) cpu.m_pc = 0xA790;
 
     // A78C: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
 
-    // A78E: BRA $0127
-    cpu.m_pc = 0xA7B7;
+    // A78E: BRA $A7B2
+    cpu.m_pc = 0xA7B2;
 
     // A790: LDA <$7D
     cpu.m_a = cpu.read_memory(0x7D);
 
-    // A792: BPL $010A
-    if (!cpu.negative_flag()) cpu.m_pc = 0xA79E;
+    // A792: BPL $A795
+    if (!cpu.negative_flag()) cpu.m_pc = 0xA795;
 
     // A796: CMPA $7,X
     // TODO: Fix comma operator: CMPA $7,X
 
-    // A798: BHI $0113
-    // TODO: Convert BHI $0113
+    // A798: BHI $A79E
+    // TODO: Convert BHI $A79E
 
     // A79A: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
 
-    // A79C: BRA $0127
-    cpu.m_pc = 0xA7C5;
+    // A79C: BRA $A7B2
+    cpu.m_pc = 0xA7B2;
 
     // A79E: LDA #$FF
     cpu.m_a = 0xFF;
@@ -342,14 +342,14 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A7A6: CMPA #$08
     cpu.compare_a(0x08);
 
-    // A7A8: BNE $0123
-    if (!cpu.zero_flag()) cpu.m_pc = 0xA7CD;
+    // A7A8: BNE $A7AE
+    if (!cpu.zero_flag()) cpu.m_pc = 0xA7AE;
 
     // A7AA: LDA #$07
     cpu.m_a = 0x07;
 
-    // A7AC: BRA $0125
-    cpu.m_pc = 0xA7D3;
+    // A7AC: BRA $A7B0
+    cpu.m_pc = 0xA7B0;
 
     // A7AE: LDA #$08
     cpu.m_a = 0x08;
@@ -369,8 +369,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A7BB: STA $4,X
     // TODO: Handle indexed addressing: STA $4,X
 
-    // A7BD: BRA $0146
-    cpu.m_pc = 0xA805;
+    // A7BD: BRA $A7D1
+    cpu.m_pc = 0xA7D1;
 
     // A7BF: JSR $A705
     cpu.call_function(0xA705);
@@ -381,8 +381,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A7C4: STA $4,X
     // TODO: Handle indexed addressing: STA $4,X
 
-    // A7C6: BRA $0146
-    cpu.m_pc = 0xA80E;
+    // A7C6: BRA $A7D1
+    cpu.m_pc = 0xA7D1;
 
     // A7C8: JSR $A705
     cpu.call_function(0xA705);
@@ -393,8 +393,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A7CD: STA $4,X
     // TODO: Handle indexed addressing: STA $4,X
 
-    // A7CF: BRA $0146
-    cpu.m_pc = 0xA817;
+    // A7CF: BRA $A7D1
+    cpu.m_pc = 0xA7D1;
 
     // A7D1: LDA #$70
     cpu.m_a = 0x70;
@@ -450,14 +450,14 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A7F7: LDA <$95
     cpu.m_a = cpu.read_memory(0x95);
 
-    // A7F9: BEQ $0175
-    if (cpu.zero_flag()) cpu.m_pc = 0xA870;
+    // A7F9: BEQ $A800
+    if (cpu.zero_flag()) cpu.m_pc = 0xA800;
 
     // A7FB: JSR $A705
     cpu.call_function(0xA705);
 
-    // A7FE: BRA $0178
-    cpu.m_pc = 0xA878;
+    // A7FE: BRA $A803
+    cpu.m_pc = 0xA803;
 
     // A800: JSR $A6F4
     cpu.call_function(0xA6F4);
@@ -471,20 +471,20 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A807: LDU ,X
     // TODO: Complex indexed addressing: ,X
 
-    // A809: BRA $0194
-    cpu.m_pc = 0xA79F;
+    // A809: BRA $A81F
+    cpu.m_pc = 0xA81F;
 
     // A80B: LDA <$95
     cpu.m_a = cpu.read_memory(0x95);
 
-    // A80D: BEQ $0189
-    if (cpu.zero_flag()) cpu.m_pc = 0xA798;
+    // A80D: BEQ $A814
+    if (cpu.zero_flag()) cpu.m_pc = 0xA814;
 
     // A80F: JSR $A705
     cpu.call_function(0xA705);
 
-    // A812: BRA $018C
-    cpu.m_pc = 0xA7A0;
+    // A812: BRA $A817
+    cpu.m_pc = 0xA817;
 
     // A814: JSR $A6F4
     cpu.call_function(0xA6F4);
@@ -498,8 +498,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A81B: LDU ,X
     // TODO: Complex indexed addressing: ,X
 
-    // A81D: BRA $0194
-    cpu.m_pc = 0xA7B3;
+    // A81D: BRA $A81F
+    cpu.m_pc = 0xA81F;
 
     // A81F: LDD $5078
     cpu.m_d = cpu.read_memory16(0x5078);
@@ -540,8 +540,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A83D: CMPB #$FC
     cpu.compare_b(0xFC);
 
-    // A83F: BLT $01B8
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xA7F9;
+    // A83F: BLT $A843
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xA843;
 
     // A841: LDA #$00
     cpu.m_a = 0x00;
@@ -561,8 +561,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A84E: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
-    // A850: BEQ $01D6
-    if (cpu.zero_flag()) cpu.m_pc = 0xA828;
+    // A850: BEQ $A861
+    if (cpu.zero_flag()) cpu.m_pc = 0xA861;
 
     // A852: LDB $4,X
     // TODO: Fix comma operator: LDB $4,X
@@ -570,8 +570,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A855: CMPB #$16
     cpu.compare_b(0x16);
 
-    // A857: BCC $01D5
-    if (!cpu.carry_flag()) cpu.m_pc = 0xA82E;
+    // A857: BCC $A860
+    if (!cpu.carry_flag()) cpu.m_pc = 0xA860;
 
     // A859: LDU #$A675
     cpu.m_u = 0xA675;
@@ -579,8 +579,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A85C: JSR [B,U]
     // TODO: Complex indexed addressing: [B,U]
 
-    // A85E: BRA $01D6
-    cpu.m_pc = 0xA836;
+    // A85E: BRA $A861
+    cpu.m_pc = 0xA861;
 
     // A861: LDX <$A8
     cpu.m_x = cpu.read_memory16(0xA8);
@@ -591,14 +591,14 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A865: CMPX #$496F
     cpu.compare_x(0x496F);
 
-    // A868: BCS $01C1
-    if (cpu.carry_flag()) cpu.m_pc = 0xA82B;
+    // A868: BCS $A84C
+    if (cpu.carry_flag()) cpu.m_pc = 0xA84C;
 
     // A86B: DEC $5,X
     // TODO: Convert DEC $5,X
 
-    // A86D: BGT $01E9
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xA858;
+    // A86D: BGT $A874
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xA874;
 
     // A870: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -609,8 +609,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A875: DEC $5,X
     // TODO: Convert DEC $5,X
 
-    // A877: BGT $01F5
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xA86E;
+    // A877: BGT $A880
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xA880;
 
     // A87A: STB $3,X
     // TODO: Handle indexed addressing: STB $3,X
@@ -618,8 +618,8 @@ void routine_a68b_impl(CPU6809& cpu) {
     // A87C: STB $5,X
     // TODO: Handle indexed addressing: STB $5,X
 
-    // A87E: BRA $021B
-    cpu.m_pc = 0xA89B;
+    // A87E: BRA $A8A6
+    cpu.m_pc = 0xA8A6;
 
     // A880: LDU ,X
     // TODO: Complex indexed addressing: ,X

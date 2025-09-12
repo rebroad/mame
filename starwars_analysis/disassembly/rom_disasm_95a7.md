@@ -1,7 +1,7 @@
 95a7: 96 8c     LDA    <$8C
-95a9: 26 07     BNE    $000B
+95a9: 26 07     BNE    $95B2
 95ab: 96 60     LDA    <$60
-95ad: 2e 03     BGT    $000B
+95ad: 2e 03     BGT    $95B2
 95af: 7e 96 04  JMP    $9604
 95b2: d6 60     LDB    <$60
 95b4: 58        ASLB
@@ -15,18 +15,18 @@
 95c6: cc 00 00  LDD    #$0000
 95c9: ed a1     STD    ,Y++
 95cb: 96 8c     LDA    <$8C
-95cd: 27 05     BEQ    $002D
+95cd: 27 05     BEQ    $95D4
 95cf: bd 96 2a  JSR    $962A
-95d2: 20 03     BRA    $0030
+95d2: 20 03     BRA    $95D7
 95d4: bd 96 0f  JSR    $960F
 95d7: cc 1f d0  LDD    #$1FD0
 95da: ed a1     STD    ,Y++
 95dc: cc 1f f4  LDD    #$1FF4
 95df: ed a1     STD    ,Y++
 95e1: 96 8c     LDA    <$8C
-95e3: 2f 05     BLE    $0043
+95e3: 2f 05     BLE    $95EA
 95e5: ce a0 18  LDU    #$A018
-95e8: 20 08     BRA    $004B
+95e8: 20 08     BRA    $95F2
 95ea: d6 60     LDB    <$60
 95ec: 58        ASLB
 95ed: 8e 96 b6  LDX    #$96B6
@@ -34,7 +34,7 @@
 95f2: ef a1     STU    ,Y++
 95f4: 0f ad     CLR    <$AD
 95f6: 96 60     LDA    <$60
-95f8: 2c 01     BGE    $0054
+95f8: 2c 01     BGE    $95FB
 95fa: 4f        CLRA
 95fb: bd e7 ad  JSR    $E7AD
 95fe: cc 80 40  LDD    #$8040
@@ -50,7 +50,7 @@
 9612: 8e 96 b6  LDX    #$96B6
 9615: ec 85     LDD    B,X
 9617: 0d 61     TST    <$61
-9619: 27 02     BEQ    $0076
+9619: 27 02     BEQ    $961D
 961b: ca ff     ORB    #$FF
 961d: ed a1     STD    ,Y++
 961f: d6 60     LDB    <$60
@@ -60,7 +60,7 @@
 9627: ef a1     STU    ,Y++
 9629: 39        RTS
 962a: 96 91     LDA    <$91
-962c: 26 1d     BNE    $00A4
+962c: 26 1d     BNE    $964B
 962e: ce a0 18  LDU    #$A018
 9631: ef a1     STU    ,Y++
 9633: d6 8e     LDB    <$8E
@@ -70,16 +70,16 @@
 963b: ef a1     STU    ,Y++
 963d: 96 43     LDA    <$43
 963f: 84 00     ANDA   #$00
-9641: 26 06     BNE    $00A2
+9641: 26 06     BNE    $9649
 9643: 0c 8d     INC    <$8D
-9645: 2d 02     BLT    $00A2
+9645: 2d 02     BLT    $9649
 9647: 0c 91     INC    <$91
-9649: 20 55     BRA    $00F9
+9649: 20 55     BRA    $96A0
 964b: bd 96 a1  JSR    $96A1
 964e: ce a0 18  LDU    #$A018
 9651: ef a1     STU    ,Y++
 9653: 96 90     LDA    <$90
-9655: 26 1d     BNE    $00CD
+9655: 26 1d     BNE    $9674
 9657: d6 8e     LDB    <$8E
 9659: 58        ASLB
 965a: 8e 96 de  LDX    #$96DE
@@ -87,15 +87,15 @@
 965f: ef a1     STU    ,Y++
 9661: 96 43     LDA    <$43
 9663: 84 00     ANDA   #$00
-9665: 26 0b     BNE    $00CB
+9665: 26 0b     BNE    $9672
 9667: 0c 90     INC    <$90
 9669: d6 60     LDB    <$60
 966b: 8e 97 18  LDX    #$9718
 966e: a6 85     LDA    B,X
 9670: 97 8d     STA    <$8D
-9672: 20 2c     BRA    $00F9
+9672: 20 2c     BRA    $96A0
 9674: 96 8f     LDA    <$8F
-9676: 26 18     BNE    $00E9
+9676: 26 18     BNE    $9690
 9678: d6 8d     LDB    <$8D
 967a: 58        ASLB
 967b: 8e 96 f2  LDX    #$96F2
@@ -103,14 +103,14 @@
 9680: ef a1     STU    ,Y++
 9682: 96 43     LDA    <$43
 9684: 84 00     ANDA   #$00
-9686: 26 06     BNE    $00E7
+9686: 26 06     BNE    $968E
 9688: 0a 8d     DEC    <$8D
-968a: 2e 02     BGT    $00E7
+968a: 2e 02     BGT    $968E
 968c: 0c 8f     INC    <$8F
-968e: 20 10     BRA    $00F9
+968e: 20 10     BRA    $96A0
 9690: 96 43     LDA    <$43
 9692: 84 00     ANDA   #$00
-9694: 26 0a     BNE    $00F9
+9694: 26 0a     BNE    $96A0
 9696: 86 00     LDA    #$00
 9698: 97 8c     STA    <$8C
 969a: 97 8b     STA    <$8B
@@ -177,9 +177,9 @@
 971f: 0e 10     JMP    <$10
 9721: 12        NOP
 9722: b6 4b 2d  LDA    $4B2D
-9725: 26 12     BNE    $0192
+9725: 26 12     BNE    $9739
 9727: f6 4b 15  LDB    $4B15
-972a: 27 0d     BEQ    $0192
+972a: 27 0d     BEQ    $9739
 972c: 58        ASLB
 972d: fb 4b 15  ADDB   $4B15
 9730: 8e 98 65  LDX    #$9865
@@ -203,17 +203,17 @@
 975a: 19        DAA
 975b: b7 4b 2e  STA    $4B2E
 975e: b6 4b 1a  LDA    $4B1A
-9761: 27 11     BEQ    $01CD
+9761: 27 11     BEQ    $9774
 9763: 8b 99     ADDA   #$99
 9765: 19        DAA
 9766: b7 4b 1a  STA    $4B1A
-9769: 26 09     BNE    $01CD
+9769: 26 09     BNE    $9774
 976b: ce 98 62  LDU    #$9862
 976e: bd 98 10  JSR    $9810
 9771: 7c 4b 35  INC    $4B35
 9774: 39        RTS
 9775: d6 60     LDB    <$60
-9777: 27 32     BEQ    $0204
+9777: 27 32     BEQ    $97AB
 9779: ce 98 65  LDU    #$9865
 977c: 86 00     LDA    #$00
 977e: b7 4b 29  STA    $4B29
@@ -232,5 +232,5 @@
 979e: 19        DAA
 979f: b7 4b 29  STA    $4B29
 97a2: 5a        DECB
-97a3: 26 e2     BNE    $01E0
-97a5: ce 4b 96  LDU    #$4B00
+97a3: 26 e2     BNE    $9787
+97a5: ce 4b 00  LDU    #$4B00

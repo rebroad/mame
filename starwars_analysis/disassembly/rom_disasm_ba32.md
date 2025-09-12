@@ -9,30 +9,30 @@ ba44: fd 47 01     STD    $4701
 ba47: 86 67        LDA    #$67
 ba49: bd cd ba     JSR    $CDBA
 ba4c: fc 50 00     LDD    $5000
-ba4f: 2b 4c        BMI    $006B
+ba4f: 2b 4c        BMI    $BA9D
 ba51: fd 50 18     STD    $5018
 ba54: fd 47 04     STD    $4704
 ba57: fc 50 02     LDD    $5002
 ba5a: fd 50 1a     STD    $501A
-ba5d: 2a 04        BPL    $0031
+ba5d: 2a 04        BPL    $BA63
 ba5f: 43           COMA
 ba60: 50           NEGB
 ba61: 82 ff        SBCA   #$FF
 ba63: b3 50 18     SUBD   $5018
-ba66: 2c 35        BGE    $006B
+ba66: 2c 35        BGE    $BA9D
 ba68: fc 50 04     LDD    $5004
 ba6b: fd 50 1c     STD    $501C
-ba6e: 2a 04        BPL    $0042
+ba6e: 2a 04        BPL    $BA74
 ba70: 43           COMA
 ba71: 50           NEGB
 ba72: 82 ff        SBCA   #$FF
 ba74: 44           LSRA
 ba75: 56           RORB
 ba76: b3 50 18     SUBD   $5018
-ba79: 2c 22        BGE    $006B
+ba79: 2c 22        BGE    $BA9D
 ba7b: e6 0c        LDB    $C,X
 ba7d: c1 09        CMPB   #$09
-ba7f: 25 01        BCS    $0050
+ba7f: 25 01        BCS    $BA82
 ba81: 3f           SWI
 ba82: ce b7 5a     LDU    #$B75A
 ba85: 58           ASLB
@@ -44,34 +44,34 @@ ba91: cc 72 00     LDD    #$7200
 ba94: ed a1        STD    ,Y++
 ba96: cc 80 40     LDD    #$8040
 ba99: ed a1        STD    ,Y++
-ba9b: 20 02        BRA    $006D
+ba9b: 20 02        BRA    $BA9F
 ba9d: 6f 0d        CLR    $D,X
 ba9f: 39           RTS
 baa0: 86 14        LDA    #$14
-baa2: 20 1a        BRA    $008C
+baa2: 20 1a        BRA    $BABE
 baa4: 86 15        LDA    #$15
-baa6: 20 16        BRA    $008C
+baa6: 20 16        BRA    $BABE
 baa8: 86 16        LDA    #$16
-baaa: 20 12        BRA    $008C
+baaa: 20 12        BRA    $BABE
 baac: 86 11        LDA    #$11
-baae: 20 08        BRA    $0086
+baae: 20 08        BRA    $BAB8
 bab0: 86 12        LDA    #$12
-bab2: 20 04        BRA    $0086
+bab2: 20 04        BRA    $BAB8
 bab4: 86 13        LDA    #$13
-bab6: 20 00        BRA    $0086
+bab6: 20 00        BRA    $BAB8
 bab8: 97 dc        STA    <$DC
 baba: 86 67        LDA    #$67
-babc: 20 04        BRA    $0090
+babc: 20 04        BRA    $BAC2
 babe: 97 dc        STA    <$DC
 bac0: 86 64        LDA    #$64
 bac2: e6 0d        LDB    $D,X
 bac4: c1 07        CMPB   #$07
-bac6: 22 06        BHI    $009C
+bac6: 22 06        BHI    $BACE
 bac8: 58           ASLB
 bac9: 58           ASLB
 baca: 58           ASLB
 bacb: 58           ASLB
-bacc: 20 02        BRA    $009E
+bacc: 20 02        BRA    $BAD0
 bace: c6 80        LDB    #$80
 bad0: ed a1        STD    ,Y++
 bad2: ec 84        LDD    ,X
@@ -102,17 +102,17 @@ bb12: 58           ASLB
 bb13: ed a1        STD    ,Y++
 bb15: 39           RTS
 bb16: c6 03        LDB    #$03
-bb18: 20 08        BRA    $00F0
+bb18: 20 08        BRA    $BB22
 bb1a: c6 01        LDB    #$01
-bb1c: 20 04        BRA    $00F0
+bb1c: 20 04        BRA    $BB22
 bb1e: c6 02        LDB    #$02
-bb20: 20 00        BRA    $00F0
+bb20: 20 00        BRA    $BB22
 bb22: d7 dc        STB    <$DC
 bb24: e6 0d        LDB    $D,X
 bb26: c1 1f        CMPB   #$1F
-bb28: 23 05        BLS    $00FD
+bb28: 23 05        BLS    $BB2F
 bb2a: cc a0 18     LDD    #$A018
-bb2d: 20 06        BRA    $0103
+bb2d: 20 06        BRA    $BB35
 bb2f: ce bb 3b     LDU    #$BB3B
 bb32: 58           ASLB
 bb33: ec c5        LDD    B,U
@@ -173,7 +173,7 @@ bba3: dc 9f        LDD    <$9F
 bba5: c3 00 02     ADDD   #$0002
 bba8: dd 9f        STD    <$9F
 bbaa: 10 83 00 3f  CMPD   #$003F
-bbae: 24 0a        BCC    $0188
+bbae: 24 0a        BCC    $BBBA
 bbb0: cc 00 01     LDD    #$0001
 bbb3: dd 9f        STD    <$9F
 bbb5: 0c a1        INC    <$A1
@@ -187,7 +187,7 @@ bbc6: dc 9f        LDD    <$9F
 bbc8: c3 00 02     ADDD   #$0002
 bbcb: dd 9f        STD    <$9F
 bbcd: 10 83 00 3f  CMPD   #$003F
-bbd1: 24 38        BCC    $01D9
+bbd1: 24 38        BCC    $BC0B
 bbd3: c6 3f        LDB    #$3F
 bbd5: d0 a0        SUBB   <$A0
 bbd7: 4f           CLRA
@@ -203,12 +203,12 @@ bbe6: 58           ASLB
 bbe7: 49           ROLA
 bbe8: 43           COMA
 bbe9: 53           COMB
-bbea: 2b 03        BMI    $01BD
+bbea: 2b 03        BMI    $BBEF
 bbec: 4a           DECA
 bbed: ca 80        ORB    #$80
 bbef: c3 76 70     ADDD   #$7670
 bbf2: 5d           TSTB
-bbf3: 2b 03        BMI    $01C6
+bbf3: 2b 03        BMI    $BBF8
 bbf5: 4a           DECA
 bbf6: c4 7f        ANDB   #$7F
 bbf8: 1f 03        TFR    D,U
@@ -223,7 +223,7 @@ bc05: cc 64 ff     LDD    #$64FF
 bc08: bd bc c8     JSR    $BCC8
 bc0b: dc 9f        LDD    <$9F
 bc0d: 10 83 00 3f  CMPD   #$003F
-bc11: 25 0a        BCS    $01EB
+bc11: 25 0a        BCS    $BC1D
 bc13: cc 00 01     LDD    #$0001
 bc16: dd 9f        STD    <$9F
 bc18: 0c a1        INC    <$A1
@@ -236,4 +236,4 @@ bc26: bd bc ae     JSR    $BCAE
 bc29: dc 9f        LDD    <$9F
 bc2b: c3 00 03     ADDD   #$0003
 bc2e: dd 9f        STD    <$9F
-bc30: 10 83 ec 84  CMPD   #$0000
+bc30: 10 83 00 00  CMPD   #$0000

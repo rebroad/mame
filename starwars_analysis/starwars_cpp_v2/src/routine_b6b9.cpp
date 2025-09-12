@@ -39,8 +39,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B6D7: LDA <$7D
     cpu.m_a = cpu.read_memory(0x7D);
 
-    // B6D9: BPL $0023
-    if (!cpu.negative_flag()) cpu.m_pc = 0xB6FE;
+    // B6D9: BPL $B6DC
+    if (!cpu.negative_flag()) cpu.m_pc = 0xB6DC;
 
     // B6DC: LDB #$6E
     cpu.m_b = 0x6E;
@@ -48,8 +48,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B6DF: LDB <$7D
     cpu.m_b = cpu.read_memory(0x7D);
 
-    // B6E1: BPL $002B
-    if (!cpu.negative_flag()) cpu.m_pc = 0xB70E;
+    // B6E1: BPL $B6E4
+    if (!cpu.negative_flag()) cpu.m_pc = 0xB6E4;
 
     // B6E4: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -78,8 +78,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B6F8: LDA <$7F
     cpu.m_a = cpu.read_memory(0x7F);
 
-    // B6FA: BPL $0044
-    if (!cpu.negative_flag()) cpu.m_pc = 0xB740;
+    // B6FA: BPL $B6FD
+    if (!cpu.negative_flag()) cpu.m_pc = 0xB6FD;
 
     // B6FD: LDB #$50
     cpu.m_b = 0x50;
@@ -87,8 +87,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B700: LDB <$7F
     cpu.m_b = cpu.read_memory(0x7F);
 
-    // B702: BPL $004C
-    if (!cpu.negative_flag()) cpu.m_pc = 0xB750;
+    // B702: BPL $B705
+    if (!cpu.negative_flag()) cpu.m_pc = 0xB705;
 
     // B705: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -210,8 +210,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B769: EXG DP,DP
     // TODO: Convert EXG DP,DP
 
-    // B76B: LBRA $EF39
-    // TODO: Convert LBRA $EF39
+    // B76B: LBRA $A5F2
+    // TODO: Convert LBRA $A5F2
 
     // B76E: JSR $B948
     cpu.call_function(0xB948);
@@ -396,11 +396,11 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B7F4: LDB #$80
     cpu.m_b = 0x80;
 
-    // B7F8: BVC $0145
-    // TODO: Convert BVC $0145
+    // B7F8: BVC $B7FE
+    // TODO: Convert BVC $B7FE
 
-    // B7FC: BRA $0163
-    cpu.m_pc = 0xB861;
+    // B7FC: BRA $B81C
+    cpu.m_pc = 0xB81C;
 
     // B7FE: ASL $9,X
     // TODO: Convert ASL $9,X
@@ -408,8 +408,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B800: ROL $8,X
     // TODO: Convert ROL $8,X
 
-    // B802: BVC $0153
-    // TODO: Convert BVC $0153
+    // B802: BVC $B80C
+    // TODO: Convert BVC $B80C
 
     // B804: ROR $8,X
     // TODO: Convert ROR $8,X
@@ -417,8 +417,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B806: ROR $9,X
     // TODO: Convert ROR $9,X
 
-    // B80A: BRA $0163
-    cpu.m_pc = 0xB86F;
+    // B80A: BRA $B81C
+    cpu.m_pc = 0xB81C;
 
     // B80C: ASL $B,X
     // TODO: Convert ASL $B,X
@@ -426,8 +426,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B80E: ROL $A,X
     // TODO: Convert ROL $A,X
 
-    // B810: BVC $013D
-    // TODO: Convert BVC $013D
+    // B810: BVC $B7F6
+    // TODO: Convert BVC $B7F6
 
     // B812: ROR $A,X
     // TODO: Convert ROR $A,X
@@ -522,8 +522,8 @@ void routine_b6b9_impl(CPU6809& cpu) {
     // B85A: STD <$03
     cpu.write_memory16(0x03, cpu.m_d);
 
-    // B85C: BRA $01AF
-    cpu.m_pc = 0xB80D;
+    // B85C: BRA $B868
+    cpu.m_pc = 0xB868;
 
     // B85E: LDD #$0304
     cpu.m_d = 0x0304;

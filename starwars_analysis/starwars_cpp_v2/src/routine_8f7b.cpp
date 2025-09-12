@@ -9,14 +9,14 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 8F7B: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
-    // 8F7D: BEQ $0008
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F87;
+    // 8F7D: BEQ $8F83
+    if (cpu.zero_flag()) cpu.m_pc = 0x8F83;
 
     // 8F7F: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
-    // 8F81: BNE $0036
-    if (!cpu.zero_flag()) cpu.m_pc = 0x8FB9;
+    // 8F81: BNE $8FB1
+    if (!cpu.zero_flag()) cpu.m_pc = 0x8FB1;
 
     // 8F83: INC <$DD
     // TODO: Convert INC <$DD
@@ -30,20 +30,20 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 8F8D: CMPX #$907C
     cpu.compare_x(0x907C);
 
-    // 8F90: BCS $0025
-    if (cpu.carry_flag()) cpu.m_pc = 0x8FB7;
+    // 8F90: BCS $8FA0
+    if (cpu.carry_flag()) cpu.m_pc = 0x8FA0;
 
     // 8F92: LDA $4B14
     cpu.m_a = cpu.read_memory(0x4B14);
 
-    // 8F96: BCS $0022
-    if (cpu.carry_flag()) cpu.m_pc = 0x8FBA;
+    // 8F96: BCS $8F9D
+    if (cpu.carry_flag()) cpu.m_pc = 0x8F9D;
 
     // 8F98: LDX #$9078
     cpu.m_x = 0x9078;
 
-    // 8F9B: BRA $0025
-    cpu.m_pc = 0x8FC2;
+    // 8F9B: BRA $8FA0
+    cpu.m_pc = 0x8FA0;
 
     // 8F9D: LDX #$907A
     cpu.m_x = 0x907A;
@@ -57,8 +57,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 8FA4: CMPB ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // 8FA6: BLS $002F
-    // TODO: Convert BLS $002F
+    // 8FA6: BLS $8FAA
+    // TODO: Convert BLS $8FAA
 
     // 8FA8: LDB -$1,X
     // TODO: Fix comma operator: LDB -$1,X
@@ -81,8 +81,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 8FB6: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
-    // 8FB8: BEQ $004B
-    if (cpu.zero_flag()) cpu.m_pc = 0x9005;
+    // 8FB8: BEQ $8FC6
+    if (cpu.zero_flag()) cpu.m_pc = 0x8FC6;
 
     // 8FBA: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
@@ -93,23 +93,23 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 8FBF: CMPX #$494B
     cpu.compare_x(0x494B);
 
-    // 8FC2: BCS $0039
-    if (cpu.carry_flag()) cpu.m_pc = 0x8FFD;
+    // 8FC2: BCS $8FB4
+    if (cpu.carry_flag()) cpu.m_pc = 0x8FB4;
 
-    // 8FC4: BRA $00A8
-    cpu.m_pc = 0x8F6E;
+    // 8FC4: BRA $9023
+    cpu.m_pc = 0x9023;
 
     // 8FC6: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
-    // 8FC8: BEQ $00A8
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F72;
+    // 8FC8: BEQ $9023
+    if (cpu.zero_flag()) cpu.m_pc = 0x9023;
 
     // 8FCA: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
-    // 8FCC: BEQ $00A8
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F76;
+    // 8FCC: BEQ $9023
+    if (cpu.zero_flag()) cpu.m_pc = 0x9023;
 
     // 8FCE: INC <$E6
     // TODO: Convert INC <$E6
@@ -492,8 +492,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 90D8: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 90DA: BCC $00F3
-    if (!cpu.carry_flag()) cpu.m_pc = 0x90CF;
+    // 90DA: BCC $906E
+    if (!cpu.carry_flag()) cpu.m_pc = 0x906E;
 
     // 90DC: ASR $903A
     // TODO: Convert ASR $903A
@@ -519,8 +519,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 90EB: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 90ED: BCC $0107
-    if (!cpu.carry_flag()) cpu.m_pc = 0x90F6;
+    // 90ED: BCC $9082
+    if (!cpu.carry_flag()) cpu.m_pc = 0x9082;
 
     // 90F0: SUBA <$4C
     cpu.m_a -= 0x4C;
@@ -546,8 +546,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 90FE: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 9100: BCC $011A
-    if (!cpu.carry_flag()) cpu.m_pc = 0x911C;
+    // 9100: BCC $9095
+    if (!cpu.carry_flag()) cpu.m_pc = 0x9095;
 
     // 9102: BITA #$90
     // TODO: Convert BITA #$90
@@ -573,8 +573,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 9111: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 9113: BCC $012D
-    if (!cpu.carry_flag()) cpu.m_pc = 0x9142;
+    // 9113: BCC $90A8
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90A8;
 
     // 9115: BITA #$90
     // TODO: Convert BITA #$90
@@ -600,29 +600,29 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 9124: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 9126: BCC $013E
-    if (!cpu.carry_flag()) cpu.m_pc = 0x9166;
+    // 9126: BCC $90B9
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90B9;
 
     // 9128: LDU <$90
     cpu.m_u = cpu.read_memory16(0x90);
 
-    // 912A: BVC $0141
-    // TODO: Convert BVC $0141
+    // 912A: BVC $90BC
+    // TODO: Convert BVC $90BC
 
-    // 912C: BCC $0145
-    if (!cpu.carry_flag()) cpu.m_pc = 0x9173;
+    // 912C: BCC $90C0
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90C0;
 
     // 912E: XNC <$90
     // TODO: Convert XNC <$90
 
-    // 9130: BGT $0147
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x9179;
+    // 9130: BGT $90C2
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x90C2;
 
-    // 9132: BCC $014B
-    if (!cpu.carry_flag()) cpu.m_pc = 0x917F;
+    // 9132: BCC $90C6
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90C6;
 
-    // 9134: BLE $014B
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x9181;
+    // 9134: BLE $90C6
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x90C6;
 
     // 9136: 00 PSHS
     // TODO: Convert 00 PSHS
@@ -657,11 +657,11 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 914A: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 914C: BCC $0166
-    if (!cpu.carry_flag()) cpu.m_pc = 0x91B4;
+    // 914C: BCC $90E1
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90E1;
 
-    // 914E: LBRA $9222
-    // TODO: Convert LBRA $9222
+    // 914E: LBRA $219D
+    // TODO: Convert LBRA $219D
 
     // 9151: SUBA <$24
     cpu.m_a -= 0x24;
@@ -684,8 +684,8 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 915D: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 915F: BCC $0179
-    if (!cpu.carry_flag()) cpu.m_pc = 0x91DA;
+    // 915F: BCC $90F4
+    if (!cpu.carry_flag()) cpu.m_pc = 0x90F4;
 
     // 9161: SBCA #$90
     // TODO: Convert SBCA #$90
@@ -711,17 +711,17 @@ void routine_8f7b_impl(CPU6809& cpu) {
     // 9170: NEG <$90
     // TODO: Convert NEG <$90
 
-    // 9172: BCC $018A
-    if (!cpu.carry_flag()) cpu.m_pc = 0x90FE;
+    // 9172: BCC $9105
+    if (!cpu.carry_flag()) cpu.m_pc = 0x9105;
 
     // 9174: LDU <$90
     cpu.m_u = cpu.read_memory16(0x90);
 
-    // 9176: BVC $018D
-    // TODO: Convert BVC $018D
+    // 9176: BVC $9108
+    // TODO: Convert BVC $9108
 
-    // 9178: BCC $0191
-    if (!cpu.carry_flag()) cpu.m_pc = 0x910B;
+    // 9178: BCC $910C
+    if (!cpu.carry_flag()) cpu.m_pc = 0x910C;
 
     // 917A: XNC <$00
     // TODO: Convert XNC <$00

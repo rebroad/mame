@@ -216,8 +216,8 @@ void routine_cccc_impl(CPU6809& cpu) {
     // CDBD: TST $4320
     // TODO: Convert TST $4320
 
-    // CDC0: BMI $00F1
-    if (cpu.negative_flag()) cpu.m_pc = 0xCDB3;
+    // CDC0: BMI $CDBD
+    if (cpu.negative_flag()) cpu.m_pc = 0xCDBD;
 
     // CDC3: LDD #$0000
     cpu.m_d = 0x0000;
@@ -384,11 +384,11 @@ void routine_cccc_impl(CPU6809& cpu) {
     // CE52: XSTX #$04C4
     // TODO: Convert XSTX #$04C4
 
-    // CE5A: BRA $01D7
-    cpu.m_pc = 0xCE33;
+    // CE5A: BRA $CEA3
+    cpu.m_pc = 0xCEA3;
 
-    // CE5E: BRA $01EB
-    cpu.m_pc = 0xCE4B;
+    // CE5E: BRA $CEB7
+    cpu.m_pc = 0xCEB7;
 
     // CE64: STA -$2,Y
     // TODO: Handle indexed addressing: STA -$2,Y

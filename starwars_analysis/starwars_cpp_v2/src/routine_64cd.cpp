@@ -63,8 +63,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 64FF: ANDA #$04
     cpu.m_a &= 0x04;
 
-    // 6501: BEQ $003A
-    if (cpu.zero_flag()) cpu.m_pc = 0x653D;
+    // 6501: BEQ $6507
+    if (cpu.zero_flag()) cpu.m_pc = 0x6507;
 
     // 6503: LDA #$03
     cpu.m_a = 0x03;
@@ -78,8 +78,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 650A: ANDA #$10
     cpu.m_a &= 0x10;
 
-    // 650C: BEQ $0045
-    if (cpu.zero_flag()) cpu.m_pc = 0x6553;
+    // 650C: BEQ $6512
+    if (cpu.zero_flag()) cpu.m_pc = 0x6512;
 
     // 650E: LDA #$05
     cpu.m_a = 0x05;
@@ -111,8 +111,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6525: JSR $C2C3
     cpu.call_function(0xC2C3);
 
-    // 6528: BEQ $0062
-    if (cpu.zero_flag()) cpu.m_pc = 0x658C;
+    // 6528: BEQ $652F
+    if (cpu.zero_flag()) cpu.m_pc = 0x652F;
 
     // 652A: LDA #$03
     cpu.m_a = 0x03;
@@ -165,8 +165,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6556: ANDA #$04
     cpu.m_a &= 0x04;
 
-    // 6558: BEQ $0090
-    if (cpu.zero_flag()) cpu.m_pc = 0x64EA;
+    // 6558: BEQ $655D
+    if (cpu.zero_flag()) cpu.m_pc = 0x655D;
 
     // 655A: JMP $F261
     cpu.m_pc = 0xF261;
@@ -177,8 +177,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6560: ANDA #$10
     cpu.m_a &= 0x10;
 
-    // 6562: BEQ $009E
-    if (cpu.zero_flag()) cpu.m_pc = 0x6502;
+    // 6562: BEQ $656B
+    if (cpu.zero_flag()) cpu.m_pc = 0x656B;
 
     // 6564: JSR $D91A
     cpu.call_function(0xD91A);
@@ -225,8 +225,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 658C: CMPB #$3A
     cpu.compare_b(0x3A);
 
-    // 658E: BCS $00B9
-    if (cpu.carry_flag()) cpu.m_pc = 0x6549;
+    // 658E: BCS $6586
+    if (cpu.carry_flag()) cpu.m_pc = 0x6586;
 
     // 6590: INC <$41
     // TODO: Convert INC <$41
@@ -258,8 +258,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 65A5: STD $4B0E
     cpu.write_memory16(0x4B0E, cpu.m_d);
 
-    // 65A8: BPL $00F0
-    if (!cpu.negative_flag()) cpu.m_pc = 0x659A;
+    // 65A8: BPL $65BD
+    if (!cpu.negative_flag()) cpu.m_pc = 0x65BD;
 
     // 65AA: LDA #$00
     cpu.m_a = 0x00;
@@ -321,20 +321,20 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 65D9: CMPX #$659F
     cpu.compare_x(0x659F);
 
-    // 65DC: BCS $00F6
-    if (cpu.carry_flag()) cpu.m_pc = 0x65D4;
+    // 65DC: BCS $65C3
+    if (cpu.carry_flag()) cpu.m_pc = 0x65C3;
 
     // 65DE: LDA <$DD
     cpu.m_a = cpu.read_memory(0xDD);
 
-    // 65E0: BPL $011A
-    if (!cpu.negative_flag()) cpu.m_pc = 0x65FC;
+    // 65E0: BPL $65E7
+    if (!cpu.negative_flag()) cpu.m_pc = 0x65E7;
 
     // 65E2: LDD #$6380
     cpu.m_d = 0x6380;
 
-    // 65E5: BRA $011D
-    cpu.m_pc = 0x6604;
+    // 65E5: BRA $65EA
+    cpu.m_pc = 0x65EA;
 
     // 65E7: LDD #$6680
     cpu.m_d = 0x6680;
@@ -366,8 +366,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6605: CMPA #$0A
     cpu.compare_a(0x0A);
 
-    // 6607: BCS $013E
-    if (cpu.carry_flag()) cpu.m_pc = 0x6647;
+    // 6607: BCS $660B
+    if (cpu.carry_flag()) cpu.m_pc = 0x660B;
 
     // 6609: ADDA #$06
     cpu.m_a += 0x06;
@@ -396,8 +396,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 661D: SUBD ,X
     // TODO: Complex indexed addressing: ,X
 
-    // 6620: BPL $0159
-    if (!cpu.negative_flag()) cpu.m_pc = 0x667B;
+    // 6620: BPL $6626
+    if (!cpu.negative_flag()) cpu.m_pc = 0x6626;
 
     // 6624: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -408,8 +408,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6629: CMPD #$0048
     // TODO: Convert CMPD #$0048
 
-    // 662D: BCC $019B
-    if (!cpu.carry_flag()) cpu.m_pc = 0x65CA;
+    // 662D: BCC $6668
+    if (!cpu.carry_flag()) cpu.m_pc = 0x6668;
 
     // 662F: LDD <$79
     cpu.m_d = cpu.read_memory16(0x79);
@@ -417,8 +417,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6631: SUBD $2,X
     // TODO: Fix comma operator: SUBD $2,X
 
-    // 6634: BPL $016D
-    if (!cpu.negative_flag()) cpu.m_pc = 0x66A3;
+    // 6634: BPL $663A
+    if (!cpu.negative_flag()) cpu.m_pc = 0x663A;
 
     // 6638: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -426,8 +426,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 663A: CMPD #$0034
     // TODO: Convert CMPD #$0034
 
-    // 663E: BCC $019B
-    if (!cpu.carry_flag()) cpu.m_pc = 0x65DB;
+    // 663E: BCC $6668
+    if (!cpu.carry_flag()) cpu.m_pc = 0x6668;
 
     // 6640: ADDD $4AFA
     cpu.m_d += 0x4AFA;
@@ -435,8 +435,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6643: CMPD #$0050
     // TODO: Convert CMPD #$0050
 
-    // 6647: BCC $019B
-    if (!cpu.carry_flag()) cpu.m_pc = 0x65E4;
+    // 6647: BCC $6668
+    if (!cpu.carry_flag()) cpu.m_pc = 0x6668;
 
     // 6649: TFR X,D
     cpu.m_d = cpu.m_x;
@@ -456,8 +456,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 6656: ANDA #$F0
     cpu.m_a &= 0xF0;
 
-    // 6658: BEQ $019A
-    if (cpu.zero_flag()) cpu.m_pc = 0x65F4;
+    // 6658: BEQ $6667
+    if (cpu.zero_flag()) cpu.m_pc = 0x6667;
 
     // 665A: LDA #$1B
     cpu.m_a = 0x1B;
@@ -480,8 +480,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 666A: CMPX #$659F
     cpu.compare_x(0x659F);
 
-    // 666D: BCS $014B
-    if (cpu.carry_flag()) cpu.m_pc = 0x66BA;
+    // 666D: BCS $6618
+    if (cpu.carry_flag()) cpu.m_pc = 0x6618;
 
     // 6670: LDD #$0000
     cpu.m_d = 0x0000;
@@ -576,8 +576,8 @@ void routine_64cd_impl(CPU6809& cpu) {
     // 66C4: ANDA #$10
     cpu.m_a &= 0x10;
 
-    // 66C6: BNE $0201
-    if (!cpu.zero_flag()) cpu.m_pc = 0x66C9;
+    // 66C6: BNE $66CE
+    if (!cpu.zero_flag()) cpu.m_pc = 0x66CE;
 
     // 66C8: LDD #$0300
     cpu.m_d = 0x0300;

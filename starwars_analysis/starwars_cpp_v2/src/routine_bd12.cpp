@@ -339,8 +339,8 @@ void routine_bd12_impl(CPU6809& cpu) {
     // BE26: CMPA #$65
     cpu.compare_a(0x65);
 
-    // BE28: BCS $0110
-    if (cpu.carry_flag()) cpu.m_pc = 0xBE3A;
+    // BE28: BCS $BE22
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE22;
 
     // BE2A: LDA #$D3
     cpu.m_a = 0xD3;
@@ -390,8 +390,8 @@ void routine_bd12_impl(CPU6809& cpu) {
     // BE4E: JSR $E7AD
     cpu.call_function(0xE7AD);
 
-    // BE52: BPL $013A
-    if (!cpu.negative_flag()) cpu.m_pc = 0xBE8E;
+    // BE52: BPL $BE4C
+    if (!cpu.negative_flag()) cpu.m_pc = 0xBE4C;
 
     // BE54: LDD #$8040
     cpu.m_d = 0x8040;
@@ -405,8 +405,8 @@ void routine_bd12_impl(CPU6809& cpu) {
     // BE5C: CMPX #$4554
     cpu.compare_x(0x4554);
 
-    // BE5F: BCS $0128
-    if (cpu.carry_flag()) cpu.m_pc = 0xBE89;
+    // BE5F: BCS $BE3A
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE3A;
 
     // BE61: LDD $C7C1
     cpu.m_d = cpu.read_memory16(0xC7C1);

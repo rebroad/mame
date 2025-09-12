@@ -62,10 +62,10 @@
 7afe: 47           ASRA
 7aff: 48           ASLA
 7b00: 54           LSRB
-7b01: 20 31        BRA    $00DA
+7b01: 20 31        BRA    $7B34
 7b03: 39           RTS
 7b04: 38 33        XANDCC #$33
-7b06: 20 41        BRA    $00EF
+7b06: 20 41        BRA    $7B49
 7b08: 54           LSRB
 7b09: 41           NEGA
 7b0a: 52           XNCB
@@ -121,7 +121,7 @@
 7b76: 7e 3d 82     JMP    $3D82
 7b79: d2 82        SBCB   <$82
 7b7b: 67 83        ASR    ,--X
-7b7d: 25 7e        BCS    $01A3
+7b7d: 25 7e        BCS    $7BFD
 7b7f: 08 82        ASL    <$82
 7b81: dc 7d        LDD    <$7D
 7b83: 5b           XDECB
@@ -138,7 +138,7 @@
 7b9c: 83 25 7e     SUBD   #$257E
 7b9f: 08 82        ASL    <$82
 7ba1: dc 82        LDD    <$82
-7ba3: 26 82        BNE    $00CD
+7ba3: 26 82        BNE    $7B27
 7ba5: c8 81        EORB   #$81
 7ba7: 0a 82        DEC    <$82
 7ba9: d2 80        SBCB   <$80
@@ -148,10 +148,10 @@
 7bb0: 82 e6        SBCA   #$E6
 7bb2: 7e 3d 82     JMP    $3D82
 7bb5: d2 7e        SBCB   <$7E
-7bb7: 21 82        BRN    $00E1
+7bb7: 21 82        BRN    $7B3B
 7bb9: d2 7c        SBCB   <$7C
 7bbb: d6 83        LDB    <$83
-7bbd: 25 7e        BCS    $01E3
+7bbd: 25 7e        BCS    $7C3D
 7bbf: 08 82        ASL    <$82
 7bc1: dc 7d        LDD    <$7D
 7bc3: 5b           XDECB
@@ -166,10 +166,10 @@
 7bd6: 80 c6        SUBA   #$C6
 7bd8: 82 c8        SBCA   #$C8
 7bda: 7e d8 83     JMP    $D883
-7bdd: 25 7e        BCS    $0203
+7bdd: 25 7e        BCS    $7C5D
 7bdf: 08 82        ASL    <$82
 7be1: dc 80        LDD    <$80
-7be3: 25 82        BCS    $010D
+7be3: 25 82        BCS    $7B67
 7be5: f0 7d e3     SUBB   $7DE3
 7be8: 82 e6        SBCA   #$E6
 7bea: 7f 16 82     CLR    $1682
@@ -221,4 +221,4 @@
 7c52: 7d 80 82     TST    $8082
 7c55: e6 81        LDB    ,X++
 7c57: a1 82        CMPA   ,-X
-7c59: f0 cc 00     SUBB   >$0000
+7c59: f0 00 00     SUBB   >$0000

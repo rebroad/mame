@@ -405,8 +405,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AB8: ADDD $8,U
     // TODO: Fix comma operator: ADDD $8,U
 
-    // 8ABA: BVS $0155
-    // TODO: Convert BVS $0155
+    // 8ABA: BVS $8ABE
+    // TODO: Convert BVS $8ABE
 
     // 8ABC: STD $8,U
     // TODO: Handle indexed addressing: STD $8,U
@@ -417,8 +417,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AC0: ADDD $A,U
     // TODO: Fix comma operator: ADDD $A,U
 
-    // 8AC2: BVS $015D
-    // TODO: Convert BVS $015D
+    // 8AC2: BVS $8AC6
+    // TODO: Convert BVS $8AC6
 
     // 8AC4: STD $A,U
     // TODO: Handle indexed addressing: STD $A,U
@@ -429,8 +429,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AC8: ADDD $6,U
     // TODO: Fix comma operator: ADDD $6,U
 
-    // 8ACA: BVS $0165
-    // TODO: Convert BVS $0165
+    // 8ACA: BVS $8ACE
+    // TODO: Convert BVS $8ACE
 
     // 8ACC: STD $C,U
     // TODO: Handle indexed addressing: STD $C,U
@@ -444,14 +444,14 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AD3: CMPA #$01
     cpu.compare_a(0x01);
 
-    // 8AD5: BNE $0172
-    if (!cpu.zero_flag()) cpu.m_pc = 0x8B49;
+    // 8AD5: BNE $8ADB
+    if (!cpu.zero_flag()) cpu.m_pc = 0x8ADB;
 
     // 8AD7: LDA $6,X
     // TODO: Fix comma operator: LDA $6,X
 
-    // 8AD9: BEQ $0173
-    if (cpu.zero_flag()) cpu.m_pc = 0x8B4E;
+    // 8AD9: BEQ $8ADC
+    if (cpu.zero_flag()) cpu.m_pc = 0x8ADC;
 
     // 8ADC: JSR $CE45
     cpu.call_function(0xCE45);
@@ -462,8 +462,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AE1: CMPA #$01
     cpu.compare_a(0x01);
 
-    // 8AE3: BNE $0184
-    if (!cpu.zero_flag()) cpu.m_pc = 0x8A69;
+    // 8AE3: BNE $8AED
+    if (!cpu.zero_flag()) cpu.m_pc = 0x8AED;
 
     // 8AE5: LDD $15,X
     // TODO: Fix comma operator: LDD $15,X
@@ -483,8 +483,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8AF1: DEC $7,X
     // TODO: Convert DEC $7,X
 
-    // 8AF3: LBLE $01EE
-    // TODO: Convert LBLE $01EE
+    // 8AF3: LBLE $8B57
+    // TODO: Convert LBLE $8B57
 
     // 8AF7: LDA #$05
     cpu.m_a = 0x05;
@@ -558,8 +558,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8B2D: LDB -$8,X
     // TODO: Fix comma operator: LDB -$8,X
 
-    // 8B30: BCS $01CA
-    if (cpu.carry_flag()) cpu.m_pc = 0x8AFC;
+    // 8B30: BCS $8B33
+    if (cpu.carry_flag()) cpu.m_pc = 0x8B33;
 
     // 8B33: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -579,8 +579,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8B3F: LDB ,X
     // TODO: Complex indexed addressing: ,X
 
-    // 8B42: BCS $01DC
-    if (cpu.carry_flag()) cpu.m_pc = 0x8B20;
+    // 8B42: BCS $8B45
+    if (cpu.carry_flag()) cpu.m_pc = 0x8B45;
 
     // 8B45: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -597,8 +597,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8B4F: DEC <$01
     // TODO: Convert DEC <$01
 
-    // 8B51: BPL $01AF
-    if (!cpu.negative_flag()) cpu.m_pc = 0x8B02;
+    // 8B51: BPL $8B18
+    if (!cpu.negative_flag()) cpu.m_pc = 0x8B18;
 
     // 8B53: JSR $BDFD
     cpu.call_function(0xBDFD);
@@ -615,8 +615,8 @@ void routine_8969_impl(CPU6809& cpu) {
     // 8B5E: CMPA $4B38
     cpu.compare_a(cpu.read_memory(0x4B38));
 
-    // 8B61: BNE $01FD
-    if (!cpu.zero_flag()) cpu.m_pc = 0x8B60;
+    // 8B61: BNE $8B66
+    if (!cpu.zero_flag()) cpu.m_pc = 0x8B66;
 
     // 8B63: JSR $BDCB
     cpu.call_function(0xBDCB);

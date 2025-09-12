@@ -45,8 +45,8 @@ void routine_bcc8_impl(CPU6809& cpu) {
     // BCE4: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
-    // BCE6: BNE $0002
-    if (!cpu.zero_flag()) cpu.m_pc = 0xBCEA;
+    // BCE6: BNE $BCCA
+    if (!cpu.zero_flag()) cpu.m_pc = 0xBCCA;
 
     // BCE9: LDB #$0E
     cpu.m_b = 0x0E;
@@ -54,11 +54,11 @@ void routine_bcc8_impl(CPU6809& cpu) {
     // BCEB: TST $4401
     // TODO: Convert TST $4401
 
-    // BCEE: BPL $002D
-    if (!cpu.negative_flag()) cpu.m_pc = 0xBD1D;
+    // BCEE: BPL $BCF5
+    if (!cpu.negative_flag()) cpu.m_pc = 0xBCF5;
 
-    // BCF1: BNE $0023
-    if (!cpu.zero_flag()) cpu.m_pc = 0xBD16;
+    // BCF1: BNE $BCEB
+    if (!cpu.zero_flag()) cpu.m_pc = 0xBCEB;
 
     // BCF3: LDA #$00
     cpu.m_a = 0x00;
@@ -429,8 +429,8 @@ void routine_bcc8_impl(CPU6809& cpu) {
     // BE26: CMPA #$65
     cpu.compare_a(0x65);
 
-    // BE28: BCS $015A
-    if (cpu.carry_flag()) cpu.m_pc = 0xBE84;
+    // BE28: BCS $BE22
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE22;
 
     // BE2A: LDA #$D3
     cpu.m_a = 0xD3;
@@ -480,8 +480,8 @@ void routine_bcc8_impl(CPU6809& cpu) {
     // BE4E: JSR $E7AD
     cpu.call_function(0xE7AD);
 
-    // BE52: BPL $0184
-    if (!cpu.negative_flag()) cpu.m_pc = 0xBDD8;
+    // BE52: BPL $BE4C
+    if (!cpu.negative_flag()) cpu.m_pc = 0xBE4C;
 
     // BE54: LDD #$8040
     cpu.m_d = 0x8040;
@@ -495,8 +495,8 @@ void routine_bcc8_impl(CPU6809& cpu) {
     // BE5C: CMPX #$4554
     cpu.compare_x(0x4554);
 
-    // BE5F: BCS $0172
-    if (cpu.carry_flag()) cpu.m_pc = 0xBED3;
+    // BE5F: BCS $BE3A
+    if (cpu.carry_flag()) cpu.m_pc = 0xBE3A;
 
     // BE61: LDD $C7C1
     cpu.m_d = cpu.read_memory16(0xC7C1);

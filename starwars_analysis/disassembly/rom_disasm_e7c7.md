@@ -1,13 +1,13 @@
 e7c7: c1 d6        CMPB   #$D6
-e7c9: 24 07        BCC    $000B
+e7c9: 24 07        BCC    $E7D2
 e7cb: f7 48 ae     STB    $48AE
-e7ce: 8d 0d        BSR    $0016
-e7d0: 8d 18        BSR    $0023
+e7ce: 8d 0d        BSR    $E7DD
+e7d0: 8d 18        BSR    $E7EA
 e7d2: 39           RTS
 e7d3: c1 d6        CMPB   #$D6
-e7d5: 24 05        BCC    $0015
+e7d5: 24 05        BCC    $E7DC
 e7d7: f7 48 ae     STB    $48AE
-e7da: 8d 0e        BSR    $0023
+e7da: 8d 0e        BSR    $E7EA
 e7dc: 39           RTS
 e7dd: f6 48 ae     LDB    $48AE
 e7e0: 8e ed a8     LDX    #$EDA8
@@ -25,7 +25,7 @@ e7f3: 3a           ABX
 e7f4: ec 02        LDD    $2,X
 e7f6: ed a1        STD    ,Y++
 e7f8: ec 84        LDD    ,X
-e7fa: 20 15        BRA    $004A
+e7fa: 20 15        BRA    $E811
 e7fc: f6 48 ae     LDB    $48AE
 e7ff: 8e ea 50     LDX    #$EA50
 e802: 3a           ABX
@@ -53,49 +53,49 @@ e82b: e6 80        LDB    ,X+
 e82d: bf 48 b1     STX    $48B1
 e830: 58           ASLB
 e831: c1 82        CMPB   #$82
-e833: 25 07        BCS    $0075
+e833: 25 07        BCS    $E83C
 e835: 8e 30 16     LDX    #$3016
 e838: c4 7f        ANDB   #$7F
-e83a: 20 4c        BRA    $00C1
+e83a: 20 4c        BRA    $E888
 e83c: c1 74        CMPB   #$74
-e83e: 26 05        BNE    $007E
+e83e: 26 05        BNE    $E845
 e840: 8e 2f de     LDX    #$2FDE
-e843: 20 43        BRA    $00C1
+e843: 20 43        BRA    $E888
 e845: c1 80        CMPB   #$80
-e847: 26 06        BNE    $0088
+e847: 26 06        BNE    $E84F
 e849: 8e 30 58     LDX    #$3058
 e84c: 5f           CLRB
-e84d: 20 39        BRA    $00C1
+e84d: 20 39        BRA    $E888
 e84f: c1 60        CMPB   #$60
-e851: 25 05        BCS    $0091
+e851: 25 05        BCS    $E858
 e853: 8e 2f a4     LDX    #$2FA4
-e856: 20 30        BRA    $00C1
+e856: 20 30        BRA    $E888
 e858: c1 40        CMPB   #$40
-e85a: 26 05        BNE    $009A
+e85a: 26 05        BNE    $E861
 e85c: 8e 2f c2     LDX    #$2FC2
-e85f: 20 27        BRA    $00C1
+e85f: 20 27        BRA    $E888
 e861: c1 4e        CMPB   #$4E
-e863: 26 05        BNE    $00A3
+e863: 26 05        BNE    $E86A
 e865: 8e 2f fe     LDX    #$2FFE
-e868: 20 1e        BRA    $00C1
+e868: 20 1e        BRA    $E888
 e86a: c1 58        CMPB   #$58
-e86c: 26 05        BNE    $00AC
+e86c: 26 05        BNE    $E873
 e86e: 8e 2f f6     LDX    #$2FF6
-e871: 20 15        BRA    $00C1
+e871: 20 15        BRA    $E888
 e873: c1 5a        CMPB   #$5A
-e875: 26 05        BNE    $00B5
+e875: 26 05        BNE    $E87C
 e877: 8e 30 00     LDX    #$3000
-e87a: 20 0c        BRA    $00C1
+e87a: 20 0c        BRA    $E888
 e87c: c1 4a        CMPB   #$4A
-e87e: 26 05        BNE    $00BE
+e87e: 26 05        BNE    $E885
 e880: 8e 30 0c     LDX    #$300C
-e883: 20 03        BRA    $00C1
+e883: 20 03        BRA    $E888
 e885: 8e 2f f4     LDX    #$2FF4
 e888: ec 85        LDD    B,X
 e88a: ed a1        STD    ,Y++
 e88c: be 48 b1     LDX    $48B1
 e88f: 6d 1f        TST    -$1,X
-e891: 2a 98        BPL    $0064
+e891: 2a 98        BPL    $E82B
 e893: 39           RTS
 e894: db 3f        ADDB   <$3F
 e896: db 48        ADDB   <$48
@@ -185,8 +185,8 @@ e93c: e1 a7        CMPB   E,Y
 e93e: e1 c8 e1     CMPB   -$1F,U
 e941: e8 e2        EORB   ,-S
 e943: 05 e2        LSR    <$E2
-e945: 20 e2        BRA    $0162
-e947: 26 e2        BNE    $0164
+e945: 20 e2        BRA    $E929
+e947: 26 e2        BNE    $E92B
 e949: 3c e2        CWAI   #$E2
 e94b: 45           LSRA
 e94c: e2 54        SBCB   -$C,U
@@ -206,11 +206,11 @@ e968: e3 52        ADDD   -$E,U
 e96a: e3 61        ADDD   $1,S
 e96c: e3 70        ADDD   -$10,S
 e96e: e3 7c        ADDD   -$4,S
-e970: e3 8c e3     ADDD   $018F,PCR
+e970: e3 8c e3     ADDD   $E956,PCR
 e973: 9d e3        JSR    <$E3
 e975: ae e3        LDX    ,--S
 e977: bb e3 c6     ADDA   $E3C6
-e97a: e3 dc e3     ADDD   [$0199,PCR]
+e97a: e3 dc e3     ADDD   [$E960,PCR]
 e97d: fc e4 05     LDD    $E405
 e980: e4 0e        ANDB   $E,X
 e982: e4 16        ANDB   -$A,X
@@ -247,4 +247,4 @@ e9be: e4 7f        ANDB   -$1,S
 e9c0: e4 82        ANDB   ,-X
 e9c2: e4 84        ANDB   ,X
 e9c4: e4 87        ANDB   E,X
-e9c6: e4 c1        ANDB   $0,X
+e9c6: e4 00        ANDB   $0,X

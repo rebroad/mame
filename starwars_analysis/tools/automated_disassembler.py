@@ -169,7 +169,16 @@ class AutomatedDisassembler:
     def _extract_jump_target(self, line: str) -> Optional[str]:
         """Extract the target address from a JMP instruction"""
         match = re.search(r'\b7e\s+([0-9a-f]+)\b', line, re.IGNORECASE)
-        return match.group(1) if match else None
+        if match:
+            target = match.group(1)
+            # Only return targets within valid 6809 address space
+            try:
+                target_int = int(target, 16)
+                if 0 <= target_int <= 0xFFFF:
+                    return target
+            except ValueError:
+                pass
+        return None
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
         """Get raw disassembly lines for a window starting at start_addr using our fixed disassembler."""
@@ -251,8 +260,8 @@ class AutomatedDisassembler:
         """Find all routines matching the given patterns"""
         print("Searching for routine patterns in ROM...")
 
-        # Get full disassembly to search for patterns
-        cmd = ["unidasm", "-arch", self.arch, self.rom_file]
+        # Get full disassembly to search for patterns with consistent base address
+        cmd = ["unidasm", "-arch", self.arch, self.rom_file, "-basepc", "0x0000"]
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -463,6 +472,20 @@ def main():
     
     # Determine ROM file path
     rom_file = args.input or args.rom_file
+    
+    # For --full-auto, try to find the ROM file automatically
+    if not rom_file and args.full_auto:
+        # Look for complete_memory_map.bin in the parent directory
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent
+        auto_rom_file = project_root / "complete_memory_map.bin"
+        
+        if auto_rom_file.exists():
+            rom_file = str(auto_rom_file)
+            print(f"Auto-detected ROM file: {rom_file}")
+        else:
+            parser.error("ROM file path required (use positional argument or --input). Auto-detection failed - complete_memory_map.bin not found in project root.")
+    
     if not rom_file:
         parser.error("ROM file path required (use positional argument or --input)")
     

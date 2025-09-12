@@ -33,26 +33,26 @@
 8f77: bd cc cc     JSR    $CCCC
 8f7a: 39           RTS
 8f7b: de e4        LDU    <$E4
-8f7d: 27 04        BEQ    $004F
+8f7d: 27 04        BEQ    $8F83
 8f7f: a6 c4        LDA    ,U
-8f81: 26 2e        BNE    $007D
+8f81: 26 2e        BNE    $8FB1
 8f83: 0c dd        INC    <$DD
 8f85: f6 4b 14     LDB    $4B14
 8f88: 58           ASLB
 8f89: 8e 90 70     LDX    #$9070
 8f8c: 3a           ABX
 8f8d: 8c 90 7c     CMPX   #$907C
-8f90: 25 0e        BCS    $006C
+8f90: 25 0e        BCS    $8FA0
 8f92: b6 4b 14     LDA    $4B14
 8f95: 44           LSRA
-8f96: 25 05        BCS    $0069
+8f96: 25 05        BCS    $8F9D
 8f98: 8e 90 78     LDX    #$9078
-8f9b: 20 03        BRA    $006C
+8f9b: 20 03        BRA    $8FA0
 8f9d: 8e 90 7a     LDX    #$907A
 8fa0: ae 84        LDX    ,X
 8fa2: d6 dd        LDB    <$DD
 8fa4: e1 80        CMPB   ,X+
-8fa6: 23 02        BLS    $0076
+8fa6: 23 02        BLS    $8FAA
 8fa8: e6 1f        LDB    -$1,X
 8faa: d7 dd        STB    <$DD
 8fac: 58           ASLB
@@ -61,16 +61,16 @@
 8fb1: 8e 49 00     LDX    #$4900
 8fb4: 9f 5a        STX    <$5A
 8fb6: a6 03        LDA    $3,X
-8fb8: 27 0c        BEQ    $0092
+8fb8: 27 0c        BEQ    $8FC6
 8fba: 9e 5a        LDX    <$5A
 8fbc: 30 88 19     LEAX   $19,X
 8fbf: 8c 49 4b     CMPX   #$494B
-8fc2: 25 f0        BCS    $0080
-8fc4: 20 5d        BRA    $00EF
+8fc2: 25 f0        BCS    $8FB4
+8fc4: 20 5d        BRA    $9023
 8fc6: de e4        LDU    <$E4
-8fc8: 27 59        BEQ    $00EF
+8fc8: 27 59        BEQ    $9023
 8fca: a6 c4        LDA    ,U
-8fcc: 27 55        BEQ    $00EF
+8fcc: 27 55        BEQ    $9023
 8fce: 0c e6        INC    <$E6
 8fd0: ec c4        LDD    ,U
 8fd2: dd e0        STD    <$E0
@@ -205,7 +205,7 @@
 90d4: 92 32        SBCA   <$32
 90d6: 90 34        SUBA   <$34
 90d8: 00 90        NEG    <$90
-90da: 24 92        BCC    $013A
+90da: 24 92        BCC    $906E
 90dc: 77 90 3a     ASR    $903A
 90df: 90 24        SUBA   <$24
 90e1: 92 ad        SBCA   <$AD
@@ -214,7 +214,7 @@
 90e7: 92 d1        SBCA   <$D1
 90e9: 90 46        SUBA   <$46
 90eb: 00 90        NEG    <$90
-90ed: 24 93        BCC    $014E
+90ed: 24 93        BCC    $9082
 90ef: 19           DAA
 90f0: 90 4c        SUBA   <$4C
 90f2: 90 24        SUBA   <$24
@@ -224,7 +224,7 @@
 90fa: 93 55        SUBD   <$55
 90fc: 90 58        SUBA   <$58
 90fe: 00 90        NEG    <$90
-9100: 24 93        BCC    $0161
+9100: 24 93        BCC    $9095
 9102: 85 90        BITA   #$90
 9104: 5e           XCLRB
 9105: 90 24        SUBA   <$24
@@ -234,7 +234,7 @@
 910d: 93 dc        SUBD   <$DC
 910f: 90 6a        SUBA   <$6A
 9111: 00 90        NEG    <$90
-9113: 24 93        BCC    $0174
+9113: 24 93        BCC    $90A8
 9115: 85 90        BITA   #$90
 9117: 5e           XCLRB
 9118: 90 24        SUBA   <$24
@@ -244,10 +244,10 @@
 9120: 93 dc        SUBD   <$DC
 9122: 90 6a        SUBA   <$6A
 9124: 00 90        NEG    <$90
-9126: 24 91        BCC    $0185
+9126: 24 91        BCC    $90B9
 9128: de 90        LDU    <$90
-912a: 28 90        BVC    $0188
-912c: 24 92        BCC    $018C
+912a: 28 90        BVC    $90BC
+912c: 24 92        BCC    $90C0
 912e: 02 90        XNC    <$90
-9130: 2e 90        BGT    $018E
-9132: 24 92        BCC    $0192
+9130: 2e 90        BGT    $90C2
+9132: 24 92        BCC    $90C6

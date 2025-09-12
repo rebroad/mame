@@ -1,4 +1,4 @@
-71c4: 2a 01        BPL    $0003
+71c4: 2a 01        BPL    $71C7
 71c6: 40           NEGA
 71c7: c6 03        LDB    #$03
 71c9: 3d           MUL
@@ -13,7 +13,7 @@
 71dc: 39           RTS
 71dd: 00 12        NEG    <$12
 71df: 00 00        NEG    <$00
-71e1: 25 00        BCS    $001F
+71e1: 25 00        BCS    $71E3
 71e3: 00 37        NEG    <$37
 71e5: 00 00        NEG    <$00
 71e7: 49           ROLA
@@ -61,7 +61,7 @@
 7259: ff ee 03     STU    $EE03
 725c: 12           NOP
 725d: ed 03        STD    $3,X
-725f: 24 ec        BCC    $0089
+725f: 24 ec        BCC    $724D
 7261: 03 36        COM    <$36
 7263: eb 03        ADDB   $3,X
 7265: 48           ASLA
@@ -81,7 +81,7 @@
 7282: 03 ff        COM    <$FF
 7284: e0 04        SUBB   $4,X
 7286: 11 df 04     STU    <$04
-7289: 23 de        BLS    $00A5
+7289: 23 de        BLS    $7269
 728b: 04 36        LSR    <$36
 728d: dd 04        STD    <$04
 728f: 48           ASLA
@@ -118,14 +118,14 @@
 72cf: bd 71 60     JSR    $7160
 72d2: bd 76 1d     JSR    $761D
 72d5: b6 4b 2d     LDA    $4B2D
-72d8: 26 16        BNE    $012C
+72d8: 26 16        BNE    $72F0
 72da: fc 4b 0e     LDD    $4B0E
 72dd: 10 83 00 a0  CMPD   #$00A0
-72e1: 24 0d        BCC    $012C
+72e1: 24 0d        BCC    $72F0
 72e3: c4 10        ANDB   #$10
-72e5: 26 04        BNE    $0127
+72e5: 26 04        BNE    $72EB
 72e7: c6 4c        LDB    #$4C
-72e9: 20 02        BRA    $0129
+72e9: 20 02        BRA    $72ED
 72eb: c6 4d        LDB    #$4D
 72ed: bd e7 c7     JSR    $E7C7
 72f0: bd 95 a7     JSR    $95A7
@@ -203,4 +203,4 @@
 73bc: bd 98 b0     JSR    $98B0
 73bf: bd 61 2f     JSR    $612F
 73c2: 39           RTS
-73c3: bd 2a 01     JSR    >$0000
+73c3: bd 00 00     JSR    >$0000

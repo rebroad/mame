@@ -28,10 +28,10 @@ ce56: 52           XNCB
 ce57: 46           RORA
 ce58: 45           LSRA
 ce59: 59           ROLB
-ce5a: 20 47        BRA    $008B
+ce5a: 20 47        BRA    $CEA3
 ce5c: 4f           CLRA
 ce5d: 54           LSRB
-ce5e: 20 57        BRA    $009F
+ce5e: 20 57        BRA    $CEB7
 ce60: 49           ROLA
 ce61: 52           XNCB
 ce62: 45           LSRA
@@ -78,10 +78,10 @@ cecf: 49           ROLA
 ced0: 47           ASRA
 ced1: 48           ASLA
 ced2: 54           LSRB
-ced3: 20 31        BRA    $00EE
+ced3: 20 31        BRA    $CF06
 ced5: 39           RTS
 ced6: 38 33        XANDCC #$33
-ced8: 20 41        BRA    $0103
+ced8: 20 41        BRA    $CF1B
 ceda: 54           LSRB
 cedb: 41           NEGA
 cedc: 52           XNCB
@@ -210,19 +210,19 @@ cfec: c0 00        SUBB   #$00
 cfee: 18           X18
 cfef: bc 1c 4a     CMPX   $1C4A
 cff2: bb 9a 1f     ADDA   $9A1F
-cff5: 24 ff        BCC    $01DE
+cff5: 24 ff        BCC    $CFF6
 cff7: ba 00 dc     ORA    >$00DC
 cffa: e0 a0        SUBB   ,Y+
 cffc: 00 00        NEG    <$00
-cffe: e0 8c bb     SUBB   $01A4,PCR
+cffe: e0 8c bb     SUBB   $CFBC,PCR
 d001: 9a 1f        ORA    <$1F
-d003: 24 ff        BCC    $01EC
+d003: 24 ff        BCC    $D004
 d005: ba 00 dc     ORA    >$00DC
 d008: e0 aa        SUBB   F,Y
 d00a: 00 00        NEG    <$00
-d00c: e0 8c bb     SUBB   $01B2,PCR
+d00c: e0 8c bb     SUBB   $CFCA,PCR
 d00f: 9d 1d        JSR    <$1D
 d011: e4 fe        ANDB   [W,S]
 d013: e8 bb        EORB   [D,Y]
 d015: a3 00        SUBD   $0,X
-d017: 00 b7        NEG    <$00
+d017: 00 00        NEG    <$00

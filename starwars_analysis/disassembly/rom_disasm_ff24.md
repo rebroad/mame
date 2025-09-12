@@ -6,7 +6,7 @@ ff2f: 8e 00 00     LDX    #$0000
 ff32: b7 46 40     STA    $4640
 ff35: 30 01        LEAX   $1,X
 ff37: 8c 56 00     CMPX   #$5600
-ff3a: 25 f6        BCS    $000E
+ff3a: 25 f6        BCS    $FF32
 ff3c: 86 ff        LDA    #$FF
 ff3e: b7 46 86     STA    $4686
 ff41: b7 46 83     STA    $4683
@@ -15,7 +15,7 @@ ff47: 8e 00 00     LDX    #$0000
 ff4a: b7 46 40     STA    $4640
 ff4d: 30 01        LEAX   $1,X
 ff4f: 8c 56 00     CMPX   #$5600
-ff52: 25 f6        BCS    $0026
+ff52: 25 f6        BCS    $FF4A
 ff54: 7e fd 07     JMP    $FD07
 ff57: a6 bf c8 40  LDA    [$C840]
 ff5b: 96 1f        LDA    <$1F
@@ -72,10 +72,10 @@ ffe1: 49           ROLA
 ffe2: 47           ASRA
 ffe3: 48           ASLA
 ffe4: 54           LSRB
-ffe5: 20 31        BRA    $00F4
+ffe5: 20 31        BRA    $0018
 ffe7: 39           RTS
 ffe8: 38 33        XANDCC #$33
-ffea: 20 41        BRA    $0109
+ffea: 20 41        BRA    $002D
 ffec: 54           LSRB
 ffed: 41           NEGA
 ffee: 52           XNCB

@@ -1,35 +1,35 @@
 622d: d6 7d        LDB    <$7D
 622f: c1 a0        CMPB   #$A0
-6231: 2e 0b        BGT    $0011
+6231: 2e 0b        BGT    $623E
 6233: 86 08        LDA    #$08
 6235: 91 41        CMPA   <$41
-6237: 27 03        BEQ    $000F
+6237: 27 03        BEQ    $623C
 6239: 4a           DECA
 623a: 97 41        STA    <$41
-623c: 20 0d        BRA    $001E
+623c: 20 0d        BRA    $624B
 623e: c1 60        CMPB   #$60
-6240: 2d 09        BLT    $001E
+6240: 2d 09        BLT    $624B
 6242: 86 0c        LDA    #$0C
 6244: 91 41        CMPA   <$41
-6246: 27 03        BEQ    $001E
+6246: 27 03        BEQ    $624B
 6248: 4a           DECA
 6249: 97 41        STA    <$41
 624b: b6 45 91     LDA    $4591
 624e: 84 03        ANDA   #$03
-6250: 26 05        BNE    $002A
+6250: 26 05        BNE    $6257
 6252: 86 01        LDA    #$01
 6254: b7 48 14     STA    $4814
 6257: b6 48 14     LDA    $4814
-625a: 27 0d        BEQ    $003C
+625a: 27 0d        BEQ    $6269
 625c: 96 ac        LDA    <$AC
 625e: 84 f0        ANDA   #$F0
-6260: 27 07        BEQ    $003C
+6260: 27 07        BEQ    $6269
 6262: 86 19        LDA    #$19
 6264: 97 41        STA    <$41
 6266: 7a 48 14     DEC    $4814
 6269: b6 48 1e     LDA    $481E
 626c: 84 10        ANDA   #$10
-626e: 26 04        BNE    $0047
+626e: 26 04        BNE    $6274
 6270: 86 01        LDA    #$01
 6272: 97 41        STA    <$41
 6274: 39           RTS
@@ -72,7 +72,7 @@
 62d4: 39           RTS
 62d5: 86 40        LDA    #$40
 62d7: a1 84        CMPA   ,X
-62d9: 23 08        BLS    $00B6
+62d9: 23 08        BLS    $62E3
 62db: a0 84        SUBA   ,X
 62dd: 44           LSRA
 62de: 44           LSRA
@@ -101,7 +101,7 @@
 6315: bd 61 2f     JSR    $612F
 6318: bd 6d b6     JSR    $6DB6
 631b: fc 4b 0e     LDD    $4B0E
-631e: 2a 02        BPL    $00F5
+631e: 2a 02        BPL    $6322
 6320: 0c 41        INC    <$41
 6322: bd 62 2d     JSR    $622D
 6325: 39           RTS
@@ -126,7 +126,7 @@
 6357: bd 61 2f     JSR    $612F
 635a: bd 6d c0     JSR    $6DC0
 635d: fc 4b 0e     LDD    $4B0E
-6360: 2a 02        BPL    $0137
+6360: 2a 02        BPL    $6364
 6362: 0c 41        INC    <$41
 6364: bd 62 2d     JSR    $622D
 6367: 39           RTS
@@ -134,13 +134,13 @@
 636b: 83 00 01     SUBD   #$0001
 636e: fd 4b 0e     STD    $4B0E
 6371: c4 07        ANDB   #$07
-6373: 26 28        BNE    $0170
+6373: 26 28        BNE    $639D
 6375: b6 4a db     LDA    $4ADB
-6378: 2b 03        BMI    $0150
+6378: 2b 03        BMI    $637D
 637a: bd d8 df     JSR    $D8DF
 637d: b6 4a db     LDA    $4ADB
 6380: 81 12        CMPA   #$12
-6382: 26 0a        BNE    $0161
+6382: 26 0a        BNE    $638E
 6384: b6 45 93     LDA    $4593
 6387: 84 03        ANDA   #$03
 6389: 8b 1f        ADDA   #$1F
@@ -148,21 +148,21 @@
 638e: b6 4a db     LDA    $4ADB
 6391: 8b 01        ADDA   #$01
 6393: b1 4a dc     CMPA   $4ADC
-6396: 25 02        BCS    $016D
+6396: 25 02        BCS    $639A
 6398: 86 80        LDA    #$80
 639a: b7 4a db     STA    $4ADB
 639d: fc 4b 0c     LDD    $4B0C
 63a0: 83 00 08     SUBD   #$0008
-63a3: 2a 03        BPL    $017B
+63a3: 2a 03        BPL    $63A8
 63a5: cc 00 00     LDD    #$0000
 63a8: fd 4b 0c     STD    $4B0C
 63ab: fc 4b 0e     LDD    $4B0E
 63ae: 10 83 00 c0  CMPD   #$00C0
-63b2: 24 12        BCC    $0199
+63b2: 24 12        BCC    $63C6
 63b4: f6 4b 11     LDB    $4B11
 63b7: c0 01        SUBB   #$01
 63b9: c1 10        CMPB   #$10
-63bb: 24 06        BCC    $0196
+63bb: 24 06        BCC    $63C3
 63bd: cc 00 00     LDD    #$0000
 63c0: fd 4b 0e     STD    $4B0E
 63c3: f7 4b 11     STB    $4B11
@@ -173,37 +173,37 @@
 63d1: bd d9 42     JSR    $D942
 63d4: 39           RTS
 63d5: b6 48 14     LDA    $4814
-63d8: 26 11        BNE    $01BE
+63d8: 26 11        BNE    $63EB
 63da: 96 43        LDA    <$43
 63dc: 84 10        ANDA   #$10
-63de: 26 04        BNE    $01B7
+63de: 26 04        BNE    $63E4
 63e0: c6 06        LDB    #$06
-63e2: 20 02        BRA    $01B9
+63e2: 20 02        BRA    $63E6
 63e4: c6 05        LDB    #$05
 63e6: bd e7 c7     JSR    $E7C7
-63e9: 20 05        BRA    $01C3
+63e9: 20 05        BRA    $63F0
 63eb: c6 0b        LDB    #$0B
 63ed: bd e7 c7     JSR    $E7C7
 63f0: b6 48 14     LDA    $4814
-63f3: 26 1b        BNE    $01E3
+63f3: 26 1b        BNE    $6410
 63f5: b6 48 12     LDA    $4812
-63f8: 27 0a        BEQ    $01D7
+63f8: 27 0a        BEQ    $6404
 63fa: 96 43        LDA    <$43
 63fc: 84 10        ANDA   #$10
-63fe: 27 04        BEQ    $01D7
-6400: 20 0e        BRA    $01E3
-6402: 20 0a        BRA    $01E1
+63fe: 27 04        BEQ    $6404
+6400: 20 0e        BRA    $6410
+6402: 20 0a        BRA    $640E
 6404: f6 45 91     LDB    $4591
 6407: c4 03        ANDB   #$03
 6409: cb 07        ADDB   #$07
 640b: bd e7 c7     JSR    $E7C7
-640e: 20 48        BRA    $022B
+640e: 20 48        BRA    $6458
 6410: b6 48 14     LDA    $4814
 6413: bb 48 12     ADDA   $4812
 6416: 81 01        CMPA   #$01
-6418: 26 04        BNE    $01F1
+6418: 26 04        BNE    $641E
 641a: c6 0d        LDB    #$0D
-641c: 20 02        BRA    $01F3
+641c: 20 02        BRA    $6420
 641e: c6 0c        LDB    #$0C
 6420: bd e7 c7     JSR    $E7C7
 6423: cc 01 b0     LDD    #$01B0

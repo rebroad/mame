@@ -9,14 +9,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F86C: LDB #$07
     cpu.m_b = 0x07;
 
-    // F86F: BCC $000A
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF87B;
+    // F86F: BCC $F876
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF876;
 
     // F871: LDX $3022
     cpu.m_x = cpu.read_memory16(0x3022);
 
-    // F874: BRA $000D
-    cpu.m_pc = 0xF883;
+    // F874: BRA $F879
+    cpu.m_pc = 0xF879;
 
     // F876: LDX $3032
     cpu.m_x = cpu.read_memory16(0x3032);
@@ -24,8 +24,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F879: STX ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_x);
 
-    // F87C: BPL $0002
-    if (!cpu.negative_flag()) cpu.m_pc = 0xF880;
+    // F87C: BPL $F86E
+    if (!cpu.negative_flag()) cpu.m_pc = 0xF86E;
 
     // F87E: LDD #$8040
     cpu.m_d = 0x8040;
@@ -72,8 +72,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F8A3: CMPB #$D3
     cpu.compare_b(0xD3);
 
-    // F8A5: BCS $002F
-    if (cpu.carry_flag()) cpu.m_pc = 0xF8D6;
+    // F8A5: BCS $F89B
+    if (cpu.carry_flag()) cpu.m_pc = 0xF89B;
 
     // F8A7: JMP $F70D
     cpu.m_pc = 0xF70D;
@@ -126,8 +126,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F8CE: CMPA #$01
     cpu.compare_a(0x01);
 
-    // F8D0: BHI $006D
-    // TODO: Convert BHI $006D
+    // F8D0: BHI $F8D9
+    // TODO: Convert BHI $F8D9
 
     // F8D2: LDD #$0000
     cpu.m_d = 0x0000;
@@ -165,14 +165,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F8ED: TST <$C4
     // TODO: Convert TST <$C4
 
-    // F8EF: BNE $0094
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF885;
+    // F8EF: BNE $F900
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF900;
 
     // F8F1: CMPB #$FC
     cpu.compare_b(0xFC);
 
-    // F8F3: BCS $0090
-    if (cpu.carry_flag()) cpu.m_pc = 0xF885;
+    // F8F3: BCS $F8FC
+    if (cpu.carry_flag()) cpu.m_pc = 0xF8FC;
 
     // F8F5: LDA #$01
     cpu.m_a = 0x01;
@@ -186,20 +186,20 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F8FC: STD <$C2
     cpu.write_memory16(0xC2, cpu.m_d);
 
-    // F8FE: BRA $00AB
-    cpu.m_pc = 0xF8AB;
+    // F8FE: BRA $F917
+    cpu.m_pc = 0xF917;
 
     // F900: CMPB #$B0
     cpu.compare_b(0xB0);
 
-    // F902: BCS $009A
-    if (cpu.carry_flag()) cpu.m_pc = 0xF89E;
+    // F902: BCS $F906
+    if (cpu.carry_flag()) cpu.m_pc = 0xF906;
 
     // F906: CMPA #$08
     cpu.compare_a(0x08);
 
-    // F908: BCS $00A3
-    if (cpu.carry_flag()) cpu.m_pc = 0xF8AD;
+    // F908: BCS $F90F
+    if (cpu.carry_flag()) cpu.m_pc = 0xF90F;
 
     // F90A: CLR <$C4
     cpu.write_memory(0xC4, 0);
@@ -213,8 +213,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F911: CMPB #$7F
     cpu.compare_b(0x7F);
 
-    // F913: BCS $00AB
-    if (cpu.carry_flag()) cpu.m_pc = 0xF8C0;
+    // F913: BCS $F917
+    if (cpu.carry_flag()) cpu.m_pc = 0xF917;
 
     // F915: LDB #$7F
     cpu.m_b = 0x7F;
@@ -246,14 +246,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F92A: LDB <$C4
     cpu.m_b = cpu.read_memory(0xC4);
 
-    // F92C: BNE $00C6
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF8F4;
+    // F92C: BNE $F932
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF932;
 
     // F92E: LDB #$CC
     cpu.m_b = 0xCC;
 
-    // F930: BRA $00C8
-    cpu.m_pc = 0xF8FA;
+    // F930: BRA $F934
+    cpu.m_pc = 0xF934;
 
     // F932: LDB #$CD
     cpu.m_b = 0xCD;
@@ -288,8 +288,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F94C: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
-    // F94E: BNE $00DE
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF92E;
+    // F94E: BNE $F94A
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF94A;
 
     // F950: LDD #$8040
     cpu.m_d = 0x8040;
@@ -336,14 +336,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F975: TST $4320
     // TODO: Convert TST $4320
 
-    // F978: BPL $0113
-    if (!cpu.negative_flag()) cpu.m_pc = 0xF98D;
+    // F978: BPL $F97F
+    if (!cpu.negative_flag()) cpu.m_pc = 0xF97F;
 
     // F97A: TST $4320
     // TODO: Convert TST $4320
 
-    // F97D: BPL $011E
-    if (!cpu.negative_flag()) cpu.m_pc = 0xF99D;
+    // F97D: BPL $F98A
+    if (!cpu.negative_flag()) cpu.m_pc = 0xF98A;
 
     // F97F: LDB #$C3
     cpu.m_b = 0xC3;
@@ -375,8 +375,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F998: JMP $FB38
     cpu.m_pc = 0xFB38;
 
-    // F99B: BEQ $01AD
-    if (cpu.zero_flag()) cpu.m_pc = 0xF94A;
+    // F99B: BEQ $FA19
+    if (cpu.zero_flag()) cpu.m_pc = 0xFA19;
 
     // F99D: STD <$D2
     cpu.write_memory16(0xD2, cpu.m_d);
@@ -429,14 +429,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F9C4: LDA #$03
     cpu.m_a = 0x03;
 
-    // F9C7: BCS $0162
-    if (cpu.carry_flag()) cpu.m_pc = 0xFA2B;
+    // F9C7: BCS $F9CE
+    if (cpu.carry_flag()) cpu.m_pc = 0xF9CE;
 
     // F9C9: LDU $3022
     cpu.m_u = cpu.read_memory16(0x3022);
 
-    // F9CC: BRA $0165
-    cpu.m_pc = 0xFA33;
+    // F9CC: BRA $F9D1
+    cpu.m_pc = 0xF9D1;
 
     // F9CE: LDU $3032
     cpu.m_u = cpu.read_memory16(0x3032);
@@ -444,8 +444,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // F9D1: STU ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
-    // F9D4: BPL $015A
-    if (!cpu.negative_flag()) cpu.m_pc = 0xFA30;
+    // F9D4: BPL $F9C6
+    if (!cpu.negative_flag()) cpu.m_pc = 0xF9C6;
 
     // F9D6: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
@@ -534,8 +534,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // FA1B: CMPX #$FB73
     cpu.compare_x(0xFB73);
 
-    // FA1E: LBCS $0128
-    // TODO: Convert LBCS $0128
+    // FA1E: LBCS $F994
+    // TODO: Convert LBCS $F994
 
     // FA22: LDS #$4FFF
     cpu.m_sp = 0x4FFF;
@@ -543,14 +543,14 @@ void routine_f86c_impl(CPU6809& cpu) {
     // FA26: TST <$CC
     // TODO: Convert TST <$CC
 
-    // FA28: BNE $01C2
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF9EC;
+    // FA28: BNE $FA2E
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFA2E;
 
     // FA2A: LDB #$C5
     cpu.m_b = 0xC5;
 
-    // FA2C: BRA $01C9
-    cpu.m_pc = 0xF9F7;
+    // FA2C: BRA $FA35
+    cpu.m_pc = 0xFA35;
 
     // FA2E: LDB #$C4
     cpu.m_b = 0xC4;
@@ -588,8 +588,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // FA4C: JMP [,X]
     // TODO: Complex indexed addressing: [,X]
 
-    // FA4E: BEQ $0255
-    if (cpu.zero_flag()) cpu.m_pc = 0xFAA5;
+    // FA4E: BEQ $FAC1
+    if (cpu.zero_flag()) cpu.m_pc = 0xFAC1;
 
     // FA50: STD <$D2
     cpu.write_memory16(0xD2, cpu.m_d);
@@ -600,8 +600,8 @@ void routine_f86c_impl(CPU6809& cpu) {
     // FA54: CMPX #$FAF9
     cpu.compare_x(0xFAF9);
 
-    // FA57: BCC $0226
-    if (!cpu.carry_flag()) cpu.m_pc = 0xFA7F;
+    // FA57: BCC $FA92
+    if (!cpu.carry_flag()) cpu.m_pc = 0xFA92;
 
     // FA59: LDD $2,X
     // TODO: Fix comma operator: LDD $2,X

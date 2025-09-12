@@ -4,25 +4,25 @@ b987: bd cd ba  JSR    $CDBA
 b98a: 39        RTS
 b98b: 8e 49 e2  LDX    #$49E2
 b98e: a6 0d     LDA    $D,X
-b990: 27 0f     BEQ    $001F
+b990: 27 0f     BEQ    $B9A1
 b992: 6a 0d     DEC    $D,X
 b994: e6 0c     LDB    $C,X
 b996: c1 09     CMPB   #$09
-b998: 25 01     BCS    $0019
+b998: 25 01     BCS    $B99B
 b99a: 3f        SWI
 b99b: ce b7 48  LDU    #$B748
 b99e: 58        ASLB
 b99f: ad d5     JSR    [B,U]
 b9a1: 30 0e     LEAX   $E,X
 b9a3: 8c 4a 52  CMPX   #$4A52
-b9a6: 25 e6     BCS    $000C
+b9a6: 25 e6     BCS    $B98E
 b9a8: 8e 49 e2  LDX    #$49E2
 b9ab: a6 0d     LDA    $D,X
-b9ad: 27 03     BEQ    $0030
+b9ad: 27 03     BEQ    $B9B2
 b9af: 7e b9 5c  JMP    $B95C
 b9b2: 30 0e     LEAX   $E,X
 b9b4: 8c 4a 52  CMPX   #$4A52
-b9b7: 25 f2     BCS    $0029
+b9b7: 25 f2     BCS    $B9AB
 b9b9: ce 50 d0  LDU    #$50D0
 b9bc: bd cd c3  JSR    $CDC3
 b9bf: 39        RTS
@@ -44,8 +44,8 @@ b9e0: e3 08     ADDD   $8,X
 b9e2: ed 08     STD    $8,X
 b9e4: ec 04     LDD    $4,X
 b9e6: e3 0a     ADDD   $A,X
-b9e8: 29 07     BVS    $006F
-b9ea: 2c 03     BGE    $006D
+b9e8: 29 07     BVS    $B9F1
+b9ea: 2c 03     BGE    $B9EF
 b9ec: cc 00 00  LDD    #$0000
 b9ef: ed 04     STD    $4,X
 b9f1: ec 0a     LDD    $A,X
@@ -54,15 +54,15 @@ b9f6: ed 0a     STD    $A,X
 b9f8: 39        RTS
 b9f9: ec 06     LDD    $6,X
 b9fb: e3 84     ADDD   ,X
-b9fd: 29 02     BVS    $007F
+b9fd: 29 02     BVS    $BA01
 b9ff: ed 84     STD    ,X
 ba01: ec 08     LDD    $8,X
 ba03: e3 02     ADDD   $2,X
-ba05: 29 02     BVS    $0087
+ba05: 29 02     BVS    $BA09
 ba07: ed 02     STD    $2,X
 ba09: ec 0a     LDD    $A,X
 ba0b: e3 04     ADDD   $4,X
-ba0d: 29 02     BVS    $008F
+ba0d: 29 02     BVS    $BA11
 ba0f: ed 04     STD    $4,X
 ba11: 39        RTS
 ba12: 86 18     LDA    #$18
@@ -72,12 +72,12 @@ ba19: bd cd ba  JSR    $CDBA
 ba1c: 8e 49 e2  LDX    #$49E2
 ba1f: 9f 64     STX    <$64
 ba21: a6 0d     LDA    $D,X
-ba23: 27 03     BEQ    $00A6
+ba23: 27 03     BEQ    $BA28
 ba25: bd ba 32  JSR    $BA32
 ba28: 9e 64     LDX    <$64
 ba2a: 30 0e     LEAX   $E,X
 ba2c: 8c 4a 52  CMPX   #$4A52
-ba2f: 25 ee     BCS    $009D
+ba2f: 25 ee     BCS    $BA1F
 ba31: 39        RTS
 ba32: ec 84     LDD    ,X
 ba34: fd 50 78  STD    $5078
@@ -90,30 +90,30 @@ ba44: fd 47 01  STD    $4701
 ba47: 86 67     LDA    #$67
 ba49: bd cd ba  JSR    $CDBA
 ba4c: fc 50 00  LDD    $5000
-ba4f: 2b 4c     BMI    $011B
+ba4f: 2b 4c     BMI    $BA9D
 ba51: fd 50 18  STD    $5018
 ba54: fd 47 04  STD    $4704
 ba57: fc 50 02  LDD    $5002
 ba5a: fd 50 1a  STD    $501A
-ba5d: 2a 04     BPL    $00E1
+ba5d: 2a 04     BPL    $BA63
 ba5f: 43        COMA
 ba60: 50        NEGB
 ba61: 82 ff     SBCA   #$FF
 ba63: b3 50 18  SUBD   $5018
-ba66: 2c 35     BGE    $011B
+ba66: 2c 35     BGE    $BA9D
 ba68: fc 50 04  LDD    $5004
 ba6b: fd 50 1c  STD    $501C
-ba6e: 2a 04     BPL    $00F2
+ba6e: 2a 04     BPL    $BA74
 ba70: 43        COMA
 ba71: 50        NEGB
 ba72: 82 ff     SBCA   #$FF
 ba74: 44        LSRA
 ba75: 56        RORB
 ba76: b3 50 18  SUBD   $5018
-ba79: 2c 22     BGE    $011B
+ba79: 2c 22     BGE    $BA9D
 ba7b: e6 0c     LDB    $C,X
 ba7d: c1 09     CMPB   #$09
-ba7f: 25 01     BCS    $0100
+ba7f: 25 01     BCS    $BA82
 ba81: 3f        SWI
 ba82: ce b7 5a  LDU    #$B75A
 ba85: 58        ASLB
@@ -125,34 +125,34 @@ ba91: cc 72 00  LDD    #$7200
 ba94: ed a1     STD    ,Y++
 ba96: cc 80 40  LDD    #$8040
 ba99: ed a1     STD    ,Y++
-ba9b: 20 02     BRA    $011D
+ba9b: 20 02     BRA    $BA9F
 ba9d: 6f 0d     CLR    $D,X
 ba9f: 39        RTS
 baa0: 86 14     LDA    #$14
-baa2: 20 1a     BRA    $013C
+baa2: 20 1a     BRA    $BABE
 baa4: 86 15     LDA    #$15
-baa6: 20 16     BRA    $013C
+baa6: 20 16     BRA    $BABE
 baa8: 86 16     LDA    #$16
-baaa: 20 12     BRA    $013C
+baaa: 20 12     BRA    $BABE
 baac: 86 11     LDA    #$11
-baae: 20 08     BRA    $0136
+baae: 20 08     BRA    $BAB8
 bab0: 86 12     LDA    #$12
-bab2: 20 04     BRA    $0136
+bab2: 20 04     BRA    $BAB8
 bab4: 86 13     LDA    #$13
-bab6: 20 00     BRA    $0136
+bab6: 20 00     BRA    $BAB8
 bab8: 97 dc     STA    <$DC
 baba: 86 67     LDA    #$67
-babc: 20 04     BRA    $0140
+babc: 20 04     BRA    $BAC2
 babe: 97 dc     STA    <$DC
 bac0: 86 64     LDA    #$64
 bac2: e6 0d     LDB    $D,X
 bac4: c1 07     CMPB   #$07
-bac6: 22 06     BHI    $014C
+bac6: 22 06     BHI    $BACE
 bac8: 58        ASLB
 bac9: 58        ASLB
 baca: 58        ASLB
 bacb: 58        ASLB
-bacc: 20 02     BRA    $014E
+bacc: 20 02     BRA    $BAD0
 bace: c6 80     LDB    #$80
 bad0: ed a1     STD    ,Y++
 bad2: ec 84     LDD    ,X
@@ -183,17 +183,17 @@ bb12: 58        ASLB
 bb13: ed a1     STD    ,Y++
 bb15: 39        RTS
 bb16: c6 03     LDB    #$03
-bb18: 20 08     BRA    $01A0
+bb18: 20 08     BRA    $BB22
 bb1a: c6 01     LDB    #$01
-bb1c: 20 04     BRA    $01A0
+bb1c: 20 04     BRA    $BB22
 bb1e: c6 02     LDB    #$02
-bb20: 20 00     BRA    $01A0
+bb20: 20 00     BRA    $BB22
 bb22: d7 dc     STB    <$DC
 bb24: e6 0d     LDB    $D,X
 bb26: c1 1f     CMPB   #$1F
-bb28: 23 05     BLS    $01AD
+bb28: 23 05     BLS    $BB2F
 bb2a: cc a0 18  LDD    #$A018
-bb2d: 20 06     BRA    $01B3
+bb2d: 20 06     BRA    $BB35
 bb2f: ce bb 3b  LDU    #$BB3B
 bb32: 58        ASLB
 bb33: ec c5     LDD    B,U

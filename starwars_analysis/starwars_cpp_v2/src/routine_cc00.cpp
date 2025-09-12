@@ -33,8 +33,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC15: ANDCC #$FF
     // TODO: Convert ANDCC #$FF
 
-    // CC17: ANDA [$CC76,PCR]
-    // TODO: Complex indexed addressing: [$CC76,PCR]
+    // CC17: ANDA [$9876,PCR]
+    // TODO: Complex indexed addressing: [$9876,PCR]
 
     // CC1B: LDA #$01
     cpu.m_a = 0x01;
@@ -42,8 +42,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC1D: JSR $C2C3
     cpu.call_function(0xC2C3);
 
-    // CC20: BNE $0038
-    if (!cpu.zero_flag()) cpu.m_pc = 0xCC5A;
+    // CC20: BNE $CC38
+    if (!cpu.zero_flag()) cpu.m_pc = 0xCC38;
 
     // CC22: LDU #$4AB6
     cpu.m_u = 0x4AB6;
@@ -78,14 +78,14 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC3D: CMPA #$1B
     cpu.compare_a(0x1B);
 
-    // CC3F: BCC $005B
-    if (!cpu.carry_flag()) cpu.m_pc = 0xCC9C;
+    // CC3F: BCC $CC5B
+    if (!cpu.carry_flag()) cpu.m_pc = 0xCC5B;
 
     // CC41: CMPX #$4AD4
     cpu.compare_x(0x4AD4);
 
-    // CC44: BCS $003B
-    if (cpu.carry_flag()) cpu.m_pc = 0xCC81;
+    // CC44: BCS $CC3B
+    if (cpu.carry_flag()) cpu.m_pc = 0xCC3B;
 
     // CC46: LDX #$4A8E
     cpu.m_x = 0x4A8E;
@@ -96,8 +96,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC4B: CMPA #$A0
     cpu.compare_a(0xA0);
 
-    // CC4D: BCC $005B
-    if (!cpu.carry_flag()) cpu.m_pc = 0xCCAA;
+    // CC4D: BCC $CC5B
+    if (!cpu.carry_flag()) cpu.m_pc = 0xCC5B;
 
     // CC4F: ANDA #$0F
     cpu.m_a &= 0x0F;
@@ -105,14 +105,14 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC51: CMPA #$0A
     cpu.compare_a(0x0A);
 
-    // CC53: BCC $005B
-    if (!cpu.carry_flag()) cpu.m_pc = 0xCCB0;
+    // CC53: BCC $CC5B
+    if (!cpu.carry_flag()) cpu.m_pc = 0xCC5B;
 
     // CC55: CMPX #$4AB6
     cpu.compare_x(0x4AB6);
 
-    // CC58: BCS $0049
-    if (cpu.carry_flag()) cpu.m_pc = 0xCCA3;
+    // CC58: BCS $CC49
+    if (cpu.carry_flag()) cpu.m_pc = 0xCC49;
 
     // CC5B: LDX #$4AB6
     cpu.m_x = 0x4AB6;
@@ -129,8 +129,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC65: CMPX #$4AD4
     cpu.compare_x(0x4AD4);
 
-    // CC68: BCS $0061
-    if (cpu.carry_flag()) cpu.m_pc = 0xCCCB;
+    // CC68: BCS $CC61
+    if (cpu.carry_flag()) cpu.m_pc = 0xCC61;
 
     // CC6A: LDX #$4A8E
     cpu.m_x = 0x4A8E;
@@ -147,8 +147,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CC74: CMPX #$4AB6
     cpu.compare_x(0x4AB6);
 
-    // CC77: BCS $0070
-    if (cpu.carry_flag()) cpu.m_pc = 0xCCE9;
+    // CC77: BCS $CC70
+    if (cpu.carry_flag()) cpu.m_pc = 0xCC70;
 
     // CC7A: CLR <$02
     cpu.write_memory(0x02, 0);
@@ -207,8 +207,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CCA4: NEG <$87
     // TODO: Convert NEG <$87
 
-    // CCA6: BCS $00F9
-    if (cpu.carry_flag()) cpu.m_pc = 0xCCA1;
+    // CCA6: BCS $CCF9
+    if (cpu.carry_flag()) cpu.m_pc = 0xCCF9;
 
     // CCA8: NEG <$81
     // TODO: Convert NEG <$81
@@ -228,8 +228,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CCB4: NEG <$49
     // TODO: Convert NEG <$49
 
-    // CCB6: BRN $0111
-    // TODO: Convert BRN $0111
+    // CCB6: BRN $CD11
+    // TODO: Convert BRN $CD11
 
     // CCB8: NEG <$38
     // TODO: Convert NEG <$38
@@ -462,8 +462,8 @@ void routine_cc00_impl(CPU6809& cpu) {
     // CDBD: TST $4320
     // TODO: Convert TST $4320
 
-    // CDC0: BMI $01BD
-    if (cpu.negative_flag()) cpu.m_pc = 0xCD7F;
+    // CDC0: BMI $CDBD
+    if (cpu.negative_flag()) cpu.m_pc = 0xCDBD;
 
     // CDC3: LDD #$0000
     cpu.m_d = 0x0000;

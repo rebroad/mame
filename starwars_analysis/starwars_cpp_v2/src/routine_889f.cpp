@@ -51,8 +51,8 @@ void routine_889f_impl(CPU6809& cpu) {
     // 88C5: CMPD #$FE00
     // TODO: Convert CMPD #$FE00
 
-    // 88C9: BGT $0031
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x88FC;
+    // 88C9: BGT $88D0
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x88D0;
 
     // 88CB: LDA #$00
     cpu.m_a = 0x00;
@@ -63,8 +63,8 @@ void routine_889f_impl(CPU6809& cpu) {
     // 88D0: SUBD #$7000
     cpu.m_d -= 0x7000;
 
-    // 88D3: BGT $0055
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x892A;
+    // 88D3: BGT $88F4
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x88F4;
 
     // 88D5: LDD #$A018
     cpu.m_d = 0xA018;
@@ -84,14 +84,14 @@ void routine_889f_impl(CPU6809& cpu) {
     // 88E4: SUBD #$1000
     cpu.m_d -= 0x1000;
 
-    // 88E7: BGE $004F
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8938;
+    // 88E7: BGE $88EE
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x88EE;
 
     // 88E9: JSR $CD5C
     cpu.call_function(0xCD5C);
 
-    // 88EC: BRA $0052
-    cpu.m_pc = 0x8940;
+    // 88EC: BRA $88F1
+    cpu.m_pc = 0x88F1;
 
     // 88EE: JSR $CD50
     cpu.call_function(0xCD50);
@@ -108,8 +108,8 @@ void routine_889f_impl(CPU6809& cpu) {
     // 88FA: LDA <$92
     cpu.m_a = cpu.read_memory(0x92);
 
-    // 88FC: BEQ $00B1
-    if (cpu.zero_flag()) cpu.m_pc = 0x88AF;
+    // 88FC: BEQ $8950
+    if (cpu.zero_flag()) cpu.m_pc = 0x8950;
 
     // 88FE: LDD <$93
     cpu.m_d = cpu.read_memory16(0x93);
@@ -123,14 +123,14 @@ void routine_889f_impl(CPU6809& cpu) {
     // 8906: SUBD #$7000
     cpu.m_d -= 0x7000;
 
-    // 8909: BMI $0072
-    if (cpu.negative_flag()) cpu.m_pc = 0x897D;
+    // 8909: BMI $8911
+    if (cpu.negative_flag()) cpu.m_pc = 0x8911;
 
     // 890D: SBCA #$FF
     // TODO: Convert SBCA #$FF
 
-    // 890F: BRA $0075
-    cpu.m_pc = 0x8986;
+    // 890F: BRA $8914
+    cpu.m_pc = 0x8914;
 
     // 8911: LDD #$0000
     cpu.m_d = 0x0000;

@@ -18,20 +18,20 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8EE1: CMPX #$907C
     cpu.compare_x(0x907C);
 
-    // 8EE4: BCS $001E
-    if (cpu.carry_flag()) cpu.m_pc = 0x8F04;
+    // 8EE4: BCS $8EF4
+    if (cpu.carry_flag()) cpu.m_pc = 0x8EF4;
 
     // 8EE6: LDA $4B14
     cpu.m_a = cpu.read_memory(0x4B14);
 
-    // 8EEA: BCS $001B
-    if (cpu.carry_flag()) cpu.m_pc = 0x8F07;
+    // 8EEA: BCS $8EF1
+    if (cpu.carry_flag()) cpu.m_pc = 0x8EF1;
 
     // 8EEC: LDX #$9078
     cpu.m_x = 0x9078;
 
-    // 8EEF: BRA $001E
-    cpu.m_pc = 0x8F0F;
+    // 8EEF: BRA $8EF4
+    cpu.m_pc = 0x8EF4;
 
     // 8EF1: LDX #$907A
     cpu.m_x = 0x907A;
@@ -45,8 +45,8 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8EF8: CMPB ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // 8EFA: BLS $0028
-    // TODO: Convert BLS $0028
+    // 8EFA: BLS $8EFE
+    // TODO: Convert BLS $8EFE
 
     // 8EFC: LDB -$1,X
     // TODO: Fix comma operator: LDB -$1,X
@@ -72,14 +72,14 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8F0C: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
-    // 8F0E: BEQ $0053
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F63;
+    // 8F0E: BEQ $8F29
+    if (cpu.zero_flag()) cpu.m_pc = 0x8F29;
 
     // 8F10: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
-    // 8F12: BEQ $0053
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F67;
+    // 8F12: BEQ $8F29
+    if (cpu.zero_flag()) cpu.m_pc = 0x8F29;
 
     // 8F14: INC <$E6
     // TODO: Convert INC <$E6
@@ -120,8 +120,8 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8F2E: CMPX #$494B
     cpu.compare_x(0x494B);
 
-    // 8F31: BCS $0032
-    if (cpu.carry_flag()) cpu.m_pc = 0x8F65;
+    // 8F31: BCS $8F08
+    if (cpu.carry_flag()) cpu.m_pc = 0x8F08;
 
     // 8F34: LDA #$01
     cpu.m_a = 0x01;
@@ -222,14 +222,14 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8F7B: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
-    // 8F7D: BEQ $00AD
-    if (cpu.zero_flag()) cpu.m_pc = 0x8F2C;
+    // 8F7D: BEQ $8F83
+    if (cpu.zero_flag()) cpu.m_pc = 0x8F83;
 
     // 8F7F: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
-    // 8F81: BNE $00DB
-    if (!cpu.zero_flag()) cpu.m_pc = 0x8F5E;
+    // 8F81: BNE $8FB1
+    if (!cpu.zero_flag()) cpu.m_pc = 0x8FB1;
 
     // 8F83: INC <$DD
     // TODO: Convert INC <$DD
@@ -243,20 +243,20 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8F8D: CMPX #$907C
     cpu.compare_x(0x907C);
 
-    // 8F90: BCS $00CA
-    if (cpu.carry_flag()) cpu.m_pc = 0x8F5C;
+    // 8F90: BCS $8FA0
+    if (cpu.carry_flag()) cpu.m_pc = 0x8FA0;
 
     // 8F92: LDA $4B14
     cpu.m_a = cpu.read_memory(0x4B14);
 
-    // 8F96: BCS $00C7
-    if (cpu.carry_flag()) cpu.m_pc = 0x8F5F;
+    // 8F96: BCS $8F9D
+    if (cpu.carry_flag()) cpu.m_pc = 0x8F9D;
 
     // 8F98: LDX #$9078
     cpu.m_x = 0x9078;
 
-    // 8F9B: BRA $00CA
-    cpu.m_pc = 0x8F67;
+    // 8F9B: BRA $8FA0
+    cpu.m_pc = 0x8FA0;
 
     // 8F9D: LDX #$907A
     cpu.m_x = 0x907A;
@@ -270,8 +270,8 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8FA4: CMPB ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // 8FA6: BLS $00D4
-    // TODO: Convert BLS $00D4
+    // 8FA6: BLS $8FAA
+    // TODO: Convert BLS $8FAA
 
     // 8FA8: LDB -$1,X
     // TODO: Fix comma operator: LDB -$1,X
@@ -294,8 +294,8 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8FB6: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
-    // 8FB8: BEQ $00F0
-    if (cpu.zero_flag()) cpu.m_pc = 0x8FAA;
+    // 8FB8: BEQ $8FC6
+    if (cpu.zero_flag()) cpu.m_pc = 0x8FC6;
 
     // 8FBA: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
@@ -306,23 +306,23 @@ void routine_8ed6_impl(CPU6809& cpu) {
     // 8FBF: CMPX #$494B
     cpu.compare_x(0x494B);
 
-    // 8FC2: BCS $00DE
-    if (cpu.carry_flag()) cpu.m_pc = 0x8FA2;
+    // 8FC2: BCS $8FB4
+    if (cpu.carry_flag()) cpu.m_pc = 0x8FB4;
 
-    // 8FC4: BRA $014D
-    cpu.m_pc = 0x9013;
+    // 8FC4: BRA $9023
+    cpu.m_pc = 0x9023;
 
     // 8FC6: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
-    // 8FC8: BEQ $014D
-    if (cpu.zero_flag()) cpu.m_pc = 0x9017;
+    // 8FC8: BEQ $9023
+    if (cpu.zero_flag()) cpu.m_pc = 0x9023;
 
     // 8FCA: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
-    // 8FCC: BEQ $014D
-    if (cpu.zero_flag()) cpu.m_pc = 0x901B;
+    // 8FCC: BEQ $9023
+    if (cpu.zero_flag()) cpu.m_pc = 0x9023;
 
     // 8FCE: INC <$E6
     // TODO: Convert INC <$E6

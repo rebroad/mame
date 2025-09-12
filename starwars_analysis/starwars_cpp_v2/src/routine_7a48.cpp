@@ -189,14 +189,14 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7AF7: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
 
-    // 7B01: BRA $00EC
-    cpu.m_pc = 0x7AEF;
+    // 7B01: BRA $7B34
+    cpu.m_pc = 0x7B34;
 
     // 7B04: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // 7B06: BRA $0101
-    cpu.m_pc = 0x7B09;
+    // 7B06: BRA $7B49
+    cpu.m_pc = 0x7B49;
 
     // 7B0C: EORA $ADBA
     cpu.m_a ^= 0xADBA;
@@ -342,8 +342,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7B7B: ASR ,--X
     // TODO: Convert ASR ,--X
 
-    // 7B7D: BCS $01B5
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B34;
+    // 7B7D: BCS $7BFD
+    if (cpu.carry_flag()) cpu.m_pc = 0x7BFD;
 
     // 7B7F: ASL <$82
     // TODO: Convert ASL <$82
@@ -390,8 +390,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7BA1: LDD <$82
     cpu.m_d = cpu.read_memory16(0x82);
 
-    // 7BA3: BNE $00DF
-    if (!cpu.zero_flag()) cpu.m_pc = 0x7B84;
+    // 7BA3: BNE $7B27
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7B27;
 
     // 7BA5: EORB #$81
     cpu.m_b ^= 0x81;
@@ -417,8 +417,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7BB5: SBCB <$7E
     // TODO: Convert SBCB <$7E
 
-    // 7BB7: BRN $00F3
-    // TODO: Convert BRN $00F3
+    // 7BB7: BRN $7B3B
+    // TODO: Convert BRN $7B3B
 
     // 7BB9: SBCB <$7C
     // TODO: Convert SBCB <$7C
@@ -426,8 +426,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7BBB: LDB <$83
     cpu.m_b = cpu.read_memory(0x83);
 
-    // 7BBD: BCS $01F5
-    if (cpu.carry_flag()) cpu.m_pc = 0x7BB4;
+    // 7BBD: BCS $7C3D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C3D;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -468,8 +468,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7BDA: JMP $D883
     cpu.m_pc = 0xD883;
 
-    // 7BDD: BCS $0215
-    if (cpu.carry_flag()) cpu.m_pc = 0x7BF4;
+    // 7BDD: BCS $7C5D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C5D;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -477,8 +477,8 @@ void routine_7a48_impl(CPU6809& cpu) {
     // 7BE1: LDD <$80
     cpu.m_d = cpu.read_memory16(0x80);
 
-    // 7BE3: BCS $011F
-    if (cpu.carry_flag()) cpu.m_pc = 0x7C04;
+    // 7BE3: BCS $7B67
+    if (cpu.carry_flag()) cpu.m_pc = 0x7B67;
 
     // 7BE5: SUBB $7DE3
     cpu.m_b -= 0x7DE3;

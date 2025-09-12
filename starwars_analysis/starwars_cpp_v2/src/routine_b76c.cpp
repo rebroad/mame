@@ -192,11 +192,11 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B7F4: LDB #$80
     cpu.m_b = 0x80;
 
-    // B7F8: BVC $0092
-    // TODO: Convert BVC $0092
+    // B7F8: BVC $B7FE
+    // TODO: Convert BVC $B7FE
 
-    // B7FC: BRA $00B0
-    cpu.m_pc = 0xB7AE;
+    // B7FC: BRA $B81C
+    cpu.m_pc = 0xB81C;
 
     // B7FE: ASL $9,X
     // TODO: Convert ASL $9,X
@@ -204,8 +204,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B800: ROL $8,X
     // TODO: Convert ROL $8,X
 
-    // B802: BVC $00A0
-    // TODO: Convert BVC $00A0
+    // B802: BVC $B80C
+    // TODO: Convert BVC $B80C
 
     // B804: ROR $8,X
     // TODO: Convert ROR $8,X
@@ -213,8 +213,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B806: ROR $9,X
     // TODO: Convert ROR $9,X
 
-    // B80A: BRA $00B0
-    cpu.m_pc = 0xB7BC;
+    // B80A: BRA $B81C
+    cpu.m_pc = 0xB81C;
 
     // B80C: ASL $B,X
     // TODO: Convert ASL $B,X
@@ -222,8 +222,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B80E: ROL $A,X
     // TODO: Convert ROL $A,X
 
-    // B810: BVC $008A
-    // TODO: Convert BVC $008A
+    // B810: BVC $B7F6
+    // TODO: Convert BVC $B7F6
 
     // B812: ROR $A,X
     // TODO: Convert ROR $A,X
@@ -318,8 +318,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B85A: STD <$03
     cpu.write_memory16(0x03, cpu.m_d);
 
-    // B85C: BRA $00FC
-    cpu.m_pc = 0xB85A;
+    // B85C: BRA $B868
+    cpu.m_pc = 0xB868;
 
     // B85E: LDD #$0304
     cpu.m_d = 0x0304;
@@ -597,8 +597,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B942: CMPX #$4A52
     cpu.compare_x(0x4A52);
 
-    // B945: BCS $01D0
-    if (cpu.carry_flag()) cpu.m_pc = 0xB917;
+    // B945: BCS $B93C
+    if (cpu.carry_flag()) cpu.m_pc = 0xB93C;
 
     // B948: LDB <$A2
     cpu.m_b = cpu.read_memory(0xA2);
@@ -606,8 +606,8 @@ void routine_b76c_impl(CPU6809& cpu) {
     // B94B: CMPB #$08
     cpu.compare_b(0x08);
 
-    // B94D: BCS $01E5
-    if (cpu.carry_flag()) cpu.m_pc = 0xB934;
+    // B94D: BCS $B951
+    if (cpu.carry_flag()) cpu.m_pc = 0xB951;
 
     // B94F: LDB #$00
     cpu.m_b = 0x00;

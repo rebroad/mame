@@ -9,8 +9,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 9890: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
 
-    // 9892: BEQ $0007
-    if (cpu.zero_flag()) cpu.m_pc = 0x989B;
+    // 9892: BEQ $9897
+    if (cpu.zero_flag()) cpu.m_pc = 0x9897;
 
     // 9895: STB <$62
     cpu.write_memory(0x62, cpu.m_b);
@@ -21,8 +21,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 989A: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 989C: BNE $001F
-    if (!cpu.zero_flag()) cpu.m_pc = 0x98BD;
+    // 989C: BNE $98AF
+    if (!cpu.zero_flag()) cpu.m_pc = 0x98AF;
 
     // 989E: LDX #$4900
     cpu.m_x = 0x4900;
@@ -30,8 +30,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 98A1: DEC $6,X
     // TODO: Convert DEC $6,X
 
-    // 98A3: BPL $0017
-    if (!cpu.negative_flag()) cpu.m_pc = 0x98BC;
+    // 98A3: BPL $98A7
+    if (!cpu.negative_flag()) cpu.m_pc = 0x98A7;
 
     // 98A5: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
@@ -42,8 +42,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 98AA: CMPX #$494B
     cpu.compare_x(0x494B);
 
-    // 98AD: BCS $0011
-    if (cpu.carry_flag()) cpu.m_pc = 0x98C0;
+    // 98AD: BCS $98A1
+    if (cpu.carry_flag()) cpu.m_pc = 0x98A1;
 
     // 98B0: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
@@ -51,8 +51,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 98B2: ANDB #$03
     cpu.m_b &= 0x03;
 
-    // 98B4: BEQ $003A
-    if (cpu.zero_flag()) cpu.m_pc = 0x98F0;
+    // 98B4: BEQ $98CA
+    if (cpu.zero_flag()) cpu.m_pc = 0x98CA;
 
     // 98B6: LDD #$7100
     cpu.m_d = 0x7100;
@@ -81,26 +81,26 @@ void routine_9890_impl(CPU6809& cpu) {
     // 98CB: NEG <$16
     // TODO: Convert NEG <$16
 
-    // 98CD: LBRA $2060
-    // TODO: Convert LBRA $2060
+    // 98CD: LBRA $B8F0
+    // TODO: Convert LBRA $B8F0
 
-    // 98D0: BRA $0063
-    cpu.m_pc = 0x9935;
+    // 98D0: BRA $98F3
+    cpu.m_pc = 0x98F3;
 
-    // 98D2: BRN $006B
-    // TODO: Convert BRN $006B
+    // 98D2: BRN $98FB
+    // TODO: Convert BRN $98FB
 
-    // 98D4: BVC $0066
-    // TODO: Convert BVC $0066
+    // 98D4: BVC $98F6
+    // TODO: Convert BVC $98F6
 
-    // 98D6: BRA $006C
-    cpu.m_pc = 0x9944;
+    // 98D6: BRA $98FC
+    cpu.m_pc = 0x98FC;
 
-    // 98D8: BCC $006E
-    if (!cpu.carry_flag()) cpu.m_pc = 0x9948;
+    // 98D8: BCC $98FE
+    if (!cpu.carry_flag()) cpu.m_pc = 0x98FE;
 
-    // 98DA: BCS $0071
-    if (cpu.carry_flag()) cpu.m_pc = 0x994D;
+    // 98DA: BCS $9901
+    if (cpu.carry_flag()) cpu.m_pc = 0x9901;
 
     // 98DC: LEAY -$E,Y
     // TODO: Fix comma operator: LEAY -$E,Y
@@ -159,8 +159,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 9906: XNC <$05
     // TODO: Convert XNC <$05
 
-    // 9908: BRA $007A
-    cpu.m_pc = 0x9984;
+    // 9908: BRA $990A
+    cpu.m_pc = 0x990A;
 
     // 990A: EORA >$0001
     cpu.m_a ^= 0x0001;
@@ -168,8 +168,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 990D: XNC <$06
     // TODO: Convert XNC <$06
 
-    // 990F: BRA $0081
-    cpu.m_pc = 0x9892;
+    // 990F: BRA $9911
+    cpu.m_pc = 0x9911;
 
     // 9912: NEG <$01
     // TODO: Convert NEG <$01
@@ -342,8 +342,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 998D: ASL $0,X
     // TODO: Convert ASL $0,X
 
-    // 998F: BVC $0101
-    // TODO: Convert BVC $0101
+    // 998F: BVC $9991
+    // TODO: Convert BVC $9991
 
     // 9991: NEG <$00
     // TODO: Convert NEG <$00
@@ -390,8 +390,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 99B0: SUBA #$00
     cpu.m_a -= 0x00;
 
-    // 99B2: BVC $0124
-    // TODO: Convert BVC $0124
+    // 99B2: BVC $99B4
+    // TODO: Convert BVC $99B4
 
     // 99B4: NEG <$00
     // TODO: Convert NEG <$00
@@ -630,8 +630,8 @@ void routine_9890_impl(CPU6809& cpu) {
     // 9A5C: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A5E: LBRA $61D1
-    // TODO: Convert LBRA $61D1
+    // 9A5E: LBRA $FA61
+    // TODO: Convert LBRA $FA61
 
     // 9A61: SUBB $0,X
     // TODO: Fix comma operator: SUBB $0,X
@@ -639,11 +639,11 @@ void routine_9890_impl(CPU6809& cpu) {
     // 9A63: COM <$00
     // TODO: Convert COM <$00
 
-    // 9A65: LBSR $61D8
-    // TODO: Convert LBSR $61D8
+    // 9A65: LBSR $FA68
+    // TODO: Convert LBSR $FA68
 
-    // 9A68: BRA $01DA
-    cpu.m_pc = 0x9A44;
+    // 9A68: BRA $9A6A
+    cpu.m_pc = 0x9A6A;
 
     // 9A6A: COM <$00
     // TODO: Convert COM <$00

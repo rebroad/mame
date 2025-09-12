@@ -111,8 +111,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7DDF: XNC <$20
     // TODO: Convert XNC <$20
 
-    // 7DE1: BRA $004E
-    cpu.m_pc = 0x7E31;
+    // 7DE1: BRA $7DE8
+    cpu.m_pc = 0x7DE8;
 
     // 7DE3: NEG <$22
     // TODO: Convert NEG <$22
@@ -126,11 +126,11 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7DE9: NEG <$88
     // TODO: Convert NEG <$88
 
-    // 7DEB: BHI $0054
-    // TODO: Convert BHI $0054
+    // 7DEB: BHI $7DEE
+    // TODO: Convert BHI $7DEE
 
-    // 7DED: LEAU $0057,PCR
-    // TODO: Fix comma operator: LEAU $0057,PCR
+    // 7DED: LEAU $7DF1,PCR
+    // TODO: Fix comma operator: LEAU $7DF1,PCR
 
     // 7DF0: SUBA $A,X
     // TODO: Fix comma operator: SUBA $A,X
@@ -150,8 +150,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7DFA: COM <$02
     // TODO: Convert COM <$02
 
-    // 7DFC: BVC $FFE6
-    // TODO: Convert BVC $FFE6
+    // 7DFC: BVC $7D80
+    // TODO: Convert BVC $7D80
 
     // 7DFE: XNC <$00
     // TODO: Convert XNC <$00
@@ -255,8 +255,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7E48: NEG <$02
     // TODO: Convert NEG <$02
 
-    // 7E4A: BMI $00DD
-    if (cpu.negative_flag()) cpu.m_pc = 0x7E29;
+    // 7E4A: BMI $7E77
+    if (cpu.negative_flag()) cpu.m_pc = 0x7E77;
 
     // 7E4C: XNC <$00
     // TODO: Convert XNC <$00
@@ -378,8 +378,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7E9C: LSR <$02
     // TODO: Convert LSR <$02
 
-    // 7E9E: BPL $00B0
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7E50;
+    // 7E9E: BPL $7E4A
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7E4A;
 
     // 7EA0: NEG <$00
     // TODO: Convert NEG <$00
@@ -441,8 +441,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7EC7: DEC <$01
     // TODO: Convert DEC <$01
 
-    // 7EC9: BVC $0159
-    // TODO: Convert BVC $0159
+    // 7EC9: BVC $7EF3
+    // TODO: Convert BVC $7EF3
 
     // 7ECB: NEG <$0A
     // TODO: Convert NEG <$0A
@@ -474,8 +474,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7EDE: XNC <$2A
     // TODO: Convert XNC <$2A
 
-    // 7EE0: BPL $014A
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F2C;
+    // 7EE0: BPL $7EE4
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7EE4;
 
     // 7EE2: NEG <$00
     // TODO: Convert NEG <$00
@@ -492,8 +492,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7EEA: XNC <$2A
     // TODO: Convert XNC <$2A
 
-    // 7EEC: BPL $0156
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F44;
+    // 7EEC: BPL $7EF0
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7EF0;
 
     // 7EEE: NEG <$00
     // TODO: Convert NEG <$00
@@ -507,8 +507,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7EF4: NEG <$22
     // TODO: Convert NEG <$22
 
-    // 7EF6: BHI $015F
-    // TODO: Convert BHI $015F
+    // 7EF6: BHI $7EF9
+    // TODO: Convert BHI $7EF9
 
     // 7EF8: NEG <$00
     // TODO: Convert NEG <$00
@@ -522,8 +522,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7EFF: SBCA #$01
     // TODO: Convert SBCA #$01
 
-    // 7F01: BVC $0191
-    // TODO: Convert BVC $0191
+    // 7F01: BVC $7F2B
+    // TODO: Convert BVC $7F2B
 
     // 7F03: NEG <$00
     // TODO: Convert NEG <$00
@@ -549,8 +549,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F11: EORA $1,X
     // TODO: Fix comma operator: EORA $1,X
 
-    // 7F13: BPL $01A5
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7EBA;
+    // 7F13: BPL $7F3F
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F3F;
 
     // 7F15: LSR <$01
     // TODO: Convert LSR <$01
@@ -573,8 +573,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F21: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 7F23: BVC $018B
-    // TODO: Convert BVC $018B
+    // 7F23: BVC $7F25
+    // TODO: Convert BVC $7F25
 
     // 7F25: NEG <$03
     // TODO: Convert NEG <$03
@@ -582,8 +582,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F27: SUBB #$01
     cpu.m_b -= 0x01;
 
-    // 7F29: BVC $01B9
-    // TODO: Convert BVC $01B9
+    // 7F29: BVC $7F53
+    // TODO: Convert BVC $7F53
 
     // 7F2B: NEG <$00
     // TODO: Convert NEG <$00
@@ -609,8 +609,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F39: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 7F3B: BVC $01A3
-    // TODO: Convert BVC $01A3
+    // 7F3B: BVC $7F3D
+    // TODO: Convert BVC $7F3D
 
     // 7F3D: NEG <$00
     // TODO: Convert NEG <$00
@@ -633,8 +633,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F49: SUBA #$01
     cpu.m_a -= 0x01;
 
-    // 7F4B: BRA $01D3
-    cpu.m_pc = 0x7F20;
+    // 7F4B: BRA $7F6D
+    cpu.m_pc = 0x7F6D;
 
     // 7F4D: NEG <$08
     // TODO: Convert NEG <$08
@@ -648,8 +648,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F53: NEG <$2A
     // TODO: Convert NEG <$2A
 
-    // 7F55: BPL $01BE
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F15;
+    // 7F55: BPL $7F58
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F58;
 
     // 7F57: SUBB #$C0
     cpu.m_b -= 0xC0;
@@ -657,8 +657,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F59: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F5B: BRA $01C4
-    cpu.m_pc = 0x7F21;
+    // 7F5B: BRA $7F5E
+    cpu.m_pc = 0x7F5E;
 
     // 7F5D: NEG <$00
     // TODO: Convert NEG <$00
@@ -666,8 +666,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F5F: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F61: BRA $01CA
-    cpu.m_pc = 0x7F2D;
+    // 7F61: BRA $7F64
+    cpu.m_pc = 0x7F64;
 
     // 7F63: SUBB #$C0
     cpu.m_b -= 0xC0;
@@ -675,8 +675,8 @@ void routine_7d9a_impl(CPU6809& cpu) {
     // 7F65: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F67: BRA $01D0
-    cpu.m_pc = 0x7F39;
+    // 7F67: BRA $7F6A
+    cpu.m_pc = 0x7F6A;
 
     // 7F69: SUBB #$C0
     cpu.m_b -= 0xC0;

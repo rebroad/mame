@@ -805,13 +805,7 @@ bool CPU6809::execute_at_address(uint16_t address) {
     auto it = routine_map.find(address);
     if (it != routine_map.end()) {
         std::cout << "Found routine for address 0x" << std::hex << address << std::endl;
-
-        // Set routine mode before executing the routine
-        set_routine_mode(address);
-
-        // Execute the routine
         it->second(*this);
-
         return true;
     }
 

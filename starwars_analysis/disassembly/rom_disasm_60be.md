@@ -1,22 +1,22 @@
 60be: 0c 43        INC    <$43
-60c0: 26 08        BNE    $000C
+60c0: 26 08        BNE    $60CA
 60c2: 0c 42        INC    <$42
-60c4: 26 04        BNE    $000C
+60c4: 26 04        BNE    $60CA
 60c6: 86 80        LDA    #$80
 60c8: 97 42        STA    <$42
 60ca: b6 48 14     LDA    $4814
-60cd: 26 05        BNE    $0016
+60cd: 26 05        BNE    $60D4
 60cf: b7 4b 31     STA    $4B31
-60d2: 20 20        BRA    $0036
+60d2: 20 20        BRA    $60F4
 60d4: b6 4b 31     LDA    $4B31
-60d7: 26 0b        BNE    $0026
+60d7: 26 0b        BNE    $60E4
 60d9: bd bd 12     JSR    $BD12
 60dc: b6 48 14     LDA    $4814
 60df: b7 4b 31     STA    $4B31
-60e2: 20 10        BRA    $0036
+60e2: 20 10        BRA    $60F4
 60e4: b6 4b 31     LDA    $4B31
 60e7: b1 48 14     CMPA   $4814
-60ea: 24 08        BCC    $0036
+60ea: 24 08        BCC    $60F4
 60ec: bd bd 03     JSR    $BD03
 60ef: 86 ff        LDA    #$FF
 60f1: b7 4b 31     STA    $4B31
@@ -46,7 +46,7 @@
 6124: ec 81        LDD    ,X++
 6126: ed c1        STD    ,U++
 6128: 11 83 30 00  CMPU   #$3000
-612c: 25 f6        BCS    $0066
+612c: 25 f6        BCS    $6124
 612e: 39           RTS
 612f: cc 80 40     LDD    #$8040
 6132: ed a1        STD    ,Y++
@@ -56,7 +56,7 @@
 613b: 1f 20        TFR    Y,D
 613d: 90 3f        SUBA   <$3F
 613f: 80 14        SUBA   #$14
-6141: 25 12        BCS    $0097
+6141: 25 12        BCS    $6155
 6143: bd 61 1e     JSR    $611E
 6146: cc 20 20     LDD    #$2020
 6149: fd 13 fe     STD    $13FE
@@ -71,7 +71,7 @@
 6160: 39           RTS
 6161: b6 47 03     LDA    $4703
 6164: b0 47 03     SUBA   $4703
-6167: 26 08        BNE    $00B3
+6167: 26 08        BNE    $6171
 6169: b7 46 85     STA    $4685
 616c: 86 80        LDA    #$80
 616e: b7 46 85     STA    $4685
@@ -86,7 +86,7 @@
 6184: cb 04        ADDB   #$04
 6186: 30 88 19     LEAX   $19,X
 6189: 8c 49 4b     CMPX   #$494B
-618c: 25 ef        BCS    $00BF
+618c: 25 ef        BCS    $617D
 618e: 8e 49 4b     LDX    #$494B
 6191: ce 51 60     LDU    #$5160
 6194: c6 2c        LDB    #$2C
@@ -97,7 +97,7 @@
 619e: cb 01        ADDB   #$01
 61a0: 30 06        LEAX   $6,X
 61a2: 8c 49 6f     CMPX   #$496F
-61a5: 25 ef        BCS    $00D8
+61a5: 25 ef        BCS    $6196
 61a7: bd 8e d6     JSR    $8ED6
 61aa: c6 04        LDB    #$04
 61ac: bd cc cc     JSR    $CCCC
@@ -137,7 +137,7 @@
 6205: ed 04        STD    $4,X
 6207: 30 08        LEAX   $8,X
 6209: 8c 5d f0     CMPX   #$5DF0
-620c: 25 e5        BCS    $0135
+620c: 25 e5        BCS    $61F3
 620e: 39           RTS
 620f: 8e 5c 60     LDX    #$5C60
 6212: b6 47 03     LDA    $4703
@@ -150,40 +150,40 @@
 6223: ed 04        STD    $4,X
 6225: 30 08        LEAX   $8,X
 6227: 8c 5d f0     CMPX   #$5DF0
-622a: 25 e6        BCS    $0154
+622a: 25 e6        BCS    $6212
 622c: 39           RTS
 622d: d6 7d        LDB    <$7D
 622f: c1 a0        CMPB   #$A0
-6231: 2e 0b        BGT    $0180
+6231: 2e 0b        BGT    $623E
 6233: 86 08        LDA    #$08
 6235: 91 41        CMPA   <$41
-6237: 27 03        BEQ    $017E
+6237: 27 03        BEQ    $623C
 6239: 4a           DECA
 623a: 97 41        STA    <$41
-623c: 20 0d        BRA    $018D
+623c: 20 0d        BRA    $624B
 623e: c1 60        CMPB   #$60
-6240: 2d 09        BLT    $018D
+6240: 2d 09        BLT    $624B
 6242: 86 0c        LDA    #$0C
 6244: 91 41        CMPA   <$41
-6246: 27 03        BEQ    $018D
+6246: 27 03        BEQ    $624B
 6248: 4a           DECA
 6249: 97 41        STA    <$41
 624b: b6 45 91     LDA    $4591
 624e: 84 03        ANDA   #$03
-6250: 26 05        BNE    $0199
+6250: 26 05        BNE    $6257
 6252: 86 01        LDA    #$01
 6254: b7 48 14     STA    $4814
 6257: b6 48 14     LDA    $4814
-625a: 27 0d        BEQ    $01AB
+625a: 27 0d        BEQ    $6269
 625c: 96 ac        LDA    <$AC
 625e: 84 f0        ANDA   #$F0
-6260: 27 07        BEQ    $01AB
+6260: 27 07        BEQ    $6269
 6262: 86 19        LDA    #$19
 6264: 97 41        STA    <$41
 6266: 7a 48 14     DEC    $4814
 6269: b6 48 1e     LDA    $481E
 626c: 84 10        ANDA   #$10
-626e: 26 04        BNE    $01B6
+626e: 26 04        BNE    $6274
 6270: 86 01        LDA    #$01
 6272: 97 41        STA    <$41
 6274: 39           RTS
@@ -213,4 +213,4 @@
 62b5: bd 61 ec     JSR    $61EC
 62b8: bd d9 1a     JSR    $D91A
 62bb: 86 00        LDA    #$00
-62bd: 97 0c        STA    <$00
+62bd: 97 00        STA    <$00

@@ -4,15 +4,15 @@
 672c: ff 26 08     STU    $2608
 672f: b6 4b 06     LDA    $4B06
 6732: b7 4b 34     STA    $4B34
-6735: 20 21        BRA    $0032
+6735: 20 21        BRA    $6758
 6737: b6 4b 06     LDA    $4B06
 673a: b1 4b 34     CMPA   $4B34
-673d: 27 19        BEQ    $0032
+673d: 27 19        BEQ    $6758
 673f: b7 4b 34     STA    $4B34
 6742: bd c2 0c     JSR    $C20C
 6745: b6 45 92     LDA    $4592
 6748: 84 04        ANDA   #$04
-674a: 26 0c        BNE    $0032
+674a: 26 0c        BNE    $6758
 674c: 8e 67 59     LDX    #$6759
 674f: b6 47 03     LDA    $4703
 6752: c6 09        LDB    #$09
@@ -24,7 +24,7 @@
 675c: 80 bd        SUBA   #$BD
 675e: 8f bd 9e     XSTX   #$BD9E
 6761: bd ad bd     JSR    $ADBD
-6764: a8 bd 99 bd  EORA   [$99FF,PCR]
+6764: a8 bd 99 bd  EORA   [$0125,PCR]
 6768: 94 bd        ANDA   <$BD
 676a: 85 bd        BITA   #$BD
 676c: 61 12        NEG    -$E,X
@@ -99,12 +99,12 @@
 6812: b7 4b 16     STA    $4B16
 6815: b6 4b 15     LDA    $4B15
 6818: 81 1f        CMPA   #$1F
-681a: 23 02        BLS    $00F8
+681a: 23 02        BLS    $681E
 681c: 86 1f        LDA    #$1F
 681e: b7 4b 14     STA    $4B14
 6821: bb 4b 18     ADDA   $4B18
 6824: 81 0f        CMPA   #$0F
-6826: 23 02        BLS    $0104
+6826: 23 02        BLS    $682A
 6828: 86 0f        LDA    #$0F
 682a: b7 4b 19     STA    $4B19
 682d: 0c 41        INC    <$41
@@ -121,13 +121,13 @@
 6847: 86 09        LDA    #$09
 6849: b7 4b 3c     STA    $4B3C
 684c: b6 4b 2d     LDA    $4B2D
-684f: 26 06        BNE    $0131
+684f: 26 06        BNE    $6857
 6851: cc 00 27     LDD    #$0027
 6854: fd 4b 0e     STD    $4B0E
 6857: 0c 41        INC    <$41
 6859: bd 72 c7     JSR    $72C7
 685c: 96 60        LDA    <$60
-685e: 10 2b 04 14  LBMI   $0550
+685e: 10 2b 04 14  LBMI   $6C76
 6862: bd a8 49     JSR    $A849
 6865: bd 98 98     JSR    $9898
 6868: bd b9 8b     JSR    $B98B
@@ -143,38 +143,38 @@
 6885: c3 00 01     ADDD   #$0001
 6888: fd 4b 0e     STD    $4B0E
 688b: 10 83 00 28  CMPD   #$0028
-688f: 26 15        BNE    $0180
+688f: 26 15        BNE    $68A6
 6891: b6 4b 15     LDA    $4B15
 6894: 81 03        CMPA   #$03
-6896: 2d 09        BLT    $017B
+6896: 2d 09        BLT    $68A1
 6898: 84 01        ANDA   #$01
-689a: 27 05        BEQ    $017B
+689a: 27 05        BEQ    $68A1
 689c: bd bd 85     JSR    $BD85
-689f: 20 03        BRA    $017E
+689f: 20 03        BRA    $68A4
 68a1: bd bd a8     JSR    $BDA8
-68a4: 20 20        BRA    $01A0
+68a4: 20 20        BRA    $68C6
 68a6: 10 83 00 c8  CMPD   #$00C8
-68aa: 26 05        BNE    $018B
+68aa: 26 05        BNE    $68B1
 68ac: bd bd ad     JSR    $BDAD
-68af: 20 15        BRA    $01A0
+68af: 20 15        BRA    $68C6
 68b1: 10 83 01 90  CMPD   #$0190
-68b5: 26 05        BNE    $0196
+68b5: 26 05        BNE    $68BC
 68b7: bd bd 8a     JSR    $BD8A
-68ba: 20 0a        BRA    $01A0
+68ba: 20 0a        BRA    $68C6
 68bc: 10 83 01 a4  CMPD   #$01A4
-68c0: 25 04        BCS    $01A0
+68c0: 25 04        BCS    $68C6
 68c2: 86 21        LDA    #$21
 68c4: 97 41        STA    <$41
 68c6: 96 e6        LDA    <$E6
 68c8: 81 03        CMPA   #$03
-68ca: 24 03        BCC    $01A9
+68ca: 24 03        BCC    $68CF
 68cc: bd 8f 7b     JSR    $8F7B
 68cf: 39           RTS
 68d0: 7c 4b 3b     INC    $4B3B
 68d3: 0c 41        INC    <$41
 68d5: bd 72 c7     JSR    $72C7
 68d8: 96 60        LDA    <$60
-68da: 10 2b 03 98  LBMI   $0550
+68da: 10 2b 03 98  LBMI   $6C76
 68de: bd a8 49     JSR    $A849
 68e1: bd 98 98     JSR    $9898
 68e4: bd b9 8b     JSR    $B98B
@@ -188,10 +188,10 @@
 68fb: bd 6f 5f     JSR    $6F5F
 68fe: 8e 49 00     LDX    #$4900
 6901: a6 03        LDA    $3,X
-6903: 26 0c        BNE    $01EB
+6903: 26 0c        BNE    $6911
 6905: 30 88 19     LEAX   $19,X
 6908: 8c 49 4b     CMPX   #$494B
-690b: 25 f4        BCS    $01DB
+690b: 25 f4        BCS    $6901
 690d: 86 23        LDA    #$23
 690f: 97 41        STA    <$41
 6911: 39           RTS
@@ -200,6 +200,6 @@
 6917: cc 01 00     LDD    #$0100
 691a: dd 58        STD    <$58
 691c: b6 4b 2d     LDA    $4B2D
-691f: 26 09        BNE    $0204
+691f: 26 09        BNE    $692A
 6921: b6 4b 14     LDA    $4B14
 6924: 81 04        CMPA   #$04

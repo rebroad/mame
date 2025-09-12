@@ -45,8 +45,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7EC7: DEC <$01
     // TODO: Convert DEC <$01
 
-    // 7EC9: BVC $0044
-    // TODO: Convert BVC $0044
+    // 7EC9: BVC $7EF3
+    // TODO: Convert BVC $7EF3
 
     // 7ECB: NEG <$0A
     // TODO: Convert NEG <$0A
@@ -78,8 +78,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7EDE: XNC <$2A
     // TODO: Convert XNC <$2A
 
-    // 7EE0: BPL $0035
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F17;
+    // 7EE0: BPL $7EE4
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7EE4;
 
     // 7EE2: NEG <$00
     // TODO: Convert NEG <$00
@@ -96,8 +96,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7EEA: XNC <$2A
     // TODO: Convert XNC <$2A
 
-    // 7EEC: BPL $0041
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F2F;
+    // 7EEC: BPL $7EF0
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7EF0;
 
     // 7EEE: NEG <$00
     // TODO: Convert NEG <$00
@@ -111,8 +111,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7EF4: NEG <$22
     // TODO: Convert NEG <$22
 
-    // 7EF6: BHI $004A
-    // TODO: Convert BHI $004A
+    // 7EF6: BHI $7EF9
+    // TODO: Convert BHI $7EF9
 
     // 7EF8: NEG <$00
     // TODO: Convert NEG <$00
@@ -126,8 +126,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7EFF: SBCA #$01
     // TODO: Convert SBCA #$01
 
-    // 7F01: BVC $007C
-    // TODO: Convert BVC $007C
+    // 7F01: BVC $7F2B
+    // TODO: Convert BVC $7F2B
 
     // 7F03: NEG <$00
     // TODO: Convert NEG <$00
@@ -153,8 +153,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F11: EORA $1,X
     // TODO: Fix comma operator: EORA $1,X
 
-    // 7F13: BPL $0090
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7EA5;
+    // 7F13: BPL $7F3F
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F3F;
 
     // 7F15: LSR <$01
     // TODO: Convert LSR <$01
@@ -177,8 +177,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F21: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 7F23: BVC $0076
-    // TODO: Convert BVC $0076
+    // 7F23: BVC $7F25
+    // TODO: Convert BVC $7F25
 
     // 7F25: NEG <$03
     // TODO: Convert NEG <$03
@@ -186,8 +186,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F27: SUBB #$01
     cpu.m_b -= 0x01;
 
-    // 7F29: BVC $00A4
-    // TODO: Convert BVC $00A4
+    // 7F29: BVC $7F53
+    // TODO: Convert BVC $7F53
 
     // 7F2B: NEG <$00
     // TODO: Convert NEG <$00
@@ -213,8 +213,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F39: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 7F3B: BVC $008E
-    // TODO: Convert BVC $008E
+    // 7F3B: BVC $7F3D
+    // TODO: Convert BVC $7F3D
 
     // 7F3D: NEG <$00
     // TODO: Convert NEG <$00
@@ -237,8 +237,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F49: SUBA #$01
     cpu.m_a -= 0x01;
 
-    // 7F4B: BRA $00BE
-    cpu.m_pc = 0x7F0B;
+    // 7F4B: BRA $7F6D
+    cpu.m_pc = 0x7F6D;
 
     // 7F4D: NEG <$08
     // TODO: Convert NEG <$08
@@ -252,8 +252,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F53: NEG <$2A
     // TODO: Convert NEG <$2A
 
-    // 7F55: BPL $00A9
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7F00;
+    // 7F55: BPL $7F58
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7F58;
 
     // 7F57: SUBB #$C0
     cpu.m_b -= 0xC0;
@@ -261,8 +261,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F59: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F5B: BRA $00AF
-    cpu.m_pc = 0x7F0C;
+    // 7F5B: BRA $7F5E
+    cpu.m_pc = 0x7F5E;
 
     // 7F5D: NEG <$00
     // TODO: Convert NEG <$00
@@ -270,8 +270,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F5F: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F61: BRA $00B5
-    cpu.m_pc = 0x7F18;
+    // 7F61: BRA $7F64
+    cpu.m_pc = 0x7F64;
 
     // 7F63: SUBB #$C0
     cpu.m_b -= 0xC0;
@@ -279,8 +279,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7F65: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 7F67: BRA $00BB
-    cpu.m_pc = 0x7F24;
+    // 7F67: BRA $7F6A
+    cpu.m_pc = 0x7F6A;
 
     // 7F69: SUBB #$C0
     cpu.m_b -= 0xC0;
@@ -405,8 +405,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 7FBD: SUBA $B002
     cpu.m_a -= 0xB002;
 
-    // 7FC0: BGE $013F
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8001;
+    // 7FC0: BGE $7FEE
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x7FEE;
 
     // 7FC2: XNC <$0B
     // TODO: Convert XNC <$0B
@@ -510,8 +510,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 8004: SUBA $B001
     cpu.m_a -= 0xB001;
 
-    // 8007: BGE $0186
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x7F8F;
+    // 8007: BGE $8035
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8035;
 
     // 8009: NEG <$08
     // TODO: Convert NEG <$08
@@ -546,8 +546,8 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 801D: SUBA $012C
     cpu.m_a -= 0x012C;
 
-    // 8020: BGE $0174
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8096;
+    // 8020: BGE $8023
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8023;
 
     // 8022: ASL <$08
     // TODO: Convert ASL <$08
@@ -639,11 +639,11 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 805C: XNC <$20
     // TODO: Convert XNC <$20
 
-    // 805E: BRA $01B3
-    cpu.m_pc = 0x8013;
+    // 805E: BRA $8062
+    cpu.m_pc = 0x8062;
 
-    // 8060: BRA $01D3
-    cpu.m_pc = 0x8035;
+    // 8060: BRA $8082
+    cpu.m_pc = 0x8082;
 
     // 8062: XNC <$00
     // TODO: Convert XNC <$00
@@ -666,11 +666,11 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 806F: XNC <$23
     // TODO: Convert XNC <$23
 
-    // 8071: BLS $01C6
-    // TODO: Convert BLS $01C6
+    // 8071: BLS $8075
+    // TODO: Convert BLS $8075
 
-    // 8073: BRA $01E6
-    cpu.m_pc = 0x805B;
+    // 8073: BRA $8095
+    cpu.m_pc = 0x8095;
 
     // 8075: XNC <$08
     // TODO: Convert XNC <$08
@@ -693,14 +693,14 @@ void routine_7eaf_impl(CPU6809& cpu) {
     // 8081: NEG <$02
     // TODO: Convert NEG <$02
 
-    // 8083: BPL $0200
-    if (!cpu.negative_flag()) cpu.m_pc = 0x8085;
+    // 8083: BPL $80AF
+    if (!cpu.negative_flag()) cpu.m_pc = 0x80AF;
 
     // 8085: NEG <$20
     // TODO: Convert NEG <$20
 
-    // 8087: BRA $01DC
-    cpu.m_pc = 0x8065;
+    // 8087: BRA $808B
+    cpu.m_pc = 0x808B;
 
     // 8089: SUBB #$C0
     cpu.m_b -= 0xC0;

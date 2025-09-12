@@ -1,17 +1,17 @@
 a591: 96 60        LDA    <$60
-a593: 2d 1d        BLT    $0021
+a593: 2d 1d        BLT    $A5B2
 a595: 9e 64        LDX    <$64
 a597: ce 49 c2     LDU    #$49C2
 a59a: e6 06        LDB    $6,X
 a59c: 33 c5        LEAU   B,U
 a59e: a6 c4        LDA    ,U
 a5a0: 85 04        BITA   #$04
-a5a2: 26 0e        BNE    $0021
+a5a2: 26 0e        BNE    $A5B2
 a5a4: a6 04        LDA    $4,X
 a5a6: 81 02        CMPA   #$02
-a5a8: 10 27 00 5c  LBEQ   $0077
-a5ac: 10 22 00 a5  LBHI   $00C4
-a5b0: 20 01        BRA    $0022
+a5a8: 10 27 00 5c  LBEQ   $A608
+a5ac: 10 22 00 a5  LBHI   $A655
+a5b0: 20 01        BRA    $A5B3
 a5b2: 39           RTS
 a5b3: cc 40 00     LDD    #$4000
 a5b6: b3 50 7c     SUBD   $507C
@@ -26,27 +26,27 @@ a5ca: 86 86        LDA    #$86
 a5cc: bd cd ba     JSR    $CDBA
 a5cf: fc 50 04     LDD    $5004
 a5d2: b3 50 44     SUBD   $5044
-a5d5: 2c 07        BGE    $004D
+a5d5: 2c 07        BGE    $A5DE
 a5d7: a6 c4        LDA    ,U
 a5d9: 8a 08        ORA    #$08
 a5db: a7 c4        STA    ,U
 a5dd: 39           RTS
 a5de: b3 50 02     SUBD   $5002
-a5e1: 2f 06        BLE    $0058
+a5e1: 2f 06        BLE    $A5E9
 a5e3: a6 c4        LDA    ,U
 a5e5: 85 08        BITA   #$08
-a5e7: 27 1e        BEQ    $0076
+a5e7: 27 1e        BEQ    $A607
 a5e9: a6 c4        LDA    ,U
 a5eb: 84 f7        ANDA   #$F7
 a5ed: a7 c4        STA    ,U
 a5ef: b6 47 03     LDA    $4703
-a5f2: 2a 03        BPL    $0066
+a5f2: 2a 03        BPL    $A5F7
 a5f4: bd a7 b6     JSR    $A7B6
 a5f7: b6 47 03     LDA    $4703
-a5fa: 2a 03        BPL    $006E
+a5fa: 2a 03        BPL    $A5FF
 a5fc: bd a7 c8     JSR    $A7C8
 a5ff: b6 47 03     LDA    $4703
-a602: 2a 03        BPL    $0076
+a602: 2a 03        BPL    $A607
 a604: bd a7 bf     JSR    $A7BF
 a607: 39           RTS
 a608: cc 40 00     LDD    #$4000
@@ -62,36 +62,36 @@ a61f: 86 86        LDA    #$86
 a621: bd cd ba     JSR    $CDBA
 a624: fc 50 04     LDD    $5004
 a627: b3 50 44     SUBD   $5044
-a62a: 2c 07        BGE    $00A2
+a62a: 2c 07        BGE    $A633
 a62c: a6 c4        LDA    ,U
 a62e: 8a 08        ORA    #$08
 a630: a7 c4        STA    ,U
 a632: 39           RTS
 a633: b3 50 02     SUBD   $5002
-a636: 2f 06        BLE    $00AD
+a636: 2f 06        BLE    $A63E
 a638: a6 c4        LDA    ,U
 a63a: 85 08        BITA   #$08
-a63c: 27 16        BEQ    $00C3
+a63c: 27 16        BEQ    $A654
 a63e: a6 c4        LDA    ,U
 a640: 84 f7        ANDA   #$F7
 a642: a7 c4        STA    ,U
 a644: b6 47 03     LDA    $4703
-a647: 2a 03        BPL    $00BB
+a647: 2a 03        BPL    $A64C
 a649: bd a7 c8     JSR    $A7C8
 a64c: b6 47 03     LDA    $4703
-a64f: 2a 03        BPL    $00C3
+a64f: 2a 03        BPL    $A654
 a651: bd a7 bf     JSR    $A7BF
 a654: 39           RTS
 a655: 86 40        LDA    #$40
 a657: b0 50 7c     SUBA   $507C
 a65a: b1 47 03     CMPA   $4703
-a65d: 25 15        BCS    $00E3
+a65d: 25 15        BCS    $A674
 a65f: b6 47 03     LDA    $4703
 a662: 81 50        CMPA   #$50
-a664: 24 03        BCC    $00D8
+a664: 24 03        BCC    $A669
 a666: 7e a7 28     JMP    $A728
 a669: b6 47 03     LDA    $4703
-a66c: 2a 03        BPL    $00E0
+a66c: 2a 03        BPL    $A671
 a66e: 7e a7 28     JMP    $A728
 a671: 7e a7 28     JMP    $A728
 a674: 39           RTS
@@ -113,11 +113,11 @@ a693: e7 43        STB    $3,U
 a695: c6 01        LDB    #$01
 a697: e7 44        STB    $4,U
 a699: b6 4b 3c     LDA    $4B3C
-a69c: 2f 0d        BLE    $011A
+a69c: 2f 0d        BLE    $A6AB
 a69e: bc 4b 32     CMPX   $4B32
-a6a1: 26 08        BNE    $011A
+a6a1: 26 08        BNE    $A6AB
 a6a3: 7a 4b 3c     DEC    $4B3C
-a6a6: 26 03        BNE    $011A
+a6a6: 26 03        BNE    $A6AB
 a6a8: bd bd 4e     JSR    $BD4E
 a6ab: ee c4        LDU    ,U
 a6ad: ae 84        LDX    ,X
@@ -154,28 +154,28 @@ a6de: 49           ROLA
 a6df: 4b           XDECA
 a6e0: f6 4b 19     LDB    $4B19
 a6e3: c1 0c        CMPB   #$0C
-a6e5: 25 05        BCS    $015B
+a6e5: 25 05        BCS    $A6EC
 a6e7: 8e a6 de     LDX    #$A6DE
-a6ea: 20 06        BRA    $0161
+a6ea: 20 06        BRA    $A6F2
 a6ec: 58           ASLB
 a6ed: 8e a6 c8     LDX    #$A6C8
 a6f0: ae 85        LDX    B,X
-a6f2: 20 14        BRA    $0177
+a6f2: 20 14        BRA    $A708
 a6f4: f6 4b 19     LDB    $4B19
 a6f7: c1 07        CMPB   #$07
-a6f9: 23 02        BLS    $016C
+a6f9: 23 02        BLS    $A6FD
 a6fb: c6 07        LDB    #$07
 a6fd: 58           ASLB
 a6fe: 8e a7 18     LDX    #$A718
 a701: ae 85        LDX    B,X
-a703: 20 03        BRA    $0177
+a703: 20 03        BRA    $A708
 a705: 8e 49 4b     LDX    #$494B
 a708: 9f a8        STX    <$A8
 a70a: a6 03        LDA    $3,X
-a70c: 27 09        BEQ    $0186
+a70c: 27 09        BEQ    $A717
 a70e: 30 06        LEAX   $6,X
 a710: 8c 49 6f     CMPX   #$496F
-a713: 25 f3        BCS    $0177
+a713: 25 f3        BCS    $A708
 a715: 32 62        LEAS   $2,S
 a717: 39           RTS
 a718: 49           ROLA
@@ -199,9 +199,9 @@ a733: de 64        LDU    <$64
 a735: 9f 01        STX    <$01
 a737: ec 42        LDD    $2,U
 a739: b3 50 9a     SUBD   $509A
-a73c: 2b 04        BMI    $01B1
+a73c: 2b 04        BMI    $A742
 a73e: 86 08        LDA    #$08
-a740: 20 02        BRA    $01B3
+a740: 20 02        BRA    $A744
 a742: 86 07        LDA    #$07
 a744: a7 04        STA    $4,X
 a746: ae 84        LDX    ,X
@@ -218,7 +218,7 @@ a75c: ed 04        STD    $4,X
 a75e: ec 02        LDD    $2,X
 a760: b3 50 9a     SUBD   $509A
 a763: a7 06        STA    $6,X
-a765: 2a 04        BPL    $01DA
+a765: 2a 04        BPL    $A76B
 a767: 43           COMA
 a768: 50           NEGB
 a769: 82 ff        SBCA   #$FF
@@ -231,12 +231,12 @@ a779: fd 47 06     STD    $4706
 a77c: b6 47 00     LDA    $4700
 a77f: 48           ASLA
 a780: 48           ASLA
-a781: 24 01        BCC    $01F3
+a781: 24 01        BCC    $A784
 a783: 4f           CLRA
 a784: a7 07        STA    $7,X
 a786: 96 7d        LDA    <$7D
 a788: a8 06        EORA   $6,X
-a78a: 2a 04        BPL    $01FF
+a78a: 2a 04        BPL    $A790
 a78c: 6f 06        CLR    $6,X
-a78e: 20 22        BRA    $0221
-a790: 96 96        LDA    <$00
+a78e: 20 22        BRA    $A7B2
+a790: 96 00        LDA    <$00

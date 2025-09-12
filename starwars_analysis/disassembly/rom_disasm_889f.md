@@ -13,37 +13,37 @@
 88bf: bd cd ba     JSR    $CDBA
 88c2: fc 50 00     LDD    $5000
 88c5: 10 83 fe 00  CMPD   #$FE00
-88c9: 2e 05        BGT    $0031
+88c9: 2e 05        BGT    $88D0
 88cb: 86 00        LDA    #$00
 88cd: 97 95        STA    <$95
 88cf: 39           RTS
 88d0: 83 70 00     SUBD   #$7000
-88d3: 2e 1f        BGT    $0055
+88d3: 2e 1f        BGT    $88F4
 88d5: cc a0 18     LDD    #$A018
 88d8: fd 5e 00     STD    $5E00
 88db: cc 72 00     LDD    #$7200
 88de: fd 5e 04     STD    $5E04
 88e1: fc 50 00     LDD    $5000
 88e4: 83 10 00     SUBD   #$1000
-88e7: 2c 05        BGE    $004F
+88e7: 2c 05        BGE    $88EE
 88e9: bd cd 5c     JSR    $CD5C
-88ec: 20 03        BRA    $0052
+88ec: 20 03        BRA    $88F1
 88ee: bd cd 50     JSR    $CD50
 88f1: bd cd 74     JSR    $CD74
 88f4: 39           RTS
 88f5: cc 62 80     LDD    #$6280
 88f8: ed a1        STD    ,Y++
 88fa: 96 92        LDA    <$92
-88fc: 27 52        BEQ    $00B1
+88fc: 27 52        BEQ    $8950
 88fe: dc 93        LDD    <$93
 8900: fd 50 78     STD    $5078
 8903: b3 50 98     SUBD   $5098
 8906: 83 70 00     SUBD   #$7000
-8909: 2b 06        BMI    $0072
+8909: 2b 06        BMI    $8911
 890b: 43           COMA
 890c: 50           NEGB
 890d: 82 ff        SBCA   #$FF
-890f: 20 03        BRA    $0075
+890f: 20 03        BRA    $8914
 8911: cc 00 00     LDD    #$0000
 8914: fd 50 7c     STD    $507C
 8917: cc fc 00     LDD    #$FC00
@@ -214,4 +214,4 @@
 8a96: cc 00 00     LDD    #$0000
 8a99: a3 44        SUBD   $4,U
 8a9b: bd cd 9e     JSR    $CD9E
-8a9e: e3 c6        ADDD   $0,X
+8a9e: e3 00        ADDD   $0,X

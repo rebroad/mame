@@ -205,8 +205,29 @@ def convert_operand(operands, mnemonic):
     # For unrecognized cases, return TODO
     return f"// TODO: Unrecognized operand: {operands}"
 
-def convert_branch_instruction(mnemonic, operands, current_address):
-    """Convert branch instruction with relative offset to absolute address"""
+def extract_branch_offset_from_line(disassembly_line):
+    """Extract the actual byte offset from a disassembly line like 'ffe5: 20 31 BRA $0119'"""
+    # Look for the pattern: address: opcode byte1 byte2 mnemonic target
+    # Example: 'ffe5: 20 31 BRA $0119'
+    import re
+    match = re.match(r'^([0-9a-f]+):\s+([0-9a-f]{2})\s+([0-9a-f]{2})', disassembly_line, re.IGNORECASE)
+    if match:
+        # The second byte is the relative offset
+        offset_hex = match.group(3)
+        try:
+            offset_unsigned = int(offset_hex, 16)
+            # Convert to signed 8-bit value for 6809 branch instructions
+            if offset_unsigned > 0x7F:
+                offset = offset_unsigned - 0x100  # Convert to negative
+            else:
+                offset = offset_unsigned
+            return offset
+        except ValueError:
+            return None
+    return None
+
+def parse_branch_operand(operands):
+    """Parse branch operand as fallback when we can't extract from disassembly line"""
     # Parse the relative offset (e.g., "$0012" -> 0x12)
     if operands.startswith('$'):
         offset_str = operands[1:]  # Remove $ prefix
@@ -220,10 +241,29 @@ def convert_branch_instruction(mnemonic, operands, current_address):
                 offset = offset_8bit - 0x100  # Convert to negative
             else:
                 offset = offset_8bit
+            return offset
         except ValueError:
-            return f"    // TODO: Invalid branch offset: {operands}"
+            return None
+    return None
+
+def convert_branch_instruction(mnemonic, operands, current_address, disassembly_line=None):
+    """Convert branch instruction with relative offset to absolute address"""
+    
+    # Try to extract the actual byte offset from the disassembly line first
+    if disassembly_line:
+        actual_offset = extract_branch_offset_from_line(disassembly_line)
+        if actual_offset is not None:
+            # Use the actual byte offset from the ROM
+            offset = actual_offset
+        else:
+            # Fallback to parsing operands
+            offset = parse_branch_operand(operands)
     else:
-        return f"    // TODO: Unrecognized branch operand: {operands}"
+        # Fallback to parsing operands
+        offset = parse_branch_operand(operands)
+    
+    if offset is None:
+        return f"    // TODO: Invalid branch offset: {operands}"
     
     # Convert current_address from hex string to integer
     if isinstance(current_address, str):
@@ -264,7 +304,7 @@ def convert_branch_instruction(mnemonic, operands, current_address):
     else:
         return f"    // TODO: Unsupported branch instruction: {mnemonic}"
 
-def convert_instruction(parsed):
+def convert_instruction(parsed, original_line=None):
     """Convert a parsed instruction to C++ code with robust handling"""
     mnemonic = parsed['mnemonic']
     operands = parsed['operands']
@@ -276,7 +316,7 @@ def convert_instruction(parsed):
     # Handle branch instructions specially - convert relative offsets to absolute addresses
     branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT']
     if mnemonic in branch_instructions:
-        return convert_branch_instruction(mnemonic, operands, address)
+        return convert_branch_instruction(mnemonic, operands, address, original_line)
     
     # Handle immediate values differently from memory addressing
     is_immediate = operands.startswith('#')
@@ -358,7 +398,7 @@ def convert_disassembly_file(input_file, output_file, function_name):
         cpp_lines.append(f'    // {parsed["address"]}: {parsed["mnemonic"]} {parsed["operands"]}')
         
         # Add C++ conversion
-        cpp_code = convert_instruction(parsed)
+        cpp_code = convert_instruction(parsed, line)
         cpp_lines.append(cpp_code)
         cpp_lines.append('')
     

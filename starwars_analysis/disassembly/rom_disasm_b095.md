@@ -15,7 +15,7 @@ b0b6: f3 50 44     ADDD   $5044
 b0b9: dd 05        STD    <$05
 b0bb: cc f0 00     LDD    #$F000
 b0be: 93 05        SUBD   <$05
-b0c0: 10 2d 00 94  LBLT   $00C3
+b0c0: 10 2d 00 94  LBLT   $B158
 b0c4: fd 47 06     STD    $4706
 b0c7: fc 50 44     LDD    $5044
 b0ca: 93 05        SUBD   <$05
@@ -32,12 +32,12 @@ b0e5: 86 86        LDA    #$86
 b0e7: bd cd ba     JSR    $CDBA
 b0ea: dc 03        LDD    <$03
 b0ec: b3 50 02     SUBD   $5002
-b0ef: 2b 08        BMI    $0064
+b0ef: 2b 08        BMI    $B0F9
 b0f1: 10 83 04 00  CMPD   #$0400
-b0f5: 2e 61        BGT    $00C3
-b0f7: 20 06        BRA    $006A
+b0f5: 2e 61        BGT    $B158
+b0f7: 20 06        BRA    $B0FF
 b0f9: 10 83 fc 00  CMPD   #$FC00
-b0fd: 2d 59        BLT    $00C3
+b0fd: 2d 59        BLT    $B158
 b0ff: dd 03        STD    <$03
 b101: dc 01        LDD    <$01
 b103: b3 50 04     SUBD   $5004
@@ -54,34 +54,34 @@ b11a: b0 50 40     SUBA   $5040
 b11d: c6 03        LDB    #$03
 b11f: 3d           MUL
 b120: 10 83 00 e0  CMPD   #$00E0
-b124: 25 02        BCS    $0093
+b124: 25 02        BCS    $B128
 b126: c6 e0        LDB    #$E0
 b128: f7 4b 22     STB    $4B22
 b12b: cc 62 80     LDD    #$6280
 b12e: fd 4b 20     STD    $4B20
 b131: 96 95        LDA    <$95
-b133: 27 22        BEQ    $00C2
+b133: 27 22        BEQ    $B157
 b135: 96 44        LDA    <$44
-b137: 26 1e        BNE    $00C2
+b137: 26 1e        BNE    $B157
 b139: dc 03        LDD    <$03
 b13b: c3 02 00     ADDD   #$0200
-b13e: 2d 17        BLT    $00C2
+b13e: 2d 17        BLT    $B157
 b140: 83 04 00     SUBD   #$0400
-b143: 2e 12        BGT    $00C2
+b143: 2e 12        BGT    $B157
 b145: dc 01        LDD    <$01
 b147: 93 96        SUBD   <$96
 b149: c3 02 00     ADDD   #$0200
-b14c: 2d 09        BLT    $00C2
+b14c: 2d 09        BLT    $B157
 b14e: 83 04 00     SUBD   #$0400
-b151: 2e 04        BGT    $00C2
+b151: 2e 04        BGT    $B157
 b153: 86 01        LDA    #$01
 b155: 97 44        STA    <$44
 b157: 39           RTS
 b158: dc 03        LDD    <$03
-b15a: 10 2a 00 85  LBPL   $014E
+b15a: 10 2a 00 85  LBPL   $B1E3
 b15e: cc fc 00     LDD    #$FC00
 b161: 93 03        SUBD   <$03
-b163: 10 2d 00 f9  LBLT   $01CB
+b163: 10 2d 00 f9  LBLT   $B260
 b167: fd 47 06     STD    $4706
 b16a: fc 50 42     LDD    $5042
 b16d: 93 03        SUBD   <$03
@@ -98,12 +98,12 @@ b188: 86 86        LDA    #$86
 b18a: bd cd ba     JSR    $CDBA
 b18d: dc 05        LDD    <$05
 b18f: b3 50 04     SUBD   $5004
-b192: 2b 0a        BMI    $0109
+b192: 2b 0a        BMI    $B19E
 b194: 10 83 00 00  CMPD   #$0000
-b198: 10 2e 00 c4  LBGT   $01CB
-b19c: 20 08        BRA    $0111
+b198: 10 2e 00 c4  LBGT   $B260
+b19c: 20 08        BRA    $B1A6
 b19e: 10 83 f0 00  CMPD   #$F000
-b1a2: 10 2d 00 ba  LBLT   $01CB
+b1a2: 10 2d 00 ba  LBLT   $B260
 b1a6: dd 05        STD    <$05
 b1a8: c3 10 00     ADDD   #$1000
 b1ab: dd be        STD    <$BE
@@ -122,7 +122,7 @@ b1c6: b0 50 40     SUBA   $5040
 b1c9: c6 03        LDB    #$03
 b1cb: 3d           MUL
 b1cc: 10 83 00 e0  CMPD   #$00E0
-b1d0: 25 02        BCS    $013F
+b1d0: 25 02        BCS    $B1D4
 b1d2: c6 e0        LDB    #$E0
 b1d4: f7 4b 22     STB    $4B22
 b1d7: cc 62 80     LDD    #$6280
@@ -130,7 +130,7 @@ b1da: fd 4b 20     STD    $4B20
 b1dd: 8e 49 89     LDX    #$4989
 b1e0: 7e b2 61     JMP    $B261
 b1e3: 83 04 00     SUBD   #$0400
-b1e6: 2d 78        BLT    $01CB
+b1e6: 2d 78        BLT    $B260
 b1e8: fd 47 06     STD    $4706
 b1eb: dc 03        LDD    <$03
 b1ed: b3 50 42     SUBD   $5042
@@ -147,12 +147,12 @@ b209: 86 86        LDA    #$86
 b20b: bd cd ba     JSR    $CDBA
 b20e: dc 05        LDD    <$05
 b210: b3 50 04     SUBD   $5004
-b213: 2b 08        BMI    $0188
+b213: 2b 08        BMI    $B21D
 b215: 10 83 00 00  CMPD   #$0000
-b219: 2e 45        BGT    $01CB
-b21b: 20 06        BRA    $018E
+b219: 2e 45        BGT    $B260
+b21b: 20 06        BRA    $B223
 b21d: 10 83 f0 00  CMPD   #$F000
-b221: 2d 3d        BLT    $01CB
+b221: 2d 3d        BLT    $B260
 b223: dd 05        STD    <$05
 b225: c3 10 00     ADDD   #$1000
 b228: dd be        STD    <$BE
@@ -171,7 +171,7 @@ b243: b0 50 40     SUBA   $5040
 b246: c6 03        LDB    #$03
 b248: 3d           MUL
 b249: 10 83 00 e0  CMPD   #$00E0
-b24d: 25 02        BCS    $01BC
+b24d: 25 02        BCS    $B251
 b24f: c6 e0        LDB    #$E0
 b251: f7 4b 22     STB    $4B22
 b254: cc 62 80     LDD    #$6280
@@ -180,7 +180,7 @@ b25a: 8e 49 99     LDX    #$4999
 b25d: 7e b2 61     JMP    $B261
 b260: 39           RTS
 b261: 96 bc        LDA    <$BC
-b263: 26 01        BNE    $01D1
+b263: 26 01        BNE    $B266
 b265: 39           RTS
 b266: d6 c0        LDB    <$C0
 b268: 54           LSRB
@@ -191,16 +191,16 @@ b26d: 3a           ABX
 b26e: dc c0        LDD    <$C0
 b270: 84 07        ANDA   #$07
 b272: 83 01 c0     SUBD   #$01C0
-b275: 2d 24        BLT    $0206
+b275: 2d 24        BLT    $B29B
 b277: 83 04 80     SUBD   #$0480
-b27a: 2e 1f        BGT    $0206
+b27a: 2e 1f        BGT    $B29B
 b27c: 86 03        LDA    #$03
 b27e: 97 01        STA    <$01
 b280: dc be        LDD    <$BE
 b282: 83 00 40     SUBD   #$0040
 b285: 83 03 80     SUBD   #$0380
-b288: 2e 08        BGT    $01FD
+b288: 2e 08        BGT    $B292
 b28a: 83 fc 80     SUBD   #$FC80
-b28d: 2d 0c        BLT    $0206
+b28d: 2d 0c        BLT    $B29B
 b28f: 7e b2 9c     JMP    $B29C
 b292: 83 00 80     SUBD   #$0080

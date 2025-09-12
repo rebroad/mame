@@ -62,21 +62,21 @@ b7f2: a6 06     LDA    $6,X
 b7f4: c6 80     LDB    #$80
 b7f6: 58        ASLB
 b7f7: 49        ROLA
-b7f8: 28 04     BVC    $0092
+b7f8: 28 04     BVC    $B7FE
 b7fa: 46        RORA
 b7fb: 56        RORB
-b7fc: 20 1e     BRA    $00B0
+b7fc: 20 1e     BRA    $B81C
 b7fe: 68 09     ASL    $9,X
 b800: 69 08     ROL    $8,X
-b802: 28 08     BVC    $00A0
+b802: 28 08     BVC    $B80C
 b804: 66 08     ROR    $8,X
 b806: 66 09     ROR    $9,X
 b808: 47        ASRA
 b809: 56        RORB
-b80a: 20 10     BRA    $00B0
+b80a: 20 10     BRA    $B81C
 b80c: 68 0b     ASL    $B,X
 b80e: 69 0a     ROL    $A,X
-b810: 28 e4     BVC    $008A
+b810: 28 e4     BVC    $B7F6
 b812: 66 0a     ROR    $A,X
 b814: 66 0b     ROR    $B,X
 b816: 67 08     ASR    $8,X
@@ -112,7 +112,7 @@ b852: cc 00 01  LDD    #$0001
 b855: dd 01     STD    <$01
 b857: cc 02 03  LDD    #$0203
 b85a: dd 03     STD    <$03
-b85c: 20 0a     BRA    $00FC
+b85c: 20 0a     BRA    $B868
 b85e: cc 03 04  LDD    #$0304
 b861: dd 01     STD    <$01
 b863: cc 05 02  LDD    #$0502
@@ -206,12 +206,12 @@ b93c: 86 00     LDA    #$00
 b93e: a7 0d     STA    $D,X
 b940: 30 0e     LEAX   $E,X
 b942: 8c 4a 52  CMPX   #$4A52
-b945: 25 f5     BCS    $01D0
+b945: 25 f5     BCS    $B93C
 b947: 39        RTS
 b948: d6 a2     LDB    <$A2
 b94a: 5c        INCB
 b94b: c1 08     CMPB   #$08
-b94d: 25 02     BCS    $01E5
+b94d: 25 02     BCS    $B951
 b94f: c6 00     LDB    #$00
 b951: d7 a2     STB    <$A2
 b953: 86 0e     LDA    #$0E
@@ -224,4 +224,4 @@ b95f: fd 50 22  STD    $5022
 b962: cc 3c 8c  LDD    #$3C8C
 b965: fd 50 24  STD    $5024
 b968: cc 00 18  LDD    #$0018
-b96b: fd ee 84  STD    >$0000
+b96b: fd 00 00  STD    >$0000

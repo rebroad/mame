@@ -1,16 +1,16 @@
 88f5: cc 62 80     LDD    #$6280
 88f8: ed a1        STD    ,Y++
 88fa: 96 92        LDA    <$92
-88fc: 27 52        BEQ    $005B
+88fc: 27 52        BEQ    $8950
 88fe: dc 93        LDD    <$93
 8900: fd 50 78     STD    $5078
 8903: b3 50 98     SUBD   $5098
 8906: 83 70 00     SUBD   #$7000
-8909: 2b 06        BMI    $001C
+8909: 2b 06        BMI    $8911
 890b: 43           COMA
 890c: 50           NEGB
 890d: 82 ff        SBCA   #$FF
-890f: 20 03        BRA    $001F
+890f: 20 03        BRA    $8914
 8911: cc 00 00     LDD    #$0000
 8914: fd 50 7c     STD    $507C
 8917: cc fc 00     LDD    #$FC00
@@ -198,32 +198,32 @@
 8ab3: f7 58 d1     STB    $58D1
 8ab6: ec 56        LDD    -$A,U
 8ab8: e3 48        ADDD   $8,U
-8aba: 29 02        BVS    $01C9
+8aba: 29 02        BVS    $8ABE
 8abc: ed 48        STD    $8,U
 8abe: ec 5e        LDD    -$2,U
 8ac0: e3 4a        ADDD   $A,U
-8ac2: 29 02        BVS    $01D1
+8ac2: 29 02        BVS    $8AC6
 8ac4: ed 4a        STD    $A,U
 8ac6: ec 4c        LDD    $C,U
 8ac8: e3 46        ADDD   $6,U
-8aca: 29 02        BVS    $01D9
+8aca: 29 02        BVS    $8ACE
 8acc: ed 4c        STD    $C,U
 8ace: 39           RTS
 8acf: 9e c2        LDX    <$C2
 8ad1: a6 03        LDA    $3,X
 8ad3: 81 01        CMPA   #$01
-8ad5: 26 04        BNE    $01E6
+8ad5: 26 04        BNE    $8ADB
 8ad7: a6 06        LDA    $6,X
-8ad9: 27 01        BEQ    $01E7
+8ad9: 27 01        BEQ    $8ADC
 8adb: 39           RTS
 8adc: bd ce 45     JSR    $CE45
 8adf: a6 03        LDA    $3,X
 8ae1: 81 01        CMPA   #$01
-8ae3: 26 08        BNE    $01F8
+8ae3: 26 08        BNE    $8AED
 8ae5: ec 88 15     LDD    $15,X
 8ae8: ca 01        ORB    #$01
 8aea: ed 88 15     STD    $15,X
 8aed: 9e c2        LDX    <$C2
 8aef: 6c 08        INC    $8,X
 8af1: 6a 07        DEC    $7,X
-8af3: 10 2f cc 62  LBLE   $0202
+8af3: 10 2f 00 00  LBLE   $8AF7

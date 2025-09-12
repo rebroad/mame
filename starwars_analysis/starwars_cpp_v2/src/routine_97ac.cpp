@@ -12,14 +12,14 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 97AF: CMPB #$05
     cpu.compare_b(0x05);
 
-    // 97B1: BCS $000C
-    if (cpu.carry_flag()) cpu.m_pc = 0x97BF;
+    // 97B1: BCS $97B8
+    if (cpu.carry_flag()) cpu.m_pc = 0x97B8;
 
     // 97B3: LDU #$9847
     cpu.m_u = 0x9847;
 
-    // 97B6: BRA $0015
-    cpu.m_pc = 0x97CD;
+    // 97B6: BRA $97C1
+    cpu.m_pc = 0x97C1;
 
     // 97B9: ADDB $4B15
     cpu.m_b += 0x4B15;
@@ -72,56 +72,56 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 97E3: JSR $97AC
     cpu.call_function(0x97AC);
 
-    // 97E6: BRA $0064
-    cpu.m_pc = 0x984C;
+    // 97E6: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97E8: LDU #$984A
     cpu.m_u = 0x984A;
 
-    // 97EB: BRA $0064
-    cpu.m_pc = 0x9851;
+    // 97EB: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97ED: LDU #$984D
     cpu.m_u = 0x984D;
 
-    // 97F0: BRA $0064
-    cpu.m_pc = 0x9856;
+    // 97F0: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97F2: LDU #$9850
     cpu.m_u = 0x9850;
 
-    // 97F5: BRA $0064
-    cpu.m_pc = 0x985B;
+    // 97F5: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97F7: LDU #$9859
     cpu.m_u = 0x9859;
 
-    // 97FA: BRA $0064
-    cpu.m_pc = 0x9860;
+    // 97FA: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 97FC: LDU #$9853
     cpu.m_u = 0x9853;
 
-    // 97FF: BRA $0064
-    cpu.m_pc = 0x9865;
+    // 97FF: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 9801: LDU #$985C
     cpu.m_u = 0x985C;
 
-    // 9804: BRA $0064
-    cpu.m_pc = 0x986A;
+    // 9804: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 9806: LDU #$985F
     cpu.m_u = 0x985F;
 
-    // 9809: BRA $0064
-    cpu.m_pc = 0x986F;
+    // 9809: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 980B: LDU #$9862
     cpu.m_u = 0x9862;
 
-    // 980E: BRA $0064
-    cpu.m_pc = 0x9874;
+    // 980E: BRA $9810
+    cpu.m_pc = 0x9810;
 
     // 9810: LDA $2,U
     // TODO: Fix comma operator: LDA $2,U
@@ -201,8 +201,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 984C: NEG <$00
     // TODO: Convert NEG <$00
 
-    // 984E: BRA $00A4
-    cpu.m_pc = 0x97F4;
+    // 984E: BRA $9850
+    cpu.m_pc = 0x9850;
 
     // 9850: NEG <$00
     // TODO: Convert NEG <$00
@@ -258,8 +258,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 9874: LDA <$8B
     cpu.m_a = cpu.read_memory(0x8B);
 
-    // 9876: BNE $00D2
-    if (!cpu.zero_flag()) cpu.m_pc = 0x984A;
+    // 9876: BNE $987E
+    if (!cpu.zero_flag()) cpu.m_pc = 0x987E;
 
     // 9878: LDA #$10
     cpu.m_a = 0x10;
@@ -285,8 +285,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 9888: CMPB #$08
     cpu.compare_b(0x08);
 
-    // 988A: BLS $00E4
-    // TODO: Convert BLS $00E4
+    // 988A: BLS $9890
+    // TODO: Convert BLS $9890
 
     // 988C: LDB #$08
     cpu.m_b = 0x08;
@@ -297,8 +297,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 9890: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
 
-    // 9892: BEQ $00EB
-    if (cpu.zero_flag()) cpu.m_pc = 0x987F;
+    // 9892: BEQ $9897
+    if (cpu.zero_flag()) cpu.m_pc = 0x9897;
 
     // 9895: STB <$62
     cpu.write_memory(0x62, cpu.m_b);
@@ -309,8 +309,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 989A: ANDA #$00
     cpu.m_a &= 0x00;
 
-    // 989C: BNE $0103
-    if (!cpu.zero_flag()) cpu.m_pc = 0x98A1;
+    // 989C: BNE $98AF
+    if (!cpu.zero_flag()) cpu.m_pc = 0x98AF;
 
     // 989E: LDX #$4900
     cpu.m_x = 0x4900;
@@ -318,8 +318,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 98A1: DEC $6,X
     // TODO: Convert DEC $6,X
 
-    // 98A3: BPL $00FB
-    if (!cpu.negative_flag()) cpu.m_pc = 0x98A0;
+    // 98A3: BPL $98A7
+    if (!cpu.negative_flag()) cpu.m_pc = 0x98A7;
 
     // 98A5: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
@@ -330,8 +330,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 98AA: CMPX #$494B
     cpu.compare_x(0x494B);
 
-    // 98AD: BCS $00F5
-    if (cpu.carry_flag()) cpu.m_pc = 0x98A4;
+    // 98AD: BCS $98A1
+    if (cpu.carry_flag()) cpu.m_pc = 0x98A1;
 
     // 98B0: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
@@ -339,8 +339,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 98B2: ANDB #$03
     cpu.m_b &= 0x03;
 
-    // 98B4: BEQ $011E
-    if (cpu.zero_flag()) cpu.m_pc = 0x98D4;
+    // 98B4: BEQ $98CA
+    if (cpu.zero_flag()) cpu.m_pc = 0x98CA;
 
     // 98B6: LDD #$7100
     cpu.m_d = 0x7100;
@@ -369,26 +369,26 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 98CB: NEG <$16
     // TODO: Convert NEG <$16
 
-    // 98CD: LBRA $2144
-    // TODO: Convert LBRA $2144
+    // 98CD: LBRA $B8F0
+    // TODO: Convert LBRA $B8F0
 
-    // 98D0: BRA $0147
-    cpu.m_pc = 0x9919;
+    // 98D0: BRA $98F3
+    cpu.m_pc = 0x98F3;
 
-    // 98D2: BRN $014F
-    // TODO: Convert BRN $014F
+    // 98D2: BRN $98FB
+    // TODO: Convert BRN $98FB
 
-    // 98D4: BVC $014A
-    // TODO: Convert BVC $014A
+    // 98D4: BVC $98F6
+    // TODO: Convert BVC $98F6
 
-    // 98D6: BRA $0150
-    cpu.m_pc = 0x9928;
+    // 98D6: BRA $98FC
+    cpu.m_pc = 0x98FC;
 
-    // 98D8: BCC $0152
-    if (!cpu.carry_flag()) cpu.m_pc = 0x992C;
+    // 98D8: BCC $98FE
+    if (!cpu.carry_flag()) cpu.m_pc = 0x98FE;
 
-    // 98DA: BCS $0155
-    if (cpu.carry_flag()) cpu.m_pc = 0x9931;
+    // 98DA: BCS $9901
+    if (cpu.carry_flag()) cpu.m_pc = 0x9901;
 
     // 98DC: LEAY -$E,Y
     // TODO: Fix comma operator: LEAY -$E,Y
@@ -447,8 +447,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 9906: XNC <$05
     // TODO: Convert XNC <$05
 
-    // 9908: BRA $015E
-    cpu.m_pc = 0x9968;
+    // 9908: BRA $990A
+    cpu.m_pc = 0x990A;
 
     // 990A: EORA >$0001
     cpu.m_a ^= 0x0001;
@@ -456,8 +456,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 990D: XNC <$06
     // TODO: Convert XNC <$06
 
-    // 990F: BRA $0165
-    cpu.m_pc = 0x9976;
+    // 990F: BRA $9911
+    cpu.m_pc = 0x9911;
 
     // 9912: NEG <$01
     // TODO: Convert NEG <$01
@@ -630,8 +630,8 @@ void routine_97ac_impl(CPU6809& cpu) {
     // 998D: ASL $0,X
     // TODO: Convert ASL $0,X
 
-    // 998F: BVC $01E5
-    // TODO: Convert BVC $01E5
+    // 998F: BVC $9991
+    // TODO: Convert BVC $9991
 
     // 9991: NEG <$00
     // TODO: Convert NEG <$00

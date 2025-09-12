@@ -4,7 +4,7 @@ f712: ed a1        STD    ,Y++
 f714: b7 46 00     STA    $4600
 f717: b6 43 00     LDA    $4300
 f71a: 84 10        ANDA   #$10
-f71c: 10 27 ff 3c  LBEQ   $FF4F
+f71c: 10 27 ff 3c  LBEQ   $F65C
 f720: 7e f7 20     JMP    $F720
 f723: f7 4f f7     STB    $4FF7
 f726: 7f f9 58     CLR    $F958
@@ -26,22 +26,22 @@ f748: d4 1e        ANDB   <$1E
 f74a: a2 1e        SBCA   -$2,X
 f74c: 70 1f 6a     NEG    $1F6A
 f74f: 0a d6        DEC    <$D6
-f751: 2a 29        BPL    $006F
+f751: 2a 29        BPL    $F77C
 f753: 86 10        LDA    #$10
 f755: 97 d6        STA    <$D6
 f757: 9e d4        LDX    <$D4
 f759: dc d2        LDD    <$D2
 f75b: a4 84        ANDA   ,X
-f75d: 26 08        BNE    $005A
+f75d: 26 08        BNE    $F767
 f75f: e4 01        ANDB   $1,X
-f761: 26 04        BNE    $005A
+f761: 26 04        BNE    $F767
 f763: 86 3b        LDA    #$3B
-f765: 20 02        BRA    $005C
+f765: 20 02        BRA    $F769
 f767: 86 29        LDA    #$29
 f769: b7 44 00     STA    $4400
 f76c: 30 02        LEAX   $2,X
 f76e: 8c f3 6e     CMPX   #$F36E
-f771: 25 07        BCS    $006D
+f771: 25 07        BCS    $F77A
 f773: 86 20        LDA    #$20
 f775: 97 d6        STA    <$D6
 f777: 8e f3 4e     LDX    #$F34E
@@ -67,12 +67,12 @@ f7a9: dd cc        STD    <$CC
 f7ab: 58           ASLB
 f7ac: 49           ROLA
 f7ad: dd cc        STD    <$CC
-f7af: 25 05        BCS    $00A9
+f7af: 25 05        BCS    $F7B6
 f7b1: d6 ce        LDB    <$CE
 f7b3: bd e7 c7     JSR    $E7C7
 f7b6: 0c ce        INC    <$CE
 f7b8: dc cc        LDD    <$CC
-f7ba: 26 ef        BNE    $009E
+f7ba: 26 ef        BNE    $F7AB
 f7bc: dc c8        LDD    <$C8
 f7be: dd ca        STD    <$CA
 f7c0: b6 43 00     LDA    $4300
@@ -85,7 +85,7 @@ f7ce: 94 ca        ANDA   <$CA
 f7d0: d8 cb        EORB   <$CB
 f7d2: d4 cb        ANDB   <$CB
 f7d4: 10 83 00 00  CMPD   #$0000
-f7d8: 27 05        BEQ    $00D2
+f7d8: 27 05        BEQ    $F7DF
 f7da: 86 3b        LDA    #$3B
 f7dc: b7 44 00     STA    $4400
 f7df: cc 1e a2     LDD    #$1EA2
@@ -136,7 +136,7 @@ f848: b7 46 c1     STA    $46C1
 f84b: b7 46 c1     STA    $46C1
 f84e: 8e 00 14     LDX    #$0014
 f851: 30 1f        LEAX   -$1,X
-f853: 26 fc        BNE    $0144
+f853: 26 fc        BNE    $F851
 f855: f6 43 80     LDB    $4380
 f858: c0 80        SUBB   #$80
 f85a: 1d           SEX
@@ -149,13 +149,13 @@ f866: ce f7 25     LDU    #$F725
 f869: 7e f7 0d     JMP    $F70D
 f86c: c6 07        LDB    #$07
 f86e: 44           LSRA
-f86f: 24 05        BCC    $0169
+f86f: 24 05        BCC    $F876
 f871: be 30 22     LDX    $3022
-f874: 20 03        BRA    $016C
+f874: 20 03        BRA    $F879
 f876: be 30 32     LDX    $3032
 f879: af a1        STX    ,Y++
 f87b: 5a           DECB
-f87c: 2a f0        BPL    $0161
+f87c: 2a f0        BPL    $F86E
 f87e: cc 80 40     LDD    #$8040
 f881: ed a1        STD    ,Y++
 f883: 39           RTS
@@ -173,7 +173,7 @@ f89d: bd e7 c7     JSR    $E7C7
 f8a0: d6 ce        LDB    <$CE
 f8a2: 5c           INCB
 f8a3: c1 d3        CMPB   #$D3
-f8a5: 25 f4        BCS    $018E
+f8a5: 25 f4        BCS    $F89B
 f8a7: 7e f7 0d     JMP    $F70D
 f8aa: cc bf ae     LDD    #$BFAE
 f8ad: ed a1        STD    ,Y++
@@ -191,7 +191,7 @@ f8c6: bd e7 c7     JSR    $E7C7
 f8c9: 7e f7 0d     JMP    $F70D
 f8cc: 96 c6        LDA    <$C6
 f8ce: 81 01        CMPA   #$01
-f8d0: 22 07        BHI    $01CC
+f8d0: 22 07        BHI    $F8D9
 f8d2: cc 00 00     LDD    #$0000
 f8d5: dd c2        STD    <$C2
 f8d7: 97 c4        STA    <$C4
@@ -204,19 +204,19 @@ f8e6: ed a1        STD    ,Y++
 f8e8: dc c2        LDD    <$C2
 f8ea: c3 00 01     ADDD   #$0001
 f8ed: 0d c4        TST    <$C4
-f8ef: 26 0f        BNE    $01F3
+f8ef: 26 0f        BNE    $F900
 f8f1: c1 fc        CMPB   #$FC
-f8f3: 25 07        BCS    $01EF
+f8f3: 25 07        BCS    $F8FC
 f8f5: 86 01        LDA    #$01
 f8f7: 97 c4        STA    <$C4
 f8f9: cc 00 00     LDD    #$0000
 f8fc: dd c2        STD    <$C2
-f8fe: 20 17        BRA    $020A
+f8fe: 20 17        BRA    $F917
 f900: c1 b0        CMPB   #$B0
-f902: 25 02        BCS    $01F9
+f902: 25 02        BCS    $F906
 f904: 5f           CLRB
 f905: 4c           INCA
 f906: 81 08        CMPA   #$08
-f908: 25 05        BCS    $0202
+f908: 25 05        BCS    $F90F
 f90a: 0f c4        CLR    <$C4
-f90c: cc cc 20     LDD    #$0000
+f90c: cc 00 00     LDD    #$0000

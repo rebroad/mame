@@ -1,16 +1,16 @@
 6ecb: cc 00 00     LDD    #$0000
 6ece: fd 4b 32     STD    $4B32
 6ed1: b6 50 80     LDA    $5080
-6ed4: 2b 05        BMI    $0010
+6ed4: 2b 05        BMI    $6EDB
 6ed6: f6 50 84     LDB    $5084
-6ed9: 20 05        BRA    $0015
+6ed9: 20 05        BRA    $6EE0
 6edb: c6 7f        LDB    #$7F
 6edd: f0 50 84     SUBB   $5084
 6ee0: f7 48 6d     STB    $486D
 6ee3: b6 50 80     LDA    $5080
-6ee6: 2b 05        BMI    $0022
+6ee6: 2b 05        BMI    $6EED
 6ee8: f6 50 82     LDB    $5082
-6eeb: 20 05        BRA    $0027
+6eeb: 20 05        BRA    $6EF2
 6eed: c6 7f        LDB    #$7F
 6eef: f0 50 82     SUBB   $5082
 6ef2: 53           COMB
@@ -28,34 +28,34 @@
 6f0c: 86 67        LDA    #$67
 6f0e: bd cd ba     JSR    $CDBA
 6f11: b6 50 00     LDA    $5000
-6f14: 2f 23        BLE    $006E
+6f14: 2f 23        BLE    $6F39
 6f16: fc 50 02     LDD    $5002
 6f19: 78 50 01     ASL    $5001
 6f1c: 79 50 00     ROL    $5000
-6f1f: 29 33        BVS    $0089
+6f1f: 29 33        BVS    $6F54
 6f21: 58           ASLB
 6f22: 49           ROLA
-6f23: 28 04        BVC    $005E
+6f23: 28 04        BVC    $6F29
 6f25: 46           RORA
 6f26: 56           RORB
-6f27: 20 2b        BRA    $0089
+6f27: 20 2b        BRA    $6F54
 6f29: 78 50 05     ASL    $5005
 6f2c: 79 50 04     ROL    $5004
-6f2f: 28 e8        BVC    $004E
+6f2f: 28 e8        BVC    $6F19
 6f31: 76 50 04     ROR    $5004
 6f34: 76 50 05     ROR    $5005
-6f37: 20 1b        BRA    $0089
+6f37: 20 1b        BRA    $6F54
 6f39: fc 50 02     LDD    $5002
 6f3c: ca 01        ORB    #$01
 6f3e: 58           ASLB
 6f3f: 49           ROLA
-6f40: 28 04        BVC    $007B
+6f40: 28 04        BVC    $6F46
 6f42: 46           RORA
 6f43: 56           RORB
-6f44: 20 0e        BRA    $0089
+6f44: 20 0e        BRA    $6F54
 6f46: 78 50 05     ASL    $5005
 6f49: 79 50 04     ROL    $5004
-6f4c: 28 f0        BVC    $0073
+6f4c: 28 f0        BVC    $6F3E
 6f4e: 76 50 04     ROR    $5004
 6f51: 76 50 05     ROR    $5005
 6f54: 43           COMA
@@ -73,21 +73,21 @@
 6f6e: 39           RTS
 6f6f: fc 50 86     LDD    $5086
 6f72: f3 50 98     ADDD   $5098
-6f75: 28 06        BVC    $00B2
+6f75: 28 06        BVC    $6F7D
 6f77: 0c a7        INC    <$A7
-6f79: 28 02        BVC    $00B2
+6f79: 28 02        BVC    $6F7D
 6f7b: 0a a7        DEC    <$A7
 6f7d: fd 50 98     STD    $5098
 6f80: fd 50 40     STD    $5040
 6f83: fc 50 86     LDD    $5086
 6f86: bd cd b1     JSR    $CDB1
 6f89: d6 7d        LDB    <$7D
-6f8b: 2a 01        BPL    $00C3
+6f8b: 2a 01        BPL    $6F8E
 6f8d: 53           COMB
 6f8e: 58           ASLB
 6f8f: 3d           MUL
 6f90: 0d 7d        TST    <$7D
-6f92: 2c 04        BGE    $00CD
+6f92: 2c 04        BGE    $6F98
 6f94: 43           COMA
 6f95: 50           NEGB
 6f96: 82 ff        SBCA   #$FF
@@ -99,12 +99,12 @@
 6fa7: fc 50 86     LDD    $5086
 6faa: bd cd b1     JSR    $CDB1
 6fad: d6 7f        LDB    <$7F
-6faf: 2a 01        BPL    $00E7
+6faf: 2a 01        BPL    $6FB2
 6fb1: 53           COMB
 6fb2: 12           NOP
 6fb3: 3d           MUL
 6fb4: 0d 7f        TST    <$7F
-6fb6: 2a 04        BPL    $00F1
+6fb6: 2a 04        BPL    $6FBC
 6fb8: 43           COMA
 6fb9: 50           NEGB
 6fba: 82 ff        SBCA   #$FF
@@ -112,24 +112,24 @@
 6fbf: fd 50 96     STD    $5096
 6fc2: f3 50 9c     ADDD   $509C
 6fc5: 10 83 1c 00  CMPD   #$1C00
-6fc9: 2f 05        BLE    $0105
+6fc9: 2f 05        BLE    $6FD0
 6fcb: cc 1c 00     LDD    #$1C00
-6fce: 20 09        BRA    $010E
+6fce: 20 09        BRA    $6FD9
 6fd0: 10 83 02 00  CMPD   #$0200
-6fd4: 2c 03        BGE    $010E
+6fd4: 2c 03        BGE    $6FD9
 6fd6: cc 02 00     LDD    #$0200
 6fd9: fd 50 9c     STD    $509C
 6fdc: fd 50 44     STD    $5044
 6fdf: 39           RTS
 6fe0: fc 50 9c     LDD    $509C
 6fe3: 10 83 03 80  CMPD   #$0380
-6fe7: 2f 06        BLE    $0124
+6fe7: 2f 06        BLE    $6FEF
 6fe9: 83 01 80     SUBD   #$0180
 6fec: fd 50 9c     STD    $509C
-6fef: 20 0f        BRA    $0135
+6fef: 20 0f        BRA    $7000
 6ff1: fc 50 9c     LDD    $509C
 6ff4: 10 83 f3 00  CMPD   #$F300
-6ff8: 2f 06        BLE    $0135
+6ff8: 2f 06        BLE    $7000
 6ffa: 83 01 00     SUBD   #$0100
 6ffd: fd 50 9c     STD    $509C
 7000: fc 50 86     LDD    $5086
@@ -142,9 +142,9 @@
 7015: fd 50 86     STD    $5086
 7018: b6 4b 15     LDA    $4B15
 701b: 44           LSRA
-701c: 24 05        BCC    $0158
+701c: 24 05        BCC    $7023
 701e: cc 0b b8     LDD    #$0BB8
-7021: 20 03        BRA    $015B
+7021: 20 03        BRA    $7026
 7023: cc f4 48     LDD    #$F448
 7026: fd 50 22     STD    $5022
 7029: cc 3e eb     LDD    #$3EEB
@@ -161,11 +161,11 @@
 7047: fc 50 86     LDD    $5086
 704a: bd cd b1     JSR    $CDB1
 704d: d6 7d        LDB    <$7D
-704f: 2a 01        BPL    $0187
+704f: 2a 01        BPL    $7052
 7051: 53           COMB
 7052: 3d           MUL
 7053: 0d 7d        TST    <$7D
-7055: 2c 04        BGE    $0190
+7055: 2c 04        BGE    $705B
 7057: 43           COMA
 7058: 50           NEGB
 7059: 82 ff        SBCA   #$FF
@@ -173,10 +173,10 @@
 705e: fd 50 8e     STD    $508E
 7061: f3 50 9a     ADDD   $509A
 7064: 10 83 01 ff  CMPD   #$01FF
-7068: 2f 03        BLE    $01A2
+7068: 2f 03        BLE    $706D
 706a: cc 01 ff     LDD    #$01FF
 706d: 10 83 fe 01  CMPD   #$FE01
-7071: 2c 03        BGE    $01AB
+7071: 2c 03        BGE    $7076
 7073: cc fe 01     LDD    #$FE01
 7076: fd 50 9a     STD    $509A
 7079: fd 50 42     STD    $5042
@@ -190,12 +190,12 @@
 7085: 58           ASLB
 7086: 49           ROLA
 7087: d6 7f        LDB    <$7F
-7089: 2a 01        BPL    $01C1
+7089: 2a 01        BPL    $708C
 708b: 53           COMB
 708c: 58           ASLB
 708d: 3d           MUL
 708e: 0d 7f        TST    <$7F
-7090: 2a 04        BPL    $01CB
+7090: 2a 04        BPL    $7096
 7092: 43           COMA
 7093: 50           NEGB
 7094: 82 ff        SBCA   #$FF
@@ -210,10 +210,10 @@
 709e: fd 50 96     STD    $5096
 70a1: f3 50 9c     ADDD   $509C
 70a4: 10 83 fe ff  CMPD   #$FEFF
-70a8: 2f 03        BLE    $01E2
+70a8: 2f 03        BLE    $70AD
 70aa: cc fe ff     LDD    #$FEFF
 70ad: 10 83 f2 01  CMPD   #$F201
-70b1: 2c 03        BGE    $01EB
+70b1: 2c 03        BGE    $70B6
 70b3: cc f2 01     LDD    #$F201
 70b6: fd 50 9c     STD    $509C
 70b9: fd 50 44     STD    $5044
@@ -221,5 +221,5 @@
 70bd: 8e 48 66     LDX    #$4866
 70c0: bd 70 f0     JSR    $70F0
 70c3: bd 71 11     JSR    $7111
-70c6: 27 03        BEQ    $0200
+70c6: 27 03        BEQ    $70CB
 70c8: bd ce 2f     JSR    $CE2F

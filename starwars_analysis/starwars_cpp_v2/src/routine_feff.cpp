@@ -24,8 +24,8 @@ void routine_feff_impl(CPU6809& cpu) {
     // FF0B: CMPX #$AC55
     cpu.compare_x(0xAC55);
 
-    // FF0E: BCS $0007
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF17;
+    // FF0E: BCS $FF06
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF06;
 
     // FF10: LDA #$FF
     cpu.m_a = 0xFF;
@@ -45,8 +45,8 @@ void routine_feff_impl(CPU6809& cpu) {
     // FF1C: CMPX #$AC55
     cpu.compare_x(0xAC55);
 
-    // FF1F: BCS $0018
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF39;
+    // FF1F: BCS $FF17
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF17;
 
     // FF21: JMP $FD07
     cpu.m_pc = 0xFD07;
@@ -75,8 +75,8 @@ void routine_feff_impl(CPU6809& cpu) {
     // FF37: CMPX #$5600
     cpu.compare_x(0x5600);
 
-    // FF3A: BCS $0033
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF6F;
+    // FF3A: BCS $FF32
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF32;
 
     // FF3C: LDA #$FF
     cpu.m_a = 0xFF;
@@ -102,8 +102,8 @@ void routine_feff_impl(CPU6809& cpu) {
     // FF4F: CMPX #$5600
     cpu.compare_x(0x5600);
 
-    // FF52: BCS $004B
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF9F;
+    // FF52: BCS $FF4A
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF4A;
 
     // FF54: JMP $FD07
     cpu.m_pc = 0xFD07;
@@ -246,14 +246,14 @@ void routine_feff_impl(CPU6809& cpu) {
     // FFDB: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
 
-    // FFE5: BRA $0119
-    cpu.m_pc = 0x10000;
+    // FFE5: BRA $0018
+    cpu.m_pc = 0x10018;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // FFEA: BRA $012E
-    cpu.m_pc = 0x1001A;
+    // FFEA: BRA $002D
+    cpu.m_pc = 0x1002D;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

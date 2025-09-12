@@ -4,27 +4,27 @@
 85a0: 44           LSRA
 85a1: 84 0f        ANDA   #$0F
 85a3: b1 49 bf     CMPA   $49BF
-85a6: 27 36        BEQ    $0043
+85a6: 27 36        BEQ    $85DE
 85a8: f6 49 bf     LDB    $49BF
 85ab: b7 49 bf     STA    $49BF
 85ae: 8e 49 89     LDX    #$4989
 85b1: a6 85        LDA    B,X
 85b3: 48           ASLA
-85b4: 24 07        BCC    $0022
-85b6: 2b 05        BMI    $0022
+85b4: 24 07        BCC    $85BD
+85b6: 2b 05        BMI    $85BD
 85b8: 7c 49 c0     INC    $49C0
-85bb: 20 15        BRA    $0037
+85bb: 20 15        BRA    $85D2
 85bd: 48           ASLA
-85be: 26 f3        BNE    $0018
+85be: 26 f3        BNE    $85B3
 85c0: 8e 49 99     LDX    #$4999
 85c3: a6 85        LDA    B,X
 85c5: 48           ASLA
-85c6: 24 07        BCC    $0034
-85c8: 2b 05        BMI    $0034
+85c6: 24 07        BCC    $85CF
+85c8: 2b 05        BMI    $85CF
 85ca: 7c 49 c0     INC    $49C0
-85cd: 20 03        BRA    $0037
+85cd: 20 03        BRA    $85D2
 85cf: 48           ASLA
-85d0: 26 f3        BNE    $002A
+85d0: 26 f3        BNE    $85C5
 85d2: 86 00        LDA    #$00
 85d4: 8e 49 89     LDX    #$4989
 85d7: a7 85        STA    B,X
@@ -35,10 +35,10 @@
 85e4: bd 87 35     JSR    $8735
 85e7: bd 86 ae     JSR    $86AE
 85ea: 96 95        LDA    <$95
-85ec: 27 03        BEQ    $0056
+85ec: 27 03        BEQ    $85F1
 85ee: bd 88 9f     JSR    $889F
 85f1: 96 92        LDA    <$92
-85f3: 27 03        BEQ    $005D
+85f3: 27 03        BEQ    $85F8
 85f5: bd 88 f5     JSR    $88F5
 85f8: 39           RTS
 85f9: cc 00 00     LDD    #$0000
@@ -47,12 +47,12 @@
 8602: ed a1        STD    ,Y++
 8604: ce 86 96     LDU    #$8696
 8607: 96 92        LDA    <$92
-8609: 27 0d        BEQ    $007D
+8609: 27 0d        BEQ    $8618
 860b: dc 93        LDD    <$93
 860d: b3 50 98     SUBD   $5098
 8610: 10 83 70 00  CMPD   #$7000
-8614: 22 02        BHI    $007D
-8616: 20 03        BRA    $0080
+8614: 22 02        BHI    $8618
+8616: 20 03        BRA    $861B
 8618: cc 70 00     LDD    #$7000
 861b: fd 50 78     STD    $5078
 861e: ec c4        LDD    ,U
@@ -70,21 +70,21 @@
 863f: fd 50 78     STD    $5078
 8642: fc 50 7a     LDD    $507A
 8645: b3 50 9a     SUBD   $509A
-8648: 2a 04        BPL    $00B3
+8648: 2a 04        BPL    $864E
 864a: 43           COMA
 864b: 50           NEGB
 864c: 82 ff        SBCA   #$FF
 864e: 10 b3 50 78  CMPD   $5078
-8652: 2f 03        BLE    $00BC
+8652: 2f 03        BLE    $8657
 8654: fd 50 78     STD    $5078
 8657: fc 50 7c     LDD    $507C
 865a: b3 50 9c     SUBD   $509C
-865d: 2a 04        BPL    $00C8
+865d: 2a 04        BPL    $8663
 865f: 43           COMA
 8660: 50           NEGB
 8661: 82 ff        SBCA   #$FF
 8663: 10 b3 50 78  CMPD   $5078
-8667: 2f 03        BLE    $00D1
+8667: 2f 03        BLE    $866C
 8669: fd 50 78     STD    $5078
 866c: cc 00 0f     LDD    #$000F
 866f: fd 47 01     STD    $4701
@@ -97,7 +97,7 @@
 8683: ed a1        STD    ,Y++
 8685: 33 44        LEAU   $4,U
 8687: 11 83 86 ae  CMPU   #$86AE
-868b: 10 25 ff 78  LBCS   $006C
+868b: 10 25 ff 78  LBCS   $8607
 868f: fc 50 98     LDD    $5098
 8692: fd 50 40     STD    $5040
 8695: 39           RTS
@@ -119,12 +119,12 @@
 86b7: ed a1        STD    ,Y++
 86b9: ce 87 25     LDU    #$8725
 86bc: 96 92        LDA    <$92
-86be: 27 0d        BEQ    $0132
+86be: 27 0d        BEQ    $86CD
 86c0: dc 93        LDD    <$93
 86c2: b3 50 98     SUBD   $5098
 86c5: 10 83 70 00  CMPD   #$7000
-86c9: 22 02        BHI    $0132
-86cb: 20 03        BRA    $0135
+86c9: 22 02        BHI    $86CD
+86cb: 20 03        BRA    $86D0
 86cd: cc 70 00     LDD    #$7000
 86d0: fd 50 78     STD    $5078
 86d3: ec c4        LDD    ,U
@@ -138,7 +138,7 @@
 86e8: fc 50 00     LDD    $5000
 86eb: fd 47 04     STD    $4704
 86ee: bd cc e4     JSR    $CCE4
-86f1: 20 1e        BRA    $0176
+86f1: 20 1e        BRA    $8711
 86f3: ec c4        LDD    ,U
 86f5: fd 50 7a     STD    $507A
 86f8: ec 42        LDD    $2,U
@@ -152,7 +152,7 @@
 870e: bd cc fc     JSR    $CCFC
 8711: 33 44        LEAU   $4,U
 8713: 11 83 87 35  CMPU   #$8735
-8717: 25 da        BCS    $0158
+8717: 25 da        BCS    $86F3
 8719: cc 80 40     LDD    #$8040
 871c: ed a1        STD    ,Y++
 871e: fc 50 98     LDD    $5098
@@ -172,18 +172,18 @@
 873b: 03 26        COM    <$26
 873d: 01 39        NEG    <$39
 873f: c1 01        CMPB   #$01
-8741: 26 05        BNE    $01AD
+8741: 26 05        BNE    $8748
 8743: cc 08 00     LDD    #$0800
-8746: 20 03        BRA    $01B0
+8746: 20 03        BRA    $874B
 8748: cc 10 00     LDD    #$1000
 874b: f3 49 b1     ADDD   $49B1
 874e: b3 50 40     SUBD   $5040
-8751: 2a 33        BPL    $01EB
+8751: 2a 33        BPL    $8786
 8753: e6 c4        LDB    ,U
 8755: c1 01        CMPB   #$01
-8757: 26 05        BNE    $01C3
+8757: 26 05        BNE    $875E
 8759: cc 08 00     LDD    #$0800
-875c: 20 03        BRA    $01C6
+875c: 20 03        BRA    $8761
 875e: cc 10 00     LDD    #$1000
 8761: f3 49 b1     ADDD   $49B1
 8764: fd 49 b1     STD    $49B1
@@ -191,11 +191,11 @@
 8769: ff 49 af     STU    $49AF
 876c: e6 c4        LDB    ,U
 876e: c1 03        CMPB   #$03
-8770: 26 01        BNE    $01D8
+8770: 26 01        BNE    $8773
 8772: 39           RTS
 8773: e6 c4        LDB    ,U
 8775: c1 05        CMPB   #$05
-8777: 26 0a        BNE    $01E8
+8777: 26 0a        BNE    $8783
 8779: fe 49 a9     LDU    $49A9
 877c: 33 42        LEAU   $2,U
 877e: ff 49 a9     STU    $49A9
@@ -208,4 +208,4 @@
 8791: fd 49 ad     STD    $49AD
 8794: fc 49 af     LDD    $49AF
 8797: fd 49 b9     STD    $49B9
-879a: fc b6 50     LDD    >$0000
+879a: fc 00 00     LDD    >$0000

@@ -30,8 +30,8 @@ void routine_ff24_impl(CPU6809& cpu) {
     // FF37: CMPX #$5600
     cpu.compare_x(0x5600);
 
-    // FF3A: BCS $000E
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF4A;
+    // FF3A: BCS $FF32
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF32;
 
     // FF3C: LDA #$FF
     cpu.m_a = 0xFF;
@@ -57,8 +57,8 @@ void routine_ff24_impl(CPU6809& cpu) {
     // FF4F: CMPX #$5600
     cpu.compare_x(0x5600);
 
-    // FF52: BCS $0026
-    if (cpu.carry_flag()) cpu.m_pc = 0xFF7A;
+    // FF52: BCS $FF4A
+    if (cpu.carry_flag()) cpu.m_pc = 0xFF4A;
 
     // FF54: JMP $FD07
     cpu.m_pc = 0xFD07;
@@ -201,14 +201,14 @@ void routine_ff24_impl(CPU6809& cpu) {
     // FFDB: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
 
-    // FFE5: BRA $00F4
-    cpu.m_pc = 0xFFDB;
+    // FFE5: BRA $0018
+    cpu.m_pc = 0x10018;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
-    // FFEA: BRA $0109
-    cpu.m_pc = 0xFFF5;
+    // FFEA: BRA $002D
+    cpu.m_pc = 0x1002D;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

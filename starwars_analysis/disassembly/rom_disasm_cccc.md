@@ -119,7 +119,7 @@ cdb8: 49        ROLA
 cdb9: 39        RTS
 cdba: b7 47 00  STA    $4700
 cdbd: 7d 43 20  TST    $4320
-cdc0: 2b fb     BMI    $00F1
+cdc0: 2b fb     BMI    $CDBD
 cdc2: 39        RTS
 cdc3: cc 00 00  LDD    #$0000
 cdc6: ed 56     STD    -$A,U
@@ -187,10 +187,10 @@ ce56: 52        XNCB
 ce57: 46        RORA
 ce58: 45        LSRA
 ce59: 59        ROLB
-ce5a: 20 47     BRA    $01D7
+ce5a: 20 47     BRA    $CEA3
 ce5c: 4f        CLRA
 ce5d: 54        LSRB
-ce5e: 20 57     BRA    $01EB
+ce5e: 20 57     BRA    $CEB7
 ce60: 49        ROLA
 ce61: 52        XNCB
 ce62: 45        LSRA

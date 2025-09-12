@@ -9,8 +9,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 7160: LDA $486E
     cpu.m_a = cpu.read_memory(0x486E);
 
-    // 7163: BEQ $0021
-    if (cpu.zero_flag()) cpu.m_pc = 0x7186;
+    // 7163: BEQ $7181
+    if (cpu.zero_flag()) cpu.m_pc = 0x7181;
 
     // 7165: JSR $71C4
     cpu.call_function(0x71C4);
@@ -18,8 +18,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 7168: LDA $486E
     cpu.m_a = cpu.read_memory(0x486E);
 
-    // 716B: BPL $0016
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7183;
+    // 716B: BPL $7176
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7176;
 
     // 716D: LDD #$0000
     cpu.m_d = 0x0000;
@@ -45,8 +45,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 7181: LDA $4877
     cpu.m_a = cpu.read_memory(0x4877);
 
-    // 7184: BEQ $0042
-    if (cpu.zero_flag()) cpu.m_pc = 0x71C8;
+    // 7184: BEQ $71A2
+    if (cpu.zero_flag()) cpu.m_pc = 0x71A2;
 
     // 7186: JSR $71C4
     cpu.call_function(0x71C4);
@@ -54,8 +54,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 7189: LDA $4877
     cpu.m_a = cpu.read_memory(0x4877);
 
-    // 718C: BPL $0037
-    if (!cpu.negative_flag()) cpu.m_pc = 0x71C5;
+    // 718C: BPL $7197
+    if (!cpu.negative_flag()) cpu.m_pc = 0x7197;
 
     // 718E: LDD #$0000
     cpu.m_d = 0x0000;
@@ -81,8 +81,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 71A2: LDA $4878
     cpu.m_a = cpu.read_memory(0x4878);
 
-    // 71A5: BEQ $0063
-    if (cpu.zero_flag()) cpu.m_pc = 0x720A;
+    // 71A5: BEQ $71C3
+    if (cpu.zero_flag()) cpu.m_pc = 0x71C3;
 
     // 71A7: JSR $71C4
     cpu.call_function(0x71C4);
@@ -90,8 +90,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 71AA: LDA $4878
     cpu.m_a = cpu.read_memory(0x4878);
 
-    // 71AD: BPL $0058
-    if (!cpu.negative_flag()) cpu.m_pc = 0x7207;
+    // 71AD: BPL $71B8
+    if (!cpu.negative_flag()) cpu.m_pc = 0x71B8;
 
     // 71AF: LDD #$0000
     cpu.m_d = 0x0000;
@@ -114,8 +114,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 71C0: JSR $CDBA
     cpu.call_function(0xCDBA);
 
-    // 71C4: BPL $0067
-    if (!cpu.negative_flag()) cpu.m_pc = 0x722D;
+    // 71C4: BPL $71C7
+    if (!cpu.negative_flag()) cpu.m_pc = 0x71C7;
 
     // 71C7: LDB #$03
     cpu.m_b = 0x03;
@@ -144,8 +144,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 71DF: NEG <$00
     // TODO: Convert NEG <$00
 
-    // 71E1: BCS $0083
-    if (cpu.carry_flag()) cpu.m_pc = 0x7166;
+    // 71E1: BCS $71E3
+    if (cpu.carry_flag()) cpu.m_pc = 0x71E3;
 
     // 71E3: NEG <$37
     // TODO: Convert NEG <$37
@@ -279,8 +279,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 725D: STD $3,X
     // TODO: Handle indexed addressing: STD $3,X
 
-    // 725F: BCC $00ED
-    if (!cpu.carry_flag()) cpu.m_pc = 0x724E;
+    // 725F: BCC $724D
+    if (!cpu.carry_flag()) cpu.m_pc = 0x724D;
 
     // 7261: COM <$36
     // TODO: Convert COM <$36
@@ -333,8 +333,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 7286: STU <$04
     cpu.write_memory16(0x04, cpu.m_u);
 
-    // 7289: BLS $0109
-    // TODO: Convert BLS $0109
+    // 7289: BLS $7269
+    // TODO: Convert BLS $7269
 
     // 728B: LSR <$36
     // TODO: Convert LSR <$36
@@ -432,8 +432,8 @@ void routine_7160_impl(CPU6809& cpu) {
     // 72D5: LDA $4B2D
     cpu.m_a = cpu.read_memory(0x4B2D);
 
-    // 72D8: BNE $0190
-    if (!cpu.zero_flag()) cpu.m_pc = 0x726A;
+    // 72D8: BNE $72F0
+    if (!cpu.zero_flag()) cpu.m_pc = 0x72F0;
 
     // 72DA: LDD $4B0E
     cpu.m_d = cpu.read_memory16(0x4B0E);
@@ -441,20 +441,20 @@ void routine_7160_impl(CPU6809& cpu) {
     // 72DD: CMPD #$00A0
     // TODO: Convert CMPD #$00A0
 
-    // 72E1: BCC $0190
-    if (!cpu.carry_flag()) cpu.m_pc = 0x7273;
+    // 72E1: BCC $72F0
+    if (!cpu.carry_flag()) cpu.m_pc = 0x72F0;
 
     // 72E3: ANDB #$10
     cpu.m_b &= 0x10;
 
-    // 72E5: BNE $018B
-    if (!cpu.zero_flag()) cpu.m_pc = 0x7272;
+    // 72E5: BNE $72EB
+    if (!cpu.zero_flag()) cpu.m_pc = 0x72EB;
 
     // 72E7: LDB #$4C
     cpu.m_b = 0x4C;
 
-    // 72E9: BRA $018D
-    cpu.m_pc = 0x7278;
+    // 72E9: BRA $72ED
+    cpu.m_pc = 0x72ED;
 
     // 72EB: LDB #$4D
     cpu.m_b = 0x4D;

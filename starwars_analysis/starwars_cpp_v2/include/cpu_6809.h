@@ -467,7 +467,6 @@ public:
     void routine_feff(void);
     void routine_ff24(void);
 
-
     // 6809 CPU condition code and comparison methods
     bool zero_flag() const { return (m_cc & 0x04) != 0; }
     bool carry_flag() const { return (m_cc & 0x01) != 0; }

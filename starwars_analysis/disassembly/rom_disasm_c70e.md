@@ -6,7 +6,7 @@ c715: 44        LSRA
 c716: 44        LSRA
 c717: 44        LSRA
 c718: 81 0a     CMPA   #$0A
-c71a: 25 02     BCS    $0010
+c71a: 25 02     BCS    $C71E
 c71c: 86 09     LDA    #$09
 c71e: bd e7 ad  JSR    $E7AD
 c721: 86 b8     LDA    #$B8
@@ -15,11 +15,11 @@ c725: 86 df     LDA    #$DF
 c727: a7 a0     STA    ,Y+
 c729: 4f        CLRA
 c72a: c4 0f     ANDB   #$0F
-c72c: 27 06     BEQ    $0026
+c72c: 27 06     BEQ    $C734
 c72e: 8b 04     ADDA   #$04
 c730: 19        DAA
 c731: 5a        DECB
-c732: 26 fa     BNE    $0020
+c732: 26 fa     BNE    $C72E
 c734: 7e e7 90  JMP    $E790
 c737: 01 03     NEG    <$03
 c739: 07 0f     ASR    <$0F
@@ -79,7 +79,7 @@ c7a3: 00 05     NEG    <$05
 c7a5: 0a 10     DEC    <$10
 c7a7: 15        XHCF
 c7a8: 1a 20     ORCC   #$20
-c7aa: 25 2a     BCS    $00C8
+c7aa: 25 2a     BCS    $C7D6
 c7ac: 30 35     LEAX   -$B,Y
 c7ae: 3a        ABX
 c7af: 40        NEGA
@@ -131,7 +131,7 @@ c804: bd d8 df  JSR    $D8DF
 c807: cc 72 00  LDD    #$7200
 c80a: ed a1     STD    ,Y++
 c80c: cc ca 64  LDD    #$CA64
-c80f: 20 0d     BRA    $0110
+c80f: 20 0d     BRA    $C81E
 c811: 86 3f     LDA    #$3F
 c813: bd d8 df  JSR    $D8DF
 c816: cc 71 40  LDD    #$7140
@@ -151,85 +151,85 @@ c836: fb 4a ea  ADDB   $4AEA
 c839: 8e 4a b6  LDX    #$4AB6
 c83c: 3a        ABX
 c83d: bc 4a ec  CMPX   $4AEC
-c840: 26 05     BNE    $0139
+c840: 26 05     BNE    $C847
 c842: cc 67 80  LDD    #$6780
-c845: 20 03     BRA    $013C
+c845: 20 03     BRA    $C84A
 c847: fc 4b 10  LDD    $4B10
 c84a: ed a1     STD    ,Y++
 c84c: dd 01     STD    <$01
 c84e: ce 30 16  LDU    #$3016
 c851: 7d 4a ec  TST    $4AEC
-c854: 2b 1b     BMI    $0163
+c854: 2b 1b     BMI    $C871
 c856: b6 4a ee  LDA    $4AEE
 c859: 81 00     CMPA   #$00
-c85b: 26 10     BNE    $015F
+c85b: 26 10     BNE    $C86D
 c85d: b6 48 43  LDA    $4843
 c860: 84 01     ANDA   #$01
-c862: 26 05     BNE    $015B
+c862: 26 05     BNE    $C869
 c864: fc 4b 10  LDD    $4B10
-c867: 20 02     BRA    $015D
+c867: 20 02     BRA    $C86B
 c869: dc 01     LDD    <$01
-c86b: 20 02     BRA    $0161
+c86b: 20 02     BRA    $C86F
 c86d: dc 01     LDD    <$01
 c86f: ed a1     STD    ,Y++
 c871: a6 80     LDA    ,X+
-c873: 26 0f     BNE    $0176
+c873: 26 0f     BNE    $C884
 c875: 7d 4a ec  TST    $4AEC
-c878: 2b 05     BMI    $0171
+c878: 2b 05     BMI    $C87F
 c87a: fc 30 54  LDD    $3054
-c87d: 20 03     BRA    $0174
+c87d: 20 03     BRA    $C882
 c87f: fc 30 02  LDD    $3002
-c882: 20 03     BRA    $0179
+c882: 20 03     BRA    $C887
 c884: 48        ASLA
 c885: ec c6     LDD    A,U
 c887: ed a1     STD    ,Y++
 c889: 7d 4a ec  TST    $4AEC
-c88c: 2b 1b     BMI    $019B
+c88c: 2b 1b     BMI    $C8A9
 c88e: b6 4a ee  LDA    $4AEE
 c891: 81 01     CMPA   #$01
-c893: 26 10     BNE    $0197
+c893: 26 10     BNE    $C8A5
 c895: b6 48 43  LDA    $4843
 c898: 84 01     ANDA   #$01
-c89a: 26 05     BNE    $0193
+c89a: 26 05     BNE    $C8A1
 c89c: fc 4b 10  LDD    $4B10
-c89f: 20 02     BRA    $0195
+c89f: 20 02     BRA    $C8A3
 c8a1: dc 01     LDD    <$01
-c8a3: 20 02     BRA    $0199
+c8a3: 20 02     BRA    $C8A7
 c8a5: dc 01     LDD    <$01
 c8a7: ed a1     STD    ,Y++
 c8a9: a6 80     LDA    ,X+
-c8ab: 26 0f     BNE    $01AE
+c8ab: 26 0f     BNE    $C8BC
 c8ad: 7d 4a ec  TST    $4AEC
-c8b0: 2b 05     BMI    $01A9
+c8b0: 2b 05     BMI    $C8B7
 c8b2: fc 30 54  LDD    $3054
-c8b5: 20 03     BRA    $01AC
+c8b5: 20 03     BRA    $C8BA
 c8b7: fc 30 02  LDD    $3002
-c8ba: 20 03     BRA    $01B1
+c8ba: 20 03     BRA    $C8BF
 c8bc: 48        ASLA
 c8bd: ec c6     LDD    A,U
 c8bf: ed a1     STD    ,Y++
 c8c1: 7d 4a ec  TST    $4AEC
-c8c4: 2b 1b     BMI    $01D3
+c8c4: 2b 1b     BMI    $C8E1
 c8c6: b6 4a ee  LDA    $4AEE
 c8c9: 81 02     CMPA   #$02
-c8cb: 26 10     BNE    $01CF
+c8cb: 26 10     BNE    $C8DD
 c8cd: b6 48 43  LDA    $4843
 c8d0: 84 01     ANDA   #$01
-c8d2: 26 05     BNE    $01CB
+c8d2: 26 05     BNE    $C8D9
 c8d4: fc 4b 10  LDD    $4B10
-c8d7: 20 02     BRA    $01CD
+c8d7: 20 02     BRA    $C8DB
 c8d9: dc 01     LDD    <$01
-c8db: 20 02     BRA    $01D1
+c8db: 20 02     BRA    $C8DF
 c8dd: dc 01     LDD    <$01
 c8df: ed a1     STD    ,Y++
 c8e1: a6 80     LDA    ,X+
-c8e3: 26 0f     BNE    $01E6
+c8e3: 26 0f     BNE    $C8F4
 c8e5: 7d 4a ec  TST    $4AEC
-c8e8: 2b 05     BMI    $01E1
+c8e8: 2b 05     BMI    $C8EF
 c8ea: fc 30 54  LDD    $3054
-c8ed: 20 03     BRA    $01E4
+c8ed: 20 03     BRA    $C8F2
 c8ef: fc 30 02  LDD    $3002
-c8f2: 20 03     BRA    $01E9
+c8f2: 20 03     BRA    $C8F7
 c8f4: 48        ASLA
 c8f5: ec c6     LDD    A,U
 c8f7: ed a1     STD    ,Y++

@@ -14,7 +14,7 @@ e7f3: 3a           ABX
 e7f4: ec 02        LDD    $2,X
 e7f6: ed a1        STD    ,Y++
 e7f8: ec 84        LDD    ,X
-e7fa: 20 15        BRA    $0034
+e7fa: 20 15        BRA    $E811
 e7fc: f6 48 ae     LDB    $48AE
 e7ff: 8e ea 50     LDX    #$EA50
 e802: 3a           ABX
@@ -42,49 +42,49 @@ e82b: e6 80        LDB    ,X+
 e82d: bf 48 b1     STX    $48B1
 e830: 58           ASLB
 e831: c1 82        CMPB   #$82
-e833: 25 07        BCS    $005F
+e833: 25 07        BCS    $E83C
 e835: 8e 30 16     LDX    #$3016
 e838: c4 7f        ANDB   #$7F
-e83a: 20 4c        BRA    $00AB
+e83a: 20 4c        BRA    $E888
 e83c: c1 74        CMPB   #$74
-e83e: 26 05        BNE    $0068
+e83e: 26 05        BNE    $E845
 e840: 8e 2f de     LDX    #$2FDE
-e843: 20 43        BRA    $00AB
+e843: 20 43        BRA    $E888
 e845: c1 80        CMPB   #$80
-e847: 26 06        BNE    $0072
+e847: 26 06        BNE    $E84F
 e849: 8e 30 58     LDX    #$3058
 e84c: 5f           CLRB
-e84d: 20 39        BRA    $00AB
+e84d: 20 39        BRA    $E888
 e84f: c1 60        CMPB   #$60
-e851: 25 05        BCS    $007B
+e851: 25 05        BCS    $E858
 e853: 8e 2f a4     LDX    #$2FA4
-e856: 20 30        BRA    $00AB
+e856: 20 30        BRA    $E888
 e858: c1 40        CMPB   #$40
-e85a: 26 05        BNE    $0084
+e85a: 26 05        BNE    $E861
 e85c: 8e 2f c2     LDX    #$2FC2
-e85f: 20 27        BRA    $00AB
+e85f: 20 27        BRA    $E888
 e861: c1 4e        CMPB   #$4E
-e863: 26 05        BNE    $008D
+e863: 26 05        BNE    $E86A
 e865: 8e 2f fe     LDX    #$2FFE
-e868: 20 1e        BRA    $00AB
+e868: 20 1e        BRA    $E888
 e86a: c1 58        CMPB   #$58
-e86c: 26 05        BNE    $0096
+e86c: 26 05        BNE    $E873
 e86e: 8e 2f f6     LDX    #$2FF6
-e871: 20 15        BRA    $00AB
+e871: 20 15        BRA    $E888
 e873: c1 5a        CMPB   #$5A
-e875: 26 05        BNE    $009F
+e875: 26 05        BNE    $E87C
 e877: 8e 30 00     LDX    #$3000
-e87a: 20 0c        BRA    $00AB
+e87a: 20 0c        BRA    $E888
 e87c: c1 4a        CMPB   #$4A
-e87e: 26 05        BNE    $00A8
+e87e: 26 05        BNE    $E885
 e880: 8e 30 0c     LDX    #$300C
-e883: 20 03        BRA    $00AB
+e883: 20 03        BRA    $E888
 e885: 8e 2f f4     LDX    #$2FF4
 e888: ec 85        LDD    B,X
 e88a: ed a1        STD    ,Y++
 e88c: be 48 b1     LDX    $48B1
 e88f: 6d 1f        TST    -$1,X
-e891: 2a 98        BPL    $004E
+e891: 2a 98        BPL    $E82B
 e893: 39           RTS
 e894: db 3f        ADDB   <$3F
 e896: db 48        ADDB   <$48
@@ -174,8 +174,8 @@ e93c: e1 a7        CMPB   E,Y
 e93e: e1 c8 e1     CMPB   -$1F,U
 e941: e8 e2        EORB   ,-S
 e943: 05 e2        LSR    <$E2
-e945: 20 e2        BRA    $014C
-e947: 26 e2        BNE    $014E
+e945: 20 e2        BRA    $E929
+e947: 26 e2        BNE    $E92B
 e949: 3c e2        CWAI   #$E2
 e94b: 45           LSRA
 e94c: e2 54        SBCB   -$C,U
@@ -195,11 +195,11 @@ e968: e3 52        ADDD   -$E,U
 e96a: e3 61        ADDD   $1,S
 e96c: e3 70        ADDD   -$10,S
 e96e: e3 7c        ADDD   -$4,S
-e970: e3 8c e3     ADDD   $0179,PCR
+e970: e3 8c e3     ADDD   $E956,PCR
 e973: 9d e3        JSR    <$E3
 e975: ae e3        LDX    ,--S
 e977: bb e3 c6     ADDA   $E3C6
-e97a: e3 dc e3     ADDD   [$0183,PCR]
+e97a: e3 dc e3     ADDD   [$E960,PCR]
 e97d: fc e4 05     LDD    $E405
 e980: e4 0e        ANDB   $E,X
 e982: e4 16        ANDB   -$A,X
@@ -241,8 +241,8 @@ e9ca: e4 8e        ANDB   W,X
 e9cc: e4 91        ANDB   [,X++]
 e9ce: e4 9a        ANDB   [F,X]
 e9d0: e4 a2        ANDB   ,-Y
-e9d2: e4 ad e4 b6  ANDB   $E6AF,PCR
+e9d2: e4 ad e4 b6  ANDB   $CE8C,PCR
 e9d6: e4 c0        ANDB   ,U+
 e9d8: e4 c7        ANDB   E,U
 e9da: e4 d0        ANDB   [,W++]
-e9dc: e4 f6        ANDB   $0,X
+e9dc: e4 00        ANDB   $0,X

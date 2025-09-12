@@ -6,8 +6,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // Converted from rom_disasm_fd00.md
     // Address: 0xFD00
 
-    // FD00: CMPX [$FFAF,PCR]
-    // TODO: Complex indexed addressing: [$FFAF,PCR]
+    // FD00: CMPX [$FCAF,PCR]
+    // TODO: Complex indexed addressing: [$FCAF,PCR]
 
     // FD03: LDD $ACFC
     cpu.m_d = cpu.read_memory16(0xACFC);
@@ -27,8 +27,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD11: CMPD #$0000
     // TODO: Convert CMPD #$0000
 
-    // FD15: BEQ $001A
-    if (cpu.zero_flag()) cpu.m_pc = 0xFD31;
+    // FD15: BEQ $FD1A
+    if (cpu.zero_flag()) cpu.m_pc = 0xFD1A;
 
     // FD17: JMP $F720
     cpu.m_pc = 0xF720;
@@ -57,8 +57,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD2F: CMPB ,U+
     // TODO: Complex indexed addressing: ,U+
 
-    // FD31: BNE $005A
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFD8D;
+    // FD31: BNE $FD5A
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFD5A;
 
     // FD33: STA $4620
     cpu.write_memory(0x4620, cpu.m_a);
@@ -108,8 +108,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD5C: CMPU #$FDBC
     // TODO: Convert CMPU #$FDBC
 
-    // FD60: BCS $002F
-    if (cpu.carry_flag()) cpu.m_pc = 0xFD91;
+    // FD60: BCS $FD2F
+    if (cpu.carry_flag()) cpu.m_pc = 0xFD2F;
 
     // FD62: LDB $4340
     cpu.m_b = cpu.read_memory(0x4340);
@@ -126,8 +126,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD6C: CMPA #$C0
     cpu.compare_a(0xC0);
 
-    // FD6E: BEQ $0072
-    if (cpu.zero_flag()) cpu.m_pc = 0xFDE2;
+    // FD6E: BEQ $FD72
+    if (cpu.zero_flag()) cpu.m_pc = 0xFD72;
 
     // FD70: CLR <$D1
     cpu.write_memory(0xD1, 0);
@@ -138,8 +138,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD75: CMPA ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // FD77: BNE $007B
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFDF4;
+    // FD77: BNE $FD7B
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFD7B;
 
     // FD79: JMP [,X]
     // TODO: Complex indexed addressing: [,X]
@@ -150,8 +150,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FD7D: CMPX #$FD9A
     cpu.compare_x(0xFD9A);
 
-    // FD80: BCS $0075
-    if (cpu.carry_flag()) cpu.m_pc = 0xFDF7;
+    // FD80: BCS $FD75
+    if (cpu.carry_flag()) cpu.m_pc = 0xFD75;
 
     // FD82: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -213,23 +213,23 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FDB0: SUBB $21F1
     cpu.m_b -= 0x21F1;
 
-    // FDB3: BHI $00A7
-    // TODO: Convert BHI $00A7
+    // FDB3: BHI $FDA7
+    // TODO: Convert BHI $FDA7
 
-    // FDB5: BLS $00AA
-    // TODO: Convert BLS $00AA
+    // FDB5: BLS $FDAA
+    // TODO: Convert BLS $FDAA
 
-    // FDB7: BCC $00AD
-    if (!cpu.carry_flag()) cpu.m_pc = 0xFD66;
+    // FDB7: BCC $FDAD
+    if (!cpu.carry_flag()) cpu.m_pc = 0xFDAD;
 
-    // FDB9: BCS $00B3
-    if (cpu.carry_flag()) cpu.m_pc = 0xFD6E;
+    // FDB9: BCS $FDB3
+    if (cpu.carry_flag()) cpu.m_pc = 0xFDB3;
 
-    // FDBB: BNE $011A
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFDD7;
+    // FDBB: BNE $FE1A
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFE1A;
 
-    // FDBD: BEQ $00C2
-    if (cpu.zero_flag()) cpu.m_pc = 0xFD81;
+    // FDBD: BEQ $FDC2
+    if (cpu.zero_flag()) cpu.m_pc = 0xFDC2;
 
     // FDBF: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -246,8 +246,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FDC8: CMPD #$0000
     // TODO: Convert CMPD #$0000
 
-    // FDCC: BNE $00D4
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFDA2;
+    // FDCC: BNE $FDD4
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFDD4;
 
     // FDCE: LDU #$4686
     cpu.m_u = 0x4686;
@@ -258,8 +258,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FDD4: JMP $FD07
     cpu.m_pc = 0xFD07;
 
-    // FDD8: BEQ $00DD
-    if (cpu.zero_flag()) cpu.m_pc = 0xFDB7;
+    // FDD8: BEQ $FDDD
+    if (cpu.zero_flag()) cpu.m_pc = 0xFDDD;
 
     // FDDA: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -276,8 +276,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FDE3: CMPD #$0000
     // TODO: Convert CMPD #$0000
 
-    // FDE7: BNE $00EF
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFDD8;
+    // FDE7: BNE $FDEF
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFDEF;
 
     // FDE9: LDU #$4683
     cpu.m_u = 0x4683;
@@ -291,14 +291,14 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FDF2: CMPB #$06
     cpu.compare_b(0x06);
 
-    // FDF4: BNE $010E
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFE04;
+    // FDF4: BNE $FE0E
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFE0E;
 
     // FDF6: TST <$D1
     // TODO: Convert TST <$D1
 
-    // FDF8: BNE $010C
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFE06;
+    // FDF8: BNE $FE0C
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFE0C;
 
     // FDFA: LDX #$0800
     cpu.m_x = 0x0800;
@@ -315,8 +315,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE03: CMPX #$1000
     cpu.compare_x(0x1000);
 
-    // FE06: BCS $00FF
-    if (cpu.carry_flag()) cpu.m_pc = 0xFE07;
+    // FE06: BCS $FDFF
+    if (cpu.carry_flag()) cpu.m_pc = 0xFDFF;
 
     // FE08: LDA #$FF
     cpu.m_a = 0xFF;
@@ -324,8 +324,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE0A: STA <$D1
     cpu.write_memory(0xD1, cpu.m_a);
 
-    // FE0C: BRA $0134
-    cpu.m_pc = 0xFE42;
+    // FE0C: BRA $FE34
+    cpu.m_pc = 0xFE34;
 
     // FE0E: CLR <$D1
     cpu.write_memory(0xD1, 0);
@@ -339,8 +339,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE19: CMPX #$FE4F
     cpu.compare_x(0xFE4F);
 
-    // FE1C: BCS $0121
-    if (cpu.carry_flag()) cpu.m_pc = 0xFE3F;
+    // FE1C: BCS $FE21
+    if (cpu.carry_flag()) cpu.m_pc = 0xFE21;
 
     // FE1E: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -369,11 +369,11 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE34: JMP $FD07
     cpu.m_pc = 0xFD07;
 
-    // FE37: BRA $0159
-    cpu.m_pc = 0xFE92;
+    // FE37: BRA $FE59
+    cpu.m_pc = 0xFE59;
 
-    // FE39: BRA $015B
-    cpu.m_pc = 0xFE96;
+    // FE39: BRA $FE5B
+    cpu.m_pc = 0xFE5B;
 
     // FE3B: NEG <$00
     // TODO: Convert NEG <$00
@@ -381,23 +381,23 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE3D: NEG <$00
     // TODO: Convert NEG <$00
 
-    // FE40: XLBRA $21C4
-    // TODO: Convert XLBRA $21C4
+    // FE40: XLBRA $1EC4
+    // TODO: Convert XLBRA $1EC4
 
-    // FE45: BRA $0167
-    cpu.m_pc = 0xFEAE;
+    // FE45: BRA $FE67
+    cpu.m_pc = 0xFE67;
 
     // FE47: XNC $4020
     // TODO: Convert XNC $4020
 
-    // FE4A: BRA $01B3
-    cpu.m_pc = 0xFDFF;
+    // FE4A: BRA $FEB3
+    cpu.m_pc = 0xFEB3;
 
     // FE4C: SUBA #$20
     cpu.m_a -= 0x20;
 
-    // FE4E: BRA $00DE
-    cpu.m_pc = 0xFE2E;
+    // FE4E: BRA $FDDE
+    cpu.m_pc = 0xFDDE;
 
     // FE50: LDD $F158
     cpu.m_d = cpu.read_memory16(0xF158);
@@ -408,8 +408,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE58: CMPX #$FD07
     cpu.compare_x(0xFD07);
 
-    // FE5B: BCS $0160
-    if (cpu.carry_flag()) cpu.m_pc = 0xFEBD;
+    // FE5B: BCS $FE60
+    if (cpu.carry_flag()) cpu.m_pc = 0xFE60;
 
     // FE5D: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -423,14 +423,14 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE65: CMPY #$0200
     // TODO: Convert CMPY #$0200
 
-    // FE69: BCS $0171
-    if (cpu.carry_flag()) cpu.m_pc = 0xFEDC;
+    // FE69: BCS $FE71
+    if (cpu.carry_flag()) cpu.m_pc = 0xFE71;
 
     // FE6B: LDS #$FD07
     cpu.m_sp = 0xFD07;
 
-    // FE6F: BRA $0175
-    cpu.m_pc = 0xFEE6;
+    // FE6F: BRA $FE75
+    cpu.m_pc = 0xFE75;
 
     // FE71: LDS #$FE58
     cpu.m_sp = 0xFE58;
@@ -453,8 +453,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE87: CMPX #$FB73
     cpu.compare_x(0xFB73);
 
-    // FE8A: BCS $018F
-    if (cpu.carry_flag()) cpu.m_pc = 0xFE1B;
+    // FE8A: BCS $FE8F
+    if (cpu.carry_flag()) cpu.m_pc = 0xFE8F;
 
     // FE8C: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -468,14 +468,14 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FE94: CMPY #$0200
     // TODO: Convert CMPY #$0200
 
-    // FE98: BCS $01A0
-    if (cpu.carry_flag()) cpu.m_pc = 0xFE3A;
+    // FE98: BCS $FEA0
+    if (cpu.carry_flag()) cpu.m_pc = 0xFEA0;
 
     // FE9A: LDS #$FD07
     cpu.m_sp = 0xFD07;
 
-    // FE9E: BRA $01A4
-    cpu.m_pc = 0xFE44;
+    // FE9E: BRA $FEA4
+    cpu.m_pc = 0xFEA4;
 
     // FEA0: LDS #$FE87
     cpu.m_sp = 0xFE87;
@@ -486,8 +486,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FEA7: ANDB #$07
     cpu.m_b &= 0x07;
 
-    // FEA9: BEQ $01AE
-    if (cpu.zero_flag()) cpu.m_pc = 0xFE59;
+    // FEA9: BEQ $FEAE
+    if (cpu.zero_flag()) cpu.m_pc = 0xFEAE;
 
     // FEAB: JMP $FF24
     cpu.m_pc = 0xFF24;
@@ -510,14 +510,14 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FEBB: ANDB #$40
     cpu.m_b &= 0x40;
 
-    // FEBD: BNE $0203
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFEC2;
+    // FEBD: BNE $FF03
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFF03;
 
     // FEBF: LDB #$80
     cpu.m_b = 0x80;
 
-    // FEC2: BMI $0203
-    if (cpu.negative_flag()) cpu.m_pc = 0xFEC7;
+    // FEC2: BMI $FF03
+    if (cpu.negative_flag()) cpu.m_pc = 0xFF03;
 
     // FEC4: STA $4640
     cpu.write_memory(0x4640, cpu.m_a);
@@ -525,8 +525,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FEC7: TST $4401
     // TODO: Convert TST $4401
 
-    // FECA: BMI $01C1
-    if (cpu.negative_flag()) cpu.m_pc = 0xFE8D;
+    // FECA: BMI $FEC1
+    if (cpu.negative_flag()) cpu.m_pc = 0xFEC1;
 
     // FECC: STA $4400
     cpu.write_memory(0x4400, cpu.m_a);
@@ -534,8 +534,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FECF: LDB $4401
     cpu.m_b = cpu.read_memory(0x4401);
 
-    // FED2: BPL $0203
-    if (!cpu.negative_flag()) cpu.m_pc = 0xFED7;
+    // FED2: BPL $FF03
+    if (!cpu.negative_flag()) cpu.m_pc = 0xFF03;
 
     // FED4: LDX #$0100
     cpu.m_x = 0x0100;
@@ -543,8 +543,8 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FED7: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
-    // FED9: BEQ $0203
-    if (cpu.zero_flag()) cpu.m_pc = 0xFEDE;
+    // FED9: BEQ $FF03
+    if (cpu.zero_flag()) cpu.m_pc = 0xFF03;
 
     // FEDB: STA $4640
     cpu.write_memory(0x4640, cpu.m_a);
@@ -555,20 +555,20 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FEE1: ANDB #$40
     cpu.m_b &= 0x40;
 
-    // FEE3: BEQ $01D7
-    if (cpu.zero_flag()) cpu.m_pc = 0xFEBC;
+    // FEE3: BEQ $FED7
+    if (cpu.zero_flag()) cpu.m_pc = 0xFED7;
 
     // FEE5: TST $4401
     // TODO: Convert TST $4401
 
-    // FEE8: BMI $0203
-    if (cpu.negative_flag()) cpu.m_pc = 0xFEED;
+    // FEE8: BMI $FF03
+    if (cpu.negative_flag()) cpu.m_pc = 0xFF03;
 
     // FEEA: CMPA $4400
     cpu.compare_a(cpu.read_memory(0x4400));
 
-    // FEED: BNE $0203
-    if (!cpu.zero_flag()) cpu.m_pc = 0xFEF2;
+    // FEED: BNE $FF03
+    if (!cpu.zero_flag()) cpu.m_pc = 0xFF03;
 
     // FEEF: LDB $4401
     cpu.m_b = cpu.read_memory(0x4401);
@@ -576,11 +576,11 @@ void routine_fd00_impl(CPU6809& cpu) {
     // FEF2: ANDB #$40
     cpu.m_b &= 0x40;
 
-    // FEF4: BMI $0203
-    if (cpu.negative_flag()) cpu.m_pc = 0xFEF9;
+    // FEF4: BMI $FF03
+    if (cpu.negative_flag()) cpu.m_pc = 0xFF03;
 
-    // FEF7: BCC $01B0
-    if (!cpu.carry_flag()) cpu.m_pc = 0xFEA9;
+    // FEF7: BCC $FEB0
+    if (!cpu.carry_flag()) cpu.m_pc = 0xFEB0;
 
     // FEF9: LDU #$4682
     cpu.m_u = 0x4682;

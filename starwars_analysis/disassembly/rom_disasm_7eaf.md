@@ -11,7 +11,7 @@
 7ec3: 03 03     COM    <$03
 7ec5: 01 0a     NEG    <$0A
 7ec7: 0a 01     DEC    <$01
-7ec9: 28 28     BVC    $0044
+7ec9: 28 28     BVC    $7EF3
 7ecb: 01 0a     NEG    <$0A
 7ecd: 0a 02     DEC    <$02
 7ecf: a0 a0     SUBA   ,Y+
@@ -22,23 +22,23 @@
 7ed9: a8 a8 02  EORA   $02,Y
 7edc: 00 00     NEG    <$00
 7ede: 02 2a     XNC    <$2A
-7ee0: 2a 02     BPL    $0035
+7ee0: 2a 02     BPL    $7EE4
 7ee2: 00 00     NEG    <$00
 7ee4: 02 a8     XNC    <$A8
 7ee6: a8 02     EORA   $2,X
 7ee8: 00 00     NEG    <$00
 7eea: 02 2a     XNC    <$2A
-7eec: 2a 02     BPL    $0041
+7eec: 2a 02     BPL    $7EF0
 7eee: 00 00     NEG    <$00
 7ef0: 05 02     LSR    <$02
 7ef2: 88 88     EORA   #$88
 7ef4: 01 22     NEG    <$22
-7ef6: 22 01     BHI    $004A
+7ef6: 22 01     BHI    $7EF9
 7ef8: 00 00     NEG    <$00
 7efa: 02 cc     XNC    <$CC
 7efc: cc 02 82  LDD    #$0282
 7eff: 82 01     SBCA   #$01
-7f01: 28 28     BVC    $007C
+7f01: 28 28     BVC    $7F2B
 7f03: 01 00     NEG    <$00
 7f05: 00 01     NEG    <$01
 7f07: aa 00     ORA    $0,X
@@ -47,7 +47,7 @@
 7f0d: 00 00     NEG    <$00
 7f0f: 02 a8     XNC    <$A8
 7f11: a8 01     EORA   $1,X
-7f13: 2a 2a     BPL    $0090
+7f13: 2a 2a     BPL    $7F3F
 7f15: 05 01     LSR    <$01
 7f17: 0a a0     DEC    <$A0
 7f19: 01 c0     NEG    <$C0
@@ -55,10 +55,10 @@
 7f1d: a0 0a     SUBA   $A,X
 7f1f: 01 00     NEG    <$00
 7f21: 00 01     NEG    <$01
-7f23: 28 00     BVC    $0076
+7f23: 28 00     BVC    $7F25
 7f25: 01 03     NEG    <$03
 7f27: c0 01     SUBB   #$01
-7f29: 28 28     BVC    $00A4
+7f29: 28 28     BVC    $7F53
 7f2b: 01 00     NEG    <$00
 7f2d: 00 01     NEG    <$01
 7f2f: 80 80     SUBA   #$80
@@ -67,7 +67,7 @@
 7f35: 02 02     XNC    <$02
 7f37: 01 0c     NEG    <$0C
 7f39: 00 01     NEG    <$01
-7f3b: 28 00     BVC    $008E
+7f3b: 28 00     BVC    $7F3D
 7f3d: 01 00     NEG    <$00
 7f3f: 30 01     LEAX   $1,X
 7f41: 82 28     SBCA   #$28
@@ -75,21 +75,21 @@
 7f45: 00 05     NEG    <$05
 7f47: 01 80     NEG    <$80
 7f49: 80 01     SUBA   #$01
-7f4b: 20 20     BRA    $00BE
+7f4b: 20 20     BRA    $7F6D
 7f4d: 01 08     NEG    <$08
 7f4f: 08 01     ASL    <$01
 7f51: 30 0c     LEAX   $C,X
 7f53: 01 2a     NEG    <$2A
-7f55: 2a 01     BPL    $00A9
+7f55: 2a 01     BPL    $7F58
 7f57: c0 c0     SUBB   #$C0
 7f59: 01 20     NEG    <$20
-7f5b: 20 01     BRA    $00AF
+7f5b: 20 01     BRA    $7F5E
 7f5d: 00 00     NEG    <$00
 7f5f: 01 20     NEG    <$20
-7f61: 20 01     BRA    $00B5
+7f61: 20 01     BRA    $7F64
 7f63: c0 c0     SUBB   #$C0
 7f65: 01 20     NEG    <$20
-7f67: 20 01     BRA    $00BB
+7f67: 20 01     BRA    $7F6A
 7f69: c0 c0     SUBB   #$C0
 7f6b: 01 a8     NEG    <$A8
 7f6d: a8 01     EORA   $1,X
@@ -131,7 +131,7 @@
 7fb9: 02 0a     XNC    <$0A
 7fbb: 0a 02     DEC    <$02
 7fbd: b0 b0 02  SUBA   $B002
-7fc0: 2c 2c     BGE    $013F
+7fc0: 2c 2c     BGE    $7FEE
 7fc2: 02 0b     XNC    <$0B
 7fc4: 0b 02     XDEC   <$02
 7fc6: 00 00     NEG    <$00
@@ -166,7 +166,7 @@
 8000: 00 00     NEG    <$00
 8002: 05 01     LSR    <$01
 8004: b0 b0 01  SUBA   $B001
-8007: 2c 2c     BGE    $0186
+8007: 2c 2c     BGE    $8035
 8009: 01 08     NEG    <$08
 800b: 08 02     ASL    <$02
 800d: 00 00     NEG    <$00
@@ -178,7 +178,7 @@
 8019: 00 00     NEG    <$00
 801b: 01 b0     NEG    <$B0
 801d: b0 01 2c  SUBA   $012C
-8020: 2c 01     BGE    $0174
+8020: 2c 01     BGE    $8023
 8022: 08 08     ASL    <$08
 8024: 05 01     LSR    <$01
 8026: aa 00     ORA    $0,X
@@ -209,8 +209,8 @@
 8058: 08 02     ASL    <$02
 805a: c8 c8     EORB   #$C8
 805c: 02 20     XNC    <$20
-805e: 20 02     BRA    $01B3
-8060: 20 20     BRA    $01D3
+805e: 20 02     BRA    $8062
+8060: 20 20     BRA    $8082
 8062: 02 00     XNC    <$00
 8064: 00 05     NEG    <$05
 8066: 02 00     XNC    <$00
@@ -218,8 +218,8 @@
 806a: 8c 8c 02  CMPX   #$8C02
 806d: 80 80     SUBA   #$80
 806f: 02 23     XNC    <$23
-8071: 23 02     BLS    $01C6
-8073: 20 20     BRA    $01E6
+8071: 23 02     BLS    $8075
+8073: 20 20     BRA    $8095
 8075: 02 08     XNC    <$08
 8077: 08 02     ASL    <$02
 8079: 0b 0b     XDEC   <$0B
@@ -227,9 +227,9 @@
 807d: 00 05     NEG    <$05
 807f: 01 00     NEG    <$00
 8081: 00 02     NEG    <$02
-8083: 2a 2a     BPL    $0200
+8083: 2a 2a     BPL    $80AF
 8085: 01 20     NEG    <$20
-8087: 20 02     BRA    $01DC
+8087: 20 02     BRA    $808B
 8089: c0 c0     SUBB   #$C0
 808b: 02 30     XNC    <$30
 808d: 30 02     LEAX   $2,X
@@ -248,4 +248,4 @@
 80a8: 00 aa     NEG    <$AA
 80aa: 01 00     NEG    <$00
 80ac: 00 01     NEG    <$01
-80ae: 00 02     NEG    <$00
+80ae: 00 00     NEG    <$00

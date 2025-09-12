@@ -96,8 +96,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6209: CMPX #$5DF0
     cpu.compare_x(0x5DF0);
 
-    // 620C: BCS $003E
-    if (cpu.carry_flag()) cpu.m_pc = 0x624C;
+    // 620C: BCS $61F3
+    if (cpu.carry_flag()) cpu.m_pc = 0x61F3;
 
     // 620F: LDX #$5C60
     cpu.m_x = 0x5C60;
@@ -129,8 +129,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6227: CMPX #$5DF0
     cpu.compare_x(0x5DF0);
 
-    // 622A: BCS $005D
-    if (cpu.carry_flag()) cpu.m_pc = 0x6289;
+    // 622A: BCS $6212
+    if (cpu.carry_flag()) cpu.m_pc = 0x6212;
 
     // 622D: LDB <$7D
     cpu.m_b = cpu.read_memory(0x7D);
@@ -138,8 +138,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 622F: CMPB #$A0
     cpu.compare_b(0xA0);
 
-    // 6231: BGT $0089
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x61BC;
+    // 6231: BGT $623E
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x623E;
 
     // 6233: LDA #$08
     cpu.m_a = 0x08;
@@ -147,20 +147,20 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6235: CMPA <$41
     cpu.compare_a(cpu.read_memory(0x41));
 
-    // 6237: BEQ $0087
-    if (cpu.zero_flag()) cpu.m_pc = 0x61C0;
+    // 6237: BEQ $623C
+    if (cpu.zero_flag()) cpu.m_pc = 0x623C;
 
     // 623A: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
-    // 623C: BRA $0096
-    cpu.m_pc = 0x61D4;
+    // 623C: BRA $624B
+    cpu.m_pc = 0x624B;
 
     // 623E: CMPB #$60
     cpu.compare_b(0x60);
 
-    // 6240: BLT $0096
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x61D8;
+    // 6240: BLT $624B
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x624B;
 
     // 6242: LDA #$0C
     cpu.m_a = 0x0C;
@@ -168,8 +168,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6244: CMPA <$41
     cpu.compare_a(cpu.read_memory(0x41));
 
-    // 6246: BEQ $0096
-    if (cpu.zero_flag()) cpu.m_pc = 0x61DE;
+    // 6246: BEQ $624B
+    if (cpu.zero_flag()) cpu.m_pc = 0x624B;
 
     // 6249: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
@@ -180,8 +180,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 624E: ANDA #$03
     cpu.m_a &= 0x03;
 
-    // 6250: BNE $00A2
-    if (!cpu.zero_flag()) cpu.m_pc = 0x61F4;
+    // 6250: BNE $6257
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6257;
 
     // 6252: LDA #$01
     cpu.m_a = 0x01;
@@ -192,8 +192,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6257: LDA $4814
     cpu.m_a = cpu.read_memory(0x4814);
 
-    // 625A: BEQ $00B4
-    if (cpu.zero_flag()) cpu.m_pc = 0x6210;
+    // 625A: BEQ $6269
+    if (cpu.zero_flag()) cpu.m_pc = 0x6269;
 
     // 625C: LDA <$AC
     cpu.m_a = cpu.read_memory(0xAC);
@@ -201,8 +201,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 625E: ANDA #$F0
     cpu.m_a &= 0xF0;
 
-    // 6260: BEQ $00B4
-    if (cpu.zero_flag()) cpu.m_pc = 0x6216;
+    // 6260: BEQ $6269
+    if (cpu.zero_flag()) cpu.m_pc = 0x6269;
 
     // 6262: LDA #$19
     cpu.m_a = 0x19;
@@ -219,8 +219,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 626C: ANDA #$10
     cpu.m_a &= 0x10;
 
-    // 626E: BNE $00BF
-    if (!cpu.zero_flag()) cpu.m_pc = 0x622F;
+    // 626E: BNE $6274
+    if (!cpu.zero_flag()) cpu.m_pc = 0x6274;
 
     // 6270: LDA #$01
     cpu.m_a = 0x01;
@@ -342,8 +342,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 62D7: CMPA ,X
     // TODO: Complex indexed addressing: ,X
 
-    // 62D9: BLS $012E
-    // TODO: Convert BLS $012E
+    // 62D9: BLS $62E3
+    // TODO: Convert BLS $62E3
 
     // 62DB: SUBA ,X
     // TODO: Complex indexed addressing: ,X
@@ -411,8 +411,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 631B: LDD $4B0E
     cpu.m_d = cpu.read_memory16(0x4B0E);
 
-    // 631E: BPL $016D
-    if (!cpu.negative_flag()) cpu.m_pc = 0x638D;
+    // 631E: BPL $6322
+    if (!cpu.negative_flag()) cpu.m_pc = 0x6322;
 
     // 6320: INC <$41
     // TODO: Convert INC <$41
@@ -480,8 +480,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 635D: LDD $4B0E
     cpu.m_d = cpu.read_memory16(0x4B0E);
 
-    // 6360: BPL $01AF
-    if (!cpu.negative_flag()) cpu.m_pc = 0x6311;
+    // 6360: BPL $6364
+    if (!cpu.negative_flag()) cpu.m_pc = 0x6364;
 
     // 6362: INC <$41
     // TODO: Convert INC <$41
@@ -501,14 +501,14 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6371: ANDB #$07
     cpu.m_b &= 0x07;
 
-    // 6373: BNE $01E8
-    if (!cpu.zero_flag()) cpu.m_pc = 0x635D;
+    // 6373: BNE $639D
+    if (!cpu.zero_flag()) cpu.m_pc = 0x639D;
 
     // 6375: LDA $4ADB
     cpu.m_a = cpu.read_memory(0x4ADB);
 
-    // 6378: BMI $01C8
-    if (cpu.negative_flag()) cpu.m_pc = 0x6342;
+    // 6378: BMI $637D
+    if (cpu.negative_flag()) cpu.m_pc = 0x637D;
 
     // 637A: JSR $D8DF
     cpu.call_function(0xD8DF);
@@ -519,8 +519,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6380: CMPA #$12
     cpu.compare_a(0x12);
 
-    // 6382: BNE $01D9
-    if (!cpu.zero_flag()) cpu.m_pc = 0x635D;
+    // 6382: BNE $638E
+    if (!cpu.zero_flag()) cpu.m_pc = 0x638E;
 
     // 6384: LDA $4593
     cpu.m_a = cpu.read_memory(0x4593);
@@ -543,8 +543,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 6393: CMPA $4ADC
     cpu.compare_a(cpu.read_memory(0x4ADC));
 
-    // 6396: BCS $01E5
-    if (cpu.carry_flag()) cpu.m_pc = 0x637D;
+    // 6396: BCS $639A
+    if (cpu.carry_flag()) cpu.m_pc = 0x639A;
 
     // 6398: LDA #$80
     cpu.m_a = 0x80;
@@ -558,8 +558,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 63A0: SUBD #$0008
     cpu.m_d -= 0x0008;
 
-    // 63A3: BPL $01F3
-    if (!cpu.negative_flag()) cpu.m_pc = 0x6398;
+    // 63A3: BPL $63A8
+    if (!cpu.negative_flag()) cpu.m_pc = 0x63A8;
 
     // 63A5: LDD #$0000
     cpu.m_d = 0x0000;
@@ -573,8 +573,8 @@ void routine_61b5_impl(CPU6809& cpu) {
     // 63AE: CMPD #$00C0
     // TODO: Convert CMPD #$00C0
 
-    // 63B2: BCC $0211
-    if (!cpu.carry_flag()) cpu.m_pc = 0x63C5;
+    // 63B2: BCC $63C6
+    if (!cpu.carry_flag()) cpu.m_pc = 0x63C6;
 
     // 63B4: LDB >$0000
     cpu.m_b = cpu.read_memory(0x0000);

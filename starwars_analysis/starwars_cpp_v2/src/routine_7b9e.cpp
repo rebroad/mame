@@ -12,8 +12,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7BA1: LDD <$82
     cpu.m_d = cpu.read_memory16(0x82);
 
-    // 7BA3: BNE $FF89
-    if (!cpu.zero_flag()) cpu.m_pc = 0x7B2E;
+    // 7BA3: BNE $7B27
+    if (!cpu.zero_flag()) cpu.m_pc = 0x7B27;
 
     // 7BA5: EORB #$81
     cpu.m_b ^= 0x81;
@@ -39,8 +39,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7BB5: SBCB <$7E
     // TODO: Convert SBCB <$7E
 
-    // 7BB7: BRN $FF9D
-    // TODO: Convert BRN $FF9D
+    // 7BB7: BRN $7B3B
+    // TODO: Convert BRN $7B3B
 
     // 7BB9: SBCB <$7C
     // TODO: Convert SBCB <$7C
@@ -48,8 +48,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7BBB: LDB <$83
     cpu.m_b = cpu.read_memory(0x83);
 
-    // 7BBD: BCS $009F
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B5E;
+    // 7BBD: BCS $7C3D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C3D;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -90,8 +90,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7BDA: JMP $D883
     cpu.m_pc = 0xD883;
 
-    // 7BDD: BCS $00BF
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B9E;
+    // 7BDD: BCS $7C5D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C5D;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -99,8 +99,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7BE1: LDD <$80
     cpu.m_d = cpu.read_memory16(0x80);
 
-    // 7BE3: BCS $FFC9
-    if (cpu.carry_flag()) cpu.m_pc = 0x7BAE;
+    // 7BE3: BCS $7B67
+    if (cpu.carry_flag()) cpu.m_pc = 0x7B67;
 
     // 7BE5: SUBB $7DE3
     cpu.m_b -= 0x7DE3;
@@ -360,8 +360,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7CB1: COM <$80
     // TODO: Convert COM <$80
 
-    // 7CB3: BCS $0097
-    if (cpu.carry_flag()) cpu.m_pc = 0x7C4C;
+    // 7CB3: BCS $7C35
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C35;
 
     // 7CB5: ADDA <$80
     cpu.m_a += 0x80;
@@ -411,8 +411,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7CDC: XNC <$20
     // TODO: Convert XNC <$20
 
-    // 7CDE: BRA $0143
-    cpu.m_pc = 0x7D23;
+    // 7CDE: BRA $7CE1
+    cpu.m_pc = 0x7CE1;
 
     // 7CE0: COM <$30
     // TODO: Convert COM <$30
@@ -516,8 +516,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7D22: XANDCC #$01
     // TODO: Convert XANDCC #$01
 
-    // 7D24: BRA $01A8
-    cpu.m_pc = 0x7CCE;
+    // 7D24: BRA $7D46
+    cpu.m_pc = 0x7D46;
 
     // 7D26: NEG <$C0
     // TODO: Convert NEG <$C0
@@ -552,8 +552,8 @@ void routine_7b9e_impl(CPU6809& cpu) {
     // 7D3A: ASL <$01
     // TODO: Convert ASL <$01
 
-    // 7D3C: BRA $01C0
-    cpu.m_pc = 0x7CFE;
+    // 7D3C: BRA $7D5E
+    cpu.m_pc = 0x7D5E;
 
     // 7D3E: NEG <$80
     // TODO: Convert NEG <$80

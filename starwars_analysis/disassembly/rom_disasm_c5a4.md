@@ -27,9 +27,9 @@ c5d4: e6 01        LDB    $1,X
 c5d6: c4 0f        ANDB   #$0F
 c5d8: fb 4a fb     ADDB   $4AFB
 c5db: 7a 4a fa     DEC    $4AFA
-c5de: 2b 03        BMI    $003F
+c5de: 2b 03        BMI    $C5E3
 c5e0: 54           LSRB
-c5e1: 20 f8        BRA    $0037
+c5e1: 20 f8        BRA    $C5DB
 c5e3: e4 c4        ANDB   ,U
 c5e5: f7 4a f5     STB    $4AF5
 c5e8: 8e c7 f1     LDX    #$C7F1
@@ -41,13 +41,13 @@ c5f5: ce 4c 00     LDU    #$4C00
 c5f8: ec 81        LDD    ,X++
 c5fa: ed c1        STD    ,U++
 c5fc: 8c 46 00     CMPX   #$4600
-c5ff: 25 f7        BCS    $0054
+c5ff: 25 f7        BCS    $C5F8
 c601: 8e 45 00     LDX    #$4500
 c604: a6 84        LDA    ,X
 c606: 43           COMA
 c607: a7 80        STA    ,X+
 c609: 8c 46 00     CMPX   #$4600
-c60c: 25 f6        BCS    $0060
+c60c: 25 f6        BCS    $C604
 c60e: b7 46 a0     STA    $46A0
 c611: bd c6 88     JSR    $C688
 c614: bd c6 7a     JSR    $C67A
@@ -57,15 +57,15 @@ c61d: a6 84        LDA    ,X
 c61f: 43           COMA
 c620: a7 80        STA    ,X+
 c622: 8c 46 00     CMPX   #$4600
-c625: 25 f6        BCS    $0079
+c625: 25 f6        BCS    $C61D
 c627: b7 46 a0     STA    $46A0
 c62a: bd c6 88     JSR    $C688
 c62d: bd c6 41     JSR    $C641
-c630: 26 29        BNE    $00B7
+c630: 26 29        BNE    $C65B
 c632: bd c6 7a     JSR    $C67A
 c635: bd c6 b8     JSR    $C6B8
 c638: bd c6 41     JSR    $C641
-c63b: 27 03        BEQ    $009C
+c63b: 27 03        BEQ    $C640
 c63d: 7e c6 5b     JMP    $C65B
 c640: 39           RTS
 c641: 8e 45 00     LDX    #$4500
@@ -73,9 +73,9 @@ c644: ce 4c 00     LDU    #$4C00
 c647: a6 80        LDA    ,X+
 c649: a8 c0        EORA   ,U+
 c64b: 84 0f        ANDA   #$0F
-c64d: 26 0b        BNE    $00B6
+c64d: 26 0b        BNE    $C65A
 c64f: 8c 46 00     CMPX   #$4600
-c652: 25 f3        BCS    $00A3
+c652: 25 f3        BCS    $C647
 c654: 86 01        LDA    #$01
 c656: b7 4a f7     STA    $4AF7
 c659: 4f           CLRA
@@ -90,25 +90,25 @@ c66a: ce 4c 00     LDU    #$4C00
 c66d: ec c1        LDD    ,U++
 c66f: ed 81        STD    ,X++
 c671: 8c 46 00     CMPX   #$4600
-c674: 25 f7        BCS    $00C9
+c674: 25 f7        BCS    $C66D
 c676: 7d 4a f7     TST    $4AF7
 c679: 39           RTS
 c67a: 8e 45 00     LDX    #$4500
 c67d: cc 00 00     LDD    #$0000
 c680: ed 81        STD    ,X++
 c682: 8c 46 00     CMPX   #$4600
-c685: 25 f9        BCS    $00DC
+c685: 25 f9        BCS    $C680
 c687: 39           RTS
 c688: 8e 07 d0     LDX    #$07D0
 c68b: 30 1f        LEAX   -$1,X
-c68d: 26 fc        BNE    $00E7
+c68d: 26 fc        BNE    $C68B
 c68f: 39           RTS
 c690: b6 4a f7     LDA    $4AF7
-c693: 27 22        BEQ    $0113
+c693: 27 22        BEQ    $C6B7
 c695: 81 01        CMPA   #$01
-c697: 26 04        BNE    $00F9
+c697: 26 04        BNE    $C69D
 c699: c6 9c        LDB    #$9C
-c69b: 20 17        BRA    $0110
+c69b: 20 17        BRA    $C6B4
 c69d: cc 1f 6a     LDD    #$1F6A
 c6a0: ed a1        STD    ,Y++
 c6a2: cc 01 a4     LDD    #$01A4
@@ -129,7 +129,7 @@ c6c5: ce 00 00     LDU    #$0000
 c6c8: bd 60 05     JSR    $6005
 c6cb: 33 41        LEAU   $1,U
 c6cd: 11 83 00 20  CMPU   #$0020
-c6d1: 25 f5        BCS    $0124
+c6d1: 25 f5        BCS    $C6C8
 c6d3: 39           RTS
 c6d4: ce 4a fa     LDU    #$4AFA
 c6d7: 86 03        LDA    #$03
@@ -145,7 +145,7 @@ c6e6: 84 0f        ANDA   #$0F
 c6e8: ab c4        ADDA   ,U
 c6ea: a7 c0        STA    ,U+
 c6ec: 7a 4b 02     DEC    $4B02
-c6ef: 2a eb        BPL    $0138
+c6ef: 2a eb        BPL    $C6DC
 c6f1: 30 18        LEAX   -$8,X
 c6f3: 39           RTS
 c6f4: ce 4a fa     LDU    #$4AFA
@@ -159,7 +159,7 @@ c702: 44           LSRA
 c703: 44           LSRA
 c704: a7 81        STA    ,X++
 c706: 7a 4b 02     DEC    $4B02
-c709: 2a f1        BPL    $0158
+c709: 2a f1        BPL    $C6FC
 c70b: 30 1a        LEAX   -$6,X
 c70d: 39           RTS
 c70e: c6 00        LDB    #$00
@@ -170,7 +170,7 @@ c715: 44           LSRA
 c716: 44           LSRA
 c717: 44           LSRA
 c718: 81 0a        CMPA   #$0A
-c71a: 25 02        BCS    $017A
+c71a: 25 02        BCS    $C71E
 c71c: 86 09        LDA    #$09
 c71e: bd e7 ad     JSR    $E7AD
 c721: 86 b8        LDA    #$B8
@@ -179,11 +179,11 @@ c725: 86 df        LDA    #$DF
 c727: a7 a0        STA    ,Y+
 c729: 4f           CLRA
 c72a: c4 0f        ANDB   #$0F
-c72c: 27 06        BEQ    $0190
+c72c: 27 06        BEQ    $C734
 c72e: 8b 04        ADDA   #$04
 c730: 19           DAA
 c731: 5a           DECB
-c732: 26 fa        BNE    $018A
+c732: 26 fa        BNE    $C72E
 c734: 7e e7 90     JMP    $E790
 c737: 01 03        NEG    <$03
 c739: 07 0f        ASR    <$0F
@@ -239,4 +239,4 @@ c79a: b0 09 49     SUBA   $0949
 c79d: 89 c1        ADCA   #$C1
 c79f: e4 c4        ANDB   ,U
 c7a1: a4 84        ANDA   ,X
-c7a3: 00 8e        NEG    <$00
+c7a3: 00 00        NEG    <$00

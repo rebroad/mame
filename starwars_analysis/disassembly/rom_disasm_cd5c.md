@@ -59,7 +59,7 @@ cdb8: 49        ROLA
 cdb9: 39        RTS
 cdba: b7 47 00  STA    $4700
 cdbd: 7d 43 20  TST    $4320
-cdc0: 2b fb     BMI    $0061
+cdc0: 2b fb     BMI    $CDBD
 cdc2: 39        RTS
 cdc3: cc 00 00  LDD    #$0000
 cdc6: ed 56     STD    -$A,U
@@ -127,10 +127,10 @@ ce56: 52        XNCB
 ce57: 46        RORA
 ce58: 45        LSRA
 ce59: 59        ROLB
-ce5a: 20 47     BRA    $0147
+ce5a: 20 47     BRA    $CEA3
 ce5c: 4f        CLRA
 ce5d: 54        LSRB
-ce5e: 20 57     BRA    $015B
+ce5e: 20 57     BRA    $CEB7
 ce60: 49        ROLA
 ce61: 52        XNCB
 ce62: 45        LSRA
@@ -177,10 +177,10 @@ cecf: 49        ROLA
 ced0: 47        ASRA
 ced1: 48        ASLA
 ced2: 54        LSRB
-ced3: 20 31     BRA    $01AA
+ced3: 20 31     BRA    $CF06
 ced5: 39        RTS
 ced6: 38 33     XANDCC #$33
-ced8: 20 41     BRA    $01BF
+ced8: 20 41     BRA    $CF1B
 ceda: 54        LSRB
 cedb: 41        NEGA
 cedc: 52        XNCB
@@ -244,4 +244,4 @@ cf53: 60 bb     NEG    [D,Y]
 cf55: 8b 00     ADDA   #$00
 cf57: 46        RORA
 cf58: ff e2 bb  STU    $E2BB
-cf5b: 8e 1a 01  LDX    #$0000
+cf5b: 8e 00 00  LDX    #$0000

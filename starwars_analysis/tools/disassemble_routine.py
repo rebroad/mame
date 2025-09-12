@@ -43,20 +43,15 @@ def run_unidasm(rom_file: str, start_addr: str, end_addr: Optional[str] = None) 
             temp_file_path = temp_file.name
         
         try:
-            # Run unidasm on the extracted window
-            unidasm_cmd = ["unidasm", "-arch", "m6809", temp_file_path]
+            # Run unidasm on the extracted window with correct base address
+            unidasm_cmd = ["unidasm", "-arch", "m6809", temp_file_path, "-basepc", start_addr]
             unidasm_result = subprocess.run(unidasm_cmd, capture_output=True, text=True, check=True)
             
             lines = []
             for line in unidasm_result.stdout.split('\n'):
                 line = line.strip()
                 if line:
-                    # Convert relative addresses back to absolute addresses
-                    addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
-                    if addr_match:
-                        rel_addr = int(addr_match.group(1), 16)
-                        abs_addr = start_int + rel_addr
-                        line = f"{abs_addr:04x}:{line.split(':', 1)[1]}"
+                    # unidasm with -basepc already shows correct absolute addresses
                     lines.append(line)
             
             return lines

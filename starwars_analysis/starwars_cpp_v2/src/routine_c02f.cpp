@@ -30,14 +30,14 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C041: STA ,X
     // TODO: Handle indexed addressing: STA ,X
 
-    // C043: BCS $001B
-    if (cpu.carry_flag()) cpu.m_pc = 0xC060;
+    // C043: BCS $C04A
+    if (cpu.carry_flag()) cpu.m_pc = 0xC04A;
 
     // C045: CLR $4B02
     cpu.write_memory(0x4B02, 0);
 
-    // C048: BRA $0020
-    cpu.m_pc = 0xC06A;
+    // C048: BRA $C04F
+    cpu.m_pc = 0xC04F;
 
     // C04A: LDA #$01
     cpu.m_a = 0x01;
@@ -45,8 +45,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C04C: STA $4B02
     cpu.write_memory(0x4B02, cpu.m_a);
 
-    // C050: BPL $000A
-    if (!cpu.negative_flag()) cpu.m_pc = 0xC05C;
+    // C050: BPL $C039
+    if (!cpu.negative_flag()) cpu.m_pc = 0xC039;
 
     // C052: LDB #$FF
     cpu.m_b = 0xFF;
@@ -54,8 +54,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C055: CMPB #$EF
     cpu.compare_b(0xEF);
 
-    // C057: BEQ $0054
-    if (cpu.zero_flag()) cpu.m_pc = 0xC0AD;
+    // C057: BEQ $C083
+    if (cpu.zero_flag()) cpu.m_pc = 0xC083;
 
     // C059: LDA $4B01
     cpu.m_a = cpu.read_memory(0x4B01);
@@ -93,14 +93,14 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C07E: STA $4AFE
     cpu.write_memory(0x4AFE, cpu.m_a);
 
-    // C081: BCS $0025
-    if (cpu.carry_flag()) cpu.m_pc = 0xC0A8;
+    // C081: BCS $C054
+    if (cpu.carry_flag()) cpu.m_pc = 0xC054;
 
     // C083: STB $4AFA
     cpu.write_memory(0x4AFA, cpu.m_b);
 
-    // C087: BSR $005A
-    // TODO: Convert BSR $005A
+    // C087: BSR $C089
+    // TODO: Convert BSR $C089
 
     // C089: ANDCC #$FE
     // TODO: Convert ANDCC #$FE
@@ -123,8 +123,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C097: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
-    // C09A: BPL $0061
-    if (!cpu.negative_flag()) cpu.m_pc = 0xC0FD;
+    // C09A: BPL $C090
+    if (!cpu.negative_flag()) cpu.m_pc = 0xC090;
 
     // C09D: LDA #$02
     cpu.m_a = 0x02;
@@ -132,8 +132,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C09F: JSR $C2C3
     cpu.call_function(0xC2C3);
 
-    // C0A2: BNE $00CF
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC073;
+    // C0A2: BNE $C0FE
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC0FE;
 
     // C0A5: LDB $4815
     cpu.m_b = cpu.read_memory(0x4815);
@@ -159,8 +159,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C0BF: LDX #$4548
     cpu.m_x = 0x4548;
 
-    // C0C3: BCC $00C8
-    if (!cpu.carry_flag()) cpu.m_pc = 0xC08D;
+    // C0C3: BCC $C0F7
+    if (!cpu.carry_flag()) cpu.m_pc = 0xC0F7;
 
     // C0C5: LDU #$4B5F
     cpu.m_u = 0x4B5F;
@@ -219,8 +219,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C0F9: CMPX #$453C
     cpu.compare_x(0x453C);
 
-    // C0FC: BCC $0093
-    if (!cpu.carry_flag()) cpu.m_pc = 0xC091;
+    // C0FC: BCC $C0C2
+    if (!cpu.carry_flag()) cpu.m_pc = 0xC0C2;
 
     // C0FF: LDA #$02
     cpu.m_a = 0x02;
@@ -267,7 +267,7 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C12A: ADCA #$00
     // TODO: Convert ADCA #$00
 
-    // C12D: BCS $0103
+    // C12D: BCS $C132
     if (cpu.carry_flag()) cpu.m_pc = 0xC132;
 
     // C12F: STA $4AFA
@@ -333,8 +333,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C16A: CMPA $4AFA
     cpu.compare_a(cpu.read_memory(0x4AFA));
 
-    // C16D: BLS $014C
-    // TODO: Convert BLS $014C
+    // C16D: BLS $C17B
+    // TODO: Convert BLS $C17B
 
     // C16F: STA $4AFA
     cpu.write_memory(0x4AFA, cpu.m_a);
@@ -354,8 +354,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C17E: LDA $4819
     cpu.m_a = cpu.read_memory(0x4819);
 
-    // C181: BNE $016F
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC1F2;
+    // C181: BNE $C19E
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC19E;
 
     // C183: LDA $481A
     cpu.m_a = cpu.read_memory(0x481A);
@@ -375,8 +375,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C191: ADDA $4AFA
     cpu.m_a += 0x4AFA;
 
-    // C195: BCC $016F
-    if (!cpu.carry_flag()) cpu.m_pc = 0xC206;
+    // C195: BCC $C19E
+    if (!cpu.carry_flag()) cpu.m_pc = 0xC19E;
 
     // C197: LEAX $2,X
     // TODO: Fix comma operator: LEAX $2,X
@@ -384,8 +384,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C199: CMPX #$4586
     cpu.compare_x(0x4586);
 
-    // C19C: BCS $0162
-    if (cpu.carry_flag()) cpu.m_pc = 0xC200;
+    // C19C: BCS $C191
+    if (cpu.carry_flag()) cpu.m_pc = 0xC191;
 
     // C19E: LDA $1,X
     // TODO: Fix comma operator: LDA $1,X
@@ -402,8 +402,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C1A7: ANDA #$F0
     cpu.m_a &= 0xF0;
 
-    // C1A9: BEQ $01BA
-    if (cpu.zero_flag()) cpu.m_pc = 0xC165;
+    // C1A9: BEQ $C1E9
+    if (cpu.zero_flag()) cpu.m_pc = 0xC1E9;
 
     // C1AB: LDA ,X
     // TODO: Complex indexed addressing: ,X
@@ -420,8 +420,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C1B4: ANDA #$F0
     cpu.m_a &= 0xF0;
 
-    // C1B6: BEQ $01BA
-    if (cpu.zero_flag()) cpu.m_pc = 0xC172;
+    // C1B6: BEQ $C1E9
+    if (cpu.zero_flag()) cpu.m_pc = 0xC1E9;
 
     // C1B8: LDX #$4564
     cpu.m_x = 0x4564;
@@ -444,8 +444,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C1CB: BITA #$10
     // TODO: Convert BITA #$10
 
-    // C1CD: BEQ $01A2
-    if (cpu.zero_flag()) cpu.m_pc = 0xC171;
+    // C1CD: BEQ $C1D1
+    if (cpu.zero_flag()) cpu.m_pc = 0xC1D1;
 
     // C1CF: SUBA #$06
     cpu.m_a -= 0x06;
@@ -462,8 +462,8 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C1DC: CMPX #$4588
     cpu.compare_x(0x4588);
 
-    // C1DF: BCS $018C
-    if (cpu.carry_flag()) cpu.m_pc = 0xC16D;
+    // C1DF: BCS $C1BB
+    if (cpu.carry_flag()) cpu.m_pc = 0xC1BB;
 
     // C1E1: LDA #$05
     cpu.m_a = 0x05;
@@ -534,17 +534,17 @@ void routine_c02f_impl(CPU6809& cpu) {
     // C21C: CMPD $4AFA
     // TODO: Convert CMPD $4AFA
 
-    // C220: BHI $01FB
-    // TODO: Convert BHI $01FB
+    // C220: BHI $C22A
+    // TODO: Convert BHI $C22A
 
-    // C222: BCS $020E
-    if (cpu.carry_flag()) cpu.m_pc = 0xC232;
+    // C222: BCS $C23D
+    if (cpu.carry_flag()) cpu.m_pc = 0xC23D;
 
     // C224: CMPU $4AFC
     // TODO: Convert CMPU $4AFC
 
-    // C228: BLS $020E
-    // TODO: Convert BLS $020E
+    // C228: BLS $C23D
+    // TODO: Convert BLS $C23D
 
     // C22A: STD $4AFA
     cpu.write_memory16(0x4AFA, cpu.m_d);

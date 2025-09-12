@@ -24,8 +24,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E831: CMPB #$82
     cpu.compare_b(0x82);
 
-    // E833: BCS $001B
-    if (cpu.carry_flag()) cpu.m_pc = 0xE850;
+    // E833: BCS $E83C
+    if (cpu.carry_flag()) cpu.m_pc = 0xE83C;
 
     // E835: LDX #$3016
     cpu.m_x = 0x3016;
@@ -33,104 +33,104 @@ void routine_e821_impl(CPU6809& cpu) {
     // E838: ANDB #$7F
     cpu.m_b &= 0x7F;
 
-    // E83A: BRA $0067
-    cpu.m_pc = 0xE8A3;
+    // E83A: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E83C: CMPB #$74
     cpu.compare_b(0x74);
 
-    // E83E: BNE $0024
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE864;
+    // E83E: BNE $E845
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE845;
 
     // E840: LDX #$2FDE
     cpu.m_x = 0x2FDE;
 
-    // E843: BRA $0067
-    cpu.m_pc = 0xE8AC;
+    // E843: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E845: CMPB #$80
     cpu.compare_b(0x80);
 
-    // E847: BNE $002E
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE877;
+    // E847: BNE $E84F
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE84F;
 
     // E849: LDX #$3058
     cpu.m_x = 0x3058;
 
-    // E84D: BRA $0067
-    cpu.m_pc = 0xE8B6;
+    // E84D: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E84F: CMPB #$60
     cpu.compare_b(0x60);
 
-    // E851: BCS $0037
-    if (cpu.carry_flag()) cpu.m_pc = 0xE88A;
+    // E851: BCS $E858
+    if (cpu.carry_flag()) cpu.m_pc = 0xE858;
 
     // E853: LDX #$2FA4
     cpu.m_x = 0x2FA4;
 
-    // E856: BRA $0067
-    cpu.m_pc = 0xE8BF;
+    // E856: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E858: CMPB #$40
     cpu.compare_b(0x40);
 
-    // E85A: BNE $0040
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE89C;
+    // E85A: BNE $E861
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE861;
 
     // E85C: LDX #$2FC2
     cpu.m_x = 0x2FC2;
 
-    // E85F: BRA $0067
-    cpu.m_pc = 0xE8C8;
+    // E85F: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E861: CMPB #$4E
     cpu.compare_b(0x4E);
 
-    // E863: BNE $0049
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE8AE;
+    // E863: BNE $E86A
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE86A;
 
     // E865: LDX #$2FFE
     cpu.m_x = 0x2FFE;
 
-    // E868: BRA $0067
-    cpu.m_pc = 0xE8D1;
+    // E868: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E86A: CMPB #$58
     cpu.compare_b(0x58);
 
-    // E86C: BNE $0052
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE8C0;
+    // E86C: BNE $E873
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE873;
 
     // E86E: LDX #$2FF6
     cpu.m_x = 0x2FF6;
 
-    // E871: BRA $0067
-    cpu.m_pc = 0xE8DA;
+    // E871: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E873: CMPB #$5A
     cpu.compare_b(0x5A);
 
-    // E875: BNE $005B
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE8D2;
+    // E875: BNE $E87C
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE87C;
 
     // E877: LDX #$3000
     cpu.m_x = 0x3000;
 
-    // E87A: BRA $0067
-    cpu.m_pc = 0xE8E3;
+    // E87A: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E87C: CMPB #$4A
     cpu.compare_b(0x4A);
 
-    // E87E: BNE $0064
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE8E4;
+    // E87E: BNE $E885
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE885;
 
     // E880: LDX #$300C
     cpu.m_x = 0x300C;
 
-    // E883: BRA $0067
-    cpu.m_pc = 0xE8EC;
+    // E883: BRA $E888
+    cpu.m_pc = 0xE888;
 
     // E885: LDX #$2FF4
     cpu.m_x = 0x2FF4;
@@ -147,8 +147,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E88F: TST -$1,X
     // TODO: Convert TST -$1,X
 
-    // E891: BPL $000A
-    if (!cpu.negative_flag()) cpu.m_pc = 0xE89D;
+    // E891: BPL $E82B
+    if (!cpu.negative_flag()) cpu.m_pc = 0xE82B;
 
     // E894: ADDB <$3F
     cpu.m_b += 0x3F;
@@ -414,11 +414,11 @@ void routine_e821_impl(CPU6809& cpu) {
     // E943: LSR <$E2
     // TODO: Convert LSR <$E2
 
-    // E945: BRA $0108
-    cpu.m_pc = 0xE94F;
+    // E945: BRA $E929
+    cpu.m_pc = 0xE929;
 
-    // E947: BNE $010A
-    if (!cpu.zero_flag()) cpu.m_pc = 0xE953;
+    // E947: BNE $E92B
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE92B;
 
     // E949: CWAI #$E2
     // TODO: Convert CWAI #$E2
@@ -471,8 +471,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E96E: ADDD -$4,S
     // TODO: Fix comma operator: ADDD -$4,S
 
-    // E970: ADDD $0135,PCR
-    // TODO: Fix comma operator: ADDD $0135,PCR
+    // E970: ADDD $E956,PCR
+    // TODO: Fix comma operator: ADDD $E956,PCR
 
     // E973: JSR <$E3
     cpu.call_function(0xE3);
@@ -483,8 +483,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E977: ADDA $E3C6
     cpu.m_a += 0xE3C6;
 
-    // E97A: ADDD [$013F,PCR]
-    // TODO: Complex indexed addressing: [$013F,PCR]
+    // E97A: ADDD [$E960,PCR]
+    // TODO: Complex indexed addressing: [$E960,PCR]
 
     // E97D: LDD $E405
     cpu.m_d = cpu.read_memory16(0xE405);
@@ -609,8 +609,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E9D0: ANDB ,-Y
     // TODO: Complex indexed addressing: ,-Y
 
-    // E9D2: ANDB $E66B,PCR
-    // TODO: Fix comma operator: ANDB $E66B,PCR
+    // E9D2: ANDB $CE8C,PCR
+    // TODO: Fix comma operator: ANDB $CE8C,PCR
 
     // E9D6: ANDB ,U+
     // TODO: Complex indexed addressing: ,U+
@@ -624,8 +624,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // E9DC: ANDB [,U]
     // TODO: Complex indexed addressing: [,U]
 
-    // E9DE: ANDB [$01A4,PCR]
-    // TODO: Complex indexed addressing: [$01A4,PCR]
+    // E9DE: ANDB [$E9C5,PCR]
+    // TODO: Complex indexed addressing: [$E9C5,PCR]
 
     // E9E1: BITB ,S
     // TODO: Convert BITB ,S
@@ -693,8 +693,8 @@ void routine_e821_impl(CPU6809& cpu) {
     // EA0E: BITB [F,U]
     // TODO: Convert BITB [F,U]
 
-    // EA10: BITB $E7F3,PCR
-    // TODO: Convert BITB $E7F3,PCR
+    // EA10: BITB $D014,PCR
+    // TODO: Convert BITB $D014,PCR
 
     // EA14: LDB -$D,X
     // TODO: Fix comma operator: LDB -$D,X

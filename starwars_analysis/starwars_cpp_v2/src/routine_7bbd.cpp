@@ -6,8 +6,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7bbd.md
     // Address: 0x7BBD
 
-    // 7BBD: BCS $0080
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B3F;
+    // 7BBD: BCS $7C3D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C3D;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -48,8 +48,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7BDA: JMP $D883
     cpu.m_pc = 0xD883;
 
-    // 7BDD: BCS $00A0
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B7F;
+    // 7BDD: BCS $7C5D
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C5D;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -57,8 +57,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7BE1: LDD <$80
     cpu.m_d = cpu.read_memory16(0x80);
 
-    // 7BE3: BCS $FFAA
-    if (cpu.carry_flag()) cpu.m_pc = 0x7B8F;
+    // 7BE3: BCS $7B67
+    if (cpu.carry_flag()) cpu.m_pc = 0x7B67;
 
     // 7BE5: SUBB $7DE3
     cpu.m_b -= 0x7DE3;
@@ -318,8 +318,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7CB1: COM <$80
     // TODO: Convert COM <$80
 
-    // 7CB3: BCS $0078
-    if (cpu.carry_flag()) cpu.m_pc = 0x7D2D;
+    // 7CB3: BCS $7C35
+    if (cpu.carry_flag()) cpu.m_pc = 0x7C35;
 
     // 7CB5: ADDA <$80
     cpu.m_a += 0x80;
@@ -369,8 +369,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7CDC: XNC <$20
     // TODO: Convert XNC <$20
 
-    // 7CDE: BRA $0124
-    cpu.m_pc = 0x7D04;
+    // 7CDE: BRA $7CE1
+    cpu.m_pc = 0x7CE1;
 
     // 7CE0: COM <$30
     // TODO: Convert COM <$30
@@ -474,8 +474,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7D22: XANDCC #$01
     // TODO: Convert XANDCC #$01
 
-    // 7D24: BRA $0189
-    cpu.m_pc = 0x7CAF;
+    // 7D24: BRA $7D46
+    cpu.m_pc = 0x7D46;
 
     // 7D26: NEG <$C0
     // TODO: Convert NEG <$C0
@@ -510,8 +510,8 @@ void routine_7bbd_impl(CPU6809& cpu) {
     // 7D3A: ASL <$01
     // TODO: Convert ASL <$01
 
-    // 7D3C: BRA $01A1
-    cpu.m_pc = 0x7CDF;
+    // 7D3C: BRA $7D5E
+    cpu.m_pc = 0x7D5E;
 
     // 7D3E: NEG <$80
     // TODO: Convert NEG <$80

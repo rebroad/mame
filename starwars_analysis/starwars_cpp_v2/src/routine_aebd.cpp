@@ -12,8 +12,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AEBF: ORA <$BD
     cpu.m_a |= 0xBD;
 
-    // AEC1: BNE $0007
-    if (!cpu.zero_flag()) cpu.m_pc = 0xAECA;
+    // AEC1: BNE $AEC4
+    if (!cpu.zero_flag()) cpu.m_pc = 0xAEC4;
 
     // AEC4: LDA $4B1B
     cpu.m_a = cpu.read_memory(0x4B1B);
@@ -21,8 +21,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AEC7: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // AEC9: BEQ $0068
-    if (cpu.zero_flag()) cpu.m_pc = 0xAF33;
+    // AEC9: BEQ $AF25
+    if (cpu.zero_flag()) cpu.m_pc = 0xAF25;
 
     // AECB: LDD #$FF98
     cpu.m_d = 0xFF98;
@@ -138,8 +138,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AF28: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // AF2A: BNE $00C9
-    if (!cpu.zero_flag()) cpu.m_pc = 0xAEF5;
+    // AF2A: BNE $AF86
+    if (!cpu.zero_flag()) cpu.m_pc = 0xAF86;
 
     // AF2C: LDD #$FDFB
     cpu.m_d = 0xFDFB;
@@ -258,8 +258,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AF8C: LDA <$BD
     cpu.m_a = cpu.read_memory(0xBD);
 
-    // AF8E: BLE $00DD
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAF6D;
+    // AF8E: BLE $AF9A
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAF9A;
 
     // AF90: LDB #$3F
     cpu.m_b = 0x3F;
@@ -285,8 +285,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AFA1: LDD <$03
     cpu.m_d = cpu.read_memory16(0x03);
 
-    // AFA3: BMI $00EB
-    if (cpu.negative_flag()) cpu.m_pc = 0xAF90;
+    // AFA3: BMI $AFA8
+    if (cpu.negative_flag()) cpu.m_pc = 0xAFA8;
 
     // AFA5: ADDD #$0001
     cpu.m_d += 0x0001;
@@ -315,8 +315,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AFBA: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
-    // AFBC: BMI $0104
-    if (cpu.negative_flag()) cpu.m_pc = 0xAFC2;
+    // AFBC: BMI $AFC1
+    if (cpu.negative_flag()) cpu.m_pc = 0xAFC1;
 
     // AFBE: ADDD #$0001
     cpu.m_d += 0x0001;
@@ -348,14 +348,14 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AFD5: ADDD #$0008
     cpu.m_d += 0x0008;
 
-    // AFD8: BLT $00E0
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAFBA;
+    // AFD8: BLT $AF9D
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAF9D;
 
     // AFDA: SUBD #$0010
     cpu.m_d -= 0x0010;
 
-    // AFDD: BGT $00E0
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAFBF;
+    // AFDD: BGT $AF9D
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAF9D;
 
     // AFDF: LDD <$03
     cpu.m_d = cpu.read_memory16(0x03);
@@ -363,14 +363,14 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AFE1: ADDD #$0008
     cpu.m_d += 0x0008;
 
-    // AFE4: BLT $00E0
-    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAFC6;
+    // AFE4: BLT $AF9D
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAF9D;
 
     // AFE6: SUBD #$0010
     cpu.m_d -= 0x0010;
 
-    // AFE9: BGT $00E0
-    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAFCB;
+    // AFE9: BGT $AF9D
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAF9D;
 
     // AFEB: LDD ,U++
     cpu.m_d = cpu.read_memory16(cpu.m_u++);
@@ -399,8 +399,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // AFFB: LDA <$BD
     cpu.m_a = cpu.read_memory(0xBD);
 
-    // AFFD: BLE $0149
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB048;
+    // AFFD: BLE $B006
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB006;
 
     // AFFF: LDD #$A011
     cpu.m_d = 0xA011;
@@ -408,11 +408,11 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B002: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
-    // B004: BRA $0187
-    cpu.m_pc = 0xAF8D;
+    // B004: BRA $B044
+    cpu.m_pc = 0xB044;
 
-    // B006: BGE $0187
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAF8F;
+    // B006: BGE $B044
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xB044;
 
     // B008: LDB $4B22
     cpu.m_b = cpu.read_memory(0x4B22);
@@ -435,8 +435,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B017: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // B019: BEQ $0163
-    if (cpu.zero_flag()) cpu.m_pc = 0xB07E;
+    // B019: BEQ $B020
+    if (cpu.zero_flag()) cpu.m_pc = 0xB020;
 
     // B01B: LDD #$A01C
     cpu.m_d = 0xA01C;
@@ -450,8 +450,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B023: ANDA #$02
     cpu.m_a &= 0x02;
 
-    // B025: BEQ $016F
-    if (cpu.zero_flag()) cpu.m_pc = 0xB096;
+    // B025: BEQ $B02C
+    if (cpu.zero_flag()) cpu.m_pc = 0xB02C;
 
     // B027: LDD #$A023
     cpu.m_d = 0xA023;
@@ -465,8 +465,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B02F: ANDA #$04
     cpu.m_a &= 0x04;
 
-    // B031: BEQ $017B
-    if (cpu.zero_flag()) cpu.m_pc = 0xB0AE;
+    // B031: BEQ $B038
+    if (cpu.zero_flag()) cpu.m_pc = 0xB038;
 
     // B033: LDD #$A02A
     cpu.m_d = 0xA02A;
@@ -480,8 +480,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B03B: ANDA #$08
     cpu.m_a &= 0x08;
 
-    // B03D: BEQ $0187
-    if (cpu.zero_flag()) cpu.m_pc = 0xAFC6;
+    // B03D: BEQ $B044
+    if (cpu.zero_flag()) cpu.m_pc = 0xB044;
 
     // B03F: LDD #$A031
     cpu.m_d = 0xA031;
@@ -555,8 +555,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B071: LDA <$BC
     cpu.m_a = cpu.read_memory(0xBC);
 
-    // B073: BEQ $01D7
-    if (cpu.zero_flag()) cpu.m_pc = 0xB04C;
+    // B073: BEQ $B094
+    if (cpu.zero_flag()) cpu.m_pc = 0xB094;
 
     // B075: JSR $B095
     cpu.call_function(0xB095);
@@ -570,8 +570,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B07E: LDD <$CC
     cpu.m_d = cpu.read_memory16(0xCC);
 
-    // B080: BMI $01CC
-    if (cpu.negative_flag()) cpu.m_pc = 0xB04E;
+    // B080: BMI $B089
+    if (cpu.negative_flag()) cpu.m_pc = 0xB089;
 
     // B082: LDA #$04
     cpu.m_a = 0x04;
@@ -585,8 +585,8 @@ void routine_aebd_impl(CPU6809& cpu) {
     // B089: LDA <$44
     cpu.m_a = cpu.read_memory(0x44);
 
-    // B08B: BLE $01D7
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB064;
+    // B08B: BLE $B094
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB094;
 
     // B08D: LDA #$FF
     cpu.m_a = 0xFF;

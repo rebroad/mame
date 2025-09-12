@@ -4,17 +4,17 @@
 8edd: 8e 90 70     LDX    #$9070
 8ee0: 3a           ABX
 8ee1: 8c 90 7c     CMPX   #$907C
-8ee4: 25 0e        BCS    $001E
+8ee4: 25 0e        BCS    $8EF4
 8ee6: b6 4b 14     LDA    $4B14
 8ee9: 44           LSRA
-8eea: 25 05        BCS    $001B
+8eea: 25 05        BCS    $8EF1
 8eec: 8e 90 78     LDX    #$9078
-8eef: 20 03        BRA    $001E
+8eef: 20 03        BRA    $8EF4
 8ef1: 8e 90 7a     LDX    #$907A
 8ef4: ae 84        LDX    ,X
 8ef6: d6 dd        LDB    <$DD
 8ef8: e1 80        CMPB   ,X+
-8efa: 23 02        BLS    $0028
+8efa: 23 02        BLS    $8EFE
 8efc: e6 1f        LDB    -$1,X
 8efe: 58           ASLB
 8eff: ec 85        LDD    B,X
@@ -24,9 +24,9 @@
 8f08: 9f 5a        STX    <$5A
 8f0a: 6f 03        CLR    $3,X
 8f0c: de e4        LDU    <$E4
-8f0e: 27 19        BEQ    $0053
+8f0e: 27 19        BEQ    $8F29
 8f10: a6 c4        LDA    ,U
-8f12: 27 15        BEQ    $0053
+8f12: 27 15        BEQ    $8F29
 8f14: 0c e6        INC    <$E6
 8f16: ec c4        LDD    ,U
 8f18: dd e0        STD    <$E0
@@ -40,7 +40,7 @@
 8f29: 9e 5a        LDX    <$5A
 8f2b: 30 88 19     LEAX   $19,X
 8f2e: 8c 49 4b     CMPX   #$494B
-8f31: 25 d5        BCS    $0032
+8f31: 25 d5        BCS    $8F08
 8f33: 39           RTS
 8f34: 86 01        LDA    #$01
 8f36: a7 03        STA    $3,X
@@ -77,26 +77,26 @@
 8f77: bd cc cc     JSR    $CCCC
 8f7a: 39           RTS
 8f7b: de e4        LDU    <$E4
-8f7d: 27 04        BEQ    $00AD
+8f7d: 27 04        BEQ    $8F83
 8f7f: a6 c4        LDA    ,U
-8f81: 26 2e        BNE    $00DB
+8f81: 26 2e        BNE    $8FB1
 8f83: 0c dd        INC    <$DD
 8f85: f6 4b 14     LDB    $4B14
 8f88: 58           ASLB
 8f89: 8e 90 70     LDX    #$9070
 8f8c: 3a           ABX
 8f8d: 8c 90 7c     CMPX   #$907C
-8f90: 25 0e        BCS    $00CA
+8f90: 25 0e        BCS    $8FA0
 8f92: b6 4b 14     LDA    $4B14
 8f95: 44           LSRA
-8f96: 25 05        BCS    $00C7
+8f96: 25 05        BCS    $8F9D
 8f98: 8e 90 78     LDX    #$9078
-8f9b: 20 03        BRA    $00CA
+8f9b: 20 03        BRA    $8FA0
 8f9d: 8e 90 7a     LDX    #$907A
 8fa0: ae 84        LDX    ,X
 8fa2: d6 dd        LDB    <$DD
 8fa4: e1 80        CMPB   ,X+
-8fa6: 23 02        BLS    $00D4
+8fa6: 23 02        BLS    $8FAA
 8fa8: e6 1f        LDB    -$1,X
 8faa: d7 dd        STB    <$DD
 8fac: 58           ASLB
@@ -105,16 +105,16 @@
 8fb1: 8e 49 00     LDX    #$4900
 8fb4: 9f 5a        STX    <$5A
 8fb6: a6 03        LDA    $3,X
-8fb8: 27 0c        BEQ    $00F0
+8fb8: 27 0c        BEQ    $8FC6
 8fba: 9e 5a        LDX    <$5A
 8fbc: 30 88 19     LEAX   $19,X
 8fbf: 8c 49 4b     CMPX   #$494B
-8fc2: 25 f0        BCS    $00DE
-8fc4: 20 5d        BRA    $014D
+8fc2: 25 f0        BCS    $8FB4
+8fc4: 20 5d        BRA    $9023
 8fc6: de e4        LDU    <$E4
-8fc8: 27 59        BEQ    $014D
+8fc8: 27 59        BEQ    $9023
 8fca: a6 c4        LDA    ,U
-8fcc: 27 55        BEQ    $014D
+8fcc: 27 55        BEQ    $9023
 8fce: 0c e6        INC    <$E6
 8fd0: ec c4        LDD    ,U
 8fd2: dd e0        STD    <$E0

@@ -33,8 +33,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C6CD: CMPU #$0020
     // TODO: Convert CMPU #$0020
 
-    // C6D1: BCS $0010
-    if (cpu.carry_flag()) cpu.m_pc = 0xC6E3;
+    // C6D1: BCS $C6C8
+    if (cpu.carry_flag()) cpu.m_pc = 0xC6C8;
 
     // C6D4: LDU #$4AFA
     cpu.m_u = 0x4AFA;
@@ -66,8 +66,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C6EC: DEC $4B02
     // TODO: Convert DEC $4B02
 
-    // C6EF: BPL $0024
-    if (!cpu.negative_flag()) cpu.m_pc = 0xC715;
+    // C6EF: BPL $C6DC
+    if (!cpu.negative_flag()) cpu.m_pc = 0xC6DC;
 
     // C6F1: LEAX -$8,X
     // TODO: Fix comma operator: LEAX -$8,X
@@ -93,8 +93,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C706: DEC $4B02
     // TODO: Convert DEC $4B02
 
-    // C709: BPL $0044
-    if (!cpu.negative_flag()) cpu.m_pc = 0xC74F;
+    // C709: BPL $C6FC
+    if (!cpu.negative_flag()) cpu.m_pc = 0xC6FC;
 
     // C70B: LEAX -$6,X
     // TODO: Fix comma operator: LEAX -$6,X
@@ -111,8 +111,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C718: CMPA #$0A
     cpu.compare_a(0x0A);
 
-    // C71A: BCS $0066
-    if (cpu.carry_flag()) cpu.m_pc = 0xC782;
+    // C71A: BCS $C71E
+    if (cpu.carry_flag()) cpu.m_pc = 0xC71E;
 
     // C71C: LDA #$09
     cpu.m_a = 0x09;
@@ -135,14 +135,14 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C72A: ANDB #$0F
     cpu.m_b &= 0x0F;
 
-    // C72C: BEQ $007C
-    if (cpu.zero_flag()) cpu.m_pc = 0xC7AA;
+    // C72C: BEQ $C734
+    if (cpu.zero_flag()) cpu.m_pc = 0xC734;
 
     // C72E: ADDA #$04
     cpu.m_a += 0x04;
 
-    // C732: BNE $0076
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC7AA;
+    // C732: BNE $C72E
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC72E;
 
     // C734: JMP $E790
     cpu.m_pc = 0xE790;
@@ -315,8 +315,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C7A8: ORCC #$20
     cpu.m_cc |= 0x20;
 
-    // C7AA: BCS $011E
-    if (cpu.carry_flag()) cpu.m_pc = 0xC7CA;
+    // C7AA: BCS $C7D6
+    if (cpu.carry_flag()) cpu.m_pc = 0xC7D6;
 
     // C7AC: LEAX -$B,Y
     // TODO: Fix comma operator: LEAX -$B,Y
@@ -444,8 +444,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C80C: LDD #$CA64
     cpu.m_d = 0xCA64;
 
-    // C80F: BRA $0166
-    cpu.m_pc = 0xC877;
+    // C80F: BRA $C81E
+    cpu.m_pc = 0xC81E;
 
     // C811: LDA #$3F
     cpu.m_a = 0x3F;
@@ -498,14 +498,14 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C83D: CMPX $4AEC
     cpu.compare_x(cpu.read_memory16(0x4AEC));
 
-    // C840: BNE $018F
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC7D1;
+    // C840: BNE $C847
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC847;
 
     // C842: LDD #$6780
     cpu.m_d = 0x6780;
 
-    // C845: BRA $0192
-    cpu.m_pc = 0xC7D9;
+    // C845: BRA $C84A
+    cpu.m_pc = 0xC84A;
 
     // C847: LDD $4B10
     cpu.m_d = cpu.read_memory16(0x4B10);
@@ -522,8 +522,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C851: TST $4AEC
     // TODO: Convert TST $4AEC
 
-    // C854: BMI $01B9
-    if (cpu.negative_flag()) cpu.m_pc = 0xC80F;
+    // C854: BMI $C871
+    if (cpu.negative_flag()) cpu.m_pc = 0xC871;
 
     // C856: LDA $4AEE
     cpu.m_a = cpu.read_memory(0x4AEE);
@@ -531,8 +531,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C859: CMPA #$00
     cpu.compare_a(0x00);
 
-    // C85B: BNE $01B5
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC812;
+    // C85B: BNE $C86D
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC86D;
 
     // C85D: LDA $4843
     cpu.m_a = cpu.read_memory(0x4843);
@@ -540,20 +540,20 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C860: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // C862: BNE $01B1
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC815;
+    // C862: BNE $C869
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC869;
 
     // C864: LDD $4B10
     cpu.m_d = cpu.read_memory16(0x4B10);
 
-    // C867: BRA $01B3
-    cpu.m_pc = 0xC81C;
+    // C867: BRA $C86B
+    cpu.m_pc = 0xC86B;
 
     // C869: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
-    // C86B: BRA $01B7
-    cpu.m_pc = 0xC824;
+    // C86B: BRA $C86F
+    cpu.m_pc = 0xC86F;
 
     // C86D: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
@@ -564,26 +564,26 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C871: LDA ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // C873: BNE $01CC
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC841;
+    // C873: BNE $C884
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC884;
 
     // C875: TST $4AEC
     // TODO: Convert TST $4AEC
 
-    // C878: BMI $01C7
-    if (cpu.negative_flag()) cpu.m_pc = 0xC841;
+    // C878: BMI $C87F
+    if (cpu.negative_flag()) cpu.m_pc = 0xC87F;
 
     // C87A: LDD $3054
     cpu.m_d = cpu.read_memory16(0x3054);
 
-    // C87D: BRA $01CA
-    cpu.m_pc = 0xC849;
+    // C87D: BRA $C882
+    cpu.m_pc = 0xC882;
 
     // C87F: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
 
-    // C882: BRA $01CF
-    cpu.m_pc = 0xC853;
+    // C882: BRA $C887
+    cpu.m_pc = 0xC887;
 
     // C885: LDD A,U
     // TODO: Fix comma operator: LDD A,U
@@ -594,8 +594,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C889: TST $4AEC
     // TODO: Convert TST $4AEC
 
-    // C88C: BMI $01F1
-    if (cpu.negative_flag()) cpu.m_pc = 0xC87F;
+    // C88C: BMI $C8A9
+    if (cpu.negative_flag()) cpu.m_pc = 0xC8A9;
 
     // C88E: LDA $4AEE
     cpu.m_a = cpu.read_memory(0x4AEE);
@@ -603,8 +603,8 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C891: CMPA #$01
     cpu.compare_a(0x01);
 
-    // C893: BNE $01ED
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC882;
+    // C893: BNE $C8A5
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC8A5;
 
     // C895: LDA $4843
     cpu.m_a = cpu.read_memory(0x4843);
@@ -612,20 +612,20 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C898: ANDA #$01
     cpu.m_a &= 0x01;
 
-    // C89A: BNE $01E9
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC885;
+    // C89A: BNE $C8A1
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC8A1;
 
     // C89C: LDD $4B10
     cpu.m_d = cpu.read_memory16(0x4B10);
 
-    // C89F: BRA $01EB
-    cpu.m_pc = 0xC88C;
+    // C89F: BRA $C8A3
+    cpu.m_pc = 0xC8A3;
 
     // C8A1: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
-    // C8A3: BRA $01EF
-    cpu.m_pc = 0xC894;
+    // C8A3: BRA $C8A7
+    cpu.m_pc = 0xC8A7;
 
     // C8A5: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
@@ -636,20 +636,20 @@ void routine_c6b8_impl(CPU6809& cpu) {
     // C8A9: LDA ,X+
     // TODO: Complex indexed addressing: ,X+
 
-    // C8AB: BNE $0204
-    if (!cpu.zero_flag()) cpu.m_pc = 0xC8B1;
+    // C8AB: BNE $C8BC
+    if (!cpu.zero_flag()) cpu.m_pc = 0xC8BC;
 
     // C8AD: TST $4AEC
     // TODO: Convert TST $4AEC
 
-    // C8B0: BMI $01FF
-    if (cpu.negative_flag()) cpu.m_pc = 0xC8B1;
+    // C8B0: BMI $C8B7
+    if (cpu.negative_flag()) cpu.m_pc = 0xC8B7;
 
     // C8B2: LDD $3054
     cpu.m_d = cpu.read_memory16(0x3054);
 
-    // C8B5: BRA $0202
-    cpu.m_pc = 0xC8B9;
+    // C8B5: BRA $C8BA
+    cpu.m_pc = 0xC8BA;
 
     // C8B7: LDD >$0000
     cpu.m_d = cpu.read_memory16(0x0000);

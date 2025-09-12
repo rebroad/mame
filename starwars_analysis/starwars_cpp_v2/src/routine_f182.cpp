@@ -33,8 +33,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F198: CMPA #$78
     cpu.compare_a(0x78);
 
-    // F19A: BLE $001C
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF1B8;
+    // F19A: BLE $F19E
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF19E;
 
     // F19C: LDA #$78
     cpu.m_a = 0x78;
@@ -42,8 +42,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F19E: CMPA #$98
     cpu.compare_a(0x98);
 
-    // F1A0: BGE $0022
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF1C4;
+    // F1A0: BGE $F1A4
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF1A4;
 
     // F1A2: LDA #$98
     cpu.m_a = 0x98;
@@ -69,8 +69,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1B4: CMPA #$70
     cpu.compare_a(0x70);
 
-    // F1B6: BLE $0038
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF1F0;
+    // F1B6: BLE $F1BA
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF1BA;
 
     // F1B8: LDA #$70
     cpu.m_a = 0x70;
@@ -78,8 +78,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1BA: CMPA #$90
     cpu.compare_a(0x90);
 
-    // F1BC: BGE $003E
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF1FC;
+    // F1BC: BGE $F1C0
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF1C0;
 
     // F1BE: LDA #$90
     cpu.m_a = 0x90;
@@ -93,14 +93,14 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1C6: CMPA ,X
     // TODO: Complex indexed addressing: ,X
 
-    // F1C8: BCC $004E
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF218;
+    // F1C8: BCC $F1D0
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF1D0;
 
     // F1CA: CMPA $1,X
     // TODO: Fix comma operator: CMPA $1,X
 
-    // F1CC: BCS $004E
-    if (cpu.carry_flag()) cpu.m_pc = 0xF21C;
+    // F1CC: BCS $F1D0
+    if (cpu.carry_flag()) cpu.m_pc = 0xF1D0;
 
     // F1CE: DEC ,X
     // TODO: Convert DEC ,X
@@ -111,8 +111,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1D2: CMPA ,X
     // TODO: Complex indexed addressing: ,X
 
-    // F1D4: BCC $0056
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF22C;
+    // F1D4: BCC $F1D8
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF1D8;
 
     // F1D6: LDA ,X
     // TODO: Complex indexed addressing: ,X
@@ -129,20 +129,20 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1DF: ADDA <$51
     cpu.m_a += 0x51;
 
-    // F1E1: BNE $0063
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF246;
+    // F1E1: BNE $F1E5
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF1E5;
 
     // F1E3: LDA #$01
     cpu.m_a = 0x01;
 
-    // F1E5: BCS $0069
-    if (cpu.carry_flag()) cpu.m_pc = 0xF250;
+    // F1E5: BCS $F1EB
+    if (cpu.carry_flag()) cpu.m_pc = 0xF1EB;
 
     // F1E7: CLR $3,X
     // TODO: Fix comma operator: CLR $3,X
 
-    // F1E9: BRA $0075
-    cpu.m_pc = 0xF260;
+    // F1E9: BRA $F1F7
+    cpu.m_pc = 0xF1F7;
 
     // F1EB: LDA #$FF
     cpu.m_a = 0xFF;
@@ -156,8 +156,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F1F1: CMPB #$02
     cpu.compare_b(0x02);
 
-    // F1F3: BCS $0075
-    if (cpu.carry_flag()) cpu.m_pc = 0xF26A;
+    // F1F3: BCS $F1F7
+    if (cpu.carry_flag()) cpu.m_pc = 0xF1F7;
 
     // F1F5: DEC $2,X
     // TODO: Convert DEC $2,X
@@ -180,14 +180,14 @@ void routine_f182_impl(CPU6809& cpu) {
     // F203: SUBD $5,X
     // TODO: Fix comma operator: SUBD $5,X
 
-    // F205: BGE $0088
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF18F;
+    // F205: BGE $F20A
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xF20A;
 
     // F208: DEC <$51
     // TODO: Convert DEC <$51
 
-    // F20A: BLE $008D
-    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF199;
+    // F20A: BLE $F20F
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xF20F;
 
     // F20C: ADDD #$00FF
     cpu.m_d += 0x00FF;
@@ -195,8 +195,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F20F: CMPA #$F8
     cpu.compare_a(0xF8);
 
-    // F211: BLS $0093
-    // TODO: Convert BLS $0093
+    // F211: BLS $F215
+    // TODO: Convert BLS $F215
 
     // F213: LDA #$F8
     cpu.m_a = 0xF8;
@@ -207,8 +207,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F217: CMPA #$40
     cpu.compare_a(0x40);
 
-    // F219: BCC $009B
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF1B6;
+    // F219: BCC $F21D
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF21D;
 
     // F21B: LDB #$30
     cpu.m_b = 0x30;
@@ -216,8 +216,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F21E: TST <$51
     // TODO: Convert TST <$51
 
-    // F220: BPL $00A4
-    if (!cpu.negative_flag()) cpu.m_pc = 0xF1C6;
+    // F220: BPL $F226
+    if (!cpu.negative_flag()) cpu.m_pc = 0xF226;
 
     // F224: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -237,8 +237,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F22F: ANDA #$C0
     cpu.m_a &= 0xC0;
 
-    // F233: BCC $00B5
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF1EA;
+    // F233: BCC $F237
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF237;
 
     // F235: ORA #$3F
     cpu.m_a |= 0x3F;
@@ -264,8 +264,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F248: ANDA #$C0
     cpu.m_a &= 0xC0;
 
-    // F24C: BCC $00CE
-    if (!cpu.carry_flag()) cpu.m_pc = 0xF21C;
+    // F24C: BCC $F250
+    if (!cpu.carry_flag()) cpu.m_pc = 0xF250;
 
     // F24E: ORA #$3F
     cpu.m_a |= 0x3F;
@@ -330,8 +330,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F286: CMPU #$0000
     // TODO: Convert CMPU #$0000
 
-    // F28A: BNE $00FF
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF28B;
+    // F28A: BNE $F281
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF281;
 
     // F28C: LDS #$4FFF
     cpu.m_sp = 0x4FFF;
@@ -363,8 +363,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2A4: CMPX #$5000
     cpu.compare_x(0x5000);
 
-    // F2A7: BCS $0120
-    if (cpu.carry_flag()) cpu.m_pc = 0xF2C9;
+    // F2A7: BCS $F2A2
+    if (cpu.carry_flag()) cpu.m_pc = 0xF2A2;
 
     // F2A9: STA $4640
     cpu.write_memory(0x4640, cpu.m_a);
@@ -384,8 +384,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2B7: CMPX #$6000
     cpu.compare_x(0x6000);
 
-    // F2BA: BCS $0130
-    if (cpu.carry_flag()) cpu.m_pc = 0xF2EC;
+    // F2BA: BCS $F2B2
+    if (cpu.carry_flag()) cpu.m_pc = 0xF2B2;
 
     // F2BC: LDX #$0000
     cpu.m_x = 0x0000;
@@ -402,8 +402,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2C7: CMPX #$3000
     cpu.compare_x(0x3000);
 
-    // F2CA: BCS $0140
-    if (cpu.carry_flag()) cpu.m_pc = 0xF30C;
+    // F2CA: BCS $F2C2
+    if (cpu.carry_flag()) cpu.m_pc = 0xF2C2;
 
     // F2CC: LDA $4300
     cpu.m_a = cpu.read_memory(0x4300);
@@ -411,8 +411,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2CF: ANDA #$10
     cpu.m_a &= 0x10;
 
-    // F2D1: BNE $0154
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF327;
+    // F2D1: BNE $F2D6
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF2D6;
 
     // F2D3: JMP $F36E
     cpu.m_pc = 0xF36E;
@@ -435,8 +435,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2E3: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
-    // F2E5: BNE $0161
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF348;
+    // F2E5: BNE $F2E3
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF2E3;
 
     // F2E7: LDA $4340
     cpu.m_a = cpu.read_memory(0x4340);
@@ -447,14 +447,14 @@ void routine_f182_impl(CPU6809& cpu) {
     // F2ED: CMPA <$24
     cpu.compare_a(cpu.read_memory(0x24));
 
-    // F2EF: BNE $015A
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF34B;
+    // F2EF: BNE $F2DC
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF2DC;
 
     // F2F1: CMPB <$27
     cpu.compare_b(cpu.read_memory(0x27));
 
-    // F2F3: BNE $015A
-    if (!cpu.zero_flag()) cpu.m_pc = 0xF34F;
+    // F2F3: BNE $F2DC
+    if (!cpu.zero_flag()) cpu.m_pc = 0xF2DC;
 
     // F2F5: LDD #$2020
     cpu.m_d = 0x2020;
@@ -471,8 +471,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F300: CMPX #$2800
     cpu.compare_x(0x2800);
 
-    // F303: BCS $0179
-    if (cpu.carry_flag()) cpu.m_pc = 0xF37E;
+    // F303: BCS $F2FB
+    if (cpu.carry_flag()) cpu.m_pc = 0xF2FB;
 
     // F305: LDD #$E038
     cpu.m_d = 0xE038;
@@ -615,8 +615,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F36D: NEG <$B6
     // TODO: Convert NEG <$B6
 
-    // F370: BRA $0174
-    cpu.m_pc = 0xF3E6;
+    // F370: BRA $F2F6
+    cpu.m_pc = 0xF2F6;
 
     // F372: LSR <$26
     // TODO: Convert LSR <$26
@@ -627,8 +627,8 @@ void routine_f182_impl(CPU6809& cpu) {
     // F379: ANDA #$7F
     cpu.m_a &= 0x7F;
 
-    // F37B: BEQ $01FE
-    if (cpu.zero_flag()) cpu.m_pc = 0xF37B;
+    // F37B: BEQ $F380
+    if (cpu.zero_flag()) cpu.m_pc = 0xF380;
 
     // F37D: JMP $FD07
     cpu.m_pc = 0xFD07;

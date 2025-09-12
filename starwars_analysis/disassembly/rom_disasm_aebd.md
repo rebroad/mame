@@ -1,10 +1,10 @@
 aebd: 96 bc     LDA    <$BC
 aebf: 9a bd     ORA    <$BD
-aec1: 26 01     BNE    $0007
+aec1: 26 01     BNE    $AEC4
 aec3: 39        RTS
 aec4: b6 4b 1b  LDA    $4B1B
 aec7: 84 01     ANDA   #$01
-aec9: 27 5a     BEQ    $0068
+aec9: 27 5a     BEQ    $AF25
 aecb: cc ff 98  LDD    #$FF98
 aece: f3 4b 1e  ADDD   $4B1E
 aed1: 84 1f     ANDA   #$1F
@@ -43,7 +43,7 @@ af20: c6 08     LDB    #$08
 af22: bd af 87  JSR    $AF87
 af25: b6 4b 1b  LDA    $4B1B
 af28: 84 01     ANDA   #$01
-af2a: 26 5a     BNE    $00C9
+af2a: 26 5a     BNE    $AF86
 af2c: cc fd fb  LDD    #$FDFB
 af2f: f3 4b 1e  ADDD   $4B1E
 af32: 84 1f     ANDA   #$1F
@@ -84,7 +84,7 @@ af86: 39        RTS
 af87: ce b0 4f  LDU    #$B04F
 af8a: 33 c5     LEAU   B,U
 af8c: 96 bd     LDA    <$BD
-af8e: 2f 0a     BLE    $00DD
+af8e: 2f 0a     BLE    $AF9A
 af90: c6 3f     LDB    #$3F
 af92: 3d        MUL
 af93: 86 63     LDA    #$63
@@ -94,7 +94,7 @@ af9a: 8e 4c 00  LDX    #$4C00
 af9d: ec c1     LDD    ,U++
 af9f: ed a1     STD    ,Y++
 afa1: dc 03     LDD    <$03
-afa3: 2b 03     BMI    $00EB
+afa3: 2b 03     BMI    $AFA8
 afa5: c3 00 01  ADDD   #$0001
 afa8: 47        ASRA
 afa9: 56        RORB
@@ -108,7 +108,7 @@ afb4: ec a4     LDD    ,Y
 afb6: 84 1f     ANDA   #$1F
 afb8: ed a1     STD    ,Y++
 afba: dc 01     LDD    <$01
-afbc: 2b 03     BMI    $0104
+afbc: 2b 03     BMI    $AFC1
 afbe: c3 00 01  ADDD   #$0001
 afc1: 47        ASRA
 afc2: 56        RORB
@@ -123,14 +123,14 @@ afcf: 8a e0     ORA    #$E0
 afd1: ed a1     STD    ,Y++
 afd3: dc 01     LDD    <$01
 afd5: c3 00 08  ADDD   #$0008
-afd8: 2d c3     BLT    $00E0
+afd8: 2d c3     BLT    $AF9D
 afda: 83 00 10  SUBD   #$0010
-afdd: 2e be     BGT    $00E0
+afdd: 2e be     BGT    $AF9D
 afdf: dc 03     LDD    <$03
 afe1: c3 00 08  ADDD   #$0008
-afe4: 2d b7     BLT    $00E0
+afe4: 2d b7     BLT    $AF9D
 afe6: 83 00 10  SUBD   #$0010
-afe9: 2e b2     BGT    $00E0
+afe9: 2e b2     BGT    $AF9D
 afeb: ec c1     LDD    ,U++
 afed: ed a1     STD    ,Y++
 afef: dc 03     LDD    <$03
@@ -140,11 +140,11 @@ aff5: dc 01     LDD    <$01
 aff7: 8a e0     ORA    #$E0
 aff9: ed a1     STD    ,Y++
 affb: 96 bd     LDA    <$BD
-affd: 2f 07     BLE    $0149
+affd: 2f 07     BLE    $B006
 afff: cc a0 11  LDD    #$A011
 b002: ed a1     STD    ,Y++
-b004: 20 3e     BRA    $0187
-b006: 2c 3c     BGE    $0187
+b004: 20 3e     BRA    $B044
+b006: 2c 3c     BGE    $B044
 b008: f6 4b 22  LDB    $4B22
 b00b: 86 71     LDA    #$71
 b00d: ed a1     STD    ,Y++
@@ -152,22 +152,22 @@ b00f: fc 4b 20  LDD    $4B20
 b012: ed a1     STD    ,Y++
 b014: b6 4b 23  LDA    $4B23
 b017: 84 01     ANDA   #$01
-b019: 27 05     BEQ    $0163
+b019: 27 05     BEQ    $B020
 b01b: cc a0 1c  LDD    #$A01C
 b01e: ed a1     STD    ,Y++
 b020: b6 4b 23  LDA    $4B23
 b023: 84 02     ANDA   #$02
-b025: 27 05     BEQ    $016F
+b025: 27 05     BEQ    $B02C
 b027: cc a0 23  LDD    #$A023
 b02a: ed a1     STD    ,Y++
 b02c: b6 4b 23  LDA    $4B23
 b02f: 84 04     ANDA   #$04
-b031: 27 05     BEQ    $017B
+b031: 27 05     BEQ    $B038
 b033: cc a0 2a  LDD    #$A02A
 b036: ed a1     STD    ,Y++
 b038: b6 4b 23  LDA    $4B23
 b03b: 84 08     ANDA   #$08
-b03d: 27 05     BEQ    $0187
+b03d: 27 05     BEQ    $B044
 b03f: cc a0 31  LDD    #$A031
 b042: ed a1     STD    ,Y++
 b044: cc 72 00  LDD    #$7200
@@ -193,17 +193,17 @@ b06b: a0 0f     SUBA   $F,X
 b06d: a0 10     SUBA   -$10,X
 b06f: a0 01     SUBA   $1,X
 b071: 96 bc     LDA    <$BC
-b073: 27 1f     BEQ    $01D7
+b073: 27 1f     BEQ    $B094
 b075: bd b0 95  JSR    $B095
 b078: cc 02 00  LDD    #$0200
 b07b: fd 47 06  STD    $4706
 b07e: dc cc     LDD    <$CC
-b080: 2b 07     BMI    $01CC
+b080: 2b 07     BMI    $B089
 b082: 86 04     LDA    #$04
 b084: 97 bd     STA    <$BD
 b086: bd ad 20  JSR    $AD20
 b089: 96 44     LDA    <$44
-b08b: 2f 07     BLE    $01D7
+b08b: 2f 07     BLE    $B094
 b08d: 86 ff     LDA    #$FF
 b08f: 97 44     STA    <$44
 b091: bd ad 3e  JSR    $AD3E
@@ -223,4 +223,4 @@ b0b1: bd cd a2  JSR    $CDA2
 b0b4: d3 ba     ADDD   <$BA
 b0b6: f3 50 44  ADDD   $5044
 b0b9: dd 05     STD    <$05
-b0bb: cc f0 96  LDD    #$F000
+b0bb: cc f0 00  LDD    #$F000

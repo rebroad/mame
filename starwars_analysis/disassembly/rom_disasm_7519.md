@@ -10,7 +10,7 @@
 7532: bd e7 c7  JSR    $E7C7
 7535: b6 4b 0e  LDA    $4B0E
 7538: 81 02     CMPA   #$02
-753a: 2e 1e     BGT    $0041
+753a: 2e 1e     BGT    $755A
 753c: c6 47     LDB    #$47
 753e: bd e7 c7  JSR    $E7C7
 7541: c6 48     LDB    #$48
@@ -25,19 +25,19 @@
 7558: ed a1     STD    ,Y++
 755a: b6 4b 0e  LDA    $4B0E
 755d: 81 01     CMPA   #$01
-755f: 2e 3b     BGT    $0083
+755f: 2e 3b     BGT    $759C
 7561: b6 48 45  LDA    $4845
-7564: 27 36     BEQ    $0083
+7564: 27 36     BEQ    $759C
 7566: b6 45 92  LDA    $4592
 7569: 84 03     ANDA   #$03
-756b: 27 2f     BEQ    $0083
+756b: 27 2f     BEQ    $759C
 756d: f6 45 93  LDB    $4593
 7570: c4 03     ANDB   #$03
 7572: cb 06     ADDB   #$06
 7574: d1 60     CMPB   <$60
-7576: 22 04     BHI    $0063
+7576: 22 04     BHI    $757C
 7578: c6 4a     LDB    #$4A
-757a: 20 1d     BRA    $0080
+757a: 20 1d     BRA    $7599
 757c: ce a0 1a  LDU    #$A01A
 757f: ef a1     STU    ,Y++
 7581: ce 00 48  LDU    #$0048
@@ -53,11 +53,11 @@
 7599: bd e7 c7  JSR    $E7C7
 759c: b6 4b 0e  LDA    $4B0E
 759f: 81 00     CMPA   #$00
-75a1: 2e 0f     BGT    $0099
+75a1: 2e 0f     BGT    $75B2
 75a3: b6 4b 2d  LDA    $4B2D
-75a6: 26 0a     BNE    $0099
+75a6: 26 0a     BNE    $75B2
 75a8: f6 4b 15  LDB    $4B15
-75ab: 27 05     BEQ    $0099
+75ab: 27 05     BEQ    $75B2
 75ad: c6 4b     LDB    #$4B
 75af: bd e7 c7  JSR    $E7C7
 75b2: bd 98 b0  JSR    $98B0
@@ -68,7 +68,7 @@
 75be: bd ce 0c  JSR    $CE0C
 75c1: bd 76 1d  JSR    $761D
 75c4: b6 4b 36  LDA    $4B36
-75c7: 2f 03     BLE    $00B3
+75c7: 2f 03     BLE    $75CC
 75c9: bd 97 c2  JSR    $97C2
 75cc: bd 95 a7  JSR    $95A7
 75cf: bd b6 b9  JSR    $B6B9
@@ -116,10 +116,10 @@
 763b: cc 80 40  LDD    #$8040
 763e: ed a1     STD    ,Y++
 7640: f6 4b 2c  LDB    $4B2C
-7643: 27 29     BEQ    $0155
+7643: 27 29     BEQ    $766E
 7645: c0 08     SUBB   #$08
 7647: c1 20     CMPB   #$20
-7649: 24 02     BCC    $0134
+7649: 24 02     BCC    $764D
 764b: c6 00     LDB    #$00
 764d: f7 4b 2c  STB    $4B2C
 7650: 54        LSRB
@@ -149,12 +149,12 @@
 768a: ed a1     STD    ,Y++
 768c: 39        RTS
 768d: b6 4b 13  LDA    $4B13
-7690: 2f 6a     BLE    $01E3
+7690: 2f 6a     BLE    $76FC
 7692: b6 4b 1a  LDA    $4B1A
-7695: 27 3c     BEQ    $01BA
+7695: 27 3c     BEQ    $76D3
 7697: 96 43     LDA    <$43
 7699: 84 30     ANDA   #$30
-769b: 27 31     BEQ    $01B5
+769b: 27 31     BEQ    $76CE
 769d: c6 40     LDB    #$40
 769f: bd e7 c7  JSR    $E7C7
 76a2: cc 62 80  LDD    #$6280
@@ -173,11 +173,11 @@
 76c4: bd e7 90  JSR    $E790
 76c7: cc 80 40  LDD    #$8040
 76ca: ed a1     STD    ,Y++
-76cc: 20 05     BRA    $01BA
+76cc: 20 05     BRA    $76D3
 76ce: c6 43     LDB    #$43
 76d0: bd e7 c7  JSR    $E7C7
 76d3: b6 4b 13  LDA    $4B13
-76d6: 2f 24     BLE    $01E3
+76d6: 2f 24     BLE    $76FC
 76d8: cc 00 41  LDD    #$0041
 76db: bd e7 c7  JSR    $E7C7
 76de: cc 62 80  LDD    #$6280
@@ -193,17 +193,17 @@
 76f7: cc 80 40  LDD    #$8040
 76fa: ed a1     STD    ,Y++
 76fc: b6 4b 35  LDA    $4B35
-76ff: 27 05     BEQ    $01ED
+76ff: 27 05     BEQ    $7706
 7701: c6 42     LDB    #$42
 7703: bd e7 c7  JSR    $E7C7
 7706: 39        RTS
 7707: b6 4b 0f  LDA    $4B0F
 770a: 81 20     CMPA   #$20
-770c: 23 02     BLS    $01F7
+770c: 23 02     BLS    $7710
 770e: 86 20     LDA    #$20
 7710: c6 06     LDB    #$06
 7712: 3d        MUL
 7713: 50        NEGB
 7714: cb c0     ADDB   #$C0
 7716: 86 70     LDA    #$70
-7718: ed bd     STD    $0,X
+7718: ed 00     STD    $0,X

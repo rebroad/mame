@@ -4,14 +4,14 @@
 72cf: bd 71 60     JSR    $7160
 72d2: bd 76 1d     JSR    $761D
 72d5: b6 4b 2d     LDA    $4B2D
-72d8: 26 16        BNE    $0029
+72d8: 26 16        BNE    $72F0
 72da: fc 4b 0e     LDD    $4B0E
 72dd: 10 83 00 a0  CMPD   #$00A0
-72e1: 24 0d        BCC    $0029
+72e1: 24 0d        BCC    $72F0
 72e3: c4 10        ANDB   #$10
-72e5: 26 04        BNE    $0024
+72e5: 26 04        BNE    $72EB
 72e7: c6 4c        LDB    #$4C
-72e9: 20 02        BRA    $0026
+72e9: 20 02        BRA    $72ED
 72eb: c6 4d        LDB    #$4D
 72ed: bd e7 c7     JSR    $E7C7
 72f0: bd 95 a7     JSR    $95A7
@@ -140,53 +140,53 @@
 7447: bd 76 1d     JSR    $761D
 744a: b6 4b 0e     LDA    $4B0E
 744d: 81 04        CMPA   #$04
-744f: 22 13        BHI    $019D
+744f: 22 13        BHI    $7464
 7451: 96 98        LDA    <$98
-7453: 26 05        BNE    $0193
+7453: 26 05        BNE    $745A
 7455: bd 76 d3     JSR    $76D3
-7458: 20 0a        BRA    $019D
+7458: 20 0a        BRA    $7464
 745a: cc 71 00     LDD    #$7100
 745d: ed a1        STD    ,Y++
 745f: c6 46        LDB    #$46
 7461: bd e7 c7     JSR    $E7C7
 7464: b6 4b 2d     LDA    $4B2D
-7467: 26 28        BNE    $01CA
+7467: 26 28        BNE    $7491
 7469: b6 4b 0e     LDA    $4B0E
 746c: 81 08        CMPA   #$08
-746e: 22 21        BHI    $01CA
+746e: 22 21        BHI    $7491
 7470: 96 98        LDA    <$98
-7472: 26 1d        BNE    $01CA
+7472: 26 1d        BNE    $7491
 7474: b6 4b 35     LDA    $4B35
-7477: 26 18        BNE    $01CA
+7477: 26 18        BNE    $7491
 7479: b6 4b 12     LDA    $4B12
-747c: 26 04        BNE    $01BB
+747c: 26 04        BNE    $7482
 747e: c6 4c        LDB    #$4C
-7480: 20 0c        BRA    $01C7
+7480: 20 0c        BRA    $748E
 7482: 96 43        LDA    <$43
 7484: 84 10        ANDA   #$10
-7486: 26 04        BNE    $01C5
+7486: 26 04        BNE    $748C
 7488: c6 4c        LDB    #$4C
-748a: 20 02        BRA    $01C7
+748a: 20 02        BRA    $748E
 748c: c6 4e        LDB    #$4E
 748e: bd e7 c7     JSR    $E7C7
 7491: b6 4b 2d     LDA    $4B2D
-7494: 26 0f        BNE    $01DE
+7494: 26 0f        BNE    $74A5
 7496: b6 48 95     LDA    $4895
-7499: 27 0a        BEQ    $01DE
+7499: 27 0a        BEQ    $74A5
 749b: cc 71 00     LDD    #$7100
 749e: ed a1        STD    ,Y++
 74a0: c6 44        LDB    #$44
 74a2: bd e7 c7     JSR    $E7C7
 74a5: b6 4b 36     LDA    $4B36
-74a8: 2d 0c        BLT    $01EF
-74aa: 26 07        BNE    $01EC
+74a8: 2d 0c        BLT    $74B6
+74aa: 26 07        BNE    $74B3
 74ac: c6 4f        LDB    #$4F
 74ae: bd e7 c7     JSR    $E7C7
-74b1: 20 03        BRA    $01EF
+74b1: 20 03        BRA    $74B6
 74b3: bd 97 c2     JSR    $97C2
 74b6: bd 95 a7     JSR    $95A7
 74b9: bd b6 b9     JSR    $B6B9
 74bc: bd 85 9b     JSR    $859B
 74bf: bd ae 60     JSR    $AE60
 74c2: bd aa e4     JSR    $AAE4
-74c5: bd b0 bd     JSR    $B000
+74c5: bd b0 00     JSR    $B000
