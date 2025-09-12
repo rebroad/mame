@@ -167,7 +167,7 @@ class AutomatedDisassembler:
         end_int = int(end_addr, 16)
         return end_int - start_int + 1
 
-    def disassemble_routine(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True) -> bool:
+    def disassemble_routine(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True, force_save: bool = False) -> bool:
         """Disassemble a routine with proper boundaries"""
         if verbose:
             print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
@@ -195,7 +195,7 @@ class AutomatedDisassembler:
                         valid_assembly = True
                         break
             # If regex failed for all lines, fall back to allowing content
-            if not valid_assembly and lines:
+            if not valid_assembly and lines and force_save:
                 valid_assembly = True
 
             if not valid_assembly:
@@ -335,6 +335,7 @@ class AutomatedDisassembler:
 
         to_visit = [entry]
         visited = set()
+        discovered_entries = []
         disassembled = 0
 
         while to_visit:
@@ -342,28 +343,46 @@ class AutomatedDisassembler:
             if addr in visited:
                 continue
             visited.add(addr)
+            discovered_entries.append(addr)
 
             print(f"Traversing entry ${addr}...")
             start, end = self.find_routine_boundaries(addr, max_search=1500)
+            is_seed = (addr == entry)
 
             if start and end:
                 name = f"auto_{start}"
-                # Save only if the routine looks valid (not fallback-only)
-                if self.disassemble_routine(start, end, name, verbose=False):
+                if self.disassemble_routine(start, end, name, verbose=False, force_save=is_seed):
                     disassembled += 1
+                    # After saving, get lines again to discover new targets inside this routine
                     lines = self._disassemble_lines(start, self.calculate_byte_count(start, end))
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
             else:
-                # Fallback window: do NOT save; only extract targets to continue traversal
+                # Fallback window
                 lines = self._disassemble_lines(addr, 256)
                 if lines:
+                    if is_seed:
+                        # Save a seed window so we always have the entry disassembly
+                        output_file = self.disassembly_dir / f"rom_disasm_seed_{addr}.md"
+                        with open(output_file, 'w') as f:
+                            for line in lines:
+                                f.write(line + '\n')
+                        disassembled += 1
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
                 else:
                     print(f"  Skipping ${addr}: unable to disassemble")
+
+        # Write discovered entries for auditing
+        try:
+            ep_file = self.disassembly_dir / "entry_points.txt"
+            with open(ep_file, 'w') as f:
+                for a in discovered_entries:
+                    f.write(f"{a}\n")
+        except Exception:
+            pass
 
         print(f"Traversal complete. Disassembled {disassembled} routines from reset vector.")
         return disassembled
