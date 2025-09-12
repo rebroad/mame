@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Prepare ROM files for analysis
-Creates symbolic links to original ROM files with descriptive names
+Prepare ROM memory images for analysis and tooling.
+
+This script builds:
+- complete_memory_map.bin (CPU 64KB address space, bank1 entry 0 active)
+- maincpu_rom_region.bin (0x12000 main ROM region as per MAME)
+
+ROM data is read directly from starwars1.zip
 """
 
 import struct
@@ -10,23 +15,14 @@ import io
 import zipfile
 
 def _read_rom(path: str, zf: zipfile.ZipFile | None) -> bytes:
-    """Read a ROM either from filesystem or from starwars1.zip if available.
-
-    Returns empty bytes if not found anywhere.
-    """
-    # Prefer local file if non-empty
-    if os.path.exists(path):
-        with open(path, 'rb') as f:
-            data = f.read()
-        if data:
-            return data
-    # Try zip
+    """Read a ROM from starwars1.zip. Returns empty bytes if not found."""
     if zf is not None:
-        # Try exact name first, then any member ending with the name
-        candidates = [path]
+        # Try exact name and then any member ending with the basename
+        base = path.split('/')[-1]
+        candidates = [path, base]
         try:
             for name in zf.namelist():
-                if name.endswith('/' + path) or name == path:
+                if name.endswith('/' + base) or name == base:
                     candidates.append(name)
         except Exception:
             pass
@@ -65,8 +61,10 @@ def create_memory_map():
     rom4 = '136021.206.1m'        # 0xE000-0xFFFF
     vector_prom = '136021-105.1l' # 0x3000-0x3FFF (CPU space)
 
-    # Open zip if present
-    zip_path = os.path.join(os.getcwd(), 'starwars1.zip')
+    # Open zip from ~/.mame/roms/starwars1.zip (preferred) or CWD fallback
+    zip_path = os.path.expanduser('~/.mame/roms/starwars1.zip')
+    if not os.path.exists(zip_path):
+        zip_path = os.path.join(os.getcwd(), 'starwars1.zip')
     zf = None
     if os.path.exists(zip_path):
         try:
@@ -114,43 +112,6 @@ def create_memory_map():
 
     return cpu, rom_region
 
-def create_individual_roms():
-    """Create individual ROM files for separate analysis"""
-
-    roms = [
-        ('136021.114.1f', 'main_cpu_rom.bin'),
-        ('136021.214.1f', 'main_cpu_rom_alt.bin'),
-        ('136021.102.1hj', 'secondary_rom_1.bin'),
-        ('136021.104.1kl', 'secondary_rom_2.bin'),
-        ('136021.203.1jk', 'secondary_rom_3.bin'),
-        ('136021.206.1m', 'text_rom.bin'),
-        ('136021.208', 'secondary_rom_4.bin'),
-        ('136021.105', 'data_rom.bin'),
-        ('136021.107', 'secondary_rom_5.bin'),
-        ('136021.110', 'mathbox_prom_0.bin'),
-        ('136021.111', 'mathbox_prom_1.bin'),
-        ('136021.112', 'mathbox_prom_2.bin'),
-        ('136021.113', 'mathbox_prom_3.bin'),
-        ('136021-105.1l', 'avg_prom.bin')
-    ]
-
-    zip_path = os.path.join(os.getcwd(), 'starwars1.zip')
-    zf = None
-    if os.path.exists(zip_path):
-        try:
-            zf = zipfile.ZipFile(zip_path, 'r')
-        except Exception:
-            zf = None
-
-    for original, new_name in roms:
-        data = _read_rom(original, zf)
-        if data:
-            with open(new_name, 'wb') as f_out:
-                f_out.write(data)
-            print(f"Created: {new_name}")
-        else:
-            print(f"Skipping {new_name} (missing)")
-
 def analyze_entry_points():
     """Analyze potential entry points in the main ROM"""
 
@@ -185,7 +146,7 @@ def analyze_entry_points():
                 break
 
 def main():
-    print("Preparing ROM files for Ghidra analysis...")
+    print("Preparing Star Wars ROM memory images (MAME layout)...")
 
     # Create individual ROM files
     create_individual_roms()
@@ -206,12 +167,10 @@ def main():
     # Analyze entry points
     analyze_entry_points()
 
-    print("\nROM files prepared for Ghidra import!")
-    print("Recommended import order:")
-    print("1. complete_memory_map.bin (CPU address space, bank1 entry 0)")
-    print("2. maincpu_rom_region.bin (full ROM region including 0x10000 page)")
-    print("3. main_cpu_rom.bin (for detailed CPU analysis)")
-    print("4. text_rom.bin (for string analysis)")
+    print("\nROM memory images prepared.")
+    print("Artifacts:")
+    print("- complete_memory_map.bin (CPU address space, bank1 entry 0)")
+    print("- maincpu_rom_region.bin (full ROM region including 0x10000 page)")
 
 if __name__ == "__main__":
     main()
