@@ -113,43 +113,51 @@ def create_memory_map():
     return cpu, rom_region
 
 def analyze_entry_points():
-    """Analyze potential entry points in the main ROM"""
+    """Analyze entry points using the 6809 reset vector from complete_memory_map.bin.
 
-    with open('136021.114.1f', 'rb') as f:
-        data = f.read()
+    The 6809 CPU reads the reset vector from 0xFFFE-0xFFFF on power-up.
+    This is the actual entry point that MAME's CPU would jump to.
+    """
+    try:
+        with open('complete_memory_map.bin', 'rb') as f:
+            memory = f.read()
+    except FileNotFoundError:
+        print("WARNING: complete_memory_map.bin not found; skipping entry point analysis")
+        return
 
-    print("\n=== Entry Point Analysis ===")
+    if len(memory) < 0x10000:
+        print("WARNING: Memory map too small; skipping entry point analysis")
+        return
 
-    # Check first few bytes
-    if len(data) >= 3:
-        opcode = data[0]
-        if opcode == 0x7e:  # JMP instruction
-            target = struct.unpack('>H', data[1:3])[0]
-            print(f"Main entry point: JMP ${target:04x}")
+    print("\n=== Entry Point Analysis (6809 Reset Vector) ===")
 
-    # Look for other JMP instructions
-    print("\nJMP instructions found:")
-    for i in range(0, len(data) - 2, 2):
-        if data[i] == 0x7e:  # JMP
-            target = struct.unpack('>H', data[i+1:i+3])[0]
-            print(f"  ${i:04x}: JMP ${target:04x}")
+    # Read the reset vector from 0xFFFE-0xFFFF
+    reset_vector = struct.unpack('>H', memory[0xFFFE:0x10000])[0]
+    print(f"6809 Reset Vector (0xFFFE-0xFFFF): ${reset_vector:04x}")
+    print(f"CPU will jump to: ${reset_vector:04x} on power-up")
 
-    # Look for JSR instructions (subroutine calls)
-    print("\nJSR instructions found (first 20):")
-    count = 0
-    for i in range(0, len(data) - 2, 2):
-        if data[i] == 0xbd:  # JSR
-            target = struct.unpack('>H', data[i+1:i+3])[0]
-            print(f"  ${i:04x}: JSR ${target:04x}")
-            count += 1
-            if count >= 20:
-                break
+    # Analyze what's at the reset vector target
+    if reset_vector < len(memory):
+        target_data = memory[reset_vector:reset_vector+16]
+        print(f"Code at ${reset_vector:04x}: {target_data[:8].hex()}")
+        
+        # Check if it's a JMP instruction
+        if len(target_data) >= 3 and target_data[0] == 0x7e:
+            jmp_target = struct.unpack('>H', target_data[1:3])[0]
+            print(f"  -> JMP ${jmp_target:04x}")
+        elif len(target_data) >= 1:
+            print(f"  -> Opcode: ${target_data[0]:02x}")
+
+    # Also show what's in the ROM bank window (0x6000-0x7FFF)
+    print(f"\nROM Bank Window (0x6000-0x7FFF):")
+    rom_window = memory[0x6000:0x6000+16]
+    print(f"  ${0x6000:04x}: {rom_window.hex()}")
+    if len(rom_window) >= 3 and rom_window[0] == 0x7e:
+        jmp_target = struct.unpack('>H', rom_window[1:3])[0]
+        print(f"  -> JMP ${jmp_target:04x}")
 
 def main():
     print("Preparing Star Wars ROM memory images (MAME layout)...")
-
-    # Create individual ROM files
-    create_individual_roms()
 
     # Create CPU map and ROM region mirroring MAME
     cpu_map, rom_region = create_memory_map()

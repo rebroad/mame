@@ -338,7 +338,9 @@ class AutomatedDisassembler:
 
 def main():
     parser = argparse.ArgumentParser(description="Automated ROM Disassembler")
-    parser.add_argument("rom_file", help="Path to ROM file")
+    parser.add_argument("rom_file", nargs="?", help="Path to ROM file")
+    parser.add_argument("--input", help="Path to ROM file (alternative to positional argument)")
+    parser.add_argument("--output-dir", help="Output directory for disassembly files")
     parser.add_argument("-arch", default="m6809", help="CPU architecture (default: m6809)")
     parser.add_argument("--search", action="store_true", help="Search for common routine patterns")
     parser.add_argument("--known", action="store_true", help="Disassemble known routines")
@@ -347,12 +349,25 @@ def main():
     parser.add_argument("--name", help="Name for the routine (used with --addr)")
 
     args = parser.parse_args()
+    
+    # Determine ROM file path
+    rom_file = args.input or args.rom_file
+    if not rom_file:
+        parser.error("ROM file path required (use positional argument or --input)")
+    
+    # Set output directory if provided
+    output_dir = args.output_dir
 
-    if not os.path.exists(args.rom_file):
-        print(f"Error: ROM file {args.rom_file} not found")
+    if not os.path.exists(rom_file):
+        print(f"Error: ROM file {rom_file} not found")
         return 1
 
-    disassembler = AutomatedDisassembler(args.rom_file, args.arch)
+    disassembler = AutomatedDisassembler(rom_file, args.arch)
+    
+    # Override output directory if provided
+    if output_dir:
+        disassembler.disassembly_dir = Path(output_dir)
+        disassembler.disassembly_dir.mkdir(exist_ok=True)
 
     if args.addr:
         if not args.name:
