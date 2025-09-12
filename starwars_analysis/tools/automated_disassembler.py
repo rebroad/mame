@@ -267,38 +267,124 @@ class AutomatedDisassembler:
         for name, (start, end) in known_routines.items():
             self.disassemble_routine(start, end, name)
 
+    # --- NEW: Entry-point-driven traversal helpers ---
+    def _read_reset_vector(self) -> Optional[str]:
+        """Read the 6809 reset vector (0xFFFE-0xFFFF) from the ROM image and return hex address string."""
+        try:
+            with open(self.rom_file, 'rb') as f:
+                data = f.read()
+            if len(data) < 0x10000:
+                print("WARNING: ROM image smaller than 64KB; cannot read reset vector")
+                return None
+            reset = int.from_bytes(data[0xFFFE:0x10000], byteorder='big')
+            return f"{reset:04x}"
+        except Exception as e:
+            print(f"WARNING: Failed to read reset vector: {e}")
+            return None
+
+    def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
+        """Get raw disassembly lines from unidasm for a range starting at start_addr."""
+        try:
+            result = subprocess.run([
+                "unidasm", "-arch", self.arch, self.rom_file, "-basepc", start_addr, "-count", str(count)
+            ], capture_output=True, text=True, check=True)
+            lines = [ln for ln in result.stdout.strip().split('\n') if ln.strip()]
+            return lines
+        except subprocess.CalledProcessError as e:
+            print(f"Error running unidasm for lines at {start_addr}: {e}")
+            return []
+
+    def _extract_call_targets(self, lines: list) -> list:
+        """Extract absolute target addresses from JSR/JMP instructions in disassembly lines."""
+        targets = []
+        for line in lines:
+            # Expect format like: f261: 7e f2 61     JMP    $F261
+            m = re.search(r'\b(JSR|JMP)\s+\$?([0-9A-Fa-f]{4})\b', line)
+            if m:
+                addr = m.group(2).lower()
+                targets.append(addr)
+        return targets
+
+    def graph_disassemble_from_reset(self):
+        """Traverse and disassemble routines starting from the reset vector, following JSR/JMP."""
+        print("Step 0: Reading 6809 reset vector...")
+        entry = self._read_reset_vector()
+        if not entry:
+            print("ERROR: Could not determine reset vector; aborting traversal")
+            return
+        print(f"Reset vector -> ${entry}")
+
+        to_visit = [entry]
+        visited = set()
+        disassembled = 0
+
+        while to_visit:
+            addr = to_visit.pop(0)
+            if addr in visited:
+                continue
+            visited.add(addr)
+
+            print(f"Traversing entry ${addr}...")
+            start, end = self.find_routine_boundaries(addr, max_search=1500)
+
+            if start and end:
+                name = f"auto_{start}"
+                if self.disassemble_routine(start, end, name, verbose=False):
+                    disassembled += 1
+                    # After saving, get lines again to discover new targets inside this routine
+                    lines = self._disassemble_lines(start, self.calculate_byte_count(start, end))
+                    for t in self._extract_call_targets(lines):
+                        if t not in visited and t not in to_visit:
+                            to_visit.append(t)
+            else:
+                # Fallback: scan a small window to find new targets so traversal can continue
+                lines = self._disassemble_lines(addr, 256)
+                if lines:
+                    for t in self._extract_call_targets(lines):
+                        if t not in visited and t not in to_visit:
+                            to_visit.append(t)
+                else:
+                    print(f"  Skipping ${addr}: unable to disassemble")
+
+        print(f"Traversal complete. Disassembled {disassembled} routines from reset vector.")
+
     def fully_automated_disassembly(self):
         """Fully automated workflow to find and disassemble all meaningful routines"""
         print("=== FULLY AUTOMATED ROM DISASSEMBLY ===")
         print("This will find and disassemble all meaningful routines automatically.")
         print("")
 
-        # Step 1: Disassemble known routines
-        print("Step 1: Disassembling known routines...")
-        self.disassemble_known_routines()
+        # Preferred: entry-point-driven traversal like MAME (reset vector)
+        self.graph_disassemble_from_reset()
 
-        # Step 2: Find all RTS instructions (routine endings)
-        print("\nStep 2: Finding all RTS instructions...")
-        rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
-
-        # Step 3: Find all JMP instructions (routine starts/transfers)
-        print("\nStep 3: Finding all JMP instructions...")
-        jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
-
-        # Step 4: Find all JSR instructions (subroutine calls)
-        print("\nStep 4: Finding all JSR instructions...")
-        jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
+        # Optionally, we can still do heuristic passes afterwards if desired
+        # print("\nHeuristic pass: known routines...")
+        # self.disassemble_known_routines()
+        # print("\nHeuristic pass: RTS/JMP/JSR searches...")
+        # rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
+        # jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
+        # jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
 
         # Step 5: Analyze and disassemble meaningful routines
         print("\nStep 5: Analyzing and disassembling meaningful routines...")
 
         all_candidates = {}
+        # all_candidates.update(rts_routines) # These are now handled by graph traversal
+        # all_candidates.update(jmp_routines) # These are now handled by graph traversal
+        # all_candidates.update(jsr_routines) # These are now handled by graph traversal
+
+        meaningful_routines = 0
+        
+        # The graph traversal already handles finding and disassembling routines
+        # We can still find some patterns if the graph traversal misses them
+        rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
+        jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
+        jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
+
         all_candidates.update(rts_routines)
         all_candidates.update(jmp_routines)
         all_candidates.update(jsr_routines)
 
-        meaningful_routines = 0
-        
         for pattern, (start, end) in all_candidates.items():
             if start and end and start != end:
                 # Calculate size
