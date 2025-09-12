@@ -4,84 +4,65 @@
 
 namespace StarWars {
 
-// Wrapper class to adapt generated routines to existing CPU6809 class
-class StarWarsCPU {
-public:
-    // CPU state (adapted from existing CPU6809 members)
-    struct State {
-        uint8_t& a;
-        uint8_t& b;
-        uint16_t& d;
-        uint16_t& x;
-        uint16_t& y;
-        uint16_t& u;
-        uint16_t& sp;
-        uint8_t& cc;
-        uint16_t& pc;
-        
-        State(CPU6809& cpu) 
-            : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),
-              u(cpu.m_u), sp(cpu.m_sp), cc(cpu.m_cc), pc(cpu.m_pc) {}
-    };
-    
-    State state_;
-    CPU6809& cpu_;
-    
-    StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {}
-    
-    // Memory access methods
-    void write_memory(uint16_t address, uint8_t value) {
-        cpu_.write_memory(address, value);
-    }
-    
-    uint8_t read_memory(uint16_t address) {
-        return cpu_.read_memory(address);
-    }
-    
-    void write_memory16(uint16_t address, uint16_t value) {
-        cpu_.write_memory16(address, value);
-    }
-    
-    uint16_t read_memory16(uint16_t address) {
-        return cpu_.read_memory16(address);
-    }
-    
-    // Condition code helpers
-    bool zero_flag() const { return cpu_.get_zero_flag(); }
-    bool carry_flag() const { return cpu_.get_carry_flag(); }
-    bool negative_flag() const { return (state_.cc & 0x08) != 0; }
-    
-    // Function call handling
-    void call_function(uint16_t address) {
-        // Push return address and jump
-        cpu_.push_word(state_.pc);
-        state_.pc = address;
-    }
-    
-    void return_from_function() {
-        // Pop return address
-        state_.pc = cpu_.pop_word();
-    }
-    
-    // Comparison helpers
-    void compare_a(uint8_t value) {
-        uint8_t result = state_.a - value;
-        cpu_.set_zero_flag(result == 0);
-        cpu_.set_carry_flag(state_.a < value);
-    }
-    
-    void compare_b(uint8_t value) {
-        uint8_t result = state_.b - value;
-        cpu_.set_zero_flag(result == 0);
-        cpu_.set_carry_flag(state_.b < value);
-    }
-    
-    void compare_x(uint16_t value) {
-        uint16_t result = state_.x - value;
-        cpu_.set_zero_flag(result == 0);
-        cpu_.set_carry_flag(state_.x < value);
-    }
-};
+// Implementation of StarWarsCPU class (declared in header)
+StarWarsCPU::State::State(CPU6809& cpu) 
+    : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),
+      u(cpu.m_u), sp(cpu.m_sp), cc(cpu.m_cc), pc(cpu.m_pc) {}
+
+StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {}
+
+// Memory access methods
+void StarWarsCPU::write_memory(uint16_t address, uint8_t value) {
+    cpu_.write_memory(address, value);
+}
+
+uint8_t StarWarsCPU::read_memory(uint16_t address) {
+    return cpu_.read_memory(address);
+}
+
+void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {
+    cpu_.write_memory16(address, value);
+}
+
+uint16_t StarWarsCPU::read_memory16(uint16_t address) {
+    return cpu_.read_memory16(address);
+}
+
+// Condition code helpers
+bool StarWarsCPU::zero_flag() const { return cpu_.get_zero_flag(); }
+bool StarWarsCPU::carry_flag() const { return cpu_.get_carry_flag(); }
+bool StarWarsCPU::negative_flag() const { return (state_.cc & 0x08) != 0; }
+
+// Function call handling
+void StarWarsCPU::call_function(uint16_t address) {
+    // Push return address and jump
+    cpu_.push_word(state_.pc);
+    state_.pc = address;
+}
+
+void StarWarsCPU::return_from_function() {
+    // Pop return address
+    state_.pc = cpu_.pop_word();
+}
+
+// Comparison helpers
+void StarWarsCPU::compare_a(uint8_t value) {
+    uint8_t result = state_.a - value;
+    cpu_.set_zero_flag(result == 0);
+    cpu_.set_carry_flag(state_.a < value);
+}
+
+void StarWarsCPU::compare_b(uint8_t value) {
+    uint8_t result = state_.b - value;
+    cpu_.set_zero_flag(result == 0);
+    cpu_.set_carry_flag(state_.b < value);
+}
+
+void StarWarsCPU::compare_x(uint16_t value) {
+    uint16_t result = state_.x - value;
+    cpu_.set_zero_flag(result == 0);
+    cpu_.set_carry_flag(state_.x < value);
+}
 
 // Forward declarations of generated routines
 void routine_e790_impl(StarWarsCPU& cpu);

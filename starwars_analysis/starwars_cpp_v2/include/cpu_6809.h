@@ -12,7 +12,11 @@ namespace StarWars {
  * It provides the core instruction execution engine needed to run
  * the validated ROM routines we've disassembled.
  */
+// Forward declaration for friend class
+class StarWarsCPU;
+
 class CPU6809 {
+    friend class StarWarsCPU;
 public:
     // Constructor/Destructor
     CPU6809();
@@ -65,8 +69,8 @@ public:
     void print_state() const;
     void print_instruction(uint16_t address) const;
 
-private:
-    // CPU registers
+protected:
+    // CPU registers (protected for wrapper access)
     uint16_t m_pc;               // Program counter
     uint16_t m_sp;               // Stack pointer
     uint16_t m_u;                // User stack pointer
@@ -110,11 +114,55 @@ private:
     uint8_t get_direct_byte(uint8_t address);
     void set_direct_byte(uint8_t address, uint8_t value);
     
-    // Condition code helpers
+    // Condition code helpers (protected for wrapper access)
     void set_zero_flag(bool zero);
     void set_carry_flag(bool carry);
     bool get_zero_flag() const;
     bool get_carry_flag() const;
+};
+
+// Wrapper class for generated routines
+class StarWarsCPU {
+public:
+    // CPU state (adapted from existing CPU6809 members)
+    struct State {
+        uint8_t& a;
+        uint8_t& b;
+        uint16_t& d;
+        uint16_t& x;
+        uint16_t& y;
+        uint16_t& u;
+        uint16_t& sp;
+        uint8_t& cc;
+        uint16_t& pc;
+        
+        State(CPU6809& cpu);
+    };
+    
+    State state_;
+    CPU6809& cpu_;
+    
+    StarWarsCPU(CPU6809& cpu);
+    
+    // Memory access methods
+    void write_memory(uint16_t address, uint8_t value);
+    uint8_t read_memory(uint16_t address);
+    void write_memory16(uint16_t address, uint16_t value);
+    uint16_t read_memory16(uint16_t address);
+    
+    // Condition code helpers
+    bool zero_flag() const;
+    bool carry_flag() const;
+    bool negative_flag() const;
+    
+    // Function call handling
+    void call_function(uint16_t address);
+    void return_from_function();
+    
+    // Comparison helpers
+    void compare_a(uint8_t value);
+    void compare_b(uint8_t value);
+    void compare_x(uint16_t value);
 };
 
 } // namespace StarWars
