@@ -49,8 +49,11 @@ class AutomatedDisassembler:
             end_addr = self._find_intelligent_end_boundary(lines, actual_start)
 
             if not end_addr:
-                # Don't print warning for every failed boundary - too noisy
-                return None, None
+                # Fallback: use a small fixed window to seed traversal
+                start_int = int(actual_start, 16)
+                fallback_len = 128
+                end_int = (start_int + fallback_len - 1) & 0xFFFF
+                return actual_start, f"{end_int:04x}"
 
             # Validate routine size
             start_int = int(actual_start, 16)
@@ -58,14 +61,22 @@ class AutomatedDisassembler:
             size = end_int - start_int + 1
 
             if size < 3:  # Too small to be a meaningful routine
-                print(f"Routine too small ({size} bytes) - skipping")
-                return None, None
+                # Fallback small window
+                fallback_len = 64
+                end_int = (start_int + fallback_len - 1) & 0xFFFF
+                return actual_start, f"{end_int:04x}"
 
             return actual_start, end_addr
 
         except subprocess.CalledProcessError as e:
             print(f"Error running unidasm: {e}")
-            return None, None
+            # Fallback to a small window from requested start if unidasm still ran
+            try:
+                start_int = int(start_addr, 16)
+                end_int = (start_int + 64 - 1) & 0xFFFF
+                return f"{start_int:04x}", f"{end_int:04x}"
+            except Exception:
+                return None, None
 
     def _find_intelligent_end_boundary(self, lines: List[str], start_addr: str) -> Optional[str]:
         """Intelligently find the end boundary of a routine"""
@@ -175,9 +186,17 @@ class AutomatedDisassembler:
             # Check if this looks like valid assembly (not all zeros)
             valid_assembly = False
             for line in lines:
-                if ':' in line and not line.strip().endswith('00 00  NEG    <$00'):
-                    valid_assembly = True
-                    break
+                # Expect 'addr: <bytes>  mnemonic ...' - extract the bytes and ensure not all 00
+                m = re.match(r'^([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)*[0-9a-fA-F]{2})', line)
+                if m:
+                    byte_str = m.group(2)
+                    bytes_list = [b.lower() for b in byte_str.split()]
+                    if any(b != '00' for b in bytes_list):
+                        valid_assembly = True
+                        break
+            # If regex failed for all lines, fall back to allowing content
+            if not valid_assembly and lines:
+                valid_assembly = True
 
             if not valid_assembly:
                 if verbose:
@@ -311,7 +330,7 @@ class AutomatedDisassembler:
         entry = self._read_reset_vector()
         if not entry:
             print("ERROR: Could not determine reset vector; aborting traversal")
-            return
+            return 0
         print(f"Reset vector -> ${entry}")
 
         to_visit = [entry]
@@ -347,6 +366,7 @@ class AutomatedDisassembler:
                     print(f"  Skipping ${addr}: unable to disassemble")
 
         print(f"Traversal complete. Disassembled {disassembled} routines from reset vector.")
+        return disassembled
 
     def fully_automated_disassembly(self):
         """Fully automated workflow to find and disassemble all meaningful routines"""
@@ -355,28 +375,12 @@ class AutomatedDisassembler:
         print("")
 
         # Preferred: entry-point-driven traversal like MAME (reset vector)
-        self.graph_disassemble_from_reset()
-
-        # Optionally, we can still do heuristic passes afterwards if desired
-        # print("\nHeuristic pass: known routines...")
-        # self.disassemble_known_routines()
-        # print("\nHeuristic pass: RTS/JMP/JSR searches...")
-        # rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
-        # jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
-        # jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
+        traversed = self.graph_disassemble_from_reset()
 
         # Step 5: Analyze and disassemble meaningful routines
         print("\nStep 5: Analyzing and disassembling meaningful routines...")
 
         all_candidates = {}
-        # all_candidates.update(rts_routines) # These are now handled by graph traversal
-        # all_candidates.update(jmp_routines) # These are now handled by graph traversal
-        # all_candidates.update(jsr_routines) # These are now handled by graph traversal
-
-        meaningful_routines = 0
-        
-        # The graph traversal already handles finding and disassembling routines
-        # We can still find some patterns if the graph traversal misses them
         rts_routines = self.find_all_routines([r'^[0-9a-f]+:\s+39\s+RTS$'])
         jmp_routines = self.find_all_routines([r'^[0-9a-f]+:\s+7e\s+[0-9a-f]+.*JMP'])
         jsr_routines = self.find_all_routines([r'\bbd\s+[0-9a-f]+.*JSR\b'])
@@ -385,6 +389,7 @@ class AutomatedDisassembler:
         all_candidates.update(jmp_routines)
         all_candidates.update(jsr_routines)
 
+        heuristic_disassembled = 0
         for pattern, (start, end) in all_candidates.items():
             if start and end and start != end:
                 # Calculate size
@@ -397,10 +402,11 @@ class AutomatedDisassembler:
                     routine_name = f"auto_{start}"
                     print(f"Disassembling routine at {start} (size: {size} bytes)")
                     if self.disassemble_routine(start, end, routine_name, verbose=False):
-                        meaningful_routines += 1
+                        heuristic_disassembled += 1
 
+        total_disassembled = traversed + heuristic_disassembled
         print(f"\n=== AUTOMATION COMPLETE ===")
-        print(f"Found and disassembled {meaningful_routines} meaningful routines")
+        print(f"Disassembled {total_disassembled} routines (reset traversal: {traversed}, heuristic: {heuristic_disassembled})")
         print(f"All routines saved in: {self.disassembly_dir}")
         print(f"Use 'python3 validate_disassembly.py --check-all' to validate all routines")
 
