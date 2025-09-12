@@ -25,17 +25,50 @@ class AutomatedDisassembler:
         self.disassembly_dir = Path("disassembly")
         self.disassembly_dir.mkdir(exist_ok=True)
 
+    def _get_disassembly_window(self, start_addr: str, max_count: int) -> List[str]:
+        """Return disassembly lines starting at start_addr; if not found, start at next available address >= start.
+        Falls back to scanning full unidasm output.
+        """
+        # Try home-grown ranged run first
+        try:
+            start_int = int(start_addr, 16)
+            end_int = (start_int + max_count) & 0xFFFF
+            end_addr = f"{end_int:04x}"
+            lines = dr_run_unidasm(self.rom_file, start_addr, end_addr)
+            if lines:
+                return lines
+        except Exception:
+            pass
+
+        # Fallback: full unidasm, then pick the next address >= start
+        try:
+            result = subprocess.run(["unidasm", "-arch", self.arch, self.rom_file], capture_output=True, text=True, check=True)
+            all_lines = [ln.strip() for ln in result.stdout.split('\n') if ln.strip()]
+            start_int = int(start_addr, 16)
+            window = []
+            in_range = False
+            for ln in all_lines:
+                m = re.match(r'^([0-9a-fA-F]+):', ln)
+                if not m:
+                    continue
+                cur_int = int(m.group(1), 16)
+                if not in_range and (cur_int == start_int or cur_int > start_int):
+                    in_range = True
+                if in_range:
+                    window.append(ln)
+                    if len(window) >= max_count:
+                        break
+            return window
+        except Exception:
+            return []
+
     def find_routine_boundaries(self, start_addr: str, max_search: int = 1000) -> Tuple[str, str]:
         """Find the start and end boundaries of a routine with intelligent analysis"""
         print(f"Finding boundaries for routine at {start_addr}...")
 
-        # Use home-grown decoder to get a window of disassembly lines
         try:
-            # Compute an end address window (wrap at 64K)
-            start_int = int(start_addr, 16)
-            end_int = (start_int + max_search) & 0xFFFF
-            end_addr = f"{end_int:04x}"
-            lines = dr_run_unidasm(self.rom_file, start_addr, end_addr)
+            # Use robust window acquisition
+            lines = self._get_disassembly_window(start_addr, max_search)
 
             # Find the actual start (first non-empty line with address)
             actual_start = None
@@ -62,8 +95,7 @@ class AutomatedDisassembler:
             end_int = int(end_addr_found, 16)
             size = end_int - start_int + 1
 
-            if size < 3:  # Too small to be a meaningful routine
-                # Fallback small window
+            if size < 3:
                 fallback_len = 64
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
                 return actual_start, f"{end_int:04x}"
@@ -72,7 +104,6 @@ class AutomatedDisassembler:
 
         except Exception as e:
             print(f"Error finding boundaries: {e}")
-            # Fallback to a small window from requested start
             try:
                 start_int = int(start_addr, 16)
                 end_int = (start_int + 64 - 1) & 0xFFFF
@@ -138,11 +169,8 @@ class AutomatedDisassembler:
         return match.group(1) if match else None
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
-        """Get raw disassembly lines for a window starting at start_addr using home-grown decoder."""
-        start_int = int(start_addr, 16)
-        end_int = (start_int + count) & 0xFFFF
-        end_addr = f"{end_int:04x}"
-        return dr_run_unidasm(self.rom_file, start_addr, end_addr)
+        """Get raw disassembly lines for a window starting at start_addr using robust helper."""
+        return self._get_disassembly_window(start_addr, count)
 
     def calculate_byte_count(self, start_addr: str, end_addr: str) -> int:
         """Calculate the number of bytes between start and end addresses"""
