@@ -25,7 +25,7 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0xAC55);
 
     // FF0E: BCS $0007
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0007;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFF17;
 
     // FF10: LDA #$FF
     cpu.state_.a = 0xFF;
@@ -46,7 +46,7 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0xAC55);
 
     // FF1F: BCS $0018
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0018;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFF39;
 
     // FF21: JMP $FD07
     cpu.state_.pc = 0xFD07;
@@ -76,7 +76,7 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x5600);
 
     // FF3A: BCS $0033
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0033;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFF6F;
 
     // FF3C: LDA #$FF
     cpu.state_.a = 0xFF;
@@ -103,7 +103,7 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x5600);
 
     // FF52: BCS $004B
-    if (cpu.carry_flag()) cpu.state_.pc += 0x004B;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xFF9F;
 
     // FF54: JMP $FD07
     cpu.state_.pc = 0xFD07;
@@ -247,13 +247,13 @@ void routine_feff_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // FFE5: BRA $0119
-    cpu.state_.pc += 0x0119;
+    cpu.state_.pc = 0x10100;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // FFEA: BRA $012E
-    cpu.state_.pc += 0x012E;
+    cpu.state_.pc = 0x1011A;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

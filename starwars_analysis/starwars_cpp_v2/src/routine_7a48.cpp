@@ -190,13 +190,13 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x434F, cpu.state_.u);
 
     // 7B01: BRA $00EC
-    cpu.state_.pc += 0x00EC;
+    cpu.state_.pc = 0x7BEF;
 
     // 7B04: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // 7B06: BRA $0101
-    cpu.state_.pc += 0x0101;
+    cpu.state_.pc = 0x7C09;
 
     // 7B0C: EORA $ADBA
     cpu.state_.a ^= 0xADBA;
@@ -343,7 +343,7 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     // TODO: Convert ASR ,--X
 
     // 7B7D: BCS $01B5
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01B5;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7D34;
 
     // 7B7F: ASL <$82
     // TODO: Convert ASL <$82
@@ -391,7 +391,7 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x82);
 
     // 7BA3: BNE $00DF
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x00DF;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x7C84;
 
     // 7BA5: EORB #$81
     cpu.state_.b ^= 0x81;
@@ -427,7 +427,7 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     cpu.state_.b = cpu.read_memory(0x83);
 
     // 7BBD: BCS $01F5
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01F5;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7DB4;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -469,7 +469,7 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     cpu.state_.pc = 0xD883;
 
     // 7BDD: BCS $0215
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0215;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7DF4;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -478,7 +478,7 @@ void routine_7a48_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x80);
 
     // 7BE3: BCS $011F
-    if (cpu.carry_flag()) cpu.state_.pc += 0x011F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7D04;
 
     // 7BE5: SUBB $7DE3
     cpu.state_.b -= 0x7DE3;

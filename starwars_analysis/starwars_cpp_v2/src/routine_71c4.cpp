@@ -7,7 +7,7 @@ void routine_71c4_impl(StarWarsCPU& cpu) {
     // Address: 0x71C4
 
     // 71C4: BPL $0003
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0003;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0x71C9;
 
     // 71C7: LDB #$03
     cpu.state_.b = 0x03;
@@ -37,7 +37,7 @@ void routine_71c4_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$00
 
     // 71E1: BCS $001F
-    if (cpu.carry_flag()) cpu.state_.pc += 0x001F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7202;
 
     // 71E3: NEG <$37
     // TODO: Convert NEG <$37
@@ -172,7 +172,7 @@ void routine_71c4_impl(StarWarsCPU& cpu) {
     // TODO: Handle indexed addressing: STD $3,X
 
     // 725F: BCC $0089
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0089;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x72EA;
 
     // 7261: COM <$36
     // TODO: Convert COM <$36
@@ -325,7 +325,7 @@ void routine_71c4_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4B2D);
 
     // 72D8: BNE $012C
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x012C;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x7406;
 
     // 72DA: LDD $4B0E
     cpu.state_.d = cpu.read_memory_word(0x4B0E);
@@ -334,19 +334,19 @@ void routine_71c4_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$00A0
 
     // 72E1: BCC $012C
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x012C;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x740F;
 
     // 72E3: ANDB #$10
     cpu.state_.b &= 0x10;
 
     // 72E5: BNE $0127
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0127;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x740E;
 
     // 72E7: LDB #$4C
     cpu.state_.b = 0x4C;
 
     // 72E9: BRA $0129
-    cpu.state_.pc += 0x0129;
+    cpu.state_.pc = 0x7414;
 
     // 72EB: LDB #$4D
     cpu.state_.b = 0x4D;

@@ -22,13 +22,13 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x0F;
 
     // C64D: BNE $0019
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0019;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC668;
 
     // C64F: CMPX #$4600
     cpu.compare_x(0x4600);
 
     // C652: BCS $0006
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0006;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC65A;
 
     // C654: LDA #$01
     cpu.state_.a = 0x01;
@@ -67,7 +67,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C674: BCS $002C
-    if (cpu.carry_flag()) cpu.state_.pc += 0x002C;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC6A2;
 
     // C676: TST $4AF7
     // TODO: Convert TST $4AF7
@@ -85,7 +85,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4600);
 
     // C685: BCS $003F
-    if (cpu.carry_flag()) cpu.state_.pc += 0x003F;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC6C6;
 
     // C688: LDX #$07D0
     cpu.state_.x = 0x07D0;
@@ -94,25 +94,25 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAX -$1,X
 
     // C68D: BNE $004A
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x004A;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC6D9;
 
     // C690: LDA $4AF7
     cpu.state_.a = cpu.read_memory(0x4AF7);
 
     // C693: BEQ $0076
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0076;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC70B;
 
     // C695: CMPA #$01
     cpu.compare_a(0x01);
 
     // C697: BNE $005C
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x005C;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC6F5;
 
     // C699: LDB #$9C
     cpu.state_.b = 0x9C;
 
     // C69B: BRA $0073
-    cpu.state_.pc += 0x0073;
+    cpu.state_.pc = 0xC710;
 
     // C69D: LDD #$1F6A
     cpu.state_.d = 0x1F6A;
@@ -172,7 +172,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$0020
 
     // C6D1: BCS $0087
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0087;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC75A;
 
     // C6D4: LDU #$4AFA
     cpu.state_.u = 0x4AFA;
@@ -205,7 +205,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4B02
 
     // C6EF: BPL $009B
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x009B;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xC78C;
 
     // C6F1: LEAX -$8,X
     // TODO: Fix comma operator: LEAX -$8,X
@@ -232,7 +232,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $4B02
 
     // C709: BPL $00BB
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x00BB;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xC7C6;
 
     // C70B: LEAX -$6,X
     // TODO: Fix comma operator: LEAX -$6,X
@@ -250,7 +250,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x0A);
 
     // C71A: BCS $00DD
-    if (cpu.carry_flag()) cpu.state_.pc += 0x00DD;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC7F9;
 
     // C71C: LDA #$09
     cpu.state_.a = 0x09;
@@ -274,13 +274,13 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.b &= 0x0F;
 
     // C72C: BEQ $00F3
-    if (cpu.zero_flag()) cpu.state_.pc += 0x00F3;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC821;
 
     // C72E: ADDA #$04
     cpu.state_.a += 0x04;
 
     // C732: BNE $00ED
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x00ED;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xC821;
 
     // C734: JMP $E790
     cpu.state_.pc = 0xE790;
@@ -454,7 +454,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.cc |= 0x20;
 
     // C7AA: BCS $0195
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0195;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC941;
 
     // C7AC: LEAX -$B,Y
     // TODO: Fix comma operator: LEAX -$B,Y
@@ -583,7 +583,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.state_.d = 0xCA64;
 
     // C80F: BRA $01DD
-    cpu.state_.pc += 0x01DD;
+    cpu.state_.pc = 0xC9EE;
 
     // C811: LDA #$3F
     cpu.state_.a = 0x3F;
@@ -637,7 +637,7 @@ void routine_c641_impl(StarWarsCPU& cpu) {
     cpu.compare_x(cpu.read_memory_word(0x4AEC));
 
     // C840: BNE $0201
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0201;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xCA43;
 
 }
 

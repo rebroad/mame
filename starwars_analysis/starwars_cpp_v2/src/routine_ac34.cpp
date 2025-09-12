@@ -52,10 +52,10 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC <$01
 
     // AC5D: BEQ $0031
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0031;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xAC90;
 
     // AC61: BPL $0027
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0027;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xAC8A;
 
     // AC63: ANDA #$7F
     cpu.state_.a &= 0x7F;
@@ -70,7 +70,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x20;
 
     // AC6B: BNE $0048
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0048;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xACB5;
 
     // AC6D: LDA <$01
     cpu.state_.a = cpu.read_memory(0x01);
@@ -91,7 +91,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.write_memory(cpu.state_.y++, cpu.state_.d);
 
     // AC7A: BRA $0072
-    cpu.state_.pc += 0x0072;
+    cpu.state_.pc = 0xACEE;
 
     // AC7C: LDB <$02
     cpu.state_.b = cpu.read_memory(0x02);
@@ -103,19 +103,19 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x03);
 
     // AC83: BCC $0056
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0056;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xACDB;
 
     // AC85: LDA #$03
     cpu.state_.a = 0x03;
 
     // AC88: BRA $005D
-    cpu.state_.pc += 0x005D;
+    cpu.state_.pc = 0xACE7;
 
     // AC8A: CMPA #$06
     cpu.compare_a(0x06);
 
     // AC8C: BCS $005D
-    if (cpu.carry_flag()) cpu.state_.pc += 0x005D;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xACEB;
 
     // AC8E: LDA #$06
     cpu.state_.a = 0x06;
@@ -253,7 +253,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x63);
 
     // ACFB: BNE $00CC
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x00CC;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xADC9;
 
     // ACFD: LDA $4703
     cpu.state_.a = cpu.read_memory(0x4703);
@@ -262,7 +262,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.b = 0x20;
 
     // AD03: BPL $00D2
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x00D2;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xADD7;
 
     // AD06: STB <$63
     cpu.write_memory(0x63, cpu.state_.b);
@@ -274,7 +274,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4B37);
 
     // AD0E: BNE $00EB
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x00EB;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xADFB;
 
     // AD10: INC $4B37
     // TODO: Convert INC $4B37
@@ -301,7 +301,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,U
 
     // AD24: BEQ $0109
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0109;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xAE2F;
 
     // AD26: ANDA #$04
     cpu.state_.a &= 0x04;
@@ -379,7 +379,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x496F);
 
     // AD63: BCS $0123
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0123;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xAE88;
 
     // AD65: JSR $BDA3
     cpu.call_function(0xBDA3);
@@ -391,7 +391,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x45);
 
     // AD6E: BEQ $017A
-    if (cpu.zero_flag()) cpu.state_.pc += 0x017A;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xAEEA;
 
     // AD70: LDD <$46
     cpu.state_.d = cpu.read_memory_word(0x46);
@@ -406,7 +406,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD <$96
 
     // AD7B: BMI $014B
-    if (cpu.negative_flag()) cpu.state_.pc += 0x014B;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xAEC8;
 
     // AD7D: LDD <$96
     cpu.state_.d = cpu.read_memory_word(0x96);
@@ -427,7 +427,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD <$4A
 
     // AD8B: BGE $015B
-    // TODO: Convert BGE $015B
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAEE8;
 
     // AD8D: STD <$4A
     cpu.write_memory(0x4A, cpu.state_.d);
@@ -445,19 +445,19 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST <$48
 
     // AD98: BMI $016F
-    if (cpu.negative_flag()) cpu.state_.pc += 0x016F;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xAF09;
 
     // AD9A: CMPD <$48
     // TODO: Convert CMPD <$48
 
     // AD9D: BGE $016D
-    // TODO: Convert BGE $016D
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAF0C;
 
     // AD9F: STD <$48
     cpu.write_memory(0x48, cpu.state_.d);
 
     // ADA1: BRA $017A
-    cpu.state_.pc += 0x017A;
+    cpu.state_.pc = 0xAF1D;
 
     // ADA5: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -466,7 +466,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD <$48
 
     // ADAA: BLE $017A
-    // TODO: Convert BLE $017A
+    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xAF26;
 
     // ADAC: STD <$48
     cpu.write_memory(0x48, cpu.state_.d);
@@ -475,7 +475,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x45);
 
     // ADB1: BEQ $019F
-    if (cpu.zero_flag()) cpu.state_.pc += 0x019F;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xAF52;
 
     // ADB3: LDD <$46
     cpu.state_.d = cpu.read_memory_word(0x46);
@@ -532,7 +532,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0xE000;
 
     // ADE5: BGT $01B7
-    // TODO: Convert BGT $01B7
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xAF9E;
 
     // ADE7: LDA #$00
     cpu.state_.a = 0x00;
@@ -547,7 +547,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0001
 
     // ADF2: BLT $022B
-    // TODO: Convert BLT $022B
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0xB01F;
 
     // ADF4: STD $4704
     cpu.write_memory(0x4704, cpu.state_.d);
@@ -559,7 +559,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x5002);
 
     // ADFD: BPL $01CF
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x01CF;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xAFCE;
 
     // AE01: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -568,13 +568,13 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x5000;
 
     // AE06: BGE $022B
-    // TODO: Convert BGE $022B
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xB033;
 
     // AE08: LDD $5004
     cpu.state_.d = cpu.read_memory_word(0x5004);
 
     // AE0B: BPL $01DD
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x01DD;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xAFEA;
 
     // AE0F: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -583,7 +583,7 @@ void routine_ac34_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x5000;
 
     // AE14: BGE $022B
-    // TODO: Convert BGE $022B
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xB041;
 
     // AE16: LDD $4700
     cpu.state_.d = cpu.read_memory_word(0x4700);

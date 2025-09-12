@@ -28,7 +28,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $D,X
 
     // BA23: BEQ $0016
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0016;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xBA3B;
 
     // BA25: JSR $BA32
     cpu.call_function(0xBA32);
@@ -43,7 +43,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4A52);
 
     // BA2F: BCS $000D
-    if (cpu.carry_flag()) cpu.state_.pc += 0x000D;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBA3E;
 
     // BA32: LDD ,X
     // TODO: Complex indexed addressing: ,X
@@ -79,7 +79,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x5000);
 
     // BA4F: BMI $008B
-    if (cpu.negative_flag()) cpu.state_.pc += 0x008B;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBADC;
 
     // BA51: STD $5018
     cpu.write_memory(0x5018, cpu.state_.d);
@@ -94,7 +94,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x501A, cpu.state_.d);
 
     // BA5D: BPL $0051
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0051;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xBAB0;
 
     // BA61: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -103,7 +103,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x5018;
 
     // BA66: BGE $008B
-    // TODO: Convert BGE $008B
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xBAF3;
 
     // BA68: LDD $5004
     cpu.state_.d = cpu.read_memory_word(0x5004);
@@ -112,7 +112,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x501C, cpu.state_.d);
 
     // BA6E: BPL $0062
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0062;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xBAD2;
 
     // BA72: SBCA #$FF
     // TODO: Convert SBCA #$FF
@@ -121,7 +121,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d -= 0x5018;
 
     // BA79: BGE $008B
-    // TODO: Convert BGE $008B
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0xBB06;
 
     // BA7B: LDB $C,X
     // TODO: Fix comma operator: LDB $C,X
@@ -130,7 +130,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.compare_b(0x09);
 
     // BA7F: BCS $0070
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0070;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBAF1;
 
     // BA82: LDU #$B75A
     cpu.state_.u = 0xB75A;
@@ -160,7 +160,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.write_memory(cpu.state_.y++, cpu.state_.d);
 
     // BA9B: BRA $008D
-    cpu.state_.pc += 0x008D;
+    cpu.state_.pc = 0xBB2A;
 
     // BA9D: CLR $D,X
     // TODO: Fix comma operator: CLR $D,X
@@ -169,37 +169,37 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.a = 0x14;
 
     // BAA2: BRA $00AC
-    cpu.state_.pc += 0x00AC;
+    cpu.state_.pc = 0xBB50;
 
     // BAA4: LDA #$15
     cpu.state_.a = 0x15;
 
     // BAA6: BRA $00AC
-    cpu.state_.pc += 0x00AC;
+    cpu.state_.pc = 0xBB54;
 
     // BAA8: LDA #$16
     cpu.state_.a = 0x16;
 
     // BAAA: BRA $00AC
-    cpu.state_.pc += 0x00AC;
+    cpu.state_.pc = 0xBB58;
 
     // BAAC: LDA #$11
     cpu.state_.a = 0x11;
 
     // BAAE: BRA $00A6
-    cpu.state_.pc += 0x00A6;
+    cpu.state_.pc = 0xBB56;
 
     // BAB0: LDA #$12
     cpu.state_.a = 0x12;
 
     // BAB2: BRA $00A6
-    cpu.state_.pc += 0x00A6;
+    cpu.state_.pc = 0xBB5A;
 
     // BAB4: LDA #$13
     cpu.state_.a = 0x13;
 
     // BAB6: BRA $00A6
-    cpu.state_.pc += 0x00A6;
+    cpu.state_.pc = 0xBB5E;
 
     // BAB8: STA <$DC
     cpu.write_memory(0xDC, cpu.state_.a);
@@ -208,7 +208,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.a = 0x67;
 
     // BABC: BRA $00B0
-    cpu.state_.pc += 0x00B0;
+    cpu.state_.pc = 0xBB6E;
 
     // BABE: STA <$DC
     cpu.write_memory(0xDC, cpu.state_.a);
@@ -226,7 +226,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     // TODO: Convert BHI $00BC
 
     // BACC: BRA $00BE
-    cpu.state_.pc += 0x00BE;
+    cpu.state_.pc = 0xBB8C;
 
     // BACE: LDB #$80
     cpu.state_.b = 0x80;
@@ -310,19 +310,19 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.b = 0x03;
 
     // BB18: BRA $0110
-    cpu.state_.pc += 0x0110;
+    cpu.state_.pc = 0xBC2A;
 
     // BB1A: LDB #$01
     cpu.state_.b = 0x01;
 
     // BB1C: BRA $0110
-    cpu.state_.pc += 0x0110;
+    cpu.state_.pc = 0xBC2E;
 
     // BB1E: LDB #$02
     cpu.state_.b = 0x02;
 
     // BB20: BRA $0110
-    cpu.state_.pc += 0x0110;
+    cpu.state_.pc = 0xBC32;
 
     // BB22: STB <$DC
     cpu.write_memory(0xDC, cpu.state_.b);
@@ -340,7 +340,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d = 0xA018;
 
     // BB2D: BRA $0123
-    cpu.state_.pc += 0x0123;
+    cpu.state_.pc = 0xBC52;
 
     // BB2F: LDU #$BB3B
     cpu.state_.u = 0xBB3B;
@@ -508,7 +508,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BBAE: BCC $01A8
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x01A8;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBD58;
 
     // BBB0: LDD #$0001
     cpu.state_.d = 0x0001;
@@ -547,7 +547,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BBD1: BCC $01F9
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x01F9;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBDCC;
 
     // BBD3: LDB #$3F
     cpu.state_.b = 0x3F;
@@ -568,7 +568,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x9F);
 
     // BBEA: BMI $01DD
-    if (cpu.negative_flag()) cpu.state_.pc += 0x01DD;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBDC9;
 
     // BBED: ORB #$80
     cpu.state_.b |= 0x80;
@@ -577,7 +577,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x7670;
 
     // BBF3: BMI $01E6
-    if (cpu.negative_flag()) cpu.state_.pc += 0x01E6;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBDDB;
 
     // BBF6: ANDB #$7F
     cpu.state_.b &= 0x7F;
@@ -610,7 +610,7 @@ void routine_ba12_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BC11: BCS $0201
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0201;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBE14;
 
 }
 

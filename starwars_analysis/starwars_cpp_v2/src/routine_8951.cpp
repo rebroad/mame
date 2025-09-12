@@ -472,13 +472,13 @@ void routine_8951_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x01);
 
     // 8AD5: BNE $018A
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x018A;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8C61;
 
     // 8AD7: LDA $6,X
     // TODO: Fix comma operator: LDA $6,X
 
     // 8AD9: BEQ $018B
-    if (cpu.zero_flag()) cpu.state_.pc += 0x018B;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8C66;
 
     // 8ADC: JSR $CE45
     cpu.call_function(0xCE45);
@@ -490,7 +490,7 @@ void routine_8951_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x01);
 
     // 8AE3: BNE $019C
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x019C;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8C81;
 
     // 8AE5: LDD $15,X
     // TODO: Fix comma operator: LDD $15,X
@@ -586,7 +586,7 @@ void routine_8951_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDB -$8,X
 
     // 8B30: BCS $01E2
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01E2;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8D14;
 
     // 8B33: TFR A,B
     cpu.state_.b = cpu.state_.a;
@@ -607,7 +607,7 @@ void routine_8951_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // 8B42: BCS $01F4
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01F4;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8D38;
 
     // 8B45: TFR A,B
     cpu.state_.b = cpu.state_.a;

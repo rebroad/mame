@@ -46,7 +46,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x65);
 
     // BE28: BCS $001B
-    if (cpu.carry_flag()) cpu.state_.pc += 0x001B;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBE45;
 
     // BE2A: LDA #$D3
     cpu.state_.a = 0xD3;
@@ -97,7 +97,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xE7AD);
 
     // BE52: BPL $0045
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0045;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xBE99;
 
     // BE54: LDD #$8040
     cpu.state_.d = 0x8040;
@@ -112,7 +112,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4554);
 
     // BE5F: BCS $0033
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0033;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBE94;
 
     // BE61: LDD $C7C1
     cpu.state_.d = cpu.read_memory_word(0xC7C1);
@@ -367,7 +367,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.state_.a |= 0x4AFD;
 
     // BF4C: BEQ $0175
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0175;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC0C3;
 
     // BF4E: LDX #$4554
     cpu.state_.x = 0x4554;
@@ -394,7 +394,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4AFA);
 
     // BF64: BCS $0162
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0162;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC0C8;
 
     // BF66: INC $4AFA
     // TODO: Convert INC $4AFA
@@ -412,7 +412,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x0F);
 
     // BF77: BCS $0175
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0175;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC0EE;
 
     // BF79: INC $4AFA
     // TODO: Convert INC $4AFA
@@ -460,7 +460,7 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     cpu.state_.a |= 0x4AFD;
 
     // BFA3: BEQ $01AD
-    if (cpu.zero_flag()) cpu.state_.pc += 0x01AD;
+    if (cpu.zero_flag()) cpu.state_.pc = 0xC152;
 
     // BFA5: LDX #$4556
     cpu.state_.x = 0x4556;
@@ -541,13 +541,13 @@ void routine_be07_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPU #$C7E1
 
     // BFED: BCS $01ED
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01ED;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xC1DC;
 
     // BFEF: LDD #$1ED4
     cpu.state_.d = 0x1ED4;
 
     // BFF2: BRA $01F0
-    cpu.state_.pc += 0x01F0;
+    cpu.state_.pc = 0xC1E4;
 
     // BFF4: LDD #$0064
     cpu.state_.d = 0x0064;

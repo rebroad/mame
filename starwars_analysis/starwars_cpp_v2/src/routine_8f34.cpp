@@ -106,13 +106,13 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8F7D: BEQ $004F
-    if (cpu.zero_flag()) cpu.state_.pc += 0x004F;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8FCE;
 
     // 8F7F: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8F81: BNE $007D
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x007D;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x9000;
 
     // 8F83: INC <$DD
     // TODO: Convert INC <$DD
@@ -127,19 +127,19 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x907C);
 
     // 8F90: BCS $006C
-    if (cpu.carry_flag()) cpu.state_.pc += 0x006C;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8FFE;
 
     // 8F92: LDA $4B14
     cpu.state_.a = cpu.read_memory(0x4B14);
 
     // 8F96: BCS $0069
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0069;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x9001;
 
     // 8F98: LDX #$9078
     cpu.state_.x = 0x9078;
 
     // 8F9B: BRA $006C
-    cpu.state_.pc += 0x006C;
+    cpu.state_.pc = 0x9009;
 
     // 8F9D: LDX #$907A
     cpu.state_.x = 0x907A;
@@ -178,7 +178,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // 8FB8: BEQ $0092
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0092;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x904C;
 
     // 8FBA: LDX <$5A
     cpu.state_.x = cpu.read_memory_word(0x5A);
@@ -190,22 +190,22 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 8FC2: BCS $0080
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0080;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x9044;
 
     // 8FC4: BRA $00EF
-    cpu.state_.pc += 0x00EF;
+    cpu.state_.pc = 0x90B5;
 
     // 8FC6: LDU <$E4
     cpu.state_.u = cpu.read_memory_word(0xE4);
 
     // 8FC8: BEQ $00EF
-    if (cpu.zero_flag()) cpu.state_.pc += 0x00EF;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x90B9;
 
     // 8FCA: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
     // 8FCC: BEQ $00EF
-    if (cpu.zero_flag()) cpu.state_.pc += 0x00EF;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x90BD;
 
     // 8FCE: INC <$E6
     // TODO: Convert INC <$E6
@@ -589,7 +589,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$90
 
     // 90DA: BCC $013A
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x013A;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x9216;
 
     // 90DC: ASR $903A
     // TODO: Convert ASR $903A
@@ -616,7 +616,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$90
 
     // 90ED: BCC $014E
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x014E;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x923D;
 
     // 90F0: SUBA <$4C
     cpu.state_.a -= 0x4C;
@@ -643,7 +643,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$90
 
     // 9100: BCC $0161
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0161;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x9263;
 
     // 9102: BITA #$90
     // TODO: Convert BITA #$90
@@ -670,7 +670,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$90
 
     // 9113: BCC $0174
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0174;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x9289;
 
     // 9115: BITA #$90
     // TODO: Convert BITA #$90
@@ -697,7 +697,7 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$90
 
     // 9126: BCC $0185
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0185;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x92AD;
 
     // 9128: LDU <$90
     cpu.state_.u = cpu.read_memory_word(0x90);
@@ -706,16 +706,16 @@ void routine_8f34_impl(StarWarsCPU& cpu) {
     // TODO: Convert BVC $0188
 
     // 912C: BCC $018C
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x018C;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x92BA;
 
     // 912E: XNC <$90
     // TODO: Convert XNC <$90
 
     // 9130: BGT $018E
-    // TODO: Convert BGT $018E
+    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x92C0;
 
     // 9132: BCC $0192
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0192;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x92C6;
 
 }
 

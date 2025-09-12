@@ -427,13 +427,13 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x01);
 
     // 8AD5: BNE $0162
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0162;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8C39;
 
     // 8AD7: LDA $6,X
     // TODO: Fix comma operator: LDA $6,X
 
     // 8AD9: BEQ $0163
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0163;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8C3E;
 
     // 8ADC: JSR $CE45
     cpu.call_function(0xCE45);
@@ -445,7 +445,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x01);
 
     // 8AE3: BNE $0174
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0174;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8C59;
 
     // 8AE5: LDD $15,X
     // TODO: Fix comma operator: LDD $15,X
@@ -541,7 +541,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDB -$8,X
 
     // 8B30: BCS $01BA
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01BA;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8CEC;
 
     // 8B33: TFR A,B
     cpu.state_.b = cpu.state_.a;
@@ -562,7 +562,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // 8B42: BCS $01CC
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01CC;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x8D10;
 
     // 8B45: TFR A,B
     cpu.state_.b = cpu.state_.a;
@@ -580,7 +580,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC <$01
 
     // 8B51: BPL $019F
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x019F;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0x8CF2;
 
     // 8B53: JSR $BDFD
     cpu.call_function(0xBDFD);
@@ -598,7 +598,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     cpu.compare_a(cpu.read_memory(0x4B38));
 
     // 8B61: BNE $01ED
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x01ED;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x8D50;
 
     // 8B63: JSR $BDCB
     cpu.call_function(0xBDCB);
@@ -622,7 +622,7 @@ void routine_8979_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // 8B76: BEQ $0202
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0202;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x8D7A;
 
     // 8B78: JSR >$0000
     cpu.call_function(0x0000);

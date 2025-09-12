@@ -43,7 +43,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xC2C3);
 
     // CC20: BNE $0038
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0038;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xCC5A;
 
     // CC22: LDU #$4AB6
     cpu.state_.u = 0x4AB6;
@@ -79,13 +79,13 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x1B);
 
     // CC3F: BCC $005B
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x005B;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCC9C;
 
     // CC41: CMPX #$4AD4
     cpu.compare_x(0x4AD4);
 
     // CC44: BCS $003B
-    if (cpu.carry_flag()) cpu.state_.pc += 0x003B;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCC81;
 
     // CC46: LDX #$4A8E
     cpu.state_.x = 0x4A8E;
@@ -97,7 +97,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0xA0);
 
     // CC4D: BCC $005B
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x005B;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCCAA;
 
     // CC4F: ANDA #$0F
     cpu.state_.a &= 0x0F;
@@ -106,13 +106,13 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x0A);
 
     // CC53: BCC $005B
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x005B;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xCCB0;
 
     // CC55: CMPX #$4AB6
     cpu.compare_x(0x4AB6);
 
     // CC58: BCS $0049
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0049;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCCA3;
 
     // CC5B: LDX #$4AB6
     cpu.state_.x = 0x4AB6;
@@ -130,7 +130,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4AD4);
 
     // CC68: BCS $0061
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0061;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCCCB;
 
     // CC6A: LDX #$4A8E
     cpu.state_.x = 0x4A8E;
@@ -148,7 +148,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x4AB6);
 
     // CC77: BCS $0070
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0070;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCCE9;
 
     // CC7A: CLR <$02
     cpu.write_memory(0x02, 0);
@@ -208,7 +208,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     // TODO: Convert NEG <$87
 
     // CCA6: BCS $00F9
-    if (cpu.carry_flag()) cpu.state_.pc += 0x00F9;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xCDA1;
 
     // CCA8: NEG <$81
     // TODO: Convert NEG <$81
@@ -463,7 +463,7 @@ void routine_cc00_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $4320
 
     // CDC0: BMI $01BD
-    if (cpu.negative_flag()) cpu.state_.pc += 0x01BD;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xCF7F;
 
     // CDC3: LDD #$0000
     cpu.state_.d = 0x0000;

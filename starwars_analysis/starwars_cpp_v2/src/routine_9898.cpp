@@ -13,7 +13,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x00;
 
     // 989C: BNE $0017
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0017;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x98B5;
 
     // 989E: LDX #$4900
     cpu.state_.x = 0x4900;
@@ -22,7 +22,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert DEC $6,X
 
     // 98A3: BPL $000F
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x000F;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0x98B4;
 
     // 98A5: CLR $6,X
     // TODO: Fix comma operator: CLR $6,X
@@ -34,7 +34,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 98AD: BCS $0009
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0009;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x98B8;
 
     // 98B0: LDB <$62
     cpu.state_.b = cpu.read_memory(0x62);
@@ -43,7 +43,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     cpu.state_.b &= 0x03;
 
     // 98B4: BEQ $0032
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0032;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x98E8;
 
     // 98B6: LDD #$7100
     cpu.state_.d = 0x7100;
@@ -76,7 +76,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert LBRA $2058
 
     // 98D0: BRA $005B
-    cpu.state_.pc += 0x005B;
+    cpu.state_.pc = 0x992D;
 
     // 98D2: BRN $0063
     // TODO: Convert BRN $0063
@@ -85,13 +85,13 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert BVC $005E
 
     // 98D6: BRA $0064
-    cpu.state_.pc += 0x0064;
+    cpu.state_.pc = 0x993C;
 
     // 98D8: BCC $0066
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0066;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x9940;
 
     // 98DA: BCS $0069
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0069;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x9945;
 
     // 98DC: LEAY -$E,Y
     // TODO: Fix comma operator: LEAY -$E,Y
@@ -151,7 +151,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$05
 
     // 9908: BRA $0072
-    cpu.state_.pc += 0x0072;
+    cpu.state_.pc = 0x997C;
 
     // 990A: EORA >$0001
     cpu.state_.a ^= 0x0001;
@@ -160,7 +160,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$06
 
     // 990F: BRA $0079
-    cpu.state_.pc += 0x0079;
+    cpu.state_.pc = 0x998A;
 
     // 9912: NEG <$01
     // TODO: Convert NEG <$01
@@ -634,7 +634,7 @@ void routine_9898_impl(StarWarsCPU& cpu) {
     // TODO: Convert LBSR $61D0
 
     // 9A68: BRA $01D2
-    cpu.state_.pc += 0x01D2;
+    cpu.state_.pc = 0x9C3C;
 
     // 9A6A: COM <$00
     // TODO: Convert COM <$00

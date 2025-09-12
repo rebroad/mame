@@ -40,7 +40,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0xFF);
 
     // 672D: BNE $002A
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x002A;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6759;
 
     // 672F: LDA $4B06
     cpu.state_.a = cpu.read_memory(0x4B06);
@@ -49,7 +49,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0x4B34, cpu.state_.a);
 
     // 6735: BRA $004B
-    cpu.state_.pc += 0x004B;
+    cpu.state_.pc = 0x6782;
 
     // 6737: LDA $4B06
     cpu.state_.a = cpu.read_memory(0x4B06);
@@ -58,7 +58,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.compare_a(cpu.read_memory(0x4B34));
 
     // 673D: BEQ $004B
-    if (cpu.zero_flag()) cpu.state_.pc += 0x004B;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x678A;
 
     // 673F: STA $4B34
     cpu.write_memory(0x4B34, cpu.state_.a);
@@ -73,7 +73,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.state_.a &= 0x04;
 
     // 674A: BNE $004B
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x004B;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6797;
 
     // 674C: LDX #$6759
     cpu.state_.x = 0x6759;
@@ -367,7 +367,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.state_.a = cpu.read_memory(0x4B2D);
 
     // 684F: BNE $014A
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x014A;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x699B;
 
     // 6851: LDD #$0027
     cpu.state_.d = 0x0027;
@@ -433,7 +433,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0028
 
     // 688F: BNE $0199
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0199;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6A2A;
 
     // 6891: LDA $4B15
     cpu.state_.a = cpu.read_memory(0x4B15);
@@ -442,55 +442,55 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x03);
 
     // 6896: BLT $0194
-    // TODO: Convert BLT $0194
+    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x6A2C;
 
     // 6898: ANDA #$01
     cpu.state_.a &= 0x01;
 
     // 689A: BEQ $0194
-    if (cpu.zero_flag()) cpu.state_.pc += 0x0194;
+    if (cpu.zero_flag()) cpu.state_.pc = 0x6A30;
 
     // 689C: JSR $BD85
     cpu.call_function(0xBD85);
 
     // 689F: BRA $0197
-    cpu.state_.pc += 0x0197;
+    cpu.state_.pc = 0x6A38;
 
     // 68A1: JSR $BDA8
     cpu.call_function(0xBDA8);
 
     // 68A4: BRA $01B9
-    cpu.state_.pc += 0x01B9;
+    cpu.state_.pc = 0x6A5F;
 
     // 68A6: CMPD #$00C8
     // TODO: Convert CMPD #$00C8
 
     // 68AA: BNE $01A4
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x01A4;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6A50;
 
     // 68AC: JSR $BDAD
     cpu.call_function(0xBDAD);
 
     // 68AF: BRA $01B9
-    cpu.state_.pc += 0x01B9;
+    cpu.state_.pc = 0x6A6A;
 
     // 68B1: CMPD #$0190
     // TODO: Convert CMPD #$0190
 
     // 68B5: BNE $01AF
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x01AF;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6A66;
 
     // 68B7: JSR $BD8A
     cpu.call_function(0xBD8A);
 
     // 68BA: BRA $01B9
-    cpu.state_.pc += 0x01B9;
+    cpu.state_.pc = 0x6A75;
 
     // 68BC: CMPD #$01A4
     // TODO: Convert CMPD #$01A4
 
     // 68C0: BCS $01B9
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01B9;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6A7B;
 
     // 68C2: LDA #$21
     cpu.state_.a = 0x21;
@@ -505,7 +505,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.compare_a(0x03);
 
     // 68CA: BCC $01C2
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x01C2;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0x6A8E;
 
     // 68CC: JSR $8F7B
     cpu.call_function(0x8F7B);
@@ -565,7 +565,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LDA $3,X
 
     // 6903: BNE $0204
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0204;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0x6B09;
 
     // 6905: LEAX $19,X
     // TODO: Fix comma operator: LEAX $19,X
@@ -574,7 +574,7 @@ void routine_670d_impl(StarWarsCPU& cpu) {
     cpu.compare_x(0x494B);
 
     // 690B: BCS $01F4
-    if (cpu.carry_flag()) cpu.state_.pc += 0x01F4;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x6B01;
 
 }
 

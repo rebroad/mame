@@ -52,7 +52,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BBAE: BCC $0035
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0035;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBBE5;
 
     // BBB0: LDD #$0001
     cpu.state_.d = 0x0001;
@@ -91,7 +91,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BBD1: BCC $0086
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x0086;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBC59;
 
     // BBD3: LDB #$3F
     cpu.state_.b = 0x3F;
@@ -112,7 +112,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x9F);
 
     // BBEA: BMI $006A
-    if (cpu.negative_flag()) cpu.state_.pc += 0x006A;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBC56;
 
     // BBED: ORB #$80
     cpu.state_.b |= 0x80;
@@ -121,7 +121,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x7670;
 
     // BBF3: BMI $0073
-    if (cpu.negative_flag()) cpu.state_.pc += 0x0073;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBC68;
 
     // BBF6: ANDB #$7F
     cpu.state_.b &= 0x7F;
@@ -154,7 +154,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BC11: BCS $0098
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0098;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBCAB;
 
     // BC13: LDD #$0001
     cpu.state_.d = 0x0001;
@@ -193,7 +193,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BC34: BCC $00BE
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x00BE;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBCF4;
 
     // BC36: LDB #$3F
     cpu.state_.b = 0x3F;
@@ -217,10 +217,10 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$003F
 
     // BC49: BCC $00ED
-    if (!cpu.carry_flag()) cpu.state_.pc += 0x00ED;
+    if (!cpu.carry_flag()) cpu.state_.pc = 0xBD38;
 
     // BC53: BMI $00D3
-    if (cpu.negative_flag()) cpu.state_.pc += 0x00D3;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBD28;
 
     // BC56: ORB #$80
     cpu.state_.b |= 0x80;
@@ -229,7 +229,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     cpu.state_.d += 0x7670;
 
     // BC5C: BMI $00DC
-    if (cpu.negative_flag()) cpu.state_.pc += 0x00DC;
+    if (cpu.negative_flag()) cpu.state_.pc = 0xBD3A;
 
     // BC5F: ANDB #$7F
     cpu.state_.b &= 0x7F;
@@ -262,7 +262,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0050
 
     // BC78: BCS $00FF
-    if (cpu.carry_flag()) cpu.state_.pc += 0x00FF;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBD79;
 
     // BC7A: LDD #$0080
     cpu.state_.d = 0x0080;
@@ -289,7 +289,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert CMPD #$0008
 
     // BC90: BCS $0124
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0124;
+    if (cpu.carry_flag()) cpu.state_.pc = 0xBDB6;
 
     // BC92: ADDD #$7500
     cpu.state_.d += 0x7500;
@@ -316,7 +316,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     cpu.call_function(0xBCC8);
 
     // BCA7: BRA $0128
-    cpu.state_.pc += 0x0128;
+    cpu.state_.pc = 0xBDD1;
 
     // BCA9: LDA #$00
     cpu.state_.a = 0x00;
@@ -355,7 +355,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAX -$1,X
 
     // BCC5: BNE $012B
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x012B;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xBDF2;
 
     // BCC8: STD ,Y++
     cpu.write_memory(cpu.state_.y++, cpu.state_.d);
@@ -397,7 +397,7 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Fix comma operator: LEAX -$1,X
 
     // BCE6: BNE $0145
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0145;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xBE2D;
 
     // BCE9: LDB #$0E
     cpu.state_.b = 0x0E;
@@ -406,10 +406,10 @@ void routine_bb85_impl(StarWarsCPU& cpu) {
     // TODO: Convert TST $4401
 
     // BCEE: BPL $0170
-    if (!cpu.negative_flag()) cpu.state_.pc += 0x0170;
+    if (!cpu.negative_flag()) cpu.state_.pc = 0xBE60;
 
     // BCF1: BNE $0166
-    if (!cpu.zero_flag()) cpu.state_.pc += 0x0166;
+    if (!cpu.zero_flag()) cpu.state_.pc = 0xBE59;
 
     // BCF3: LDA #$00
     cpu.state_.a = 0x00;

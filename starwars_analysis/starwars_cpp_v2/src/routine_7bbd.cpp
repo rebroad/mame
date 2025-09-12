@@ -7,7 +7,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     // Address: 0x7BBD
 
     // 7BBD: BCS $0080
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0080;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7C3F;
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -49,7 +49,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     cpu.state_.pc = 0xD883;
 
     // 7BDD: BCS $00A0
-    if (cpu.carry_flag()) cpu.state_.pc += 0x00A0;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7C7F;
 
     // 7BDF: ASL <$82
     // TODO: Convert ASL <$82
@@ -58,7 +58,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     cpu.state_.d = cpu.read_memory_word(0x80);
 
     // 7BE3: BCS $FFAA
-    if (cpu.carry_flag()) cpu.state_.pc += 0xFFAA;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x17B8F;
 
     // 7BE5: SUBB $7DE3
     cpu.state_.b -= 0x7DE3;
@@ -319,7 +319,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     // TODO: Convert COM <$80
 
     // 7CB3: BCS $0078
-    if (cpu.carry_flag()) cpu.state_.pc += 0x0078;
+    if (cpu.carry_flag()) cpu.state_.pc = 0x7D2D;
 
     // 7CB5: ADDA <$80
     cpu.state_.a += 0x80;
@@ -370,7 +370,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     // TODO: Convert XNC <$20
 
     // 7CDE: BRA $0124
-    cpu.state_.pc += 0x0124;
+    cpu.state_.pc = 0x7E04;
 
     // 7CE0: COM <$30
     // TODO: Convert COM <$30
@@ -475,7 +475,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     // TODO: Convert XANDCC #$01
 
     // 7D24: BRA $0189
-    cpu.state_.pc += 0x0189;
+    cpu.state_.pc = 0x7EAF;
 
     // 7D26: NEG <$C0
     // TODO: Convert NEG <$C0
@@ -511,7 +511,7 @@ void routine_7bbd_impl(StarWarsCPU& cpu) {
     // TODO: Convert ASL <$01
 
     // 7D3C: BRA $01A1
-    cpu.state_.pc += 0x01A1;
+    cpu.state_.pc = 0x7EDF;
 
     // 7D3E: NEG <$80
     // TODO: Convert NEG <$80
