@@ -151,7 +151,7 @@ void routine_f720_impl(StarWarsCPU& cpu) {
     cpu.write_memory(cpu.state_.y++, cpu.state_.d);
 
     // F78F: LDS #$4FFF
-    cpu.state_.s = 0x4FFF;
+    cpu.state_.sp = 0x4FFF;
 
     // F793: LDB #$9E
     cpu.state_.b = 0x9E;

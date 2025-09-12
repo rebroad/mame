@@ -499,7 +499,7 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // FD46: LDS #$4FFF
-    cpu.state_.s = 0x4FFF;
+    cpu.state_.sp = 0x4FFF;
 
     // FD4A: JSR $E790
     cpu.call_function(0xE790);
@@ -844,13 +844,13 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xFE71;
 
     // FE6B: LDS #$FD07
-    cpu.state_.s = 0xFD07;
+    cpu.state_.sp = 0xFD07;
 
     // FE6F: BRA $FE75
     cpu.state_.pc += 0xFE75;
 
     // FE71: LDS #$FE58
-    cpu.state_.s = 0xFE58;
+    cpu.state_.sp = 0xFE58;
 
     // FE75: TFR X,D
     cpu.state_.d = cpu.state_.x;
@@ -889,13 +889,13 @@ void routine_fb74_impl(StarWarsCPU& cpu) {
     if (cpu.carry_flag()) cpu.state_.pc += 0xFEA0;
 
     // FE9A: LDS #$FD07
-    cpu.state_.s = 0xFD07;
+    cpu.state_.sp = 0xFD07;
 
     // FE9E: BRA $FEA4
     cpu.state_.pc += 0xFEA4;
 
     // FEA0: LDS #$FE87
-    cpu.state_.s = 0xFE87;
+    cpu.state_.sp = 0xFE87;
 
     // FEA4: JMP $FB38
     cpu.state_.pc = 0xFB38;

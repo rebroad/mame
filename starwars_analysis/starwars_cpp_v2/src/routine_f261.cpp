@@ -55,7 +55,7 @@ void routine_f261_impl(StarWarsCPU& cpu) {
     if (!cpu.zero_flag()) cpu.state_.pc += 0xF281;
 
     // F28C: LDS #$4FFF
-    cpu.state_.s = 0x4FFF;
+    cpu.state_.sp = 0x4FFF;
 
     // F290: LDA #$48
     cpu.state_.a = 0x48;

@@ -211,7 +211,9 @@ def convert_instruction(parsed):
         cpp_operand = convert_operand(operands, mnemonic)
         if mnemonic in ['LDA', 'LDB']:
             return f"    cpu.state_.{mnemonic[2].lower()} = {cpp_operand};"
-        else:  # LDD, LDX, LDY, LDU, LDS
+        elif mnemonic == 'LDS':
+            return f"    cpu.state_.sp = {cpp_operand};"  # S register maps to sp
+        else:  # LDD, LDX, LDY, LDU
             return f"    cpu.state_.{mnemonic[2:].lower()} = {cpp_operand};"
     
     cpp_template = INSTRUCTION_MAP[mnemonic]

@@ -330,7 +330,7 @@ void StarWarsHardware::process_io_read(uint16_t /* address */) {
 }
 
 bool StarWarsHardware::is_ram_address(uint16_t address) const {
-    return (address >= 0x0000 && address < 0x3000);
+    return (address < 0x3000);
 }
 
 bool StarWarsHardware::is_vector_rom_address(uint16_t address) const {
@@ -360,7 +360,7 @@ uint16_t StarWarsHardware::translate_rom_address(uint16_t address) const {
         // Map 0x6000-0x7FFF to ROM file offset 0x0000-0x1FFF (ROM 0)
         return address - 0x6000;
     }
-    else if (address >= 0x8000 && address <= 0xFFFF) {
+    else if (address >= 0x8000) {
         // Map 0x8000-0xFFFF to ROM file offset (address - 0x6000)
         // This accounts for MAME's ROM loading starting at 0x6000
         return address - 0x6000;

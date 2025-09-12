@@ -25,7 +25,7 @@ void routine_f36f_impl(StarWarsCPU& cpu) {
     cpu.state_.pc = 0xFD07;
 
     // F380: LDS #$0000
-    cpu.state_.s = 0x0000;
+    cpu.state_.sp = 0x0000;
 
     // F384: LDU #$F32E
     cpu.state_.u = 0xF32E;
@@ -664,7 +664,7 @@ void routine_f36f_impl(StarWarsCPU& cpu) {
     cpu.write_memory(0xCC, cpu.state_.sp);
 
     // F594: LDS #$4FFF
-    cpu.state_.s = 0x4FFF;
+    cpu.state_.sp = 0x4FFF;
 
     // F598: LDB #$D3
     cpu.state_.b = 0xD3;
@@ -1294,7 +1294,7 @@ void routine_f36f_impl(StarWarsCPU& cpu) {
     cpu.write_memory(cpu.state_.y++, cpu.state_.d);
 
     // F78F: LDS #$4FFF
-    cpu.state_.s = 0x4FFF;
+    cpu.state_.sp = 0x4FFF;
 
     // F793: LDB #$9E
     cpu.state_.b = 0x9E;
