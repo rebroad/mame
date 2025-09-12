@@ -36,13 +36,17 @@ INSTRUCTION_MAP = {
     'JMP': 'cpu.state_.pc = {operand}',
     'JSR': 'cpu.call_function({operand})',
     'RTS': 'cpu.return_from_function()',
-    'BRA': 'cpu.state_.pc += {operand}',
-    'BNE': 'if (!cpu.zero_flag()) cpu.state_.pc += {operand}',
-    'BEQ': 'if (cpu.zero_flag()) cpu.state_.pc += {operand}',
-    'BCS': 'if (cpu.carry_flag()) cpu.state_.pc += {operand}',
-    'BCC': 'if (!cpu.carry_flag()) cpu.state_.pc += {operand}',
-    'BMI': 'if (cpu.negative_flag()) cpu.state_.pc += {operand}',
-    'BPL': 'if (!cpu.negative_flag()) cpu.state_.pc += {operand}',
+    'BRA': 'cpu.state_.pc = {operand}',
+    'BNE': 'if (!cpu.zero_flag()) cpu.state_.pc = {operand}',
+    'BEQ': 'if (cpu.zero_flag()) cpu.state_.pc = {operand}',
+    'BCS': 'if (cpu.carry_flag()) cpu.state_.pc = {operand}',
+    'BCC': 'if (!cpu.carry_flag()) cpu.state_.pc = {operand}',
+    'BMI': 'if (cpu.negative_flag()) cpu.state_.pc = {operand}',
+    'BPL': 'if (!cpu.negative_flag()) cpu.state_.pc = {operand}',
+    'BLE': 'if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = {operand}',
+    'BGT': 'if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = {operand}',
+    'BGE': 'if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = {operand}',
+    'BLT': 'if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = {operand}',
     'CMPA': 'cpu.compare_a(cpu.read_memory({operand}))',
     'CMPB': 'cpu.compare_b(cpu.read_memory({operand}))',
     'CMPX': 'cpu.compare_x(cpu.read_memory_word({operand}))',
@@ -195,13 +199,70 @@ def convert_operand(operands, mnemonic):
     # For unrecognized cases, return TODO
     return f"// TODO: Unrecognized operand: {operands}"
 
+def convert_branch_instruction(mnemonic, operands, current_address):
+    """Convert branch instruction with relative offset to absolute address"""
+    # Parse the relative offset (e.g., "$0012" -> 0x12)
+    if operands.startswith('$'):
+        offset_str = operands[1:]  # Remove $ prefix
+        try:
+            offset = int(offset_str, 16)
+        except ValueError:
+            return f"    // TODO: Invalid branch offset: {operands}"
+    else:
+        return f"    // TODO: Unrecognized branch operand: {operands}"
+    
+    # Convert current_address from hex string to integer
+    if isinstance(current_address, str):
+        try:
+            current_addr_int = int(current_address, 16)
+        except ValueError:
+            return f"    // TODO: Invalid address: {current_address}"
+    else:
+        current_addr_int = current_address
+    
+    # Calculate target address: current_address + offset + 2 (for the instruction size)
+    # For 6809, branch instructions are 2 bytes, so we add 2 to get the address after the instruction
+    target_address = current_addr_int + offset + 2
+    
+    # Generate the appropriate branch code
+    if mnemonic == 'BRA':
+        return f"    cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BNE':
+        return f"    if (!cpu.zero_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BEQ':
+        return f"    if (cpu.zero_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BCS':
+        return f"    if (cpu.carry_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BCC':
+        return f"    if (!cpu.carry_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BMI':
+        return f"    if (cpu.negative_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BPL':
+        return f"    if (!cpu.negative_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BLE':
+        return f"    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BGT':
+        return f"    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BGE':
+        return f"    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    elif mnemonic == 'BLT':
+        return f"    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.state_.pc = 0x{target_address:04X};"
+    else:
+        return f"    // TODO: Unsupported branch instruction: {mnemonic}"
+
 def convert_instruction(parsed):
     """Convert a parsed instruction to C++ code with robust handling"""
     mnemonic = parsed['mnemonic']
     operands = parsed['operands']
+    address = parsed.get('address', 0)
     
     if mnemonic not in INSTRUCTION_MAP:
         return f"    // TODO: Convert {mnemonic} {operands}"
+    
+    # Handle branch instructions specially - convert relative offsets to absolute addresses
+    branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT']
+    if mnemonic in branch_instructions:
+        return convert_branch_instruction(mnemonic, operands, address)
     
     # Handle immediate values differently from memory addressing
     is_immediate = operands.startswith('#')

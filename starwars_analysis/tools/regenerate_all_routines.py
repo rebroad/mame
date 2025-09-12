@@ -16,19 +16,19 @@ def regenerate_all_routines():
     output_dir = project_root / "starwars_cpp_v2" / "src"
     converter = script_dir / "disasm_to_cpp_converter.py"
     
-    # Find all rom_disasm_auto_*.md files
+    # Find all rom_disasm_*.md files
     disasm_files = list(disasm_dir.glob("rom_disasm_*.md"))
     
     if not disasm_files:
-        print("No rom_disasm_auto_*.md files found")
+        print("No rom_disasm_*.md files found")
         return False
     
     print(f"Found {len(disasm_files)} disassembly files to convert")
     
     # Convert each file
     for disasm_file in disasm_files:
-        # Extract address from filename (e.g., rom_disasm_auto_f261.md -> f261)
-        addr = disasm_file.stem.replace('rom_disasm_auto_', '')
+        # Extract address from filename (e.g., rom_disasm_f261.md -> f261)
+        addr = disasm_file.stem.replace('rom_disasm_', '')
         
         # Create function name (e.g., f261 -> routine_f261)
         function_name = f"routine_{addr}"

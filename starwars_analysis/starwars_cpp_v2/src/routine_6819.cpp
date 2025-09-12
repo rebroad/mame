@@ -1,0 +1,584 @@
+#include "cpu_6809.h"
+
+namespace StarWars {
+
+void routine_6819_impl(StarWarsCPU& cpu) {
+    // Converted from rom_disasm_6819.md
+    // Address: 0x6819
+
+    // 6819: TFR Y,U
+    cpu.state_.u = cpu.state_.y;
+
+    // 681B: XNC <$86
+    // TODO: Convert XNC <$86
+
+    // 681D: TFR DP,inv
+    cpu.state_.inv = cpu.state_.dp;
+
+    // 6821: ADDA $4B18
+    cpu.state_.a += 0x4B18;
+
+    // 6824: CMPA #$0F
+    cpu.compare_a(0x0F);
+
+    // 6826: BLS $0011
+    // TODO: Convert BLS $0011
+
+    // 6828: LDA #$0F
+    cpu.state_.a = 0x0F;
+
+    // 682A: STA $4B19
+    cpu.write_memory(0x4B19, cpu.state_.a);
+
+    // 682D: INC <$41
+    // TODO: Convert INC <$41
+
+    // 682F: LDA #$1F
+    cpu.state_.a = 0x1F;
+
+    // 6831: STA <$41
+    cpu.write_memory(0x41, cpu.state_.a);
+
+    // 6833: LDA #$00
+    cpu.state_.a = 0x00;
+
+    // 6835: STA <$DD
+    cpu.write_memory(0xDD, cpu.state_.a);
+
+    // 6838: JSR $6161
+    cpu.call_function(0x6161);
+
+    // 683B: JSR $B939
+    cpu.call_function(0xB939);
+
+    // 683E: LDD #$0000
+    cpu.state_.d = 0x0000;
+
+    // 6841: STD $4B0E
+    cpu.write_memory(0x4B0E, cpu.state_.d);
+
+    // 6844: STA $4B3B
+    cpu.write_memory(0x4B3B, cpu.state_.a);
+
+    // 6847: LDA #$09
+    cpu.state_.a = 0x09;
+
+    // 6849: STA $4B3C
+    cpu.write_memory(0x4B3C, cpu.state_.a);
+
+    // 684C: LDA $4B2D
+    cpu.state_.a = cpu.read_memory(0x4B2D);
+
+    // 684F: BNE $003E
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x003E;
+
+    // 6851: LDD #$0027
+    cpu.state_.d = 0x0027;
+
+    // 6854: STD $4B0E
+    cpu.write_memory(0x4B0E, cpu.state_.d);
+
+    // 6857: INC <$41
+    // TODO: Convert INC <$41
+
+    // 6859: JSR $72C7
+    cpu.call_function(0x72C7);
+
+    // 685C: LDA <$60
+    cpu.state_.a = cpu.read_memory(0x60);
+
+    // 685E: LBMI $045D
+    // TODO: Convert LBMI $045D
+
+    // 6862: JSR $A849
+    cpu.call_function(0xA849);
+
+    // 6865: JSR $9898
+    cpu.call_function(0x9898);
+
+    // 6868: JSR $B98B
+    cpu.call_function(0xB98B);
+
+    // 686B: JSR $9890
+    cpu.call_function(0x9890);
+
+    // 686E: JSR $9558
+    cpu.call_function(0x9558);
+
+    // 6871: JSR $8B6D
+    cpu.call_function(0x8B6D);
+
+    // 6874: JSR $70DB
+    cpu.call_function(0x70DB);
+
+    // 6877: JSR $6DD2
+    cpu.call_function(0x6DD2);
+
+    // 687A: LDA #$10
+    cpu.state_.a = 0x10;
+
+    // 687C: JSR $CE0C
+    cpu.call_function(0xCE0C);
+
+    // 687F: JSR $6F5F
+    cpu.call_function(0x6F5F);
+
+    // 6882: LDD $4B0E
+    cpu.state_.d = cpu.read_memory_word(0x4B0E);
+
+    // 6885: ADDD #$0001
+    cpu.state_.d += 0x0001;
+
+    // 6888: STD $4B0E
+    cpu.write_memory(0x4B0E, cpu.state_.d);
+
+    // 688B: CMPD #$0028
+    // TODO: Convert CMPD #$0028
+
+    // 688F: BNE $008D
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x008D;
+
+    // 6891: LDA $4B15
+    cpu.state_.a = cpu.read_memory(0x4B15);
+
+    // 6894: CMPA #$03
+    cpu.compare_a(0x03);
+
+    // 6896: BLT $0088
+    // TODO: Convert BLT $0088
+
+    // 6898: ANDA #$01
+    cpu.state_.a &= 0x01;
+
+    // 689A: BEQ $0088
+    if (cpu.zero_flag()) cpu.state_.pc += 0x0088;
+
+    // 689C: JSR $BD85
+    cpu.call_function(0xBD85);
+
+    // 689F: BRA $008B
+    cpu.state_.pc += 0x008B;
+
+    // 68A1: JSR $BDA8
+    cpu.call_function(0xBDA8);
+
+    // 68A4: BRA $00AD
+    cpu.state_.pc += 0x00AD;
+
+    // 68A6: CMPD #$00C8
+    // TODO: Convert CMPD #$00C8
+
+    // 68AA: BNE $0098
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x0098;
+
+    // 68AC: JSR $BDAD
+    cpu.call_function(0xBDAD);
+
+    // 68AF: BRA $00AD
+    cpu.state_.pc += 0x00AD;
+
+    // 68B1: CMPD #$0190
+    // TODO: Convert CMPD #$0190
+
+    // 68B5: BNE $00A3
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x00A3;
+
+    // 68B7: JSR $BD8A
+    cpu.call_function(0xBD8A);
+
+    // 68BA: BRA $00AD
+    cpu.state_.pc += 0x00AD;
+
+    // 68BC: CMPD #$01A4
+    // TODO: Convert CMPD #$01A4
+
+    // 68C0: BCS $00AD
+    if (cpu.carry_flag()) cpu.state_.pc += 0x00AD;
+
+    // 68C2: LDA #$21
+    cpu.state_.a = 0x21;
+
+    // 68C4: STA <$41
+    cpu.write_memory(0x41, cpu.state_.a);
+
+    // 68C6: LDA <$E6
+    cpu.state_.a = cpu.read_memory(0xE6);
+
+    // 68C8: CMPA #$03
+    cpu.compare_a(0x03);
+
+    // 68CA: BCC $00B6
+    if (!cpu.carry_flag()) cpu.state_.pc += 0x00B6;
+
+    // 68CC: JSR $8F7B
+    cpu.call_function(0x8F7B);
+
+    // 68D0: INC $4B3B
+    // TODO: Convert INC $4B3B
+
+    // 68D3: INC <$41
+    // TODO: Convert INC <$41
+
+    // 68D5: JSR $72C7
+    cpu.call_function(0x72C7);
+
+    // 68D8: LDA <$60
+    cpu.state_.a = cpu.read_memory(0x60);
+
+    // 68DA: LBMI $045D
+    // TODO: Convert LBMI $045D
+
+    // 68DE: JSR $A849
+    cpu.call_function(0xA849);
+
+    // 68E1: JSR $9898
+    cpu.call_function(0x9898);
+
+    // 68E4: JSR $B98B
+    cpu.call_function(0xB98B);
+
+    // 68E7: JSR $9890
+    cpu.call_function(0x9890);
+
+    // 68EA: JSR $9558
+    cpu.call_function(0x9558);
+
+    // 68ED: JSR $8B86
+    cpu.call_function(0x8B86);
+
+    // 68F0: JSR $70DB
+    cpu.call_function(0x70DB);
+
+    // 68F3: JSR $6DFA
+    cpu.call_function(0x6DFA);
+
+    // 68F6: LDA #$10
+    cpu.state_.a = 0x10;
+
+    // 68F8: JSR $CE0C
+    cpu.call_function(0xCE0C);
+
+    // 68FB: JSR $6F5F
+    cpu.call_function(0x6F5F);
+
+    // 68FE: LDX #$4900
+    cpu.state_.x = 0x4900;
+
+    // 6901: LDA $3,X
+    // TODO: Fix comma operator: LDA $3,X
+
+    // 6903: BNE $00F8
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x00F8;
+
+    // 6905: LEAX $19,X
+    // TODO: Fix comma operator: LEAX $19,X
+
+    // 6908: CMPX #$494B
+    cpu.compare_x(0x494B);
+
+    // 690B: BCS $00E8
+    if (cpu.carry_flag()) cpu.state_.pc += 0x00E8;
+
+    // 690D: LDA #$23
+    cpu.state_.a = 0x23;
+
+    // 690F: STA <$41
+    cpu.write_memory(0x41, cpu.state_.a);
+
+    // 6912: LDD #$7780
+    cpu.state_.d = 0x7780;
+
+    // 6915: STD <$56
+    cpu.write_memory(0x56, cpu.state_.d);
+
+    // 6917: LDD #$0100
+    cpu.state_.d = 0x0100;
+
+    // 691A: STD <$58
+    cpu.write_memory(0x58, cpu.state_.d);
+
+    // 691C: LDA $4B2D
+    cpu.state_.a = cpu.read_memory(0x4B2D);
+
+    // 691F: BNE $0111
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x0111;
+
+    // 6921: LDA $4B14
+    cpu.state_.a = cpu.read_memory(0x4B14);
+
+    // 6924: CMPA #$04
+    cpu.compare_a(0x04);
+
+    // 6926: BNE $0111
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x0111;
+
+    // 6928: BRA $0117
+    cpu.state_.pc += 0x0117;
+
+    // 692A: JSR $BD67
+    cpu.call_function(0xBD67);
+
+    // 692D: JSR $BDEE
+    cpu.call_function(0xBDEE);
+
+    // 6930: INC <$41
+    // TODO: Convert INC <$41
+
+    // 6933: JSR $733C
+    cpu.call_function(0x733C);
+
+    // 6936: JSR $B98B
+    cpu.call_function(0xB98B);
+
+    // 6939: JSR $9890
+    cpu.call_function(0x9890);
+
+    // 693C: JSR $9558
+    cpu.call_function(0x9558);
+
+    // 693F: JSR $6DD2
+    cpu.call_function(0x6DD2);
+
+    // 6942: JSR $6F67
+    cpu.call_function(0x6F67);
+
+    // 6945: LDD $5080
+    cpu.state_.d = cpu.read_memory_word(0x5080);
+
+    // 6948: CMPD #$3F00
+    // TODO: Convert CMPD #$3F00
+
+    // 694C: BLT $0139
+    // TODO: Convert BLT $0139
+
+    // 694E: LDA #$25
+    cpu.state_.a = 0x25;
+
+    // 6950: STA <$41
+    cpu.write_memory(0x41, cpu.state_.a);
+
+    // 6953: LDA $4B2D
+    cpu.state_.a = cpu.read_memory(0x4B2D);
+
+    // 6956: BNE $0149
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x0149;
+
+    // 6958: LDA $4B14
+    cpu.state_.a = cpu.read_memory(0x4B14);
+
+    // 695B: CMPA #$04
+    cpu.compare_a(0x04);
+
+    // 695D: BNE $0149
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x0149;
+
+    // 695F: JSR $BD53
+    cpu.call_function(0xBD53);
+
+    // 6962: JSR $BE0C
+    cpu.call_function(0xBE0C);
+
+    // 6965: INC <$41
+    // TODO: Convert INC <$41
+
+    // 6968: JSR $736F
+    cpu.call_function(0x736F);
+
+    // 696B: JSR $9898
+    cpu.call_function(0x9898);
+
+    // 696E: JSR $9890
+    cpu.call_function(0x9890);
+
+    // 6971: JSR $9558
+    cpu.call_function(0x9558);
+
+    // 6974: JSR $6DD2
+    cpu.call_function(0x6DD2);
+
+    // 6977: JSR $6F67
+    cpu.call_function(0x6F67);
+
+    // 697A: LDB <$58
+    cpu.state_.b = cpu.read_memory(0x58);
+
+    // 697E: ADDD <$56
+    cpu.state_.d += 0x56;
+
+    // 6980: ANDB #$7F
+    cpu.state_.b &= 0x7F;
+
+    // 6982: STD <$56
+    cpu.write_memory(0x56, cpu.state_.d);
+
+    // 6984: CMPD #$7310
+    // TODO: Convert CMPD #$7310
+
+    // 6988: BHI $017E
+    // TODO: Convert BHI $017E
+
+    // 698A: LDA $4B14
+    cpu.state_.a = cpu.read_memory(0x4B14);
+
+    // 698D: BNE $017A
+    if (!cpu.zero_flag()) cpu.state_.pc += 0x017A;
+
+    // 698F: LDA #$27
+    cpu.state_.a = 0x27;
+
+    // 6991: BRA $017C
+    cpu.state_.pc += 0x017C;
+
+    // 6993: LDA #$29
+    cpu.state_.a = 0x29;
+
+    // 6995: STA <$41
+    cpu.write_memory(0x41, cpu.state_.a);
+
+    // 6997: LDD <$58
+    cpu.state_.d = cpu.read_memory_word(0x58);
+
+    // 6999: ADDD #$0060
+    cpu.state_.d += 0x0060;
+
+    // 699C: STD <$58
+    cpu.write_memory(0x58, cpu.state_.d);
+
+    // 699E: LDA <$83
+    cpu.state_.a = cpu.read_memory(0x83);
+
+    // 69A0: SUBA #$02
+    cpu.state_.a -= 0x02;
+
+    // 69A2: BHI $018D
+    // TODO: Convert BHI $018D
+
+    // 69A4: LDA #$00
+    cpu.state_.a = 0x00;
+
+    // 69A6: STA <$83
+    cpu.write_memory(0x83, cpu.state_.a);
+
+    // 69A9: LDA $4B15
+    cpu.state_.a = cpu.read_memory(0x4B15);
+
+    // 69AD: CMPA #$1F
+    cpu.compare_a(0x1F);
+
+    // 69AF: BCS $019A
+    if (cpu.carry_flag()) cpu.state_.pc += 0x019A;
+
+    // 69B1: LDA #$1F
+    cpu.state_.a = 0x1F;
+
+    // 69B3: STA $4B13
+    cpu.write_memory(0x4B13, cpu.state_.a);
+
+    // 69B6: ADDA $4B18
+    cpu.state_.a += 0x4B18;
+
+    // 69B9: CMPA #$0F
+    cpu.compare_a(0x0F);
+
+    // 69BB: BLS $01A6
+    // TODO: Convert BLS $01A6
+
+    // 69BD: LDA #$0F
+    cpu.state_.a = 0x0F;
+
+    // 69BF: STA $4B19
+    cpu.write_memory(0x4B19, cpu.state_.a);
+
+    // 69C2: JSR $615A
+    cpu.call_function(0x615A);
+
+    // 69C5: JSR $620F
+    cpu.call_function(0x620F);
+
+    // 69C8: JSR $A1CE
+    cpu.call_function(0xA1CE);
+
+    // 69CB: JSR $B939
+    cpu.call_function(0xB939);
+
+    // 69CE: LDD #$0100
+    cpu.state_.d = 0x0100;
+
+    // 69D1: STD $5086
+    cpu.write_memory(0x5086, cpu.state_.d);
+
+    // 69D6: STD $5098
+    cpu.write_memory(0x5098, cpu.state_.d);
+
+    // 69D9: LDD #$2000
+    cpu.state_.d = 0x2000;
+
+    // 69DC: STD $509C
+    cpu.write_memory(0x509C, cpu.state_.d);
+
+    // 69DF: LDA #$00
+    cpu.state_.a = 0x00;
+
+    // 69E1: STA <$A7
+    cpu.write_memory(0xA7, cpu.state_.a);
+
+    // 69E3: STA $4B35
+    cpu.write_memory(0x4B35, cpu.state_.a);
+
+    // 69E6: STA $4B3D
+    cpu.write_memory(0x4B3D, cpu.state_.a);
+
+    // 69E9: LDA #$00
+    cpu.state_.a = 0x00;
+
+    // 69EB: STA $4B0E
+    cpu.write_memory(0x4B0E, cpu.state_.a);
+
+    // 69EE: JSR $BD94
+    cpu.call_function(0xBD94);
+
+    // 69F1: INC <$41
+    // TODO: Convert INC <$41
+
+    // 69F4: JSR $7390
+    cpu.call_function(0x7390);
+
+    // 69F7: LDA <$60
+    cpu.state_.a = cpu.read_memory(0x60);
+
+    // 69F9: LBMI $049D
+    // TODO: Convert LBMI $049D
+
+    // 69FD: JSR $A849
+    cpu.call_function(0xA849);
+
+    // 6A00: JSR $9890
+    cpu.call_function(0x9890);
+
+    // 6A03: JSR $9558
+    cpu.call_function(0x9558);
+
+    // 6A06: JSR $B98B
+    cpu.call_function(0xB98B);
+
+    // 6A09: JSR $70DB
+    cpu.call_function(0x70DB);
+
+    // 6A0C: JSR $6E22
+    cpu.call_function(0x6E22);
+
+    // 6A0F: LDA #$10
+    cpu.state_.a = 0x10;
+
+    // 6A11: JSR $CE0C
+    cpu.call_function(0xCE0C);
+
+    // 6A14: JSR $6F6F
+    cpu.call_function(0x6F6F);
+
+    // 6A17: LDD $5000
+    cpu.state_.d = cpu.read_memory_word(0x5000);
+
+}
+
+} // namespace StarWars
