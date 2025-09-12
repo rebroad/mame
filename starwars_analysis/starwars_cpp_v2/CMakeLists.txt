@@ -26,6 +26,7 @@ set(SOURCES
     src/starwars_hardware.cpp
     src/cpu_6809.cpp
     src/cpu_6809_hardware.cpp
+    src/rom_routines_wrapper.cpp
     # Generated ROM routines
     src/routine_e790.cpp
     src/routine_e7c7.cpp
