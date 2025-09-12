@@ -247,13 +247,13 @@ void routine_feff_impl(CPU6809& cpu) {
     cpu.write_memory16(0x434F, cpu.m_u);
 
     // FFE5: BRA $0018
-    cpu.m_pc = 0x10018;
+    cpu.m_pc = 0x0018;
 
     // FFE8: XANDCC #$33
     // TODO: Convert XANDCC #$33
 
     // FFEA: BRA $002D
-    cpu.m_pc = 0x1002D;
+    cpu.m_pc = 0x002D;
 
     // FFF0: INC <$85
     // TODO: Convert INC <$85

@@ -249,6 +249,45 @@ def parse_branch_operand(operands):
 def convert_branch_instruction(mnemonic, operands, current_address, disassembly_line=None):
     """Convert branch instruction with relative offset to absolute address"""
     
+    # Check if operands already contain an absolute address (e.g., "$0018", "$002D")
+    if operands.startswith('$'):
+        target_str = operands[1:]  # Remove $ prefix
+        try:
+            # If it's a valid hex address, use it directly
+            target_address = int(target_str, 16)
+            # Validate that it's within 16-bit range
+            if target_address <= 0xFFFF:
+                # Generate the appropriate branch code with the target address
+                if mnemonic == 'BRA':
+                    return f"    cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BNE':
+                    return f"    if (!cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BEQ':
+                    return f"    if (cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BCS':
+                    return f"    if (cpu.carry_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BCC':
+                    return f"    if (!cpu.carry_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BMI':
+                    return f"    if (cpu.negative_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BPL':
+                    return f"    if (!cpu.negative_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BLE':
+                    return f"    if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BGT':
+                    return f"    if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BGE':
+                    return f"    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
+                elif mnemonic == 'BLT':
+                    return f"    if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x{target_address:04X};"
+                else:
+                    return f"    // TODO: Unsupported branch instruction: {mnemonic}"
+            else:
+                return f"    // TODO: Target address {target_address:04X} exceeds 16-bit range: {operands}"
+        except ValueError:
+            # If it's not a valid hex number, fall through to relative offset calculation
+            pass
+    
     # Try to extract the actual byte offset from the disassembly line first
     if disassembly_line:
         actual_offset = extract_branch_offset_from_line(disassembly_line)
