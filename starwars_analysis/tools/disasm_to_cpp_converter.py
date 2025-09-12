@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Improved Disassembly to C++ Converter
+Robust Disassembly to C++ Converter
 
 This tool converts rom_disasm_auto_*.md files to C++ function implementations,
-generating proper C++ syntax that works with the StarWarsCPU wrapper class.
+handling complex 6809 addressing modes and generating proper C++ syntax.
 """
 
 import argparse
 import re
 from pathlib import Path
 
-# 6809 instruction to C++ mapping (improved)
+# 6809 instruction to C++ mapping (robust)
 INSTRUCTION_MAP = {
     'ORCC': 'cpu.state_.cc |= {operand}',
     'CLR': 'cpu.write_memory({operand}, 0)',
@@ -101,7 +101,7 @@ def parse_disassembly_line(line):
     }
 
 def convert_operand(operands, mnemonic):
-    """Convert 6809 operand to C++ expression"""
+    """Convert 6809 operand to C++ expression with robust handling"""
     if not operands:
         return ""
     
@@ -120,33 +120,66 @@ def convert_operand(operands, mnemonic):
         value = operands[1:]  # Remove > prefix
         return f"0x{value.upper()}"
     
-    # Handle indexed addressing
+    # Handle simple $ prefix
+    if operands.startswith('$') and not operands.startswith('$x'):
+        value = operands[1:]  # Remove $ prefix
+        return f"0x{value.upper()}"
+    
+    # Handle indexed addressing - complex cases
     if ',' in operands:
         # Handle simple indexed addressing like "A,X" or "B,Y"
         parts = operands.split(',')
         if len(parts) == 2:
             reg1, reg2 = parts[0].strip(), parts[1].strip()
-            if reg1 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S'] and reg2 in ['X', 'Y', 'U', 'S']:
+            
+            # Handle register-to-register transfers
+            if reg1 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S'] and reg2 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S']:
                 return f"cpu.state_.{reg1.lower()},cpu.state_.{reg2.lower()}"
-        return operands
-    
-    # Handle relative addressing
-    if operands.startswith('$'):
-        value = operands[1:]  # Remove $ prefix
-        return f"0x{value.upper()}"
-    
-    # Handle numeric values
-    if operands.isdigit() or (operands.startswith('0x') and all(c in '0123456789ABCDEFabcdef' for c in operands[2:])):
-        return operands
+            
+            # Handle indexed addressing with offset
+            if reg1.startswith('$') and reg2 in ['X', 'Y', 'U', 'S']:
+                offset = reg1[1:]  # Remove $ prefix
+                return f"0x{offset.upper()},cpu.state_.{reg2.lower()}"
+            
+            # Handle negative offsets
+            if reg1.startswith('-$') and reg2 in ['X', 'Y', 'U', 'S']:
+                offset = reg1[2:]  # Remove -$ prefix
+                return f"-0x{offset.upper()},cpu.state_.{reg2.lower()}"
+            
+            # Handle post-increment
+            if reg2.endswith('++') or reg2.endswith('--'):
+                reg = reg2[:-2]
+                if reg in ['X', 'Y', 'U', 'S']:
+                    return f"cpu.state_.{reg.lower()}{reg2[-2:]}"
+            
+            # Handle pre-increment
+            if reg1.endswith('++') or reg1.endswith('--'):
+                reg = reg1[:-2]
+                if reg in ['X', 'Y', 'U', 'S']:
+                    return f"cpu.state_.{reg.lower()}{reg1[-2:]}"
+        
+        # For complex cases, return TODO
+        return f"// TODO: Complex indexed addressing: {operands}"
     
     # Handle register names
     if operands in ['A', 'B', 'D', 'X', 'Y', 'U', 'S', 'PC', 'CC', 'DP']:
         return f"cpu.state_.{operands.lower()}"
     
-    return operands
+    # Handle numeric values
+    if operands.isdigit() or (operands.startswith('0x') and all(c in '0123456789ABCDEFabcdef' for c in operands[2:])):
+        return operands
+    
+    # Handle post-increment/decrement
+    if operands.endswith('++') or operands.endswith('--'):
+        reg = operands[:-2]
+        if reg in ['X', 'Y', 'U', 'S']:
+            return f"cpu.state_.{reg.lower()}{operands[-2:]}"
+    
+    # For unrecognized cases, return TODO
+    return f"// TODO: Unrecognized operand: {operands}"
 
 def convert_instruction(parsed):
-    """Convert a parsed instruction to C++ code"""
+    """Convert a parsed instruction to C++ code with robust handling"""
     mnemonic = parsed['mnemonic']
     operands = parsed['operands']
     
@@ -167,6 +200,10 @@ def convert_instruction(parsed):
     if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
         # For now, simplify indexed addressing
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
+    
+    # Handle complex addressing modes
+    if cpp_operand.startswith('// TODO:'):
+        return f"    {cpp_operand}"
     
     # Replace operand placeholder
     cpp_code = cpp_template.format(operand=cpp_operand)
