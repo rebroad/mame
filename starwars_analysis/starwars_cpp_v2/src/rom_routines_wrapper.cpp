@@ -9,7 +9,9 @@ StarWarsCPU::State::State(CPU6809& cpu)
     : a(cpu.m_a), b(cpu.m_b), d(cpu.m_d), x(cpu.m_x), y(cpu.m_y),
       u(cpu.m_u), sp(cpu.m_sp), dp(cpu.m_dp), cc(cpu.m_cc), pc(cpu.m_pc) {}
 
-StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {}
+StarWarsCPU::StarWarsCPU(CPU6809& cpu) : state_(cpu), cpu_(cpu) {
+    std::cout << "StarWarsCPU: Created wrapper, initial PC=0x" << std::hex << state_.pc << std::endl;
+}
 
 // Memory access methods
 void StarWarsCPU::write_memory(uint16_t address, uint8_t value) {
@@ -22,6 +24,12 @@ uint8_t StarWarsCPU::read_memory(uint16_t address) {
 
 uint16_t StarWarsCPU::read_memory_word(uint16_t address) {
     return cpu_.read_memory16(address);
+}
+
+void StarWarsCPU::set_pc_debug(uint16_t pc, const std::string& reason) {
+    std::cout << "StarWarsCPU::set_pc_debug() - PC changed from 0x" << std::hex << state_.pc
+              << " to 0x" << pc << " (" << reason << ")" << std::endl;
+    cpu_.set_pc(pc);
 }
 
 void StarWarsCPU::write_memory16(uint16_t address, uint16_t value) {
@@ -98,18 +106,24 @@ static const std::map<uint16_t, std::function<void(StarWarsCPU&)>> routine_map =
     {0xFD07, routine_fd07_impl},
     {0xFEFF, routine_feff_impl},
     {0xFF24, routine_ff24_impl},
+    {0xF36E, routine_f36e_impl},
 };
 
 // CPU6809 method implementations
 bool CPU6809::execute_at_address(uint16_t address) {
+    std::cout << "CPU6809::execute_at_address(0x" << std::hex << address << ") - PC=0x" << m_pc << std::endl;
+
     auto it = routine_map.find(address);
     if (it != routine_map.end()) {
         // Use native C++ implementation
+        std::cout << "  -> Calling C++ routine for 0x" << std::hex << address << std::endl;
         StarWarsCPU wrapper(*this);
         it->second(wrapper);
+        std::cout << "  -> Routine completed, new PC=0x" << std::hex << m_pc << std::endl;
         return true;
     } else {
         // Not a known routine
+        std::cout << "  -> No C++ routine found for 0x" << std::hex << address << std::endl;
         return false;
     }
 }

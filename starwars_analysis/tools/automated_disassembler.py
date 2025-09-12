@@ -22,7 +22,10 @@ class AutomatedDisassembler:
         self.rom_file = rom_file
         self.arch = arch
         self.routines = {}
-        self.disassembly_dir = Path("disassembly")
+        # Set disassembly directory to be relative to project root, not current working directory
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent  # Go up one level from tools/ to starwars_analysis/
+        self.disassembly_dir = project_root / "disassembly"
         self.disassembly_dir.mkdir(exist_ok=True)
 
     def _get_disassembly_window(self, start_addr: str, max_count: int) -> List[str]:
@@ -67,8 +70,8 @@ class AutomatedDisassembler:
         print(f"Finding boundaries for routine at {start_addr}...")
 
         try:
-            # Use robust window acquisition
-            lines = self._get_disassembly_window(start_addr, max_search)
+            # Use our fixed disassembler with dd skip approach
+            lines = dr_run_unidasm(self.rom_file, start_addr)
 
             # Find the actual start (first non-empty line with address)
             actual_start = None
@@ -344,7 +347,7 @@ class AutomatedDisassembler:
             is_seed = (addr == entry)
 
             if start and end:
-                name = f"auto_{start}"
+                name = start
                 ok = self.disassemble_routine(start, end, name, verbose=False, force_save=is_seed)
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless

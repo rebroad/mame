@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <set>
+#include <iostream>
 
 // Forward declaration
 namespace StarWars {
@@ -13,7 +14,7 @@ namespace StarWars {
 
 /**
  * Motorola 6809E CPU Simulation
- * 
+ *
  * This class simulates the 6809E CPU used in the Star Wars arcade game.
  * It provides the core instruction execution engine needed to run
  * the validated ROM routines we've disassembled.
@@ -32,14 +33,17 @@ public:
     void reset();
     void step();
     bool is_running() const { return m_running; }
-    
+
     // Register access
     uint16_t get_pc() const { return m_pc; }
     uint16_t get_sp() const { return m_sp; }
     uint8_t get_dp() const { return m_dp; }
     uint8_t get_cc() const { return m_cc; }
-    
-    void set_pc(uint16_t pc) { m_pc = pc; }
+
+    void set_pc(uint16_t pc) {
+        std::cout << "CPU6809::set_pc() - PC changed from 0x" << std::hex << m_pc << " to 0x" << pc << std::endl;
+        m_pc = pc;
+    }
     void set_sp(uint16_t sp) { m_sp = sp; }
     void set_dp(uint8_t dp) { m_dp = dp; }
     void set_cc(uint8_t cc) { m_cc = cc; }
@@ -50,18 +54,22 @@ public:
 
     // Instruction execution
     void execute_instruction();
-    
+
     // Memory access (delegates to hardware)
     uint8_t read_memory(uint16_t address);
     void write_memory(uint16_t address, uint8_t value);
-    
+
     // Native routine execution (address-perfect C++ implementations)
     bool execute_at_address(uint16_t address);
-    
+
     // Track unknown addresses for future disassembly
     void track_unknown_address(uint16_t address);
     void write_unknown_addresses_to_file();
-    
+
+    // PC validation and debugging
+    bool is_potentially_valid_code_address(uint16_t address);
+    void validate_pc();
+
     // ROM routine implementations (generated from disassembly)
     void routine_e790();  // Address 0xE790
     void routine_e7c7();  // Address 0xE7C7
@@ -76,7 +84,7 @@ public:
     void routine_fd07();  // Address 0xFD07
     void routine_feff();  // Address 0xFEFF
     void routine_ff24();  // Address 0xFF24
-    
+
     // Debugging
     void print_state() const;
     void print_instruction(uint16_t address) const;
@@ -93,17 +101,17 @@ protected:
     uint8_t m_b;                 // Accumulator B
     uint8_t m_dp;                // Direct page register
     uint8_t m_cc;                // Condition codes
-    
+
     // CPU state
     bool m_running;
     bool m_initialized;
-    
+
     // Hardware reference
     StarWarsHardware* m_hardware;
-    
+
     // Track unknown addresses for future disassembly
     std::set<uint16_t> m_unknown_addresses;
-    
+
     // Instruction execution
     uint8_t fetch_byte();
     uint16_t fetch_word();
@@ -111,7 +119,7 @@ protected:
     uint8_t pop_byte();
     void push_word(uint16_t value);
     uint16_t pop_word();
-    
+
     // Instruction implementations
     void execute_jmp(uint16_t address);
     void execute_jsr(uint16_t address);
@@ -125,13 +133,13 @@ protected:
     void execute_cmps_immediate(uint16_t value);
     void execute_beq(uint16_t address);
     void execute_stu_indexed(int8_t offset);
-    
+
     // Addressing modes
     uint16_t get_immediate_word();
     uint8_t get_immediate_byte();
     uint8_t get_direct_byte(uint8_t address);
     void set_direct_byte(uint8_t address, uint8_t value);
-    
+
     // Condition code helpers (protected for wrapper access)
     void set_zero_flag(bool zero);
     void set_carry_flag(bool carry);
@@ -154,31 +162,34 @@ public:
         uint8_t& dp;
         uint8_t& cc;
         uint16_t& pc;
-        
+
         State(CPU6809& cpu);
     };
-    
+
     State state_;
     CPU6809& cpu_;
-    
+
     StarWarsCPU(CPU6809& cpu);
-    
+
     // Memory access methods
     void write_memory(uint16_t address, uint8_t value);
     uint8_t read_memory(uint16_t address);
     uint16_t read_memory_word(uint16_t address);
+
+    // PC tracking for debugging
+    void set_pc_debug(uint16_t pc, const std::string& reason);
     void write_memory16(uint16_t address, uint16_t value);
     uint16_t read_memory16(uint16_t address);
-    
+
     // Condition code helpers
     bool zero_flag() const;
     bool carry_flag() const;
     bool negative_flag() const;
-    
+
     // Function call handling
     void call_function(uint16_t address);
     void return_from_function();
-    
+
     // Comparison helpers
     void compare_a(uint8_t value);
     void compare_b(uint8_t value);

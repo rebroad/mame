@@ -66,12 +66,20 @@ void CPU6809::step() {
         return;
     }
 
+    uint16_t old_pc = m_pc;
+    std::cout << "CPU6809::step() - PC=0x" << std::hex << m_pc << std::endl;
+
+    // Validate PC before executing
+    validate_pc();
+
     // Check if we're at a known routine address
     if (execute_at_address(m_pc)) {
+        std::cout << "  -> Routine executed, PC changed from 0x" << std::hex << old_pc << " to 0x" << m_pc << std::endl;
         return; // Routine was executed successfully
     }
 
     // Track unknown address and fall back to normal instruction execution
+    std::cout << "  -> Falling back to instruction execution at 0x" << std::hex << m_pc << std::endl;
     track_unknown_address(m_pc);
     execute_instruction();
 }
@@ -343,7 +351,7 @@ void CPU6809::print_instruction(uint16_t address) const {
 void CPU6809::track_unknown_address(uint16_t address) {
     if (m_unknown_addresses.find(address) == m_unknown_addresses.end()) {
         m_unknown_addresses.insert(address);
-        std::cout << "Unknown routine at address 0x" << std::hex << address 
+        std::cout << "Unknown routine at address 0x" << std::hex << address
                   << " - needs disassembly! (Total unknown: " << m_unknown_addresses.size() << ")" << std::endl;
     }
 }
@@ -352,21 +360,74 @@ void CPU6809::write_unknown_addresses_to_file() {
     if (m_unknown_addresses.empty()) {
         return;
     }
-    
+
     std::ofstream file("/home/rebroad/src/mame/starwars_analysis/unknown_addresses.txt");
     if (file.is_open()) {
         file << "# Unknown addresses discovered during execution\n";
         file << "# These should be added to entry_points.txt for disassembly\n\n";
-        
+
         for (uint16_t addr : m_unknown_addresses) {
             file << "0x" << std::hex << std::uppercase << addr << "\n";
         }
-        
+
         file.close();
-        std::cout << "Wrote " << m_unknown_addresses.size() 
+        std::cout << "Wrote " << m_unknown_addresses.size()
                   << " unknown addresses to unknown_addresses.txt" << std::endl;
     } else {
         std::cerr << "Failed to write unknown_addresses.txt" << std::endl;
+    }
+}
+
+bool CPU6809::is_potentially_valid_code_address(uint16_t address) {
+    // This function checks if an address might contain executable code vs data
+    // It's used for debugging to detect when PC points to obvious data
+    
+    // RAM addresses (0x0000-0x2FFF) are typically data, not code
+    if (address < 0x3000) {
+        return false;
+    }
+    
+    // I/O port addresses (0x4300-0x47FF) are definitely not code
+    if (address >= 0x4300 && address < 0x4800) {
+        return false;
+    }
+    
+    // For ROM addresses, check if it looks like obvious data vs potentially code
+    if (address >= 0x6000) {
+        uint8_t byte = read_memory(address);
+        
+        // Specific check for 0xF36E case: LDA $4320 (data pattern)
+        if (address == 0xF36E && byte == 0xB6) {
+            uint8_t next_byte = read_memory(address + 1);
+            if (next_byte == 0x43) {  // LDA $43xx - looks like data
+                return false;
+            }
+        }
+        
+        // If we get here, assume it's potentially valid code
+        return true;
+    }
+    
+    return false;
+}
+
+void CPU6809::validate_pc() {
+    // Check for known problematic addresses
+    if (m_pc == 0xF36E) {
+        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc 
+                  << " - This is a DATA address, not code!" << std::endl;
+        
+        uint8_t byte = read_memory(m_pc);
+        uint8_t next_byte = read_memory(m_pc + 1);
+        std::cout << "    Bytes at PC: 0x" << std::hex << (int)byte << " 0x" << (int)next_byte << std::endl;
+        std::cout << "    This is LDA $43xx - data pattern!" << std::endl;
+        std::cout << "    PC corruption detected - check routine execution!" << std::endl;
+    }
+    
+    // Check if PC is in obviously invalid regions
+    if (!is_potentially_valid_code_address(m_pc)) {
+        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc 
+                  << " - PC is in invalid code region!" << std::endl;
     }
 }
 

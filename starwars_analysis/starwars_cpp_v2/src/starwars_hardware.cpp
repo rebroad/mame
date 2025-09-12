@@ -347,7 +347,7 @@ bool StarWarsHardware::is_math_ram_address(uint16_t address) const {
 }
 
 bool StarWarsHardware::is_main_rom_address(uint16_t address) const {
-    return (address >= 0x6000 && address < 0x10000);
+    return (address >= 0x6000);
 }
 
 bool StarWarsHardware::is_io_port_address(uint16_t address) const {

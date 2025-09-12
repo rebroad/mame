@@ -14,42 +14,58 @@ import subprocess
 import argparse
 import os
 from typing import List, Tuple, Optional
+from pathlib import Path
 
 def run_unidasm(rom_file: str, start_addr: str, end_addr: Optional[str] = None) -> List[str]:
-    """Run unidasm and return disassembly lines"""
-    cmd = ["unidasm", "-arch", "m6809", rom_file]
-
+    """Run unidasm on a specific address range using dd to extract the window"""
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        lines = result.stdout.split('\n')
-
-        # Filter lines for the specified address range
-        filtered_lines = []
-        in_range = False
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Check if we're in the target range
-            addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
-            if addr_match:
-                current_addr = addr_match.group(1).lower()
-                start_addr_lower = start_addr.lower()
-
-                if current_addr == start_addr_lower:
-                    in_range = True
-                    filtered_lines.append(line)
-                elif end_addr and current_addr >= end_addr.lower():
-                    break
-                elif in_range:
-                    filtered_lines.append(line)
-
-        return filtered_lines
-
+        start_int = int(start_addr, 16)
+        
+        # Calculate the number of bytes to extract
+        if end_addr:
+            end_int = int(end_addr, 16)
+            count = end_int - start_int
+        else:
+            # Default to 512 bytes if no end address specified
+            count = 512
+        
+        # Use dd to extract the specific byte range
+        dd_cmd = ["dd", f"if={rom_file}", "bs=1", f"skip={start_int}", f"count={count}"]
+        dd_result = subprocess.run(dd_cmd, capture_output=True, check=True)
+        
+        if not dd_result.stdout:
+            return []
+        
+        # dd outputs binary data, so we need to handle it properly
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
+            temp_file.write(dd_result.stdout)
+            temp_file_path = temp_file.name
+        
+        try:
+            # Run unidasm on the extracted window
+            unidasm_cmd = ["unidasm", "-arch", "m6809", temp_file_path]
+            unidasm_result = subprocess.run(unidasm_cmd, capture_output=True, text=True, check=True)
+            
+            lines = []
+            for line in unidasm_result.stdout.split('\n'):
+                line = line.strip()
+                if line:
+                    # Convert relative addresses back to absolute addresses
+                    addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
+                    if addr_match:
+                        rel_addr = int(addr_match.group(1), 16)
+                        abs_addr = start_int + rel_addr
+                        line = f"{abs_addr:04x}:{line.split(':', 1)[1]}"
+                    lines.append(line)
+            
+            return lines
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_file_path)
+            
     except subprocess.CalledProcessError as e:
-        print(f"Error running unidasm: {e}")
+        print(f"Error running dd or unidasm: {e}")
         return []
     except FileNotFoundError:
         print("Error: unidasm not found. Please install unidasm.")
@@ -119,8 +135,12 @@ def disassemble_routine(rom_file: str, start_addr: str, routine_name: str,
 
     print(f"Routine ends at line {end_line} (found boundary instruction)")
 
-    # Create output file
-    output_file = f"rom_disasm_{routine_name}_unidasm.md"
+    # Create output file in disassembly directory
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent  # Go up one level from tools/ to starwars_analysis/
+    disassembly_dir = project_root / "disassembly"
+    disassembly_dir.mkdir(exist_ok=True)
+    output_file = disassembly_dir / f"rom_disasm_{routine_name}.md"
     with open(output_file, 'w') as f:
         f.write('\n'.join(routine_lines))
 
@@ -140,7 +160,7 @@ def main():
     parser = argparse.ArgumentParser(description="Automated ROM routine disassembly")
     parser.add_argument("rom_file", help="ROM file to disassemble")
     parser.add_argument("start_addr", help="Start address (hex, e.g., 611e)")
-    parser.add_argument("routine_name", help="Name for the routine (e.g., 611e)")
+    parser.add_argument("routine_name", nargs='?', help="Name for the routine (auto-generated from start_addr if not provided)")
     parser.add_argument("--max-lines", "-m", type=int, default=100,
                        help="Maximum lines to disassemble (default: 100)")
     parser.add_argument("--no-validate", action="store_true",
@@ -156,6 +176,10 @@ def main():
     if not re.match(r'^[0-9a-f]+$', args.start_addr, re.IGNORECASE):
         print(f"Error: Invalid start address {args.start_addr}")
         return 1
+
+    # Auto-generate routine name if not provided
+    if not args.routine_name:
+        args.routine_name = args.start_addr.lower()
 
     # Disassemble routine
     success = disassemble_routine(

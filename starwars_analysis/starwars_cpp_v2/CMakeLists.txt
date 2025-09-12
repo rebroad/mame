@@ -40,6 +40,7 @@ set(SOURCES
     src/routine_fd07.cpp
     src/routine_feff.cpp
     src/routine_ff24.cpp
+    src/routine_f36e.cpp
 )
 
 # Create executable
