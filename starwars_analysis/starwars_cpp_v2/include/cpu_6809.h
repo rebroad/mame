@@ -473,11 +473,17 @@ public:
     bool carry_flag() const { return (m_cc & 0x01) != 0; }
     bool negative_flag() const { return (m_cc & 0x08) != 0; }
     bool overflow_flag() const { return (m_cc & 0x02) != 0; }
-    
+
     void compare_a(uint8_t value);
     void compare_b(uint8_t value);
     void compare_x(uint16_t value);
     void call_function(uint16_t address);
+
+    // Execution mode management
+    void set_routine_mode(uint16_t start_pc);
+    void set_instruction_mode();
+    bool is_in_routine_mode() const { return m_execution_mode == ROUTINE_MODE; }
+    void check_routine_termination();
 
     void print_instruction(uint16_t address) const;
 
@@ -502,6 +508,14 @@ protected:
     // CPU state
     bool m_running;
     bool m_initialized;
+
+    // Execution mode tracking
+    enum ExecutionMode {
+        INSTRUCTION_MODE,    // Execute instruction by instruction
+        ROUTINE_MODE         // Execute within a converted routine
+    };
+    ExecutionMode m_execution_mode;
+    uint16_t m_routine_start_pc;  // Starting PC of current routine
 
     // Hardware reference
     StarWarsHardware* m_hardware;

@@ -22,6 +22,8 @@ CPU6809::CPU6809(StarWarsHardware* hardware)
     , m_inv(0)      // Invalid register
     , m_running(false)
     , m_initialized(false)
+    , m_execution_mode(INSTRUCTION_MODE)
+    , m_routine_start_pc(0)
     , m_hardware(hardware)
 {
 }
@@ -73,7 +75,21 @@ void CPU6809::step() {
     // Validate PC before executing
     validate_pc();
 
-    // Check if we're at a known routine address
+    // Check execution mode
+    if (m_execution_mode == ROUTINE_MODE) {
+        // We're in routine mode - check for termination
+        check_routine_termination();
+        
+        if (m_execution_mode == ROUTINE_MODE) {
+            // Still in routine mode - execute instruction by instruction within the routine
+            std::cout << "  -> Executing within routine at 0x" << std::hex << m_pc << std::endl;
+            execute_instruction();
+            return;
+        }
+        // Fall through to check for new routine entry point
+    }
+
+    // Check if we're at a known routine entry point
     if (execute_at_address(m_pc)) {
         std::cout << "  -> Routine executed, PC changed from 0x" << std::hex << old_pc << " to 0x" << m_pc << std::endl;
         return; // Routine was executed successfully
@@ -476,6 +492,36 @@ void CPU6809::call_function(uint16_t address) {
     m_hardware->write_memory(m_sp + 1, m_pc & 0xFF);
     // Jump to address
     m_pc = address;
+}
+
+void CPU6809::set_routine_mode(uint16_t start_pc) {
+    m_execution_mode = ROUTINE_MODE;
+    m_routine_start_pc = start_pc;
+    std::cout << "CPU6809::set_routine_mode(0x" << std::hex << start_pc << ")" << std::endl;
+}
+
+void CPU6809::set_instruction_mode() {
+    m_execution_mode = INSTRUCTION_MODE;
+    m_routine_start_pc = 0;
+    std::cout << "CPU6809::set_instruction_mode()" << std::endl;
+}
+
+void CPU6809::check_routine_termination() {
+    // Check if we've hit a termination condition
+    // For now, we'll use a simple approach: check if PC is outside the routine
+    // In a more sophisticated implementation, we'd detect RTS, JMP, etc.
+    
+    // If PC has changed significantly from the routine start, we might have hit a jump/branch
+    // For now, let's assume routines are relatively short and check if we've moved too far
+    uint16_t pc_delta = (m_pc > m_routine_start_pc) ? 
+                       (m_pc - m_routine_start_pc) : 
+                       (m_routine_start_pc - m_pc);
+    
+    // If we've moved more than 512 bytes from the start, assume we've hit a jump/branch
+    if (pc_delta > 512) {
+        std::cout << "CPU6809::check_routine_termination() - PC moved too far from routine start" << std::endl;
+        set_instruction_mode();
+    }
 }
 
 } // namespace StarWars

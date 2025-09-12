@@ -801,14 +801,20 @@ static const std::map<uint16_t, std::function<void(CPU6809&)>> routine_map = {
 
 bool CPU6809::execute_at_address(uint16_t address) {
     std::cout << "CPU6809::execute_at_address(0x" << std::hex << address << ") - PC=0x" << m_pc << std::endl;
-    
+
     auto it = routine_map.find(address);
     if (it != routine_map.end()) {
         std::cout << "Found routine for address 0x" << std::hex << address << std::endl;
+
+        // Set routine mode before executing the routine
+        set_routine_mode(address);
+
+        // Execute the routine
         it->second(*this);
+
         return true;
     }
-    
+
     std::cout << "No routine found for address 0x" << std::hex << address << ", tracking as unknown" << std::endl;
     track_unknown_address(address);
     return false;
