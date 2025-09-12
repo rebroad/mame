@@ -102,8 +102,11 @@ def create_memory_map():
     load_file_into(rom_region, rom3, 0xC000, 0x2000)
     load_file_into(rom_region, rom4, 0xE000, 0x2000)
 
-    # Populate CPU address space with the currently active bank (bank1 entry 0)
-    # MAME sets bank1 entry 0 to rom_region+0x6000 and maps 0x6000-0x7FFF.
+    # Populate CPU address space with the currently active bank window (0x6000-0x7FFF)
+    # MAME's bank1 is configured with 2 entries:
+    # - Entry 0: rom_region + 0x6000 (initial bank, set_entry(0))
+    # - Entry 1: rom_region + 0x10000 (ROM_CONTINUE page)
+    # We start with entry 0 as MAME does
     cpu[0x6000:0x8000] = rom_region[0x6000:0x8000]
     cpu[0x8000:0xA000] = rom_region[0x8000:0xA000]
     cpu[0xA000:0xC000] = rom_region[0xA000:0xC000]
