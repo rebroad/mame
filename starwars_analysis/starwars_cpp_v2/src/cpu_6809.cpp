@@ -1,4 +1,5 @@
 #include "cpu_6809.h"
+#include "starwars_hardware.h"
 #include <iostream>
 #include <iomanip>
 
