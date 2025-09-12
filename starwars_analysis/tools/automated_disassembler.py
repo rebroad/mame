@@ -5,7 +5,8 @@ Automated ROM Disassembler
 This tool automates the process of finding and disassembling ROM routines
 with proper boundary detection and validation.
 
-Usage: python3 automated_disassembler.py <rom_file> [options]
+Usage: python3 automated_disassembler.py <address> --rom <rom_file> [options]
+       python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin
 """
 
 import sys
@@ -458,20 +459,24 @@ class AutomatedDisassembler:
 
 def main():
     parser = argparse.ArgumentParser(description="Automated ROM Disassembler")
-    parser.add_argument("rom_file", nargs="?", help="Path to ROM file")
-    parser.add_argument("--input", help="Path to ROM file (alternative to positional argument)")
+    parser.add_argument("address", nargs="?", help="Address to disassemble (hex format, e.g., 0xf448)")
+    parser.add_argument("--rom", help="Path to ROM file")
+    parser.add_argument("--input", help="Path to ROM file (alternative to --rom)")
     parser.add_argument("--output-dir", help="Output directory for disassembly files")
     parser.add_argument("-arch", default="m6809", help="CPU architecture (default: m6809)")
     parser.add_argument("--search", action="store_true", help="Search for common routine patterns")
     parser.add_argument("--known", action="store_true", help="Disassemble known routines")
     parser.add_argument("--full-auto", action="store_true", help="Fully automated disassembly of all meaningful routines")
-    parser.add_argument("--addr", help="Disassemble specific address")
-    parser.add_argument("--name", help="Name for the routine (used with --addr)")
+    parser.add_argument("--addr", help="Disassemble specific address (alternative to positional argument)")
+    parser.add_argument("--name", help="Name for the routine (used with address)")
 
     args = parser.parse_args()
     
     # Determine ROM file path
     rom_file = args.input or args.rom_file
+    
+    # Determine address (positional argument takes precedence over --addr)
+    address = args.address or args.addr
     
     # For --full-auto, try to find the ROM file automatically
     if not rom_file and args.full_auto:
@@ -484,10 +489,10 @@ def main():
             rom_file = str(auto_rom_file)
             print(f"Auto-detected ROM file: {rom_file}")
         else:
-            parser.error("ROM file path required (use positional argument or --input). Auto-detection failed - complete_memory_map.bin not found in project root.")
+            parser.error("ROM file path required (use --rom or --input). Auto-detection failed - complete_memory_map.bin not found in project root.")
     
     if not rom_file:
-        parser.error("ROM file path required (use positional argument or --input)")
+        parser.error("ROM file path required (use --rom or --input)")
     
     # Set output directory if provided
     output_dir = args.output_dir
@@ -503,17 +508,18 @@ def main():
         disassembler.disassembly_dir = Path(output_dir)
         disassembler.disassembly_dir.mkdir(exist_ok=True)
 
-    if args.addr:
+    if address:
         if not args.name:
-            print("Error: --name required when using --addr")
-            return 1
+            # Generate a default name from the address
+            addr_clean = address.replace("0x", "").replace("0X", "").upper()
+            args.name = f"routine_{addr_clean}"
 
         # Find boundaries for the specific address
-        start, end = disassembler.find_routine_boundaries(args.addr)
+        start, end = disassembler.find_routine_boundaries(address)
         if start and end:
             disassembler.disassemble_routine(start, end, args.name)
         else:
-            print(f"Error: Could not find boundaries for address {args.addr}")
+            print(f"Error: Could not find boundaries for address {address}")
             return 1
 
     elif args.search:
