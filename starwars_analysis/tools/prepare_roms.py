@@ -6,6 +6,42 @@ Creates symbolic links to original ROM files with descriptive names
 
 import struct
 import os
+import io
+import zipfile
+
+def _read_rom(path: str, zf: zipfile.ZipFile | None) -> bytes:
+    """Read a ROM either from filesystem or from starwars1.zip if available.
+
+    Returns empty bytes if not found anywhere.
+    """
+    # Prefer local file if non-empty
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            data = f.read()
+        if data:
+            return data
+    # Try zip
+    if zf is not None:
+        # Try exact name first, then any member ending with the name
+        candidates = [path]
+        try:
+            for name in zf.namelist():
+                if name.endswith('/' + path) or name == path:
+                    candidates.append(name)
+        except Exception:
+            pass
+        for name in candidates:
+            try:
+                with zf.open(name) as f:
+                    data = f.read()
+                if data:
+                    return data
+            except KeyError:
+                continue
+            except Exception:
+                continue
+    return b""
+
 
 def create_memory_map():
     """Create memory maps mirroring MAME exactly.
@@ -29,20 +65,30 @@ def create_memory_map():
     rom4 = '136021.206.1m'        # 0xE000-0xFFFF
     vector_prom = '136021-105.1l' # 0x3000-0x3FFF (CPU space)
 
+    # Open zip if present
+    zip_path = os.path.join(os.getcwd(), 'starwars1.zip')
+    zf = None
+    if os.path.exists(zip_path):
+        try:
+            zf = zipfile.ZipFile(zip_path, 'r')
+            print(f"Using ROMs from: {zip_path}")
+        except Exception as e:
+            print(f"WARNING: Failed to open {zip_path}: {e}")
+
     # Load vector PROM into CPU space at 0x3000-0x3FFF
-    if os.path.exists(vector_prom):
-        with open(vector_prom, 'rb') as f:
-            v = f.read()
+    v = _read_rom(vector_prom, zf)
+    if v:
         cpu[0x3000:0x3000 + len(v)] = v
         print(f"Loaded vector PROM: {len(v)} bytes -> CPU[0x3000]")
+    else:
+        print(f"WARNING: Missing vector PROM {vector_prom}")
 
     # Helper to load a file at an offset into a buffer
     def load_file_into(buf: bytearray, path: str, offset: int, max_len: int = None):
-        if not os.path.exists(path):
+        data = _read_rom(path, zf)
+        if not data:
             print(f"WARNING: Missing ROM file: {path}")
             return 0
-        with open(path, 'rb') as f:
-            data = f.read()
         n = len(data) if max_len is None else min(len(data), max_len)
         buf[offset:offset + n] = data[:n]
         print(f"Loaded {path}: {n} bytes -> offset 0x{offset:04X}")
@@ -88,12 +134,22 @@ def create_individual_roms():
         ('136021-105.1l', 'avg_prom.bin')
     ]
 
+    zip_path = os.path.join(os.getcwd(), 'starwars1.zip')
+    zf = None
+    if os.path.exists(zip_path):
+        try:
+            zf = zipfile.ZipFile(zip_path, 'r')
+        except Exception:
+            zf = None
+
     for original, new_name in roms:
-        if os.path.exists(original):
-            with open(original, 'rb') as f_in:
-                with open(new_name, 'wb') as f_out:
-                    f_out.write(f_in.read())
+        data = _read_rom(original, zf)
+        if data:
+            with open(new_name, 'wb') as f_out:
+                f_out.write(data)
             print(f"Created: {new_name}")
+        else:
+            print(f"Skipping {new_name} (missing)")
 
 def analyze_entry_points():
     """Analyze potential entry points in the main ROM"""
