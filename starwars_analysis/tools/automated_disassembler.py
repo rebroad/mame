@@ -172,8 +172,8 @@ class AutomatedDisassembler:
         return match.group(1) if match else None
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
-        """Get raw disassembly lines for a window starting at start_addr using robust helper."""
-        return self._get_disassembly_window(start_addr, count)
+        """Get raw disassembly lines for a window starting at start_addr using our fixed disassembler."""
+        return dr_run_unidasm(self.rom_file, start_addr)
 
     def calculate_byte_count(self, start_addr: str, end_addr: str) -> int:
         """Calculate the number of bytes between start and end addresses"""
