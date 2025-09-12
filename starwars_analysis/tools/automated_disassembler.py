@@ -49,7 +49,7 @@ class AutomatedDisassembler:
             end_addr = self._find_intelligent_end_boundary(lines, actual_start)
 
             if not end_addr:
-                print(f"Warning: No clear end boundary found for {start_addr}")
+                # Don't print warning for every failed boundary - too noisy
                 return None, None
 
             # Validate routine size
@@ -156,9 +156,10 @@ class AutomatedDisassembler:
         end_int = int(end_addr, 16)
         return end_int - start_int + 1
 
-    def disassemble_routine(self, start_addr: str, end_addr: str, routine_name: str) -> bool:
+    def disassemble_routine(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True) -> bool:
         """Disassemble a routine with proper boundaries"""
-        print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
+        if verbose:
+            print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
 
         byte_count = self.calculate_byte_count(start_addr, end_addr)
 
@@ -171,21 +172,36 @@ class AutomatedDisassembler:
             # Filter out empty lines
             lines = [line for line in lines if line.strip()]
 
+            # Check if this looks like valid assembly (not all zeros)
+            valid_assembly = False
+            for line in lines:
+                if ':' in line and not line.strip().endswith('00 00  NEG    <$00'):
+                    valid_assembly = True
+                    break
+
+            if not valid_assembly:
+                if verbose:
+                    print(f"⚠ Skipping {routine_name} - appears to be all zeros or invalid")
+                return False
+
             # Save to file
             output_file = self.disassembly_dir / f"rom_disasm_{routine_name}.md"
             with open(output_file, 'w') as f:
                 for line in lines:
                     f.write(line + '\n')
 
-            print(f"✓ Created {output_file} with {len(lines)} lines")
+            if verbose:
+                print(f"✓ Created {output_file} with {len(lines)} lines")
 
-            # Validate the disassembly
-            self.validate_routine(output_file)
+            # Validate the disassembly (but don't print validation output during capture)
+            if verbose:
+                self.validate_routine(output_file)
 
             return True
 
         except subprocess.CalledProcessError as e:
-            print(f"Error disassembling {routine_name}: {e}")
+            if verbose:
+                print(f"Error disassembling {routine_name}: {e}")
             return False
 
     def validate_routine(self, file_path: Path):
@@ -282,19 +298,50 @@ class AutomatedDisassembler:
         all_candidates.update(jsr_routines)
 
         meaningful_routines = 0
-        for pattern, (start, end) in all_candidates.items():
-            if start and end and start != end:
-                # Calculate size
-                start_int = int(start, 16)
-                end_int = int(end, 16)
-                size = end_int - start_int + 1
+        
+        # Capture output to a temporary file first
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_file:
+            temp_filename = temp_file.name
+            
+            # Redirect stdout to capture all output
+            original_stdout = sys.stdout
+            sys.stdout = temp_file
+            
+            try:
+                for pattern, (start, end) in all_candidates.items():
+                    if start and end and start != end:
+                        # Calculate size
+                        start_int = int(start, 16)
+                        end_int = int(end, 16)
+                        size = end_int - start_int + 1
 
-                # Only disassemble routines of reasonable size
-                if 5 <= size <= 200:  # 5-200 bytes
-                    routine_name = f"auto_{start}"
-                    print(f"Disassembling routine at {start} (size: {size} bytes)")
-                    if self.disassemble_routine(start, end, routine_name):
-                        meaningful_routines += 1
+                        # Only disassemble routines of reasonable size
+                        if 5 <= size <= 200:  # 5-200 bytes
+                            routine_name = f"auto_{start}"
+                            print(f"Disassembling routine at {start} (size: {size} bytes)")
+                            if self.disassemble_routine(start, end, routine_name, verbose=False):
+                                meaningful_routines += 1
+            finally:
+                # Restore stdout
+                sys.stdout = original_stdout
+        
+        # Now check file size and display appropriately
+        with open(temp_filename, 'r') as f:
+            lines = f.readlines()
+        
+        if len(lines) <= 100:
+            # Show full output
+            print("".join(lines))
+        else:
+            # Show summary
+            print(f"Processing output ({len(lines)} lines) - showing summary:")
+            print("".join(lines[:50]))  # First 50 lines
+            print(f"... ({len(lines) - 100} lines omitted) ...")
+            print("".join(lines[-50:]))  # Last 50 lines
+        
+        # Clean up temp file
+        os.unlink(temp_filename)
 
         print(f"\n=== AUTOMATION COMPLETE ===")
         print(f"Found and disassembled {meaningful_routines} meaningful routines")
