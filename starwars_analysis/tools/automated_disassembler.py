@@ -15,6 +15,7 @@ import argparse
 import os
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
+from disassemble_routine import run_unidasm as dr_run_unidasm, find_routine_end as dr_find_routine_end
 
 class AutomatedDisassembler:
     def __init__(self, rom_file: str, arch: str = "m6809"):
@@ -28,12 +29,13 @@ class AutomatedDisassembler:
         """Find the start and end boundaries of a routine with intelligent analysis"""
         print(f"Finding boundaries for routine at {start_addr}...")
 
-        # Get disassembly for a large range to find boundaries
-        cmd = ["unidasm", "-arch", self.arch, self.rom_file, "-basepc", start_addr, "-count", str(max_search)]
-
+        # Use home-grown decoder to get a window of disassembly lines
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            lines = result.stdout.strip().split('\n')
+            # Compute an end address window (wrap at 64K)
+            start_int = int(start_addr, 16)
+            end_int = (start_int + max_search) & 0xFFFF
+            end_addr = f"{end_int:04x}"
+            lines = dr_run_unidasm(self.rom_file, start_addr, end_addr)
 
             # Find the actual start (first non-empty line with address)
             actual_start = None
@@ -46,9 +48,9 @@ class AutomatedDisassembler:
                 raise ValueError(f"Could not find start address in disassembly")
 
             # Intelligent boundary detection
-            end_addr = self._find_intelligent_end_boundary(lines, actual_start)
+            end_addr_found = self._find_intelligent_end_boundary(lines, actual_start)
 
-            if not end_addr:
+            if not end_addr_found:
                 # Fallback: use a small fixed window to seed traversal
                 start_int = int(actual_start, 16)
                 fallback_len = 128
@@ -57,7 +59,7 @@ class AutomatedDisassembler:
 
             # Validate routine size
             start_int = int(actual_start, 16)
-            end_int = int(end_addr, 16)
+            end_int = int(end_addr_found, 16)
             size = end_int - start_int + 1
 
             if size < 3:  # Too small to be a meaningful routine
@@ -66,11 +68,11 @@ class AutomatedDisassembler:
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
                 return actual_start, f"{end_int:04x}"
 
-            return actual_start, end_addr
+            return actual_start, end_addr_found
 
-        except subprocess.CalledProcessError as e:
-            print(f"Error running unidasm: {e}")
-            # Fallback to a small window from requested start if unidasm still ran
+        except Exception as e:
+            print(f"Error finding boundaries: {e}")
+            # Fallback to a small window from requested start
             try:
                 start_int = int(start_addr, 16)
                 end_int = (start_int + 64 - 1) & 0xFFFF
@@ -112,20 +114,14 @@ class AutomatedDisassembler:
 
             # Look for unconditional branches that might indicate routine end
             elif re.search(r'\b(20.*BRA|16.*LBRA)\b', line, re.IGNORECASE):
-                # Check if it branches backwards (loop) or forwards (exit)
-                branch_target = self._extract_branch_target(line, addr_int)
-                if branch_target and branch_target < addr_int:
-                    # Backwards branch - might be loop, not end
-                    continue
-                else:
-                    # Forward branch - might be exit
-                    end_candidates.append((addr, addr_int, "forward_branch"))
+                # Estimate branch direction using the home-grown helper to cap the window
+                end_candidates.append((addr, addr_int, "branch"))
 
         if not end_candidates:
             return None
 
-        # Prioritize end candidates: return > external_jump > forward_branch > infinite_loop
-        priority_order = ["return", "external_jump", "forward_branch", "infinite_loop"]
+        # Prioritize end candidates: return > external_jump > branch > infinite_loop
+        priority_order = ["return", "external_jump", "branch", "infinite_loop"]
 
         for priority in priority_order:
             for addr, addr_int, reason in end_candidates:
@@ -141,25 +137,12 @@ class AutomatedDisassembler:
         match = re.search(r'\b7e\s+([0-9a-f]+)\b', line, re.IGNORECASE)
         return match.group(1) if match else None
 
-    def _extract_branch_target(self, line: str, current_addr: int) -> Optional[int]:
-        """Extract the target address from a branch instruction"""
-        # Handle BRA instruction
-        match = re.search(r'\b20\s+([0-9a-f]+)\b', line, re.IGNORECASE)
-        if match:
-            offset = int(match.group(1), 16)
-            if offset > 127:  # Negative offset
-                offset = offset - 256
-            return current_addr + 2 + offset
-
-        # Handle LBRA instruction
-        match = re.search(r'\b16\s+([0-9a-f]+)\b', line, re.IGNORECASE)
-        if match:
-            offset = int(match.group(1), 16)
-            if offset > 32767:  # Negative offset
-                offset = offset - 65536
-            return current_addr + 3 + offset
-
-        return None
+    def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
+        """Get raw disassembly lines for a window starting at start_addr using home-grown decoder."""
+        start_int = int(start_addr, 16)
+        end_int = (start_int + count) & 0xFFFF
+        end_addr = f"{end_int:04x}"
+        return dr_run_unidasm(self.rom_file, start_addr, end_addr)
 
     def calculate_byte_count(self, start_addr: str, end_addr: str) -> int:
         """Calculate the number of bytes between start and end addresses"""
@@ -174,11 +157,9 @@ class AutomatedDisassembler:
 
         byte_count = self.calculate_byte_count(start_addr, end_addr)
 
-        cmd = ["unidasm", "-arch", self.arch, self.rom_file, "-basepc", start_addr, "-count", str(byte_count)]
-
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            lines = result.stdout.strip().split('\n')
+            # Use home-grown decoder to get lines in range
+            lines = self._disassemble_lines(start_addr, byte_count)
 
             # Filter out empty lines
             lines = [line for line in lines if line.strip()]
@@ -186,7 +167,6 @@ class AutomatedDisassembler:
             # Check if this looks like valid assembly (not all zeros)
             valid_assembly = False
             for line in lines:
-                # Expect 'addr: <bytes>  mnemonic ...' - extract the bytes and ensure not all 00
                 m = re.match(r'^([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)*[0-9a-fA-F]{2})', line)
                 if m:
                     byte_str = m.group(2)
@@ -194,12 +174,11 @@ class AutomatedDisassembler:
                     if any(b != '00' for b in bytes_list):
                         valid_assembly = True
                         break
-            # If regex failed for all lines, fall back to allowing content
             if not valid_assembly and lines and force_save:
                 valid_assembly = True
 
             if not valid_assembly:
-                if verbose:
+                if verbose or force_save:
                     print(f"⚠ Skipping {routine_name} - appears to be all zeros or invalid")
                 return False
 
@@ -209,17 +188,16 @@ class AutomatedDisassembler:
                 for line in lines:
                     f.write(line + '\n')
 
-            if verbose:
+            if verbose or force_save:
                 print(f"✓ Created {output_file} with {len(lines)} lines")
 
-            # Validate the disassembly (but don't print validation output during capture)
             if verbose:
                 self.validate_routine(output_file)
 
             return True
 
-        except subprocess.CalledProcessError as e:
-            if verbose:
+        except Exception as e:
+            if verbose or force_save:
                 print(f"Error disassembling {routine_name}: {e}")
             return False
 
@@ -301,18 +279,6 @@ class AutomatedDisassembler:
             print(f"WARNING: Failed to read reset vector: {e}")
             return None
 
-    def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
-        """Get raw disassembly lines from unidasm for a range starting at start_addr."""
-        try:
-            result = subprocess.run([
-                "unidasm", "-arch", self.arch, self.rom_file, "-basepc", start_addr, "-count", str(count)
-            ], capture_output=True, text=True, check=True)
-            lines = [ln for ln in result.stdout.strip().split('\n') if ln.strip()]
-            return lines
-        except subprocess.CalledProcessError as e:
-            print(f"Error running unidasm for lines at {start_addr}: {e}")
-            return []
-
     def _extract_call_targets(self, lines: list) -> list:
         """Extract absolute target addresses from JSR/JMP instructions in disassembly lines."""
         targets = []
@@ -351,7 +317,21 @@ class AutomatedDisassembler:
 
             if start and end:
                 name = f"auto_{start}"
-                if self.disassemble_routine(start, end, name, verbose=False, force_save=is_seed):
+                ok = self.disassemble_routine(start, end, name, verbose=False, force_save=is_seed)
+                if not ok and is_seed:
+                    # Seed fallback: try raw window and save regardless
+                    seed_lines = self._disassemble_lines(addr, 256)
+                    if seed_lines:
+                        output_file = self.disassembly_dir / f"rom_disasm_seed_{addr}.md"
+                        with open(output_file, 'w') as f:
+                            for line in seed_lines:
+                                f.write(line + '\n')
+                        print(f"✓ Created {output_file} (seed window)")
+                        disassembled += 1
+                        for t in self._extract_call_targets(seed_lines):
+                            if t not in visited and t not in to_visit:
+                                to_visit.append(t)
+                elif ok:
                     disassembled += 1
                     # After saving, get lines again to discover new targets inside this routine
                     lines = self._disassemble_lines(start, self.calculate_byte_count(start, end))
@@ -359,15 +339,15 @@ class AutomatedDisassembler:
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
             else:
-                # Fallback window
+                # Fallback window: do NOT save; only extract targets to continue traversal
                 lines = self._disassemble_lines(addr, 256)
                 if lines:
                     if is_seed:
-                        # Save a seed window so we always have the entry disassembly
                         output_file = self.disassembly_dir / f"rom_disasm_seed_{addr}.md"
                         with open(output_file, 'w') as f:
                             for line in lines:
                                 f.write(line + '\n')
+                        print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
