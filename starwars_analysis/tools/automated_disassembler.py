@@ -26,7 +26,7 @@ import os
 import time
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
-from unidasm_wrapper import run_unidasm, find_routine_end, validate_unidasm
+from unidasm_wrapper import run_unidasm, find_routine_end, validate_unidasm, find_intelligent_boundaries
 from disassemble_routine import disassemble_routine
 
 class AutomatedDisassembler:
@@ -85,40 +85,27 @@ class AutomatedDisassembler:
         print(f"Finding boundaries for routine at {start_addr}...")
 
         try:
-            # Use our fixed disassembler with dd skip approach
-            lines = run_unidasm(self.rom_file, start_addr, arch=self.arch)
-
-            # Find the actual start (first non-empty line with address)
-            actual_start = None
-            for line in lines:
-                if re.match(r'^[0-9a-f]+:', line, re.IGNORECASE):
-                    actual_start = line.split(':')[0]
-                    break
-
-            if not actual_start:
-                raise ValueError(f"Could not find start address in disassembly")
-
-            # Intelligent boundary detection
-            end_addr_found, external_targets = self._find_intelligent_end_boundary(lines, actual_start)
+            # Use the intelligent boundary detection from unidasm_wrapper
+            end_addr_found, external_targets = find_intelligent_boundaries(self.rom_file, start_addr, self.arch)
 
             if not end_addr_found:
                 # Fallback: use a small fixed window to seed traversal
-                start_int = int(actual_start, 16)
+                start_int = int(start_addr, 16)
                 fallback_len = 128
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return actual_start, f"{end_int:04x}", set()
+                return start_addr, f"{end_int:04x}", set()
 
             # Validate routine size
-            start_int = int(actual_start, 16)
+            start_int = int(start_addr, 16)
             end_int = int(end_addr_found, 16)
             size = end_int - start_int + 1
 
             if size < 3:
                 fallback_len = 64
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return actual_start, f"{end_int:04x}", set()
+                return start_addr, f"{end_int:04x}", set()
 
-            return actual_start, end_addr_found, external_targets
+            return start_addr, end_addr_found, external_targets
 
         except Exception as e:
             print(f"Error finding boundaries: {e}")
@@ -129,89 +116,6 @@ class AutomatedDisassembler:
             except Exception:
                 return None, None, set()
 
-    def _find_intelligent_end_boundary(self, lines: List[str], start_addr: str) -> Tuple[Optional[str], set]:
-        """Intelligently find the end boundary of a routine"""
-        start_int = int(start_addr, 16)
-        end_candidates = []
-        jump_targets = set()  # Collect all jump targets as we process
-
-        for i, line in enumerate(lines):
-            if not re.match(r'^[0-9a-f]+:', line, re.IGNORECASE):
-                continue
-
-            addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
-            if not addr_match:
-                continue
-
-            addr = addr_match.group(1)
-            addr_int = int(addr, 16)
-
-            # Skip if we haven't reached the start address yet
-            if addr_int < start_int:
-                continue
-
-            # Collect jump targets from this line
-            branch_matches = re.findall(r'\b(BEQ|BNE|BCC|BCS|BVC|BVS|BMI|BPL|BHI|BLS|BGE|BLT|BGT|BLE|BRA)\s+\$?([0-9A-Fa-f]{4})\b', line, re.IGNORECASE)
-            for _, target in branch_matches:
-                jump_targets.add(target.lower())
-
-            # Look for end boundary instructions
-            if re.search(r'\b(39.*RTS|3b.*RTI|3f.*SWI)\b', line, re.IGNORECASE):
-                # Check if the next address is a jump target
-                next_addr = f"{addr_int + 1:04x}".lower()
-                
-                # Only stop at RTS if the next address is not a jump target
-                if next_addr not in jump_targets:
-                    end_candidates.append((addr, addr_int, "return"))
-            elif re.search(r'\b(7e.*JMP)\b', line, re.IGNORECASE):
-                # Check if it's a jump to self (infinite loop) or external jump
-                jmp_target = self._extract_jump_target(line)
-                if jmp_target and jmp_target.lower() == addr.lower():
-                    end_candidates.append((addr, addr_int, "infinite_loop"))
-                elif jmp_target:
-                    # External jump - this might be the end
-                    end_candidates.append((addr, addr_int, "external_jump"))
-
-            # Look for unconditional branches that might indicate routine end
-            elif re.search(r'\b(20.*BRA|16.*LBRA)\b', line, re.IGNORECASE):
-                # Estimate branch direction using the home-grown helper to cap the window
-                end_candidates.append((addr, addr_int, "branch"))
-
-        if not end_candidates:
-            return None, set()
-
-        # Prioritize end candidates: return > external_jump > branch > infinite_loop
-        priority_order = ["return", "external_jump", "branch", "infinite_loop"]
-
-        for priority in priority_order:
-            for addr, addr_int, reason in end_candidates:
-                if reason == priority:
-                    print(f"  Found {reason} boundary at {addr}")
-                    # Filter jump targets that are outside the routine range
-                    end_int = addr_int
-                    external_targets = {target for target in jump_targets 
-                                      if int(target, 16) < start_int or int(target, 16) > end_int}
-                    return addr, external_targets
-
-        # Fallback: return the first candidate
-        end_int = end_candidates[0][1]
-        external_targets = {target for target in jump_targets 
-                          if int(target, 16) < start_int or int(target, 16) > end_int}
-        return end_candidates[0][0], external_targets
-
-    def _extract_jump_target(self, line: str) -> Optional[str]:
-        """Extract the target address from a JMP instruction"""
-        match = re.search(r'\b7e\s+([0-9a-f]+)\b', line, re.IGNORECASE)
-        if match:
-            target = match.group(1)
-            # Only return targets within valid 6809 address space
-            try:
-                target_int = int(target, 16)
-                if 0 <= target_int <= 0xFFFF:
-                    return target
-            except ValueError:
-                pass
-        return None
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
         """Get raw disassembly lines for a window starting at start_addr using our fixed disassembler."""

@@ -81,9 +81,101 @@ def run_unidasm(rom_file: str, start_addr: str, end_addr: Optional[str] = None, 
     except ValueError as e:
         raise ValueError(f"Invalid address format: {e}")
 
+def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m6809") -> Tuple[Optional[str], set]:
+    """
+    Find routine boundaries using intelligent analysis that considers jump targets.
+    
+    Args:
+        rom_file: Path to the ROM file
+        start_addr: Start address (hex string)
+        arch: Architecture (default: "m6809")
+    
+    Returns:
+        Tuple of (end_address, external_targets_set)
+    """
+    try:
+        # Get disassembly for a reasonable range
+        lines = run_unidasm(rom_file, start_addr, arch=arch)
+        
+        start_int = int(start_addr, 16)
+        end_candidates = []
+        jump_targets = set()
+        
+        for i, line in enumerate(lines):
+            if not re.match(r'^[0-9a-f]+:', line, re.IGNORECASE):
+                continue
+                
+            addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
+            if not addr_match:
+                continue
+                
+            addr = addr_match.group(1)
+            addr_int = int(addr, 16)
+            
+            # Skip if we haven't reached the start address yet
+            if addr_int < start_int:
+                continue
+            
+            # Collect jump targets from this line
+            branch_matches = re.findall(r'\b(BEQ|BNE|BCC|BCS|BVC|BVS|BMI|BPL|BHI|BLS|BGE|BLT|BGT|BLE|BRA)\s+\$?([0-9A-Fa-f]{4})\b', line, re.IGNORECASE)
+            for _, target in branch_matches:
+                jump_targets.add(target.lower())
+            
+            # Look for end boundary instructions
+            if re.search(r'\b(39.*RTS|3b.*RTI|3f.*SWI)\b', line, re.IGNORECASE):
+                # Check if the next address is a jump target
+                next_addr = f"{addr_int + 1:04x}".lower()
+                
+                # Only stop at RTS if the next address is not a jump target
+                if next_addr not in jump_targets:
+                    end_candidates.append((addr, addr_int, "return"))
+            elif re.search(r'\b(7e.*JMP)\b', line, re.IGNORECASE):
+                # Check if it's a jump to self (infinite loop) or external jump
+                jmp_target = _extract_jump_target(line)
+                if jmp_target and jmp_target.lower() == addr.lower():
+                    end_candidates.append((addr, addr_int, "infinite_loop"))
+                elif jmp_target:
+                    # External jump - this might be the end
+                    end_candidates.append((addr, addr_int, "external_jump"))
+            elif re.search(r'\b(20.*BRA|16.*LBRA)\b', line, re.IGNORECASE):
+                # Estimate branch direction using the home-grown helper to cap the window
+                end_candidates.append((addr, addr_int, "branch"))
+        
+        if not end_candidates:
+            return None, set()
+        
+        # Prioritize end candidates: return > external_jump > branch > infinite_loop
+        priority_order = ["return", "external_jump", "branch", "infinite_loop"]
+        
+        for priority in priority_order:
+            # Find the LAST (furthest) boundary of this priority type
+            last_boundary = None
+            for addr, addr_int, reason in end_candidates:
+                if reason == priority:
+                    if last_boundary is None or addr_int > last_boundary[1]:
+                        last_boundary = (addr, addr_int, reason)
+            
+            if last_boundary:
+                addr, addr_int, reason = last_boundary
+                # Filter jump targets that are outside the routine range
+                end_int = addr_int
+                external_targets = {target for target in jump_targets 
+                                  if int(target, 16) < start_int or int(target, 16) > end_int}
+                return addr, external_targets
+        
+        # Fallback: return the first candidate
+        end_int = end_candidates[0][1]
+        external_targets = {target for target in jump_targets 
+                          if int(target, 16) < start_int or int(target, 16) > end_int}
+        return end_candidates[0][0], external_targets
+        
+    except Exception as e:
+        print(f"Error finding routine boundaries: {e}")
+        return None, set()
+
 def find_routine_end(rom_file: str, start_addr: str, arch: str = "m6809") -> Optional[str]:
     """
-    Find the end of a routine by looking for common termination patterns.
+    Find the end of a routine using intelligent boundary detection.
     
     Args:
         rom_file: Path to the ROM file
@@ -93,32 +185,15 @@ def find_routine_end(rom_file: str, start_addr: str, arch: str = "m6809") -> Opt
     Returns:
         End address as hex string, or None if not found
     """
-    try:
-        # Get disassembly for a reasonable range
-        lines = run_unidasm(rom_file, start_addr, arch=arch)
-        
-        # Look for common termination patterns
-        termination_patterns = [
-            r'RTS',           # Return from subroutine
-            r'RTI',           # Return from interrupt
-            r'JMP\s+\$([0-9A-Fa-f]+)',  # Jump to another routine
-            r'BRA\s+\$([0-9A-Fa-f]+)',  # Branch to another routine
-        ]
-        
-        for i, line in enumerate(lines):
-            for pattern in termination_patterns:
-                if re.search(pattern, line):
-                    # Extract address from the line
-                    addr_match = re.search(r'([0-9A-Fa-f]{4,6})', line)
-                    if addr_match:
-                        return addr_match.group(1)
-        
-        # If no clear termination found, return None
-        return None
-        
-    except Exception as e:
-        print(f"Error finding routine end: {e}")
-        return None
+    end_addr, _ = find_intelligent_boundaries(rom_file, start_addr, arch)
+    return end_addr
+
+def _extract_jump_target(line: str) -> Optional[str]:
+    """Extract the target address from a JMP instruction"""
+    match = re.search(r'\b7e\s+([0-9a-f]+)\b', line, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
 
 def run_unidasm_full(rom_file: str, arch: str = "m6809") -> List[str]:
     """
