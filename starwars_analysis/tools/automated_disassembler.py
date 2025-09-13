@@ -331,6 +331,9 @@ class AutomatedDisassembler:
         discovered_entries = []
         disassembled = 0
 
+        print(f"🚀 Starting traversal from reset vector ${entry}")
+        print(f"📊 Initial queue: {len(to_visit)} addresses")
+
         while to_visit:
             addr = to_visit.pop(0)
             if addr in visited:
@@ -338,7 +341,11 @@ class AutomatedDisassembler:
             visited.add(addr)
             discovered_entries.append(addr)
 
-            print(f"Traversing entry ${addr}...")
+            # Progress reporting every 50 files
+            if disassembled > 0 and disassembled % 50 == 0:
+                print(f"📊 Progress: {disassembled} files created, {len(to_visit)} addresses in queue")
+            
+            print(f"Traversing entry ${addr}... (Queue: {len(to_visit)})")
             start, end = self.find_routine_boundaries(addr, max_search=1500)
             is_seed = (addr == entry)
 
@@ -391,7 +398,10 @@ class AutomatedDisassembler:
         except Exception:
             pass
 
-        print(f"Traversal complete. Disassembled {disassembled} routines from reset vector.")
+        print(f"\n🎉 Traversal complete!")
+        print(f"📁 Disassembled {disassembled} routines from reset vector")
+        print(f"🔍 Explored {len(discovered_entries)} unique addresses")
+        print(f"📂 All files saved in: {self.disassembly_dir}")
         return disassembled
 
     def fully_automated_disassembly(self):
