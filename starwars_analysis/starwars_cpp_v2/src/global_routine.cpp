@@ -75,10 +75,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 6036: JMP $6036
     goto label_6036;
 
-    label_6036:
-    // 6036: LDA <$41
-    cpu.m_a = cpu.read_memory(0x41);
-
     // 6038: CMPA #$3D
     cpu.compare_a(0x3D);
 
@@ -170,10 +166,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 60CA: JMP $60ca
     goto label_60CA;
 
-    label_60CA:
-    // 60CA: LDA $4814
-    cpu.m_a = cpu.read_memory(0x4814);
-
     // 60CD: BNE $60D4
     if (!cpu.zero_flag()) cpu.m_pc = 0x60D4;
 
@@ -183,8 +175,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 60D2: BRA $60F4
     goto label_60F4;
 
-    // 60D4: LDA $4B31
-    cpu.m_a = cpu.read_memory(0x4B31);
+    label_60D4:
+    // 60D4: JMP $60d4
+    goto label_60D4;
 
     // 60D7: BNE $60E4
     if (!cpu.zero_flag()) cpu.m_pc = 0x60E4;
@@ -222,10 +215,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_60F4:
     // 60F4: JMP $60f4
     goto label_60F4;
-
-    label_60F4:
-    // 60F4: JSR $70DB
-    cpu.call_function(0x70DB);
 
     // 60F7: LDA <$AB
     cpu.m_a = cpu.read_memory(0xAB);
@@ -293,8 +282,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 6121: LDU #$2800
     cpu.m_u = 0x2800;
 
-    // 6124: LDD ,X++
-    cpu.m_d = cpu.read_memory16(cpu.m_x++);
+    label_6124:
+    // 6124: JMP $6124
+    goto label_6124;
 
     // 6126: STD ,U++
     cpu.write_memory16(cpu.m_u++, cpu.m_d);
@@ -434,6 +424,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 6194: LDB #$2C
     cpu.m_b = 0x2C;
 
+    label_6196:
     // 6196: STU ,X
     // TODO: Handle indexed addressing: STU ,X
 
@@ -542,6 +533,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 61F0: LDX #$5C60
     cpu.m_x = 0x5C60;
 
+    label_61F3:
     // 61F3: LDA $4703
     cpu.m_a = cpu.read_memory(0x4703);
 
@@ -584,6 +576,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 620F: LDX #$5C60
     cpu.m_x = 0x5C60;
 
+    label_6212:
     // 6212: LDA $4703
     cpu.m_a = cpu.read_memory(0x4703);
 
@@ -648,12 +641,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 623C: JMP $623c
     goto label_623C;
 
-    label_623C:
-    // 623C: BRA $624B
-    goto label_624B;
-
-    // 623E: CMPB #$60
-    cpu.compare_b(0x60);
+    label_623E:
+    // 623E: JMP $623e
+    goto label_623E;
 
     // 6240: BLT $624B
     if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x624B;
@@ -676,10 +666,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_624B:
     // 624B: JMP $624b
     goto label_624B;
-
-    label_624B:
-    // 624B: LDA $4591
-    cpu.m_a = cpu.read_memory(0x4591);
 
     // 624E: ANDA #$03
     cpu.m_a &= 0x03;
@@ -945,8 +931,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 6320: INC <$41
     // TODO: Convert INC <$41
 
-    // 6322: JSR $622D
-    cpu.call_function(0x622D);
+    label_6322:
+    // 6322: JMP $6322
+    goto label_6322;
 
     // 6325: RTS 
     return;
@@ -1233,10 +1220,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 640E: JMP $640e
     goto label_640E;
 
-    label_640E:
-    // 640E: BRA $6458
-    goto label_6458;
-
     label_6410:
     // 6410: LDA $4814
     cpu.m_a = cpu.read_memory(0x4814);
@@ -1333,8 +1316,93 @@ void global_routine_impl(CPU6809& cpu) {
     // 6458: RTS 
     return;
 
-    // 64A6: STB $4B11
-    cpu.write_memory(0x4B11, cpu.m_b);
+    // 6459: LDD #$0000
+    cpu.m_d = 0x0000;
+
+    // 645C: STD $4B0C
+    cpu.write_memory16(0x4B0C, cpu.m_d);
+
+    // 645F: STD $48AF
+    cpu.write_memory16(0x48AF, cpu.m_d);
+
+    // 6462: LDD #$0100
+    cpu.m_d = 0x0100;
+
+    // 6465: STD $4B0E
+    cpu.write_memory16(0x4B0E, cpu.m_d);
+
+    // 6468: LDD #$6180
+    cpu.m_d = 0x6180;
+
+    // 646B: STD $4B10
+    cpu.write_memory16(0x4B10, cpu.m_d);
+
+    // 646E: JSR $D91A
+    cpu.call_function(0xD91A);
+
+    // 6471: JSR $61B5
+    cpu.call_function(0x61B5);
+
+    // 6474: JSR $615A
+    cpu.call_function(0x615A);
+
+    // 6477: LDU #$5038
+    cpu.m_u = 0x5038;
+
+    // 647A: JSR $CDC3
+    cpu.call_function(0xCDC3);
+
+    // 647D: JSR $CC38
+    cpu.call_function(0xCC38);
+
+    // 6480: INC <$41
+    // TODO: Convert INC <$41
+
+    // 6482: RTS 
+    return;
+
+    // 6483: JSR $6112
+    cpu.call_function(0x6112);
+
+    // 6486: JSR $64CD
+    cpu.call_function(0x64CD);
+
+    // 6489: JSR $CD80
+    cpu.call_function(0xCD80);
+
+    // 648C: JSR $761D
+    cpu.call_function(0x761D);
+
+    // 648F: JSR $63D5
+    cpu.call_function(0x63D5);
+
+    // 6492: LDD $4B0E
+    cpu.m_d = cpu.read_memory16(0x4B0E);
+
+    // 6495: CMPD #$0050
+    // TODO: Convert CMPD #$0050
+
+    // 6499: BCC $64A9
+    if (!cpu.carry_flag()) cpu.m_pc = 0x64A9;
+
+    // 649B: LDB $4B11
+    cpu.m_b = cpu.read_memory(0x4B11);
+
+    // 649E: SUBB #$01
+    cpu.m_b -= 0x01;
+
+    // 64A0: CMPB #$F0
+    cpu.compare_b(0xF0);
+
+    // 64A2: BCS $64A6
+    if (cpu.carry_flag()) cpu.m_pc = 0x64A6;
+
+    // 64A4: LDB #$00
+    cpu.m_b = 0x00;
+
+    label_64A6:
+    // 64A6: JMP $64a6
+    goto label_64A6;
 
     // 64A9: LDD $4B10
     cpu.m_d = cpu.read_memory16(0x4B10);
@@ -1375,10 +1443,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_64C9:
     // 64C9: JMP $64c9
     goto label_64C9;
-
-    label_64C9:
-    // 64C9: JSR $622D
-    cpu.call_function(0x622D);
 
     // 64CC: RTS 
     return;
@@ -1469,10 +1533,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // 6510: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
-
-    label_6512:
-    // 6512: JMP $6512
-    goto label_6512;
 
     label_6512:
     // 6512: RTS 
@@ -1566,10 +1626,6 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_F261;
 
     label_655D:
-    // 655D: JMP $655d
-    goto label_655D;
-
-    label_655D:
     // 655D: LDA $481E
     cpu.m_a = cpu.read_memory(0x481E);
 
@@ -1587,10 +1643,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // 6569: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
-
-    label_656B:
-    // 656B: JMP $656b
-    goto label_656B;
 
     label_656B:
     // 656B: RTS 
@@ -1624,10 +1676,6 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0x2C;
 
     label_6586:
-    // 6586: JMP $6586
-    goto label_6586;
-
-    label_6586:
     // 6586: TFR B,A
     cpu.m_a = cpu.m_b;
 
@@ -1647,6 +1695,63 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert INC <$41
 
     // 6592: RTS 
+    return;
+
+    // 6593: NEG <$64
+    // TODO: Convert NEG <$64
+
+    // 6595: LDU $70FE
+    cpu.m_u = cpu.read_memory16(0x70FE);
+
+    // 6598: ANDB <$00
+    cpu.m_b &= 0x00;
+
+    // 659A: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 659C: LSR $1,X
+    // TODO: Convert LSR $1,X
+
+    // 659E: SUBA <$FC
+    cpu.m_a -= 0xFC;
+
+    // 65A0: XDECA 
+    // TODO: Convert XDECA 
+
+    // 65A1: JMP <$83
+    // TODO: Invalid branch offset: <$83
+
+    // 65A3: NEG <$01
+    // TODO: Convert NEG <$01
+
+    // 65A5: STD $4B0E
+    cpu.write_memory16(0x4B0E, cpu.m_d);
+
+    // 65A8: BPL $65BD
+    if (!cpu.negative_flag()) cpu.m_pc = 0x65BD;
+
+    // 65AA: LDA #$00
+    cpu.m_a = 0x00;
+
+    // 65AC: STA $4B15
+    cpu.write_memory(0x4B15, cpu.m_a);
+
+    // 65AF: LDA #$1B
+    cpu.m_a = 0x1B;
+
+    // 65B1: STA <$41
+    cpu.write_memory(0x41, cpu.m_a);
+
+    // 65B3: CLR $481B
+    cpu.write_memory(0x481B, 0);
+
+    // 65B6: CLR $481A
+    cpu.write_memory(0x481A, 0);
+
+    // 65B9: CLR $4819
+    cpu.write_memory(0x4819, 0);
+
+    // 65BC: RTS 
     return;
 
     // 65BD: JSR $6112
@@ -1797,8 +1902,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 6624: SBCA #$FF
     // TODO: Convert SBCA #$FF
 
-    // 6626: STD $4AFA
-    cpu.write_memory16(0x4AFA, cpu.m_d);
+    label_6626:
+    // 6626: JMP $6626
+    goto label_6626;
 
     // 6629: CMPD #$0048
     // TODO: Convert CMPD #$0048
@@ -1921,10 +2027,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 66E3: JMP $66e3
     goto label_66E3;
 
-    label_66E3:
-    // 66E3: LDD $4AEC
-    cpu.m_d = cpu.read_memory16(0x4AEC);
-
     // 66E6: BPL $6707
     if (!cpu.negative_flag()) cpu.m_pc = 0x6707;
 
@@ -2018,6 +2120,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 6735: BRA $6758
     goto label_6758;
 
+    label_6737:
     // 6737: LDA $4B06
     cpu.m_a = cpu.read_memory(0x4B06);
 
@@ -2311,10 +2414,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 681E: JMP $681e
     goto label_681E;
 
-    label_681E:
-    // 681E: STA $4B14
-    cpu.write_memory(0x4B14, cpu.m_a);
-
     // 6821: ADDA $4B18
     cpu.m_a += 0x4B18;
 
@@ -2327,8 +2426,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 6828: LDA #$0F
     cpu.m_a = 0x0F;
 
-    // 682A: STA $4B19
-    cpu.write_memory(0x4B19, cpu.m_a);
+    label_682A:
+    // 682A: JMP $682a
+    goto label_682A;
 
     // 682D: INC <$41
     // TODO: Convert INC <$41
@@ -2369,9 +2469,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // 6865: JMP $6864
     goto label_6864;
-
-    // 6865: JSR $9898
-    cpu.call_function(0x9898);
 
     // 6868: JSR $B98B
     cpu.call_function(0xB98B);
@@ -2520,10 +2617,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 6911: JMP $6911
     goto label_6911;
 
-    label_6911:
-    // 6911: RTS 
-    return;
-
     // 6912: LDD #$7780
     cpu.m_d = 0x7780;
 
@@ -2558,17 +2651,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 692A: JMP $692a
     goto label_692A;
 
-    label_692A:
-    // 692A: JSR $BD67
-    cpu.call_function(0xBD67);
-
     label_692D:
     // 692D: JMP $692d
     goto label_692D;
-
-    label_692D:
-    // 692D: JSR $BDEE
-    cpu.call_function(0xBDEE);
 
     label_6930:
     // 6930: INC <$41
@@ -5076,10 +5161,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 70DB: JMP $70db
     goto label_70DB;
 
-    label_70DB:
-    // 70DB: ORCC #$10
-    cpu.m_cc |= 0x10;
-
     // 70DD: LDD <$6B
     cpu.m_d = cpu.read_memory16(0x6B);
 
@@ -5143,10 +5224,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_7105:
     // 7105: JMP $7105
     goto label_7105;
-
-    label_7105:
-    // 7105: BRA $710E
-    goto label_710E;
 
     // 7107: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -5257,8 +5334,9 @@ void global_routine_impl(CPU6809& cpu) {
     // 7152: RTS 
     return;
 
-    // 7153: SUBA #$0E
-    cpu.m_a -= 0x0E;
+    label_7153:
+    // 7153: JMP $7153
+    goto label_7153;
 
     // 7155: STA $8,X
     // TODO: Handle indexed addressing: STA $8,X
@@ -5356,6 +5434,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 719F: JSR $CDBA
     cpu.call_function(0xCDBA);
 
+    label_71A2:
     // 71A2: LDA $4878
     cpu.m_a = cpu.read_memory(0x4878);
 
@@ -5743,10 +5822,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_72C7:
     // 72C7: JMP $72c7
     goto label_72C7;
-
-    label_72C7:
-    // 72C7: JSR $6112
-    cpu.call_function(0x6112);
 
     // 72CA: LDA #$10
     cpu.m_a = 0x10;
@@ -6731,10 +6806,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_761D:
     // 761D: JMP $761d
     goto label_761D;
-
-    label_761D:
-    // 761D: LDD #$B9F2
-    cpu.m_d = 0xB9F2;
 
     // 7620: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
@@ -8107,10 +8178,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 7A48: JMP $7a48
     goto label_7A48;
 
-    label_7A48:
-    // 7A48: LDU #$5090
-    cpu.m_u = 0x5090;
-
     // 7A4B: JSR $CDC3
     cpu.call_function(0xCDC3);
 
@@ -8193,10 +8260,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 7B34: JMP $7b34
     goto label_7B34;
 
-    label_7B34:
-    // 7B34: SBCA #$DC
-    // TODO: Convert SBCA #$DC
-
     // 7B36: SBCA #$01
     // TODO: Convert SBCA #$01
 
@@ -8227,10 +8290,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_7B49:
     // 7B49: JMP $7b49
     goto label_7B49;
-
-    label_7B49:
-    // 7B49: EORB #$80
-    cpu.m_b ^= 0x80;
 
     // 7B4B: LDB #$82
     cpu.m_b = 0x82;
@@ -8343,6 +8402,10 @@ void global_routine_impl(CPU6809& cpu) {
     // 7B9C: SUBD #$257E
     cpu.m_d -= 0x257E;
 
+    label_7B9E:
+    // 7B9E: JMP $0882
+    // TODO: External jump to 0x0882 - not implemented
+
     // 7B9F: ASL <$82
     // TODO: Convert ASL <$82
 
@@ -8391,10 +8454,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_7BBD:
     // 7BBD: JMP $7bbd
     goto label_7BBD;
-
-    label_7BBD:
-    // 7BBD: BCS $7C3D
-    // TODO: External jump to 0x7C3D - not implemented
 
     // 7BBF: ASL <$82
     // TODO: Convert ASL <$82
@@ -8748,7 +8807,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XDEC $5E7B
 
     // 7CC7: JMP $7B9E
-    // TODO: External jump to 0x7B9E - not implemented
+    goto label_7B9E;
 
     // 7CCA: XDEC $BE7B
     // TODO: Convert XDEC $BE7B
@@ -9063,10 +9122,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // 7D98: NEG <$0A
     // TODO: Convert NEG <$0A
-
-    label_7D9A:
-    // 7D9A: JMP $7d9a
-    goto label_7D9A;
 
     label_7D9A:
     // 7D9A: DEC <$01
@@ -10121,7 +10176,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_8062;
 
     // 8060: BRA $8082
-    // TODO: External jump to 0x8082 - not implemented
+    goto label_8082;
 
     label_8062:
     // 8062: XNC <$00
@@ -10149,7 +10204,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BLS $8075
 
     // 8073: BRA $8095
-    // TODO: External jump to 0x8095 - not implemented
+    goto label_8095;
 
     // 8075: XNC <$08
     // TODO: Convert XNC <$08
@@ -10172,443 +10227,889 @@ void global_routine_impl(CPU6809& cpu) {
     // 8081: NEG <$02
     // TODO: Convert NEG <$02
 
+    label_8082:
+    // 8082: XNC <$2A
+    // TODO: Convert XNC <$2A
+
     // 8083: BPL $80AF
-    // TODO: External jump to 0x80AF - not implemented
+    if (!cpu.negative_flag()) cpu.m_pc = 0x80AF;
+
+    // 8084: BPL $8087
+    if (!cpu.negative_flag()) cpu.m_pc = 0x8087;
 
     // 8085: NEG <$20
     // TODO: Convert NEG <$20
 
+    // 8086: BRA $80A8
+    goto label_80A8;
+
     // 8087: BRA $808B
     goto label_808B;
 
+    // 8088: XNC <$C0
+    // TODO: Convert XNC <$C0
+
     // 8089: SUBB #$C0
     cpu.m_b -= 0xC0;
+
+    // 808A: SUBB #$02
+    cpu.m_b -= 0x02;
 
     label_808B:
     // 808B: XNC <$30
     // TODO: Convert XNC <$30
 
+    // 808C: LEAX -$10,Y
+    // TODO: Fix comma operator: LEAX -$10,Y
+
     // 808D: LEAX $2,X
     // TODO: Fix comma operator: LEAX $2,X
+
+    // 808E: XNC <$CC
+    // TODO: Convert XNC <$CC
 
     // 808F: LDD #$CC02
     cpu.m_d = 0xCC02;
 
+    // 8090: LDD #$0233
+    cpu.m_d = 0x0233;
+
     // 8092: LEAU -$D,Y
     // TODO: Fix comma operator: LEAU -$D,Y
+
+    // 8093: LEAU $1,X
+    // TODO: Fix comma operator: LEAU $1,X
 
     // 8094: NEG <$0C
     // TODO: Convert NEG <$0C
 
+    label_8095:
+    // 8095: INC <$0C
+    // TODO: Convert INC <$0C
+
     // 8096: INC <$04
     // TODO: Convert INC <$04
 
+    // 8097: LSR <$03
+    // TODO: Convert LSR <$03
+
     // 8098: COM <$03
+    // TODO: Convert COM <$03
+
+    // 8099: COM <$03
     // TODO: Convert COM <$03
 
     // 809A: COM <$01
     // TODO: Convert COM <$01
 
+    // 809B: NEG <$A8
+    // TODO: Convert NEG <$A8
+
     // 809C: EORA F,Y
     // TODO: Complex indexed addressing: F,Y
 
+    // 809D: ORA $1,X
+    // TODO: Fix comma operator: ORA $1,X
+
     // 809E: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 809F: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80A0: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80A1: NEG <$03
+    // TODO: Convert NEG <$03
+
     // 80A2: COM <$AA
     // TODO: Convert COM <$AA
+
+    // 80A3: ORA $2,X
+    // TODO: Fix comma operator: ORA $2,X
 
     // 80A4: XNC <$AA
     // TODO: Convert XNC <$AA
 
+    // 80A5: ORA $3,X
+    // TODO: Fix comma operator: ORA $3,X
+
     // 80A6: COM <$01
     // TODO: Convert COM <$01
 
+    // 80A7: NEG <$00
+    // TODO: Convert NEG <$00
+
+    label_80A8:
     // 80A8: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 80A9: ORA $1,X
+    // TODO: Fix comma operator: ORA $1,X
+
     // 80AA: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80AB: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80AC: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80AD: NEG <$00
+    // TODO: Convert NEG <$00
+
     // 80AE: NEG <$00
     // TODO: Convert NEG <$00
+
+    // 80AF: NEG <$01
+    // TODO: Convert NEG <$01
 
     // 80B0: NEG <$A2
     // TODO: Convert NEG <$A2
 
+    // 80B1: SBCA F,Y
+    // TODO: Convert SBCA F,Y
+
     // 80B2: ORA $1,X
     // TODO: Fix comma operator: ORA $1,X
+
+    // 80B3: NEG <$00
+    // TODO: Convert NEG <$00
 
     // 80B4: NEG <$00
     // TODO: Convert NEG <$00
 
+    // 80B5: NEG <$01
+    // TODO: Convert NEG <$01
+
     // 80B6: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80B7: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80B8: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80B9: NEG <$00
+    // TODO: Convert NEG <$00
+
     // 80BA: NEG <$AA
     // TODO: Convert NEG <$AA
+
+    // 80BB: ORA $2,X
+    // TODO: Fix comma operator: ORA $2,X
 
     // 80BC: XNC <$AA
     // TODO: Convert XNC <$AA
 
+    // 80BD: ORA $0,X
+    // TODO: Fix comma operator: ORA $0,X
+
     // 80BE: NEG <$01
     // TODO: Convert NEG <$01
+
+    // 80BF: NEG <$00
+    // TODO: Convert NEG <$00
 
     // 80C0: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 80C1: ORA $1,X
+    // TODO: Fix comma operator: ORA $1,X
+
     // 80C2: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80C3: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80C4: NEG <$05
     // TODO: Convert NEG <$05
 
+    // 80C5: LSR <$01
+    // TODO: Convert LSR <$01
+
     // 80C6: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80C7: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80C8: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80C9: NEG <$C0
+    // TODO: Convert NEG <$C0
+
     // 80CA: SUBB #$30
     cpu.m_b -= 0x30;
+
+    // 80CB: LEAX $2,X
+    // TODO: Fix comma operator: LEAX $2,X
 
     // 80CC: XNC <$0A
     // TODO: Convert XNC <$0A
 
+    // 80CD: DEC <$0A
+    // TODO: Convert DEC <$0A
+
     // 80CE: DEC <$01
     // TODO: Convert DEC <$01
+
+    // 80CF: NEG <$30
+    // TODO: Convert NEG <$30
 
     // 80D0: LEAX ,U+
     // TODO: Complex indexed addressing: ,U+
 
+    // 80D1: SUBB #$01
+    cpu.m_b -= 0x01;
+
     // 80D2: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80D3: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80D4: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80D5: NEG <$C0
+    // TODO: Convert NEG <$C0
+
     // 80D6: SUBB #$30
     cpu.m_b -= 0x30;
+
+    // 80D7: LEAX $2,X
+    // TODO: Fix comma operator: LEAX $2,X
 
     // 80D8: XNC <$0A
     // TODO: Convert XNC <$0A
 
+    // 80D9: DEC <$0A
+    // TODO: Convert DEC <$0A
+
     // 80DA: DEC <$01
     // TODO: Convert DEC <$01
+
+    // 80DB: NEG <$30
+    // TODO: Convert NEG <$30
 
     // 80DC: LEAX ,U+
     // TODO: Complex indexed addressing: ,U+
 
+    // 80DD: SUBB #$01
+    cpu.m_b -= 0x01;
+
     // 80DE: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80DF: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80E0: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 80E1: NEG <$C0
+    // TODO: Convert NEG <$C0
+
     // 80E2: SUBB #$30
     cpu.m_b -= 0x30;
+
+    // 80E3: LEAX $2,X
+    // TODO: Fix comma operator: LEAX $2,X
 
     // 80E4: XNC <$0A
     // TODO: Convert XNC <$0A
 
+    // 80E5: DEC <$0A
+    // TODO: Convert DEC <$0A
+
     // 80E6: DEC <$01
     // TODO: Convert DEC <$01
+
+    // 80E7: NEG <$00
+    // TODO: Convert NEG <$00
 
     // 80E8: NEG <$00
     // TODO: Convert NEG <$00
 
+    // 80E9: NEG <$01
+    // TODO: Convert NEG <$01
+
     // 80EA: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 80EB: NEG <$00
     // TODO: Convert NEG <$00
 
     // 80EC: NEG <$05
     // TODO: Convert NEG <$05
 
+    // 80ED: LSR <$01
+    // TODO: Convert LSR <$01
+
     // 80EE: NEG <$02
     // TODO: Convert NEG <$02
+
+    // 80EF: XNC <$02
+    // TODO: Convert XNC <$02
 
     // 80F0: XNC <$02
     // TODO: Convert XNC <$02
 
+    // 80F1: XNC <$30
+    // TODO: Convert XNC <$30
+
     // 80F2: LEAX ,X+
     // TODO: Complex indexed addressing: ,X+
+
+    // 80F3: SUBA #$02
+    cpu.m_a -= 0x02;
 
     // 80F4: XNC <$0C
     // TODO: Convert XNC <$0C
 
+    // 80F5: INC <$20
+    // TODO: Convert INC <$20
+
     // 80F6: BRA $80FA
     goto label_80FA;
 
+    // 80F7: XNC <$C2
+    // TODO: Convert XNC <$C2
+
     // 80F8: SBCB #$0A
     // TODO: Convert SBCB #$0A
+
+    // 80F9: DEC <$01
+    // TODO: Convert DEC <$01
 
     label_80FA:
     // 80FA: NEG <$02
     // TODO: Convert NEG <$02
 
+    // 80FB: XNC <$02
+    // TODO: Convert XNC <$02
+
     // 80FC: XNC <$02
     // TODO: Convert XNC <$02
+
+    // 80FD: XNC <$0A
+    // TODO: Convert XNC <$0A
 
     // 80FE: DEC <$C2
     // TODO: Convert DEC <$C2
 
+    // 80FF: SBCB #$02
+    // TODO: Convert SBCB #$02
+
     // 8100: XNC <$20
     // TODO: Convert XNC <$20
+
+    // 8101: BRA $810F
+    goto label_810F;
 
     // 8102: INC <$02
     // TODO: Convert INC <$02
 
+    // 8103: XNC <$80
+    // TODO: Convert XNC <$80
+
     // 8104: SUBA #$30
     cpu.m_a -= 0x30;
 
+    // 8105: LEAX $2,X
+    // TODO: Fix comma operator: LEAX $2,X
+
     // 8106: XNC <$02
+    // TODO: Convert XNC <$02
+
+    // 8107: XNC <$02
     // TODO: Convert XNC <$02
 
     // 8108: XNC <$05
     // TODO: Convert XNC <$05
 
+    // 8109: LSR <$01
+    // TODO: Convert LSR <$01
+
     // 810A: NEG <$02
     // TODO: Convert NEG <$02
+
+    // 810B: XNC <$02
+    // TODO: Convert XNC <$02
 
     // 810C: XNC <$01
     // TODO: Convert XNC <$01
 
+    // 810D: NEG <$C0
+    // TODO: Convert NEG <$C0
+
     // 810E: SUBB #$C0
     cpu.m_b -= 0xC0;
+
+    label_810F:
+    // 810F: SUBB #$01
+    cpu.m_b -= 0x01;
 
     // 8110: NEG <$20
     // TODO: Convert NEG <$20
 
+    // 8111: BRA $8133
+    goto label_8133;
+
     // 8112: BRA $8115
-    // TODO: External jump to 0x8115 - not implemented
+    goto label_8115;
+
+    // 8113: NEG <$0E
+    // TODO: Convert NEG <$0E
 
     // 8114: JMP <$0E
     // TODO: Invalid branch offset: <$0E
 
+    label_8115:
+    // 8115: JMP <$01
+    // TODO: Invalid branch offset: <$01
+
     // 8116: NEG <$08
     // TODO: Convert NEG <$08
+
+    // 8117: ASL <$08
+    // TODO: Convert ASL <$08
 
     // 8118: ASL <$02
     // TODO: Convert ASL <$02
 
+    // 8119: XNC <$00
+    // TODO: Convert XNC <$00
+
     // 811A: NEG <$00
     // TODO: Convert NEG <$00
+
+    // 811B: NEG <$01
+    // TODO: Convert NEG <$01
 
     // 811C: NEG <$02
     // TODO: Convert NEG <$02
 
+    // 811D: XNC <$02
+    // TODO: Convert XNC <$02
+
     // 811E: XNC <$01
     // TODO: Convert XNC <$01
+
+    // 811F: NEG <$2C
+    // TODO: Convert NEG <$2C
 
     // 8120: BGE $814E
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x814E;
 
+    // 8121: BGE $8124
+    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0x8124;
+
     // 8122: NEG <$80
     // TODO: Convert NEG <$80
+
+    // 8123: SUBA #$80
+    cpu.m_a -= 0x80;
 
     // 8124: SUBA #$01
     cpu.m_a -= 0x01;
 
+    // 8125: NEG <$02
+    // TODO: Convert NEG <$02
+
     // 8126: XNC <$02
+    // TODO: Convert XNC <$02
+
+    // 8127: XNC <$02
     // TODO: Convert XNC <$02
 
     // 8128: XNC <$00
     // TODO: Convert XNC <$00
 
+    // 8129: NEG <$00
+    // TODO: Convert NEG <$00
+
     // 812A: NEG <$01
     // TODO: Convert NEG <$01
+
+    // 812B: NEG <$8C
+    // TODO: Convert NEG <$8C
 
     // 812C: CMPX #$8C01
     cpu.compare_x(0x8C01);
 
+    // 812D: CMPX #$0120
+    cpu.compare_x(0x0120);
+
     // 812F: BRA $8151
-    // TODO: External jump to 0x8151 - not implemented
+    goto label_8151;
+
+    // 8130: BRA $8133
+    goto label_8133;
 
     // 8131: NEG <$03
     // TODO: Convert NEG <$03
 
+    // 8132: COM <$03
+    // TODO: Convert COM <$03
+
+    label_8133:
     // 8133: COM <$05
     // TODO: Convert COM <$05
+
+    // 8134: LSR <$01
+    // TODO: Convert LSR <$01
 
     // 8135: NEG <$03
     // TODO: Convert NEG <$03
 
+    // 8136: COM <$03
+    // TODO: Convert COM <$03
+
     // 8137: COM <$02
     // TODO: Convert COM <$02
+
+    // 8138: XNC <$02
+    // TODO: Convert XNC <$02
 
     // 8139: XNC <$02
     // TODO: Convert XNC <$02
 
+    // 813A: XNC <$01
+    // TODO: Convert XNC <$01
+
     // 813B: NEG <$08
     // TODO: Convert NEG <$08
+
+    // 813C: ASL <$08
+    // TODO: Convert ASL <$08
 
     // 813D: ASL <$02
     // TODO: Convert ASL <$02
 
+    // 813E: XNC <$B0
+    // TODO: Convert XNC <$B0
+
     // 813F: SUBA $B002
     cpu.m_a -= 0xB002;
+
+    // 8140: SUBA $0208
+    cpu.m_a -= 0x0208;
 
     // 8142: ASL <$08
     // TODO: Convert ASL <$08
 
+    // 8143: ASL <$01
+    // TODO: Convert ASL <$01
+
     // 8144: NEG <$32
     // TODO: Convert NEG <$32
+
+    // 8145: LEAS -$E,Y
+    // TODO: Fix comma operator: LEAS -$E,Y
 
     // 8146: LEAS $2,X
     // TODO: Fix comma operator: LEAS $2,X
 
+    // 8147: XNC <$C8
+    // TODO: Convert XNC <$C8
+
     // 8148: EORB #$C8
     cpu.m_b ^= 0xC8;
+
+    // 8149: EORB #$02
+    cpu.m_b ^= 0x02;
 
     // 814A: XNC <$80
     // TODO: Convert XNC <$80
 
+    // 814B: SUBA #$80
+    cpu.m_a -= 0x80;
+
     // 814C: SUBA #$01
     cpu.m_a -= 0x01;
+
+    // 814D: NEG <$20
+    // TODO: Convert NEG <$20
 
     // 814E: BRA $8170
     goto label_8170;
 
+    // 814F: BRA $8153
+    goto label_8153;
+
     // 8150: XNC <$0B
     // TODO: Convert XNC <$0B
+
+    label_8151:
+    // 8151: XDEC <$0B
+    // TODO: Convert XDEC <$0B
 
     // 8152: XDEC <$05
     // TODO: Convert XDEC <$05
 
+    label_8153:
+    // 8153: LSR <$01
+    // TODO: Convert LSR <$01
+
     // 8154: NEG <$0E
     // TODO: Convert NEG <$0E
+
+    // 8155: JMP <$0E
+    // TODO: Invalid branch offset: <$0E
 
     // 8156: JMP <$02
     // TODO: Invalid branch offset: <$02
 
+    // 8157: XNC <$0A
+    // TODO: Convert XNC <$0A
+
     // 8158: DEC <$00
     // TODO: Convert DEC <$00
+
+    // 8159: NEG <$01
+    // TODO: Convert NEG <$01
 
     // 815A: NEG <$A0
     // TODO: Convert NEG <$A0
 
+    // 815B: SUBA ,Y+
+    // TODO: Complex indexed addressing: ,Y+
+
     // 815C: SUBA $2,X
     // TODO: Fix comma operator: SUBA $2,X
+
+    // 815D: XNC <$00
+    // TODO: Convert XNC <$00
 
     // 815E: NEG <$0A
     // TODO: Convert NEG <$0A
 
+    // 815F: DEC <$01
+    // TODO: Convert DEC <$01
+
     // 8160: NEG <$FA
     // TODO: Convert NEG <$FA
+
+    // 8161: ORB $FA02
+    cpu.m_b |= 0xFA02;
 
     // 8162: ORB $020A
     cpu.m_b |= 0x020A;
 
+    // 8164: DEC <$00
+    // TODO: Convert DEC <$00
+
     // 8165: NEG <$01
     // TODO: Convert NEG <$01
+
+    // 8166: NEG <$A0
+    // TODO: Convert NEG <$A0
 
     // 8167: SUBA ,Y+
     // TODO: Complex indexed addressing: ,Y+
 
+    // 8168: SUBA $2,X
+    // TODO: Fix comma operator: SUBA $2,X
+
     // 8169: XNC <$00
     // TODO: Convert XNC <$00
+
+    // 816A: NEG <$0A
+    // TODO: Convert NEG <$0A
 
     // 816B: DEC <$01
     // TODO: Convert DEC <$01
 
+    // 816C: NEG <$FA
+    // TODO: Convert NEG <$FA
+
     // 816D: ORB $FA02
     cpu.m_b |= 0xFA02;
+
+    // 816E: ORB $020A
+    cpu.m_b |= 0x020A;
 
     label_8170:
     // 8170: DEC <$00
     // TODO: Convert DEC <$00
 
+    // 8171: NEG <$01
+    // TODO: Convert NEG <$01
+
     // 8172: NEG <$02
     // TODO: Convert NEG <$02
+
+    // 8173: XNC <$02
+    // TODO: Convert XNC <$02
 
     // 8174: XNC <$05
     // TODO: Convert XNC <$05
 
+    // 8175: LSR <$01
+    // TODO: Convert LSR <$01
+
     // 8176: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 8177: ORA $A,Y
+    // TODO: Fix comma operator: ORA $A,Y
+
     // 8178: BPL $817B
-    // TODO: External jump to 0x817B - not implemented
+    if (!cpu.negative_flag()) cpu.m_pc = 0x817B;
+
+    // 8179: NEG <$00
+    // TODO: Convert NEG <$00
 
     // 817A: NEG <$00
     // TODO: Convert NEG <$00
 
+    // 817B: NEG <$01
+    // TODO: Convert NEG <$01
+
     // 817C: NEG <$AA
     // TODO: Convert NEG <$AA
+
+    // 817D: ORA $3,X
+    // TODO: Fix comma operator: ORA $3,X
 
     // 817E: COM <$02
     // TODO: Convert COM <$02
 
+    // 817F: XNC <$03
+    // TODO: Convert XNC <$03
+
     // 8180: COM <$AA
     // TODO: Convert COM <$AA
+
+    // 8181: ORA $1,X
+    // TODO: Fix comma operator: ORA $1,X
 
     // 8182: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 8183: ORA $0,X
+    // TODO: Fix comma operator: ORA $0,X
+
     // 8184: NEG <$01
     // TODO: Convert NEG <$01
+
+    // 8185: NEG <$00
+    // TODO: Convert NEG <$00
 
     // 8186: NEG <$00
     // TODO: Convert NEG <$00
 
+    // 8187: NEG <$01
+    // TODO: Convert NEG <$01
+
     // 8188: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 8189: NEG <$00
     // TODO: Convert NEG <$00
 
     // 818A: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 818B: NEG <$AA
+    // TODO: Convert NEG <$AA
+
     // 818C: ORA F,X
     // TODO: Complex indexed addressing: F,X
 
+    // 818D: ORA #$01
+    cpu.m_a |= 0x01;
+
     // 818E: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 818F: NEG <$00
     // TODO: Convert NEG <$00
 
     // 8190: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 8191: NEG <$00
+    // TODO: Convert NEG <$00
+
     // 8192: NEG <$00
     // TODO: Convert NEG <$00
+
+    // 8193: NEG <$01
+    // TODO: Convert NEG <$01
 
     // 8194: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 8195: ORA $0,X
+    // TODO: Fix comma operator: ORA $0,X
+
     // 8196: NEG <$02
     // TODO: Convert NEG <$02
+
+    // 8197: XNC <$00
+    // TODO: Convert XNC <$00
 
     // 8198: NEG <$AA
     // TODO: Convert NEG <$AA
 
+    // 8199: ORA $1,X
+    // TODO: Fix comma operator: ORA $1,X
+
     // 819A: NEG <$AA
     // TODO: Convert NEG <$AA
+
+    // 819B: ORA $0,X
+    // TODO: Fix comma operator: ORA $0,X
 
     // 819C: NEG <$01
     // TODO: Convert NEG <$01
 
+    // 819D: NEG <$00
+    // TODO: Convert NEG <$00
+
     // 819E: NEG <$00
     // TODO: Convert NEG <$00
+
+    // 819F: NEG <$05
+    // TODO: Convert NEG <$05
 
     // 81A0: LSR <$02
     // TODO: Convert LSR <$02
 
+    // 81A1: XNC <$2A
+    // TODO: Convert XNC <$2A
+
     // 81A2: BPL $81CE
     // TODO: External jump to 0x81CE - not implemented
 
+    // 81A3: BPL $81A6
+    if (!cpu.negative_flag()) cpu.m_pc = 0x81A6;
+
     // 81A4: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 81A5: NEG <$00
     // TODO: Convert NEG <$00
 
     // 81A6: NEG <$02
     // TODO: Convert NEG <$02
 
+    // 81A7: XNC <$A8
+    // TODO: Convert XNC <$A8
+
     // 81A8: EORA $01,Y
     // TODO: Fix comma operator: EORA $01,Y
+
+    // 81A9: EORA $1,X
+    // TODO: Fix comma operator: EORA $1,X
 
     // 81AB: NEG <$00
     // TODO: Convert NEG <$00
@@ -11397,10 +11898,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_83CE:
     // 83CE: JMP $83ce
     goto label_83CE;
-
-    label_83CE:
-    // 83CE: LDA <$92
-    cpu.m_a = cpu.read_memory(0x92);
 
     // 83D0: BNE $8407
     if (!cpu.zero_flag()) cpu.m_pc = 0x8407;
@@ -12307,8 +12804,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 868A: LDX -$10,X
     // TODO: Fix comma operator: LDX -$10,X
 
-    // 868B: JMP $868a
-    goto label_868A;
+    // 868B: LBCS $8607
+    // TODO: Convert LBCS $8607
 
     // 868C: BCS $868D
     // TODO: External jump to 0x868D - not implemented
@@ -12316,8 +12813,14 @@ void global_routine_impl(CPU6809& cpu) {
     // 868E: ASL $FC50
     // TODO: Convert ASL $FC50
 
+    // 868F: LDD $5098
+    cpu.m_d = cpu.read_memory16(0x5098);
+
     // 8691: EORA <$FD
     cpu.m_a ^= 0xFD;
+
+    // 8692: STD $5040
+    cpu.write_memory16(0x5040, cpu.m_d);
 
     // 8693: NEGB 
     cpu.m_b = -cpu.m_b;
@@ -12328,12 +12831,80 @@ void global_routine_impl(CPU6809& cpu) {
     // 8695: RTS 
     return;
 
+    // 8696: LDD >$0000
+    cpu.m_d = cpu.read_memory16(0x0000);
+
+    // 8699: NEG <$04
+    // TODO: Convert NEG <$04
+
+    // 869B: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 869D: NEG <$FC
+    // TODO: Convert NEG <$FC
+
+    // 869F: NEG <$F0
+    // TODO: Convert NEG <$F0
+
+    // 86A1: NEG <$FE
+    // TODO: Convert NEG <$FE
+
+    // 86A3: NEG <$F0
+    // TODO: Convert NEG <$F0
+
+    // 86A5: NEG <$02
+    // TODO: Convert NEG <$02
+
+    // 86A7: NEG <$F0
+    // TODO: Convert NEG <$F0
+
+    // 86A9: NEG <$04
+    // TODO: Convert NEG <$04
+
+    // 86AB: NEG <$F0
+    // TODO: Convert NEG <$F0
+
+    // 86AD: NEG <$CC
+    // TODO: Convert NEG <$CC
+
+    // 86AF: NEG <$00
+    // TODO: Convert NEG <$00
+
+    // 86B1: STD $5040
+    cpu.write_memory16(0x5040, cpu.m_d);
+
+    // 86B4: LDD #$6250
+    cpu.m_d = 0x6250;
+
+    // 86B7: STD ,Y++
+    cpu.write_memory16(cpu.m_y++, cpu.m_d);
+
+    // 86B9: LDU #$8725
+    cpu.m_u = 0x8725;
+
+    // 86BC: LDA <$92
+    cpu.m_a = cpu.read_memory(0x92);
+
+    // 86BE: BEQ $86CD
+    if (cpu.zero_flag()) cpu.m_pc = 0x86CD;
+
+    // 86C0: LDD <$93
+    cpu.m_d = cpu.read_memory16(0x93);
+
+    // 86C2: SUBD $5098
+    cpu.m_d -= 0x5098;
+
+    // 86C5: CMPD #$7000
+    // TODO: Convert CMPD #$7000
+
+    // 86C9: BHI $86CD
+    // TODO: Convert BHI $86CD
+
+    // 86CB: BRA $86D0
+    goto label_86D0;
+
     // 86CD: LDD #$7000
     cpu.m_d = 0x7000;
-
-    label_86D0:
-    // 86D0: JMP $86d0
-    goto label_86D0;
 
     label_86D0:
     // 86D0: STD $5078
@@ -12754,10 +13325,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // 882D: SBCA #$FF
     // TODO: Convert SBCA #$FF
-
-    label_882F:
-    // 882F: JMP $882f
-    goto label_882F;
 
     label_882F:
     // 882F: SUBD $5000
@@ -13870,10 +14437,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_8B6D:
     // 8B6D: JMP $8b6d
     goto label_8B6D;
-
-    label_8B6D:
-    // 8B6D: LDX #$4900
-    cpu.m_x = 0x4900;
 
     // 8B70: STX <$5A
     cpu.write_memory16(0x5A, cpu.m_x);
@@ -15073,10 +15636,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 8ED6: JMP $8ed6
     goto label_8ED6;
 
-    label_8ED6:
-    // 8ED6: JSR $CCC0
-    cpu.call_function(0xCCC0);
-
     // 8ED9: LDB $4B14
     cpu.m_b = cpu.read_memory(0x4B14);
 
@@ -15312,10 +15871,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_8F7B:
     // 8F7B: JMP $8f7b
     goto label_8F7B;
-
-    label_8F7B:
-    // 8F7B: LDU <$E4
-    cpu.m_u = cpu.read_memory16(0xE4);
 
     // 8F7D: BEQ $8F83
     if (cpu.zero_flag()) cpu.m_pc = 0x8F83;
@@ -17600,10 +18155,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 9558: JMP $9558
     goto label_9558;
 
-    label_9558:
-    // 9558: LDA <$8B
-    cpu.m_a = cpu.read_memory(0x8B);
-
     // 955A: BLE $95A0
     if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0x95A0;
 
@@ -18766,10 +19317,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 9890: JMP $9890
     goto label_9890;
 
-    label_9890:
-    // 9890: LDB <$62
-    cpu.m_b = cpu.read_memory(0x62);
-
     // 9892: BEQ $9897
     if (cpu.zero_flag()) cpu.m_pc = 0x9897;
 
@@ -18785,10 +19332,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_9898:
     // 9898: JMP $9898
     goto label_9898;
-
-    label_9898:
-    // 9898: LDA <$43
-    cpu.m_a = cpu.read_memory(0x43);
 
     // 989A: ANDA #$00
     cpu.m_a &= 0x00;
@@ -19117,17 +19660,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9991: NEG <$00
     // TODO: Convert NEG <$00
 
-    // 9991: NEG <$00
-    // TODO: Convert NEG <$00
-
     // 9993: DAA 
     // TODO: Convert DAA 
-
-    // 9993: DAA 
-    // TODO: Convert DAA 
-
-    // 9994: NEG >$00F0
-    // TODO: Convert NEG >$00F0
 
     // 9994: NEG >$00F0
     // TODO: Convert NEG >$00F0
@@ -19135,17 +19669,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9997: NEG <$02
     // TODO: Convert NEG <$02
 
-    // 9997: NEG <$02
-    // TODO: Convert NEG <$02
-
     // 9999: XNC <$1A
     // TODO: Convert XNC <$1A
-
-    // 9999: XNC <$1A
-    // TODO: Convert XNC <$1A
-
-    // 999B: NEG >$0010
-    // TODO: Convert NEG >$0010
 
     // 999B: NEG >$0010
     // TODO: Convert NEG >$0010
@@ -19153,22 +19678,10 @@ void global_routine_impl(CPU6809& cpu) {
     // 999E: NEG <$02
     // TODO: Convert NEG <$02
 
-    // 999E: NEG <$02
-    // TODO: Convert NEG <$02
-
-    // 99A0: XNC <$1B
-    // TODO: Convert XNC <$1B
-
     // 99A0: XNC <$1B
     // TODO: Convert XNC <$1B
 
     // 99A2: SUBA #$00
-    cpu.m_a -= 0x00;
-
-    // 99A2: SUBA #$00
-    cpu.m_a -= 0x00;
-
-    // 99A4: SUBA <$00
     cpu.m_a -= 0x00;
 
     // 99A4: SUBA <$00
@@ -19177,17 +19690,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99A6: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 99A6: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 99A8: ANDCC #$80
     // TODO: Convert ANDCC #$80
-
-    // 99A8: ANDCC #$80
-    // TODO: Convert ANDCC #$80
-
-    // 99AA: NEG <$D8
-    // TODO: Convert NEG <$D8
 
     // 99AA: NEG <$D8
     // TODO: Convert NEG <$D8
@@ -19195,17 +19699,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99AC: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 99AC: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 99AE: NEG <$1D
     // TODO: Convert NEG <$1D
-
-    // 99AE: NEG <$1D
-    // TODO: Convert NEG <$1D
-
-    // 99B0: SUBA #$00
-    cpu.m_a -= 0x00;
 
     // 99B0: SUBA #$00
     cpu.m_a -= 0x00;
@@ -19213,17 +19708,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99B2: BVC $99B4
     // TODO: Convert BVC $99B4
 
-    // 99B2: BVC $99B4
-    // TODO: Convert BVC $99B4
-
     // 99B4: NEG <$00
     // TODO: Convert NEG <$00
-
-    // 99B4: NEG <$00
-    // TODO: Convert NEG <$00
-
-    // 99B6: EXG A,D
-    // TODO: Convert EXG A,D
 
     // 99B6: EXG A,D
     // TODO: Convert EXG A,D
@@ -19231,17 +19717,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99B8: NEG <$70
     // TODO: Convert NEG <$70
 
-    // 99B8: NEG <$70
-    // TODO: Convert NEG <$70
-
     // 99BA: NEG <$01
     // TODO: Convert NEG <$01
-
-    // 99BA: NEG <$01
-    // TODO: Convert NEG <$01
-
-    // 99BC: XNC <$1F
-    // TODO: Convert XNC <$1F
 
     // 99BC: XNC <$1F
     // TODO: Convert XNC <$1F
@@ -19249,17 +19726,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99BE: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
 
-    // 99BE: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
-
     // 99C0: EORA #$00
     cpu.m_a ^= 0x00;
-
-    // 99C0: EORA #$00
-    cpu.m_a ^= 0x00;
-
-    // 99C2: NEG <$02
-    // TODO: Convert NEG <$02
 
     // 99C2: NEG <$02
     // TODO: Convert NEG <$02
@@ -19267,17 +19735,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99C4: NEG <$30
     // TODO: Convert NEG <$30
 
-    // 99C4: NEG <$30
-    // TODO: Convert NEG <$30
-
     // 99C6: NEG <$98
     // TODO: Convert NEG <$98
-
-    // 99C6: NEG <$98
-    // TODO: Convert NEG <$98
-
-    // 99C8: NEG <$03
-    // TODO: Convert NEG <$03
 
     // 99C8: NEG <$03
     // TODO: Convert NEG <$03
@@ -19285,17 +19744,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99CA: XNC <$01
     // TODO: Convert XNC <$01
 
-    // 99CA: XNC <$01
-    // TODO: Convert XNC <$01
-
     // 99CC: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
-
-    // 99CC: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
-
-    // 99CE: EORA $0,X
-    // TODO: Fix comma operator: EORA $0,X
 
     // 99CE: EORA $0,X
     // TODO: Fix comma operator: EORA $0,X
@@ -19303,17 +19753,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99D0: COM <$02
     // TODO: Convert COM <$02
 
-    // 99D0: COM <$02
-    // TODO: Convert COM <$02
-
     // 99D2: XNC <$30
     // TODO: Convert XNC <$30
-
-    // 99D2: XNC <$30
-    // TODO: Convert XNC <$30
-
-    // 99D4: NEG <$B8
-    // TODO: Convert NEG <$B8
 
     // 99D4: NEG <$B8
     // TODO: Convert NEG <$B8
@@ -19321,17 +19762,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99D6: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 99D6: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 99D8: XNC <$03
     // TODO: Convert XNC <$03
-
-    // 99D8: XNC <$03
-    // TODO: Convert XNC <$03
-
-    // 99DA: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
 
     // 99DA: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
@@ -19339,17 +19771,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99DC: EORB $0,X
     // TODO: Fix comma operator: EORB $0,X
 
-    // 99DC: EORB $0,X
-    // TODO: Fix comma operator: EORB $0,X
-
     // 99DE: NEG <$00
     // TODO: Convert NEG <$00
-
-    // 99DE: NEG <$00
-    // TODO: Convert NEG <$00
-
-    // 99E0: LSR <$30
-    // TODO: Convert LSR <$30
 
     // 99E0: LSR <$30
     // TODO: Convert LSR <$30
@@ -19357,17 +19780,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99E2: NEG <$F8
     // TODO: Convert NEG <$F8
 
-    // 99E2: NEG <$F8
-    // TODO: Convert NEG <$F8
-
     // 99E4: NEG <$03
     // TODO: Convert NEG <$03
-
-    // 99E4: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 99E6: NEG <$05
-    // TODO: Convert NEG <$05
 
     // 99E6: NEG <$05
     // TODO: Convert NEG <$05
@@ -19375,17 +19789,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99E8: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
 
-    // 99E8: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
-
     // 99EA: ASL <$00
     // TODO: Convert ASL <$00
-
-    // 99EA: ASL <$00
-    // TODO: Convert ASL <$00
-
-    // 99EC: COM <$00
-    // TODO: Convert COM <$00
 
     // 99EC: COM <$00
     // TODO: Convert COM <$00
@@ -19393,17 +19798,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99EE: ROR <$30
     // TODO: Convert ROR <$30
 
-    // 99EE: ROR <$30
-    // TODO: Convert ROR <$30
-
     // 99F0: NEG <$18
     // TODO: Convert NEG <$18
-
-    // 99F0: NEG <$18
-    // TODO: Convert NEG <$18
-
-    // 99F2: NEG <$01
-    // TODO: Convert NEG <$01
 
     // 99F2: NEG <$01
     // TODO: Convert NEG <$01
@@ -19411,17 +19807,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99F4: NEG <$07
     // TODO: Convert NEG <$07
 
-    // 99F4: NEG <$07
-    // TODO: Convert NEG <$07
-
     // 99F6: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
-
-    // 99F6: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
-
-    // 99F8: ASLA 
-    cpu.m_a <<= 1;
 
     // 99F8: ASLA 
     cpu.m_a <<= 1;
@@ -19429,17 +19816,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99F9: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 99F9: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 99FB: COM <$08
     // TODO: Convert COM <$08
-
-    // 99FB: COM <$08
-    // TODO: Convert COM <$08
-
-    // 99FD: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
 
     // 99FD: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
@@ -19447,17 +19825,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 99FF: ASLB 
     cpu.m_b <<= 1;
 
-    // 99FF: ASLB 
-    cpu.m_b <<= 1;
-
     // 9A00: NEG <$03
     // TODO: Convert NEG <$03
-
-    // 9A00: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9A02: COM <$09
-    // TODO: Convert COM <$09
 
     // 9A02: COM <$09
     // TODO: Convert COM <$09
@@ -19465,17 +19834,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A04: LEAX $0,X
     // TODO: Fix comma operator: LEAX $0,X
 
-    // 9A04: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
-
     // 9A06: ASL $0,X
     // TODO: Convert ASL $0,X
-
-    // 9A06: ASL $0,X
-    // TODO: Convert ASL $0,X
-
-    // 9A08: COM <$03
-    // TODO: Convert COM <$03
 
     // 9A08: COM <$03
     // TODO: Convert COM <$03
@@ -19483,17 +19843,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A0A: DEC <$30
     // TODO: Convert DEC <$30
 
-    // 9A0A: DEC <$30
-    // TODO: Convert DEC <$30
-
     // 9A0C: NEG <$78
     // TODO: Convert NEG <$78
-
-    // 9A0C: NEG <$78
-    // TODO: Convert NEG <$78
-
-    // 9A0E: NEG <$01
-    // TODO: Convert NEG <$01
 
     // 9A0E: NEG <$01
     // TODO: Convert NEG <$01
@@ -19501,17 +19852,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A10: COM <$0B
     // TODO: Convert COM <$0B
 
-    // 9A10: COM <$0B
-    // TODO: Convert COM <$0B
-
     // 9A12: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // 9A12: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // 9A13: NEG <$90
-    // TODO: Convert NEG <$90
 
     // 9A13: NEG <$90
     // TODO: Convert NEG <$90
@@ -19519,17 +19861,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A15: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A15: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 9A17: XNC <$0C
     // TODO: Convert XNC <$0C
-
-    // 9A17: XNC <$0C
-    // TODO: Convert XNC <$0C
-
-    // 9A19: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // 9A19: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -19537,17 +19870,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A1A: NEG <$A0
     // TODO: Convert NEG <$A0
 
-    // 9A1A: NEG <$A0
-    // TODO: Convert NEG <$A0
-
     // 9A1C: NEG <$03
     // TODO: Convert NEG <$03
-
-    // 9A1C: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9A1E: XNC <$0D
-    // TODO: Convert XNC <$0D
 
     // 9A1E: XNC <$0D
     // TODO: Convert XNC <$0D
@@ -19555,17 +19879,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A20: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // 9A20: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // 9A21: NEG <$B0
     // TODO: Convert NEG <$B0
-
-    // 9A21: NEG <$B0
-    // TODO: Convert NEG <$B0
-
-    // 9A23: NEG <$01
-    // TODO: Convert NEG <$01
 
     // 9A23: NEG <$01
     // TODO: Convert NEG <$01
@@ -19573,17 +19888,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A25: XNC <$0E
     // TODO: Convert XNC <$0E
 
-    // 9A25: XNC <$0E
-    // TODO: Convert XNC <$0E
-
     // 9A27: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // 9A27: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // 9A28: NEG <$F0
-    // TODO: Convert NEG <$F0
 
     // 9A28: NEG <$F0
     // TODO: Convert NEG <$F0
@@ -19591,17 +19897,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A2A: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A2A: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 9A2C: NEG <$0F
     // TODO: Convert NEG <$0F
-
-    // 9A2C: NEG <$0F
-    // TODO: Convert NEG <$0F
-
-    // 9A2E: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // 9A2E: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -19609,17 +19906,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A2F: NEG <$10
     // TODO: Convert NEG <$10
 
-    // 9A2F: NEG <$10
-    // TODO: Convert NEG <$10
-
     // 9A31: NEG <$01
     // TODO: Convert NEG <$01
-
-    // 9A31: NEG <$01
-    // TODO: Convert NEG <$01
-
-    // 9A33: NEG <$10
-    // TODO: Convert NEG <$10
 
     // 9A33: NEG <$10
     // TODO: Convert NEG <$10
@@ -19627,17 +19915,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A35: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // 9A35: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // 9A36: NEG <$50
     // TODO: Convert NEG <$50
-
-    // 9A36: NEG <$50
-    // TODO: Convert NEG <$50
-
-    // 9A38: NEG <$01
-    // TODO: Convert NEG <$01
 
     // 9A38: NEG <$01
     // TODO: Convert NEG <$01
@@ -19645,17 +19924,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A3A: COM <$11
     // TODO: Convert COM <$11
 
-    // 9A3A: COM <$11
-    // TODO: Convert COM <$11
-
     // 9A3C: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // 9A3C: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // 9A3D: NEG <$60
-    // TODO: Convert NEG <$60
 
     // 9A3D: NEG <$60
     // TODO: Convert NEG <$60
@@ -19663,17 +19933,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A3F: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9A3F: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9A41: COM <$12
     // TODO: Convert COM <$12
-
-    // 9A41: COM <$12
-    // TODO: Convert COM <$12
-
-    // 9A43: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // 9A43: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -19681,17 +19942,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A44: NEG <$70
     // TODO: Convert NEG <$70
 
-    // 9A44: NEG <$70
-    // TODO: Convert NEG <$70
-
     // 9A46: NEG <$01
     // TODO: Convert NEG <$01
-
-    // 9A46: NEG <$01
-    // TODO: Convert NEG <$01
-
-    // 9A48: COM <$13
-    // TODO: Convert COM <$13
 
     // 9A48: COM <$13
     // TODO: Convert COM <$13
@@ -19699,17 +19951,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A4A: LSRB 
     cpu.m_b >>= 1;
 
-    // 9A4A: LSRB 
-    cpu.m_b >>= 1;
-
     // 9A4B: NEG <$CC
     // TODO: Convert NEG <$CC
-
-    // 9A4B: NEG <$CC
-    // TODO: Convert NEG <$CC
-
-    // 9A4D: NEG <$03
-    // TODO: Convert NEG <$03
 
     // 9A4D: NEG <$03
     // TODO: Convert NEG <$03
@@ -19717,17 +19960,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A4F: NEG <$14
     // TODO: Convert NEG <$14
 
-    // 9A4F: NEG <$14
-    // TODO: Convert NEG <$14
-
     // 9A51: LSRB 
     cpu.m_b >>= 1;
-
-    // 9A51: LSRB 
-    cpu.m_b >>= 1;
-
-    // 9A52: NEG <$34
-    // TODO: Convert NEG <$34
 
     // 9A52: NEG <$34
     // TODO: Convert NEG <$34
@@ -19735,17 +19969,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A54: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9A54: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9A56: NEG <$15
     // TODO: Convert NEG <$15
-
-    // 9A56: NEG <$15
-    // TODO: Convert NEG <$15
-
-    // 9A58: NEG $0,X
-    // TODO: Convert NEG $0,X
 
     // 9A58: NEG $0,X
     // TODO: Convert NEG $0,X
@@ -19753,17 +19978,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A5A: SUBA $0,X
     // TODO: Fix comma operator: SUBA $0,X
 
-    // 9A5A: SUBA $0,X
-    // TODO: Fix comma operator: SUBA $0,X
-
     // 9A5C: NEG <$01
     // TODO: Convert NEG <$01
-
-    // 9A5C: NEG <$01
-    // TODO: Convert NEG <$01
-
-    // 9A5E: LBRA $FA61
-    // TODO: Convert LBRA $FA61
 
     // 9A5E: LBRA $FA61
     // TODO: Convert LBRA $FA61
@@ -19771,23 +19987,11 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A61: SUBB $0,X
     // TODO: Fix comma operator: SUBB $0,X
 
-    // 9A61: SUBB $0,X
-    // TODO: Fix comma operator: SUBB $0,X
-
-    // 9A63: COM <$00
-    // TODO: Convert COM <$00
-
     // 9A63: COM <$00
     // TODO: Convert COM <$00
 
     // 9A65: LBSR $FA68
     // TODO: Convert LBSR $FA68
-
-    // 9A65: LBSR $FA68
-    // TODO: Convert LBSR $FA68
-
-    // 9A68: BRA $9A6A
-    goto label_9A6A;
 
     // 9A68: BRA $9A6A
     goto label_9A6A;
@@ -19796,23 +20000,10 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A6A: COM <$00
     // TODO: Convert COM <$00
 
-    label_9A6A:
-    // 9A6A: COM <$00
-    // TODO: Convert COM <$00
-
-    // 9A6C: X18 
-    // TODO: Convert X18 
-
     // 9A6C: X18 
     // TODO: Convert X18 
 
     // 9A6D: NEG $0,X
-    // TODO: Convert NEG $0,X
-
-    // 9A6D: NEG $0,X
-    // TODO: Convert NEG $0,X
-
-    // 9A6F: NEG $0,X
     // TODO: Convert NEG $0,X
 
     // 9A6F: NEG $0,X
@@ -19821,17 +20012,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A71: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A71: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 9A73: DAA 
     // TODO: Convert DAA 
-
-    // 9A73: DAA 
-    // TODO: Convert DAA 
-
-    // 9A74: LSR >$00E0
-    // TODO: Convert LSR >$00E0
 
     // 9A74: LSR >$00E0
     // TODO: Convert LSR >$00E0
@@ -19839,17 +20021,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A77: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A77: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 9A79: NEG <$1A
     // TODO: Convert NEG <$1A
-
-    // 9A79: NEG <$1A
-    // TODO: Convert NEG <$1A
-
-    // 9A7B: LSR >$0020
-    // TODO: Convert LSR >$0020
 
     // 9A7B: LSR >$0020
     // TODO: Convert LSR >$0020
@@ -19857,17 +20030,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A7E: NEG <$01
     // TODO: Convert NEG <$01
 
-    // 9A7E: NEG <$01
-    // TODO: Convert NEG <$01
-
     // 9A80: NEG <$1B
     // TODO: Convert NEG <$1B
-
-    // 9A80: NEG <$1B
-    // TODO: Convert NEG <$1B
-
-    // 9A82: SUBA #$00
-    cpu.m_a -= 0x00;
 
     // 9A82: SUBA #$00
     cpu.m_a -= 0x00;
@@ -19875,17 +20039,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A84: EORA <$00
     cpu.m_a ^= 0x00;
 
-    // 9A84: EORA <$00
-    cpu.m_a ^= 0x00;
-
     // 9A86: NEG <$02
     // TODO: Convert NEG <$02
-
-    // 9A86: NEG <$02
-    // TODO: Convert NEG <$02
-
-    // 9A88: ANDCC #$80
-    // TODO: Convert ANDCC #$80
 
     // 9A88: ANDCC #$80
     // TODO: Convert ANDCC #$80
@@ -19893,17 +20048,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A8A: NEG <$B8
     // TODO: Convert NEG <$B8
 
-    // 9A8A: NEG <$B8
-    // TODO: Convert NEG <$B8
-
     // 9A8C: NEG <$01
     // TODO: Convert NEG <$01
-
-    // 9A8C: NEG <$01
-    // TODO: Convert NEG <$01
-
-    // 9A8E: XNC <$1D
-    // TODO: Convert XNC <$1D
 
     // 9A8E: XNC <$1D
     // TODO: Convert XNC <$1D
@@ -19911,17 +20057,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A90: SUBA #$00
     cpu.m_a -= 0x00;
 
-    // 9A90: SUBA #$00
-    cpu.m_a -= 0x00;
-
     // 9A92: ASLA 
     cpu.m_a <<= 1;
-
-    // 9A92: ASLA 
-    cpu.m_a <<= 1;
-
-    // 9A93: NEG <$01
-    // TODO: Convert NEG <$01
 
     // 9A93: NEG <$01
     // TODO: Convert NEG <$01
@@ -19929,17 +20066,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A95: COM <$1E
     // TODO: Convert COM <$1E
 
-    // 9A95: COM <$1E
-    // TODO: Convert COM <$1E
-
     // 9A97: SUBA #$00
     cpu.m_a -= 0x00;
-
-    // 9A97: SUBA #$00
-    cpu.m_a -= 0x00;
-
-    // 9A99: ASL $0,X
-    // TODO: Convert ASL $0,X
 
     // 9A99: ASL $0,X
     // TODO: Convert ASL $0,X
@@ -19947,17 +20075,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9A9B: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9A9B: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9A9D: TFR D,S
     cpu.m_sp = cpu.m_d;
-
-    // 9A9D: TFR D,S
-    cpu.m_sp = cpu.m_d;
-
-    // 9A9F: NEG <$30
-    // TODO: Convert NEG <$30
 
     // 9A9F: NEG <$30
     // TODO: Convert NEG <$30
@@ -19965,23 +20084,11 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AA1: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9AA1: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9AA3: NEG <$00
-    // TODO: Convert NEG <$00
-
     // 9AA3: NEG <$00
     // TODO: Convert NEG <$00
 
     // 9AA5: INC <$00
     // TODO: Convert INC <$00
-
-    // 9AA5: INC <$00
-    // TODO: Convert INC <$00
-
-    // 9AA7: BRA $9AA9
-    goto label_9AA9;
 
     // 9AA7: BRA $9AA9
     goto label_9AA9;
@@ -19990,18 +20097,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AA9: COM <$00
     // TODO: Convert COM <$00
 
-    label_9AA9:
-    // 9AA9: COM <$00
-    // TODO: Convert COM <$00
-
     // 9AAB: NEG <$10
     // TODO: Convert NEG <$10
-
-    // 9AAB: NEG <$10
-    // TODO: Convert NEG <$10
-
-    // 9AAD: NEG <$98
-    // TODO: Convert NEG <$98
 
     // 9AAD: NEG <$98
     // TODO: Convert NEG <$98
@@ -20009,17 +20106,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AAF: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9AAF: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9AB1: NEG <$02
     // TODO: Convert NEG <$02
-
-    // 9AB1: NEG <$02
-    // TODO: Convert NEG <$02
-
-    // 9AB3: XHCF 
-    // TODO: Convert XHCF 
 
     // 9AB3: XHCF 
     // TODO: Convert XHCF 
@@ -20027,16 +20115,7 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AB4: NEG <$48
     // TODO: Convert NEG <$48
 
-    // 9AB4: NEG <$48
-    // TODO: Convert NEG <$48
-
     // 9AB6: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9AB6: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9AB8: NEG <$03
     // TODO: Convert NEG <$03
 
     // 9AB8: NEG <$03
@@ -20045,17 +20124,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9ABA: X18 
     // TODO: Convert X18 
 
-    // 9ABA: X18 
-    // TODO: Convert X18 
-
     // 9ABB: NEG <$B0
     // TODO: Convert NEG <$B0
-
-    // 9ABB: NEG <$B0
-    // TODO: Convert NEG <$B0
-
-    // 9ABD: NEG <$03
-    // TODO: Convert NEG <$03
 
     // 9ABD: NEG <$03
     // TODO: Convert NEG <$03
@@ -20063,17 +20133,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9ABF: COM <$04
     // TODO: Convert COM <$04
 
-    // 9ABF: COM <$04
-    // TODO: Convert COM <$04
-
     // 9AC1: X18 
     // TODO: Convert X18 
-
-    // 9AC1: X18 
-    // TODO: Convert X18 
-
-    // 9AC2: NEG <$D0
-    // TODO: Convert NEG <$D0
 
     // 9AC2: NEG <$D0
     // TODO: Convert NEG <$D0
@@ -20081,17 +20142,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AC4: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9AC4: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9AC6: NEG <$05
     // TODO: Convert NEG <$05
-
-    // 9AC6: NEG <$05
-    // TODO: Convert NEG <$05
-
-    // 9AC8: BRA $9ACA
-    goto label_9ACA;
 
     // 9AC8: BRA $9ACA
     goto label_9ACA;
@@ -20100,18 +20152,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9ACA: SUBB #$00
     cpu.m_b -= 0x00;
 
-    label_9ACA:
-    // 9ACA: SUBB #$00
-    cpu.m_b -= 0x00;
-
     // 9ACC: COM <$01
     // TODO: Convert COM <$01
-
-    // 9ACC: COM <$01
-    // TODO: Convert COM <$01
-
-    // 9ACE: ROR <$24
-    // TODO: Convert ROR <$24
 
     // 9ACE: ROR <$24
     // TODO: Convert ROR <$24
@@ -20119,17 +20161,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AD0: NEG <$38
     // TODO: Convert NEG <$38
 
-    // 9AD0: NEG <$38
-    // TODO: Convert NEG <$38
-
     // 9AD2: NEG <$03
     // TODO: Convert NEG <$03
-
-    // 9AD2: NEG <$03
-    // TODO: Convert NEG <$03
-
-    // 9AD4: XNC <$07
-    // TODO: Convert XNC <$07
 
     // 9AD4: XNC <$07
     // TODO: Convert XNC <$07
@@ -20137,17 +20170,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AD6: BCC $9AD8
     if (!cpu.carry_flag()) cpu.m_pc = 0x9AD8;
 
-    // 9AD6: BCC $9AD8
-    if (!cpu.carry_flag()) cpu.m_pc = 0x9AD8;
-
     // 9AD8: NEG >$0003
     // TODO: Convert NEG >$0003
-
-    // 9AD8: NEG >$0003
-    // TODO: Convert NEG >$0003
-
-    // 9ADB: XNC <$08
-    // TODO: Convert XNC <$08
 
     // 9ADB: XNC <$08
     // TODO: Convert XNC <$08
@@ -20155,17 +20179,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9ADD: BVC $9ADF
     // TODO: Convert BVC $9ADF
 
-    // 9ADD: BVC $9ADF
-    // TODO: Convert BVC $9ADF
-
     // 9ADF: NEG <$00
     // TODO: Convert NEG <$00
-
-    // 9ADF: NEG <$00
-    // TODO: Convert NEG <$00
-
-    // 9AE1: COM <$00
-    // TODO: Convert COM <$00
 
     // 9AE1: COM <$00
     // TODO: Convert COM <$00
@@ -20173,17 +20188,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AE3: ROL <$30
     // TODO: Convert ROL <$30
 
-    // 9AE3: ROL <$30
-    // TODO: Convert ROL <$30
-
     // 9AE5: NEG <$88
     // TODO: Convert NEG <$88
-
-    // 9AE5: NEG <$88
-    // TODO: Convert NEG <$88
-
-    // 9AE7: NEG <$03
-    // TODO: Convert NEG <$03
 
     // 9AE7: NEG <$03
     // TODO: Convert NEG <$03
@@ -20191,17 +20197,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AE9: NEG <$0A
     // TODO: Convert NEG <$0A
 
-    // 9AE9: NEG <$0A
-    // TODO: Convert NEG <$0A
-
     // 9AEB: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // 9AEB: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // 9AEC: NEG <$80
-    // TODO: Convert NEG <$80
 
     // 9AEC: NEG <$80
     // TODO: Convert NEG <$80
@@ -20209,17 +20206,8 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AEE: NEG <$03
     // TODO: Convert NEG <$03
 
-    // 9AEE: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9AF0: NEG <$0B
     // TODO: Convert NEG <$0B
-
-    // 9AF0: NEG <$0B
-    // TODO: Convert NEG <$0B
-
-    // 9AF2: LSRA 
-    cpu.m_a >>= 1;
 
     // 9AF2: LSRA 
     cpu.m_a >>= 1;
@@ -20227,29 +20215,14 @@ void global_routine_impl(CPU6809& cpu) {
     // 9AF3: NEG <$60
     // TODO: Convert NEG <$60
 
-    // 9AF3: NEG <$60
-    // TODO: Convert NEG <$60
-
-    // 9AF5: NEG <$03
-    // TODO: Convert NEG <$03
-
     // 9AF5: NEG <$03
     // TODO: Convert NEG <$03
 
     // 9AF7: XNC <$0C
     // TODO: Convert XNC <$0C
 
-    // 9AF7: XNC <$0C
-    // TODO: Convert XNC <$0C
-
     // 9AF9: ASLA 
     cpu.m_a <<= 1;
-
-    // 9AF9: ASLA 
-    cpu.m_a <<= 1;
-
-    // 9AFA: NEG <$90
-    // TODO: Convert NEG <$90
 
     // 9AFA: NEG <$90
     // TODO: Convert NEG <$90
@@ -21105,10 +21078,6 @@ void global_routine_impl(CPU6809& cpu) {
     // 9D32: JMP $9d32
     goto label_9D32;
 
-    label_9D32:
-    // 9D32: SUBB <$00
-    cpu.m_b -= 0x00;
-
     // 9D34: COM <$01
     // TODO: Convert COM <$01
 
@@ -21802,10 +21771,6 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_9F00;
 
     label_9F00:
-    // 9F00: JMP $9f00
-    goto label_9F00;
-
-    label_9F00:
     // 9F00: NEG $0,X
     // TODO: Convert NEG $0,X
 
@@ -22080,10 +22045,6 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x00;
 
     // 9FB6: BRA $9FB8
-    goto label_9FB8;
-
-    label_9FB8:
-    // 9FB8: JMP $9fb8
     goto label_9FB8;
 
     label_9FB8:
@@ -22904,10 +22865,6 @@ void global_routine_impl(CPU6809& cpu) {
     // A1CE: JMP $a1ce
     goto label_A1CE;
 
-    label_A1CE:
-    // A1CE: LDU #$49C2
-    cpu.m_u = 0x49C2;
-
     // A1D1: LDA #$00
     cpu.m_a = 0x00;
 
@@ -23085,8 +23042,17 @@ void global_routine_impl(CPU6809& cpu) {
     // A260: STD $5E02
     cpu.write_memory16(0x5E02, cpu.m_d);
 
+    // A261: XCLRB 
+    // TODO: Convert XCLRB 
+
+    // A262: XNC <$CC
+    // TODO: Convert XNC <$CC
+
     // A263: LDD #$1E00
     cpu.m_d = 0x1E00;
+
+    // A264: EXG D,D
+    // TODO: Convert EXG D,D
 
     // A266: STD $5E04
     cpu.write_memory16(0x5E04, cpu.m_d);
@@ -25119,10 +25085,6 @@ void global_routine_impl(CPU6809& cpu) {
     // A849: JMP $a849
     goto label_A849;
 
-    label_A849:
-    // A849: LDX #$494B
-    cpu.m_x = 0x494B;
-
     // A84C: STX <$A8
     cpu.write_memory16(0xA8, cpu.m_x);
 
@@ -27012,10 +26974,6 @@ void global_routine_impl(CPU6809& cpu) {
     // ADBD: JMP $adbd
     goto label_ADBD;
 
-    label_ADBD:
-    // ADBD: STD $507A
-    cpu.write_memory16(0x507A, cpu.m_d);
-
     // ADC0: LDD <$4A
     cpu.m_d = cpu.read_memory16(0x4A);
 
@@ -27071,10 +27029,6 @@ void global_routine_impl(CPU6809& cpu) {
     // ADEB: JMP $adeb
     goto label_ADEB;
 
-    label_ADEB:
-    // ADEB: LDD $5000
-    cpu.m_d = cpu.read_memory16(0x5000);
-
     // ADEE: CMPD #$0001
     // TODO: Convert CMPD #$0001
 
@@ -27106,10 +27060,6 @@ void global_routine_impl(CPU6809& cpu) {
     // AE03: JMP $ae03
     goto label_AE03;
 
-    label_AE03:
-    // AE03: SUBD $5000
-    cpu.m_d -= 0x5000;
-
     // AE06: BGE $AE5F
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xAE5F;
 
@@ -27127,10 +27077,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // AE0F: SBCA #$FF
     // TODO: Convert SBCA #$FF
-
-    label_AE11:
-    // AE11: JMP $ae11
-    goto label_AE11;
 
     label_AE11:
     // AE11: SUBD $5000
@@ -27188,10 +27134,6 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(0x5018);
 
     label_AE3E:
-    // AE3E: JMP $ae3e
-    goto label_AE3E;
-
-    label_AE3E:
     // AE3E: DEC <$01
     // TODO: Convert DEC <$01
 
@@ -27209,10 +27151,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // AE46: ANDA #$7F
     cpu.m_a &= 0x7F;
-
-    label_AE48:
-    // AE48: JMP $ae48
-    goto label_AE48;
 
     label_AE48:
     // AE48: LDB <$01
@@ -27268,10 +27206,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // AE6C: BRA $AE72
     goto label_AE72;
-
-    label_AE6E:
-    // AE6E: JMP $ae6e
-    goto label_AE6E;
 
     label_AE6E:
     // AE6E: LDA #$00
@@ -27347,8 +27281,9 @@ void global_routine_impl(CPU6809& cpu) {
     // AE9D: STD <$B5
     cpu.write_memory16(0xB5, cpu.m_d);
 
-    // AE9F: ANDCC #$EF
-    // TODO: Convert ANDCC #$EF
+    label_AE9F:
+    // AE9F: JMP $ae9f
+    goto label_AE9F;
 
     // AEA1: LDA <$B7
     cpu.m_a = cpu.read_memory(0xB7);
@@ -27374,10 +27309,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_AEB2:
     // AEB2: JMP $aeb2
     goto label_AEB2;
-
-    label_AEB2:
-    // AEB2: LDA #$FF
-    cpu.m_a = 0xFF;
 
     // AEB4: STA <$C4
     cpu.write_memory(0xC4, cpu.m_a);
@@ -28140,8 +28071,9 @@ void global_routine_impl(CPU6809& cpu) {
     // B0F7: BRA $B0FF
     goto label_B0FF;
 
-    // B0F9: CMPD #$FC00
-    // TODO: Convert CMPD #$FC00
+    label_B0F9:
+    // B0F9: JMP $b0f9
+    goto label_B0F9;
 
     // B0FD: BLT $B158
     if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB158;
@@ -28348,10 +28280,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_B1A6:
     // B1A6: JMP $b1a6
     goto label_B1A6;
-
-    label_B1A6:
-    // B1A6: STD <$05
-    cpu.write_memory16(0x05, cpu.m_d);
 
     // B1A8: ADDD #$1000
     cpu.m_d += 0x1000;
@@ -28821,10 +28749,6 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_A54B;
 
     label_B307:
-    // B307: JMP $b307
-    goto label_B307;
-
-    label_B307:
     // B307: LDD <$D0
     cpu.m_d = cpu.read_memory16(0xD0);
 
@@ -29052,7 +28976,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b >>= 1;
 
     // B3BB: BRA $B3EE
-    // TODO: External jump to 0xB3EE - not implemented
+    goto label_B3EE;
 
     // B3BD: RTS 
     return;
@@ -29061,7 +28985,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XANDCC #$33
 
     // B3C0: BRA $B403
-    // TODO: External jump to 0xB403 - not implemented
+    goto label_B403;
 
     // B3C2: LSRB 
     cpu.m_b >>= 1;
@@ -29162,35 +29086,79 @@ void global_routine_impl(CPU6809& cpu) {
     // B3ED: STA $49C0
     cpu.write_memory(0x49C0, cpu.m_a);
 
+    label_B3EE:
+    // B3EE: ROLA 
+    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
+
+    // B3EF: SUBB #$86
+    cpu.m_b -= 0x86;
+
     // B3F0: LDA #$01
     cpu.m_a = 0x01;
+
+    // B3F1: NEG <$97
+    // TODO: Convert NEG <$97
 
     // B3F2: STA <$9C
     cpu.write_memory(0x9C, cpu.m_a);
 
+    // B3F3: CMPX <$86
+    cpu.compare_x(cpu.read_memory16(0x86));
+
     // B3F4: LDA #$0B
     cpu.m_a = 0x0B;
+
+    // B3F5: XDEC <$97
+    // TODO: Convert XDEC <$97
 
     // B3F6: STA <$DC
     cpu.write_memory(0xDC, cpu.m_a);
 
+    // B3F7: LDD <$97
+    cpu.m_d = cpu.read_memory16(0x97);
+
     // B3F8: STA <$9D
     cpu.write_memory(0x9D, cpu.m_a);
+
+    // B3F9: JSR <$BD
+    cpu.call_function(0xBD);
 
     // B3FA: JSR $CD38
     cpu.call_function(0xCD38);
 
+    // B3FB: XHCF 
+    // TODO: Convert XHCF 
+
+    // B3FC: XANDCC #$BD
+    // TODO: Convert XANDCC #$BD
+
     // B3FD: JSR $B43F
     cpu.call_function(0xB43F);
+
+    // B3FE: ANDA $3F96
+    cpu.m_a &= 0x3F96;
 
     // B400: LDA <$9D
     cpu.m_a = cpu.read_memory(0x9D);
 
+    // B401: JSR <$97
+    cpu.call_function(0x97);
+
     // B402: STA <$DC
     cpu.write_memory(0xDC, cpu.m_a);
 
+    label_B403:
+    // B403: LDD <$BD
+    cpu.m_d = cpu.read_memory16(0xBD);
+
     // B404: JSR $CD44
     cpu.call_function(0xCD44);
+
+    // B405: XHCF 
+    // TODO: Convert XHCF 
+
+    // B406: LSRA 
+    cpu.m_a >>= 1;
 
     // B407: JSR $B579
     cpu.call_function(0xB579);
@@ -29248,8 +29216,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD38);
 
     label_B431:
-    // B431: JSR $B43F
-    cpu.call_function(0xB43F);
+    // B431: JMP $b431
+    goto label_B431;
 
     // B434: LDA <$9D
     cpu.m_a = cpu.read_memory(0x9D);
@@ -29631,6 +29599,7 @@ void global_routine_impl(CPU6809& cpu) {
     // B55B: LDA #$40
     cpu.m_a = 0x40;
 
+    label_B55D:
     // B55D: STA $49C1
     cpu.write_memory(0x49C1, cpu.m_a);
 
@@ -30078,10 +30047,6 @@ void global_routine_impl(CPU6809& cpu) {
     // B6C0: JMP $b6c0
     goto label_B6C0;
 
-    label_B6C0:
-    // B6C0: JSR $B6CC
-    cpu.call_function(0xB6CC);
-
     // B6C3: JSR $B6D7
     cpu.call_function(0xB6D7);
 
@@ -30097,10 +30062,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_B6CC:
     // B6CC: JMP $b6cc
     goto label_B6CC;
-
-    label_B6CC:
-    // B6CC: LDD #$A012
-    cpu.m_d = 0xA012;
 
     // B6CF: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
@@ -32297,10 +32258,6 @@ void global_routine_impl(CPU6809& cpu) {
     // BD03: JMP $bd03
     goto label_BD03;
 
-    label_BD03:
-    // BD03: LDA #$03
-    cpu.m_a = 0x03;
-
     // BD05: JMP $BCE9
     goto label_BCE9;
 
@@ -32319,10 +32276,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_BD12:
     // BD12: JMP $bd12
     goto label_BD12;
-
-    label_BD12:
-    // BD12: LDA #$06
-    cpu.m_a = 0x06;
 
     // BD14: JMP $BCE9
     goto label_BCE9;
@@ -33975,10 +33928,6 @@ void global_routine_impl(CPU6809& cpu) {
     // C24E: JMP $c24e
     goto label_C24E;
 
-    label_C24E:
-    // C24E: CMPA #$03
-    cpu.compare_a(0x03);
-
     // C250: BCC $C2B3
     if (!cpu.carry_flag()) cpu.m_pc = 0xC2B3;
 
@@ -34141,10 +34090,6 @@ void global_routine_impl(CPU6809& cpu) {
     // C2C3: JMP $c2c3
     goto label_C2C3;
 
-    label_C2C3:
-    // C2C3: LEAS -$3,S
-    // TODO: Fix comma operator: LEAS -$3,S
-
     // C2C5: LDX #$C7B7
     cpu.m_x = 0xC7B7;
 
@@ -34250,10 +34195,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_C306:
     // C306: JMP $c306
     goto label_C306;
-
-    label_C306:
-    // C306: LDX #$4500
-    cpu.m_x = 0x4500;
 
     // C309: LDU #$4C00
     cpu.m_u = 0x4C00;
@@ -34569,10 +34510,6 @@ void global_routine_impl(CPU6809& cpu) {
     // C409: JMP $c409
     goto label_C409;
 
-    label_C409:
-    // C409: LDB ,U+
-    // TODO: Complex indexed addressing: ,U+
-
     // C40B: STB ,X+
     // TODO: Handle indexed addressing: STB ,X+
 
@@ -34604,10 +34541,6 @@ void global_routine_impl(CPU6809& cpu) {
     // C421: JMP $c421
     goto label_C421;
 
-    label_C421:
-    // C421: LDD ,X++
-    cpu.m_d = cpu.read_memory16(cpu.m_x++);
-
     // C423: STD ,U++
     cpu.write_memory16(cpu.m_u++, cpu.m_d);
 
@@ -34629,10 +34562,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_C434:
     // C434: JMP $c434
     goto label_C434;
-
-    label_C434:
-    // C434: LDU ,X
-    // TODO: Complex indexed addressing: ,X
 
     // C436: LDD ,Y
     // TODO: Complex indexed addressing: ,Y
@@ -34664,8 +34593,9 @@ void global_routine_impl(CPU6809& cpu) {
     // C44C: JSR $C24E
     cpu.call_function(0xC24E);
 
-    // C44F: RTS 
-    return;
+    label_C44F:
+    // C44F: JMP $c44f
+    goto label_C44F;
 
     // C450: LDA #$65
     cpu.m_a = 0x65;
@@ -34757,6 +34687,7 @@ void global_routine_impl(CPU6809& cpu) {
     // C495: JSR $CC18
     cpu.call_function(0xCC18);
 
+    label_C498:
     // C498: LDA $4598
     cpu.m_a = cpu.read_memory(0x4598);
 
@@ -34983,10 +34914,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_C542:
     // C542: JMP $c542
     goto label_C542;
-
-    label_C542:
-    // C542: STA $4AF5
-    cpu.write_memory(0x4AF5, cpu.m_a);
 
     // C545: LDA $4AFC
     cpu.m_a = cpu.read_memory(0x4AFC);
@@ -35215,8 +35142,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b += 0x4AFB;
 
     label_C5DB:
-    // C5DB: DEC $4AFA
-    // TODO: Convert DEC $4AFA
+    // C5DB: JMP $c5db
+    goto label_C5DB;
 
     // C5DE: BMI $C5E3
     if (cpu.negative_flag()) cpu.m_pc = 0xC5E3;
@@ -35380,10 +35307,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_C65B:
     // C65B: JMP $c65b
     goto label_C65B;
-
-    label_C65B:
-    // C65B: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
 
     // C65D: TFR X,D
     cpu.m_d = cpu.m_x;
@@ -36228,10 +36151,6 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_C8A7;
 
     label_C8A5:
-    // C8A5: JMP $c8a5
-    goto label_C8A5;
-
-    label_C8A5:
     // C8A5: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
@@ -36827,6 +36746,69 @@ void global_routine_impl(CPU6809& cpu) {
     // CA63: RTS 
     return;
 
+    // CA64: TFR DP,A
+    cpu.m_a = cpu.m_dp;
+
+    // CA66: TFR B,S
+    cpu.m_sp = cpu.m_b;
+
+    // CA68: TFR inv,Y
+    cpu.m_y = cpu.m_inv;
+
+    // CA6A: TFR S,Y
+    cpu.m_y = cpu.m_sp;
+
+    // CA6C: TFR X,inv
+    cpu.m_inv = cpu.m_x;
+
+    // CA6E: EXG inv,inv
+    // TODO: Convert EXG inv,inv
+
+    // CA70: EXG inv,A
+    // TODO: Convert EXG inv,A
+
+    // CA72: EXG DP,inv
+    // TODO: Convert EXG DP,inv
+
+    // CA74: EXG B,Y
+    // TODO: Convert EXG B,Y
+
+    // CA76: EXG inv,inv
+    // TODO: Convert EXG inv,inv
+
+    // CA78: NEG <$8C
+    // TODO: Convert NEG <$8C
+
+    // CA7A: NEG <$64
+    // TODO: Convert NEG <$64
+
+    // CA7C: NEG <$3C
+    // TODO: Convert NEG <$3C
+
+    // CA7E: NEG <$14
+    // TODO: Convert NEG <$14
+
+    // CA80: TFR inv,inv
+    cpu.m_inv = cpu.m_inv;
+
+    // CA82: TFR inv,S
+    cpu.m_sp = cpu.m_inv;
+
+    // CA84: TFR B,inv
+    cpu.m_inv = cpu.m_b;
+
+    // CA86: TFR inv,S
+    cpu.m_sp = cpu.m_inv;
+
+    // CA88: TFR S,inv
+    cpu.m_inv = cpu.m_sp;
+
+    // CA8A: TFR Y,S
+    cpu.m_sp = cpu.m_y;
+
+    // CA8C: LDX #$4A8E
+    cpu.m_x = 0x4A8E;
+
     // CA8F: LDD <$5C
     cpu.m_d = cpu.read_memory16(0x5C);
 
@@ -36847,10 +36829,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // CA9B: BCC $CAA5
     if (!cpu.carry_flag()) cpu.m_pc = 0xCAA5;
-
-    label_CA9D:
-    // CA9D: JMP $ca9d
-    goto label_CA9D;
 
     label_CA9D:
     // CA9D: LEAX $4,X
@@ -36904,10 +36882,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_CAC5:
     // CAC5: JMP $cac5
     goto label_CAC5;
-
-    label_CAC5:
-    // CAC5: LDD -$4,X
-    // TODO: Fix comma operator: LDD -$4,X
 
     // CAC7: STD ,X
     // TODO: Handle indexed addressing: STD ,X
@@ -37002,10 +36976,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_CB08:
     // CB08: JMP $cb08
     goto label_CB08;
-
-    label_CB08:
-    // CB08: LDX #$CBA4
-    cpu.m_x = 0xCBA4;
 
     label_CB0B:
     // CB0B: LDD $4879
@@ -37254,8 +37224,9 @@ void global_routine_impl(CPU6809& cpu) {
     // CBE3: BCC $CBE5
     if (!cpu.carry_flag()) cpu.m_pc = 0xCBE5;
 
-    // CBE5: BGE $CBE5
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xCBE5;
+    label_CBE5:
+    // CBE5: JMP $cbe5
+    goto label_CBE5;
 
     // CBE7: BCC $CBE9
     if (!cpu.carry_flag()) cpu.m_pc = 0xCBE9;
@@ -37285,10 +37256,14 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$FE
 
     // CBFB: BCC $CBFE
-    // TODO: External jump to 0xCBFE - not implemented
+    if (!cpu.carry_flag()) cpu.m_pc = 0xCBFE;
 
     // CBFD: ANDCC #$FE
     // TODO: Convert ANDCC #$FE
+
+    label_CBFE:
+    // CBFE: LDU $5401
+    cpu.m_u = cpu.read_memory16(0x5401);
 
     // CBFF: LSRB 
     cpu.m_b >>= 1;
@@ -37296,8 +37271,14 @@ void global_routine_impl(CPU6809& cpu) {
     // CC00: NEG <$1C
     // TODO: Convert NEG <$1C
 
+    // CC01: ANDCC #$FE
+    // TODO: Convert ANDCC #$FE
+
     // CC02: LDU $8401
     cpu.m_u = cpu.read_memory16(0x8401);
+
+    // CC03: ANDA #$01
+    cpu.m_a &= 0x01;
 
     // CC05: ANDCC #$FE
     // TODO: Convert ANDCC #$FE
@@ -37332,9 +37313,6 @@ void global_routine_impl(CPU6809& cpu) {
 
     // CC1B: JMP $cc18
     goto label_CC18;
-
-    // CC1B: LDA #$01
-    cpu.m_a = 0x01;
 
     // CC1D: JSR $C2C3
     cpu.call_function(0xC2C3);
@@ -37471,10 +37449,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_CCCC:
     // CCCC: JMP $cccc
     goto label_CCCC;
-
-    label_CCCC:
-    // CCCC: ORCC #$01
-    cpu.m_cc |= 0x01;
 
     // CCCE: ROR $4684
     // TODO: Convert ROR $4684
@@ -37690,6 +37664,7 @@ void global_routine_impl(CPU6809& cpu) {
     // CD7F: RTS 
     return;
 
+    label_CD80:
     // CD80: ORCC #$01
     cpu.m_cc |= 0x01;
 
@@ -37826,6 +37801,7 @@ void global_routine_impl(CPU6809& cpu) {
     // CDBA: STA $4700
     cpu.write_memory(0x4700, cpu.m_a);
 
+    label_CDBD:
     // CDBD: TST $4320
     // TODO: Convert TST $4320
 
@@ -38158,20 +38134,41 @@ void global_routine_impl(CPU6809& cpu) {
     // CEBA: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
+    // CEBB: STU $FFFF
+    cpu.write_memory16(0xFFFF, cpu.m_u);
+
     // CEBD: STU $FFFF
+    cpu.write_memory16(0xFFFF, cpu.m_u);
+
+    // CEBE: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
     // CEC0: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
+    // CEC1: STU $FFFF
+    cpu.write_memory16(0xFFFF, cpu.m_u);
+
     // CEC3: STU $FFFF
+    cpu.write_memory16(0xFFFF, cpu.m_u);
+
+    // CEC4: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
     // CEC6: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
+    // CEC7: STU $FFFF
+    cpu.write_memory16(0xFFFF, cpu.m_u);
+
     // CEC9: STU $434F
     cpu.write_memory16(0x434F, cpu.m_u);
+
+    // CECA: COMA 
+    cpu.m_a = ~cpu.m_a;
+
+    // CECB: CLRA 
+    cpu.m_a = 0;
 
     // CECC: NEGB 
     cpu.m_b = -cpu.m_b;
@@ -38195,7 +38192,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b >>= 1;
 
     // CED3: BRA $CF06
-    // TODO: External jump to 0xCF06 - not implemented
+    goto label_CF06;
 
     // CED5: RTS 
     return;
@@ -38274,6 +38271,10 @@ void global_routine_impl(CPU6809& cpu) {
 
     // CF05: ADDB $1FEC
     cpu.m_b += 0x1FEC;
+
+    label_CF06:
+    // CF06: TFR inv,inv
+    cpu.m_inv = cpu.m_inv;
 
     // CF08: SUBB -$E,Y
     // TODO: Fix comma operator: SUBB -$E,Y
@@ -38622,20 +38623,33 @@ void global_routine_impl(CPU6809& cpu) {
     // D007: LDD <$E0
     cpu.m_d = cpu.read_memory16(0xE0);
 
+    // D008: SUBB F,Y
+    // TODO: Complex indexed addressing: F,Y
+
     // D009: ORA $0,X
     // TODO: Fix comma operator: ORA $0,X
+
+    // D00A: NEG <$00
+    // TODO: Convert NEG <$00
 
     // D00B: NEG <$E0
     // TODO: Convert NEG <$E0
 
+    // D00C: SUBB $CFCA,PCR
+    // TODO: Fix comma operator: SUBB $CFCA,PCR
+
     // D00D: CMPX #$BB9D
     cpu.compare_x(0xBB9D);
 
+    // D00F: JSR <$1D
+    cpu.call_function(0x1D);
+
+    label_D010:
     // D010: SEX 
     // TODO: Convert SEX 
 
-    // D011: ANDB [W,S]
-    // TODO: Complex indexed addressing: [W,S]
+    // D011: JMP $d010
+    goto label_D010;
 
     // D013: EORB [D,Y]
     // TODO: Complex indexed addressing: [D,Y]
@@ -38649,14 +38663,27 @@ void global_routine_impl(CPU6809& cpu) {
     // D019: ADDA $A300
     cpu.m_a += 0xA300;
 
+    label_D01C:
+    // D01C: NEG <$96
+    // TODO: Convert NEG <$96
+
     // D01D: LDA <$E0
     cpu.m_a = cpu.read_memory(0xE0);
+
+    // D01E: SUBB -$E,Y
+    // TODO: Fix comma operator: SUBB -$E,Y
 
     // D01F: LEAS -$1,X
     // TODO: Fix comma operator: LEAS -$1,X
 
+    // D020: TFR inv,CC
+    cpu.m_cc = cpu.m_inv;
+
     // D021: DEC [$7EBB]
     // TODO: Convert DEC [$7EBB]
+
+    // D022: STU $7EBB
+    cpu.write_memory16(0x7EBB, cpu.m_u);
 
     // D025: SUBD $0,X
     // TODO: Fix comma operator: SUBD $0,X
@@ -38740,7 +38767,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$FF
 
     // D05F: BCC $D01C
-    // TODO: External jump to 0xD01C - not implemented
+    if (!cpu.carry_flag()) cpu.m_pc = 0xD01C;
 
     // D061: SUBD $2,X
     // TODO: Fix comma operator: SUBD $2,X
@@ -39108,6 +39135,7 @@ void global_routine_impl(CPU6809& cpu) {
     // D16D: BLT $D16F
     if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xD16F;
 
+    label_D16F:
     // D16F: DEC <$00
     // TODO: Convert DEC <$00
 
@@ -39949,11 +39977,20 @@ void global_routine_impl(CPU6809& cpu) {
     // D3E1: RTI 
     // TODO: Convert RTI 
 
+    // D3E2: ADCA $EFF6
+    // TODO: Convert ADCA $EFF6
+
     // D3E4: LDB $7C5C
     cpu.m_b = cpu.read_memory(0x7C5C);
 
+    // D3E5: INC $5C06
+    // TODO: Convert INC $5C06
+
     // D3E7: ROR <$45
     // TODO: Convert ROR <$45
+
+    // D3E8: LSRA 
+    cpu.m_a >>= 1;
 
     // D3E9: SWI 
     // TODO: Convert SWI 
@@ -39964,9 +40001,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_D3EC:
     // D3EC: CLRB 
     cpu.m_b = 0;
-
-    // D3ED: JMP $d3ec
-    goto label_D3EC;
 
     // D3ED: RTI 
     // TODO: Convert RTI 
@@ -40074,8 +40108,8 @@ void global_routine_impl(CPU6809& cpu) {
     // D432: ADCA $EF42
     // TODO: Convert ADCA $EF42
 
-    // D433: JMP $d432
-    goto label_D432;
+    // D433: STU $2,U
+    // TODO: Handle indexed addressing: STU $2,U
 
     // D435: DEC <$C0
     // TODO: Convert DEC <$C0
@@ -40209,9 +40243,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_D486:
     // D486: DECB 
     cpu.m_b--;
-
-    // D487: JMP $d486
-    goto label_D486;
 
     // D487: ANDCC #$B9
     // TODO: Convert ANDCC #$B9
@@ -41499,10 +41530,6 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.zero_flag()) cpu.m_pc = 0xD808;
 
     label_D800:
-    // D800: JMP $d800
-    goto label_D800;
-
-    label_D800:
     // D800: DEC <$0B
     // TODO: Convert DEC <$0B
 
@@ -41704,7 +41731,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.compare_a(0x03);
 
     // D87F: BEQ $D885
-    // TODO: External jump to 0xD885 - not implemented
+    if (cpu.zero_flag()) cpu.m_pc = 0xD885;
 
     // D881: ADDB #$80
     cpu.m_b += 0x80;
@@ -41714,11 +41741,14 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x24;
 
     label_D883:
-    // D883: JMP $d882
-    goto label_D882;
+    // D883: BCC $D889
+    if (!cpu.carry_flag()) cpu.m_pc = 0xD889;
 
     // D884: LSR <$0C
     // TODO: Convert LSR <$0C
+
+    // D885: INC <$12
+    // TODO: Convert INC <$12
 
     // D886: NOP 
     // NOP;
@@ -41864,10 +41894,6 @@ void global_routine_impl(CPU6809& cpu) {
     // D8DF: JMP $d8df
     goto label_D8DF;
 
-    label_D8DF:
-    // D8DF: LDX #$4A52
-    cpu.m_x = 0x4A52;
-
     // D8E2: CMPX $4AD9
     cpu.compare_x(cpu.read_memory16(0x4AD9));
 
@@ -41932,10 +41958,6 @@ void global_routine_impl(CPU6809& cpu) {
     // D912: JMP $d912
     goto label_D912;
 
-    label_D912:
-    // D912: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
-
     // D914: CMPX $4AD9
     cpu.compare_x(cpu.read_memory16(0x4AD9));
 
@@ -41990,8 +42012,9 @@ void global_routine_impl(CPU6809& cpu) {
     // D93F: BCS $D92C
     if (cpu.carry_flag()) cpu.m_pc = 0xD92C;
 
-    // D941: RTS 
-    return;
+    label_D941:
+    // D941: JMP $d941
+    goto label_D941;
 
     // D942: LDU #$4A52
     cpu.m_u = 0x4A52;
@@ -42002,6 +42025,7 @@ void global_routine_impl(CPU6809& cpu) {
     // D949: BCC $D95D
     if (!cpu.carry_flag()) cpu.m_pc = 0xD95D;
 
+    label_D94B:
     // D94B: LDB ,U+
     // TODO: Complex indexed addressing: ,U+
 
@@ -42017,6 +42041,7 @@ void global_routine_impl(CPU6809& cpu) {
     // D954: JSR $E7FC
     cpu.call_function(0xE7FC);
 
+    label_D957:
     // D957: CMPU $4AD9
     // TODO: Convert CMPU $4AD9
 
@@ -42026,10 +42051,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_D95D:
     // D95D: JMP $d95d
     goto label_D95D;
-
-    label_D95D:
-    // D95D: RTS 
-    return;
 
     // D95E: LDU $4ADD
     cpu.m_u = cpu.read_memory16(0x4ADD);
@@ -42474,10 +42495,6 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x4A66;
 
     label_DAD3:
-    // DAD3: JMP $dad3
-    goto label_DAD3;
-
-    label_DAD3:
     // DAD3: CMPA ,U
     // TODO: Complex indexed addressing: ,U
 
@@ -42521,8 +42538,9 @@ void global_routine_impl(CPU6809& cpu) {
     // DAF3: BCS $DA9C
     if (cpu.carry_flag()) cpu.m_pc = 0xDA9C;
 
-    // DAF5: LDD $4AE4
-    cpu.m_d = cpu.read_memory16(0x4AE4);
+    label_DAF5:
+    // DAF5: JMP $daf5
+    goto label_DAF5;
 
     // DAF8: CMPD #$0200
     // TODO: Convert CMPD #$0200
@@ -42772,6 +42790,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DB7D: LSRA 
     cpu.m_a >>= 1;
 
+    label_DB7E:
     // DB7E: LSRA 
     cpu.m_a >>= 1;
 
@@ -44474,7 +44493,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a <<= 1;
 
     // DE2E: BRA $DE86
-    // TODO: External jump to 0xDE86 - not implemented
+    goto label_DE86;
 
     // DE30: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -44550,10 +44569,6 @@ void global_routine_impl(CPU6809& cpu) {
     // DE52: JMP $de52
     goto label_DE52;
 
-    label_DE52:
-    // DE52: LSRB 
-    cpu.m_b >>= 1;
-
     // DE53: XCLRA 
     // TODO: Convert XCLRA 
 
@@ -44586,16 +44601,16 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xDE82 - not implemented
 
     // DE62: BRA $DE84
-    // TODO: External jump to 0xDE84 - not implemented
+    goto label_DE84;
 
     // DE64: BRA $DE86
-    // TODO: External jump to 0xDE86 - not implemented
+    goto label_DE86;
 
     // DE66: BRA $DE88
-    // TODO: External jump to 0xDE88 - not implemented
+    goto label_DE88;
 
     // DE68: BRA $DE8A
-    // TODO: External jump to 0xDE8A - not implemented
+    goto label_DE8A;
 
     // DE6A: LEAS -$10,Y
     // TODO: Fix comma operator: LEAS -$10,Y
@@ -44649,21 +44664,43 @@ void global_routine_impl(CPU6809& cpu) {
     // DE83: BRA $DEA5
     goto label_DEA5;
 
+    label_DE84:
+    // DE84: BRA $DEA6
+    // TODO: External jump to 0xDEA6 - not implemented
+
     // DE85: BRA $DEA7
     goto label_DEA7;
+
+    label_DE86:
+    // DE86: JMP $de86
+    goto label_DE86;
 
     // DE87: BRA $DEA9
     goto label_DEA9;
 
+    label_DE88:
+    // DE88: BRA $DEAA
+    // TODO: External jump to 0xDEAA - not implemented
+
     // DE89: BRA $DEAB
     goto label_DEAB;
 
+    label_DE8A:
+    // DE8A: JMP $de8a
+    goto label_DE8A;
+
     label_DE8B:
     // DE8B: BRA $DEBF
-    // TODO: External jump to 0xDEBF - not implemented
+    goto label_DEBF;
+
+    // DE8C: LEAS -$10,Y
+    // TODO: Fix comma operator: LEAS -$10,Y
 
     // DE8D: LEAX [$5452,W]
     // TODO: Complex indexed addressing: [$5452,W]
+
+    // DE8E: SUBA $5452
+    cpu.m_a -= 0x5452;
 
     // DE91: LSRA 
     cpu.m_a >>= 1;
@@ -44702,35 +44739,35 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_DE9D:
     // DE9D: BRA $DEBF
-    // TODO: External jump to 0xDEBF - not implemented
+    goto label_DEBF;
 
     label_DE9F:
     // DE9F: BRA $DEC1
-    // TODO: External jump to 0xDEC1 - not implemented
+    goto label_DEC1;
 
     label_DEA1:
     // DEA1: BRA $DEC3
-    // TODO: External jump to 0xDEC3 - not implemented
+    goto label_DEC3;
 
     label_DEA3:
     // DEA3: BRA $DEC5
-    // TODO: External jump to 0xDEC5 - not implemented
+    goto label_DEC5;
 
     label_DEA5:
     // DEA5: BRA $DEC7
-    // TODO: External jump to 0xDEC7 - not implemented
+    goto label_DEC7;
 
     label_DEA7:
     // DEA7: BRA $DEC9
-    // TODO: External jump to 0xDEC9 - not implemented
+    goto label_DEC9;
 
     label_DEA9:
     // DEA9: BRA $DECB
-    // TODO: External jump to 0xDECB - not implemented
+    goto label_DECB;
 
     label_DEAB:
     // DEAB: BRA $DECD
-    // TODO: External jump to 0xDECD - not implemented
+    goto label_DECD;
 
     // DEAD: BRA $DEE0
     goto label_DEE0;
@@ -44768,36 +44805,80 @@ void global_routine_impl(CPU6809& cpu) {
     // DEBE: BRA $DEE0
     goto label_DEE0;
 
+    label_DEBF:
+    // DEBF: BRA $DEE1
+    goto label_DEE1;
+
     // DEC0: BRA $DEE2
     goto label_DEE2;
+
+    label_DEC1:
+    // DEC1: BRA $DEE3
+    goto label_DEE3;
 
     // DEC2: BRA $DEE4
     goto label_DEE4;
 
+    label_DEC3:
+    // DEC3: BRA $DEE5
+    goto label_DEE5;
+
     // DEC4: BRA $DEE6
     goto label_DEE6;
 
+    label_DEC5:
+    // DEC5: BRA $DEE7
+    goto label_DEE7;
+
     // DEC6: BRA $DEE8
     goto label_DEE8;
+
+    label_DEC7:
+    // DEC7: BRA $DEE9
+    goto label_DEE9;
 
     label_DEC8:
     // DEC8: BRA $DEEA
     goto label_DEEA;
 
+    label_DEC9:
+    // DEC9: BRA $DEEB
+    goto label_DEEB;
+
     // DECA: BRA $DEEC
     goto label_DEEC;
+
+    label_DECB:
+    // DECB: BRA $DEED
+    goto label_DEED;
 
     // DECC: BRA $DEEE
     goto label_DEEE;
 
+    label_DECD:
+    // DECD: BRA $DEEF
+    goto label_DEEF;
+
     // DECE: BRA $DEF0
     goto label_DEF0;
+
+    // DECF: BRA $DEF1
+    goto label_DEF1;
 
     // DED0: BRA $DF05
     goto label_DF05;
 
+    // DED1: LEAU [,--Y]
+    // TODO: Complex indexed addressing: [,--Y]
+
     // DED2: SUBD $4558
     cpu.m_d -= 0x4558;
+
+    // DED3: LSRA 
+    cpu.m_a >>= 1;
+
+    // DED4: ASLB 
+    cpu.m_b <<= 1;
 
     // DED5: ASLA 
     cpu.m_a <<= 1;
@@ -44821,26 +44902,12 @@ void global_routine_impl(CPU6809& cpu) {
     // DEDC: CLRA 
     cpu.m_a = 0;
 
-    label_DEDC:
-    // DEDC: CLRA 
-    cpu.m_a = 0;
-
-    // DEDD: XNCB 
-    // TODO: Convert XNCB 
-
     // DEDD: XNCB 
     // TODO: Convert XNCB 
 
     label_DEDE:
     // DEDE: LSRB 
     cpu.m_b >>= 1;
-
-    label_DEDE:
-    // DEDE: LSRB 
-    cpu.m_b >>= 1;
-
-    // DEDF: BRA $DF01
-    goto label_DF01;
 
     // DEDF: BRA $DF01
     goto label_DF01;
@@ -44849,16 +44916,15 @@ void global_routine_impl(CPU6809& cpu) {
     // DEE0: BRA $DF02
     goto label_DF02;
 
+    label_DEE1:
     // DEE1: BRA $DF03
     goto label_DF03;
-
-    // DEE1: JMP $dee0
-    goto label_DEE0;
 
     label_DEE2:
     // DEE2: BRA $DF04
     // TODO: External jump to 0xDF04 - not implemented
 
+    label_DEE3:
     // DEE3: BRA $DF05
     goto label_DF05;
 
@@ -44866,6 +44932,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEE4: BRA $DF06
     goto label_DF06;
 
+    label_DEE5:
     // DEE5: BRA $DF07
     goto label_DF07;
 
@@ -44873,6 +44940,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEE6: BRA $DF08
     goto label_DF08;
 
+    label_DEE7:
     // DEE7: BRA $DF09
     goto label_DF09;
 
@@ -44880,6 +44948,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEE8: BRA $DF0A
     // TODO: External jump to 0xDF0A - not implemented
 
+    label_DEE9:
     // DEE9: BRA $DF0B
     goto label_DF0B;
 
@@ -44895,6 +44964,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEEC: BRA $DF0E
     goto label_DF0E;
 
+    label_DEED:
     // DEED: BRA $DF0F
     // TODO: External jump to 0xDF0F - not implemented
 
@@ -44902,6 +44972,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEEE: BRA $DF22
     goto label_DF22;
 
+    label_DEEF:
     // DEEF: LEAS -$B,Y
     // TODO: Fix comma operator: LEAS -$B,Y
 
@@ -44909,6 +44980,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DEF0: PULS B,DP,Y
     // TODO: Convert PULS B,DP,Y
 
+    label_DEF1:
     // DEF1: BGE $DF23
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xDF23;
 
@@ -44924,17 +44996,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DEF7: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    // DEF7: COMB 
-    cpu.m_b = ~cpu.m_b;
-
     // DEF8: LSRB 
     cpu.m_b >>= 1;
-
-    // DEF8: LSRB 
-    cpu.m_b >>= 1;
-
-    // DEF9: XNCB 
-    // TODO: Convert XNCB 
 
     // DEF9: XNCB 
     // TODO: Convert XNCB 
@@ -44942,17 +45005,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DEFA: CLRA 
     cpu.m_a = 0;
 
-    // DEFA: CLRA 
-    cpu.m_a = 0;
-
     // DEFB: ROLB 
     cpu.m_b = (cpu.m_b << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DEFB: ROLB 
-    cpu.m_b = (cpu.m_b << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DEFC: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // DEFC: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
@@ -44960,31 +45014,14 @@ void global_routine_impl(CPU6809& cpu) {
     // DEFD: XCLRA 
     // TODO: Convert XCLRA 
 
-    // DEFD: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // DEFE: ASRA 
-    // TODO: Convert ASRA 
-
     // DEFE: ASRA 
     // TODO: Convert ASRA 
 
     // DEFF: BRA $DF42
     goto label_DF42;
 
-    // DEFF: BRA $DF42
-    goto label_DF42;
-
     label_DF01:
     // DF01: INCA 
-    cpu.m_a++;
-
-    label_DF01:
-    // DF01: INCA 
-    cpu.m_a++;
-
-    label_DF02:
-    // DF02: INCA 
     cpu.m_a++;
 
     label_DF02:
@@ -44995,21 +45032,9 @@ void global_routine_impl(CPU6809& cpu) {
     // DF03: BRA $DF59
     goto label_DF59;
 
-    label_DF03:
-    // DF03: BRA $DF59
-    goto label_DF59;
-
     label_DF05:
     // DF05: CLRA 
     cpu.m_a = 0;
-
-    label_DF05:
-    // DF05: CLRA 
-    cpu.m_a = 0;
-
-    label_DF06:
-    // DF06: ASRB 
-    // TODO: Convert ASRB 
 
     label_DF06:
     // DF06: ASRB 
@@ -45019,21 +45044,9 @@ void global_routine_impl(CPU6809& cpu) {
     // DF07: LSRA 
     cpu.m_a >>= 1;
 
-    label_DF07:
-    // DF07: LSRA 
-    cpu.m_a >>= 1;
-
     label_DF08:
     // DF08: XNCB 
     // TODO: Convert XNCB 
-
-    label_DF08:
-    // DF08: XNCB 
-    // TODO: Convert XNCB 
-
-    label_DF09:
-    // DF09: BRA $DF5F
-    goto label_DF5F;
 
     label_DF09:
     // DF09: BRA $DF5F
@@ -45043,21 +45056,9 @@ void global_routine_impl(CPU6809& cpu) {
     // DF0B: CLRA 
     cpu.m_a = 0;
 
-    label_DF0B:
-    // DF0B: CLRA 
-    cpu.m_a = 0;
-
     label_DF0C:
     // DF0C: NEGB 
     cpu.m_b = -cpu.m_b;
-
-    label_DF0C:
-    // DF0C: NEGB 
-    cpu.m_b = -cpu.m_b;
-
-    label_DF0D:
-    // DF0D: COMB 
-    cpu.m_b = ~cpu.m_b;
 
     label_DF0D:
     // DF0D: COMB 
@@ -45067,30 +45068,14 @@ void global_routine_impl(CPU6809& cpu) {
     // DF0E: BRA $DF30
     goto label_DF30;
 
-    label_DF0E:
-    // DF0E: BRA $DF30
-    goto label_DF30;
-
-    // DF10: BRA $DF47
-    goto label_DF47;
-
     // DF10: BRA $DF47
     goto label_DF47;
 
     // DF12: LEAX $C,Y
     // TODO: Fix comma operator: LEAX $C,Y
 
-    // DF12: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
-
     // DF14: LEAX -$10,Y
     // TODO: Fix comma operator: LEAX -$10,Y
-
-    // DF14: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
-
-    // DF16: SUBA $5345
-    cpu.m_a -= 0x5345;
 
     // DF16: SUBA $5345
     cpu.m_a -= 0x5345;
@@ -45102,20 +45087,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF19: INCA 
     cpu.m_a++;
 
-    // DF19: JMP $df18
-    goto label_DF18;
-
-    // DF19: INCA 
-    cpu.m_a++;
-
     // DF1A: LSRA 
     cpu.m_a >>= 1;
-
-    // DF1A: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF1B: COMA 
-    cpu.m_a = ~cpu.m_a;
 
     // DF1B: COMA 
     cpu.m_a = ~cpu.m_a;
@@ -45123,23 +45096,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DF1C: LSRB 
     cpu.m_b >>= 1;
 
-    // DF1C: LSRB 
-    cpu.m_b >>= 1;
-
-    // DF1D: BRA $DF60
-    goto label_DF60;
-
     // DF1D: BRA $DF60
     goto label_DF60;
 
     // DF1F: BRA $DF65
     goto label_DF65;
-
-    // DF1F: BRA $DF65
-    goto label_DF65;
-
-    // DF21: LSRA 
-    cpu.m_a >>= 1;
 
     // DF21: LSRA 
     cpu.m_a >>= 1;
@@ -45148,30 +45109,14 @@ void global_routine_impl(CPU6809& cpu) {
     // DF22: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    label_DF22:
-    // DF22: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DF23: LSRB 
-    cpu.m_b >>= 1;
-
     // DF23: LSRB 
     cpu.m_b >>= 1;
 
     // DF24: ASLA 
     cpu.m_a <<= 1;
 
-    // DF24: ASLA 
-    cpu.m_a <<= 1;
-
     // DF25: BRA $DF7A
     goto label_DF7A;
-
-    // DF25: BRA $DF7A
-    goto label_DF7A;
-
-    // DF27: LSRB 
-    cpu.m_b >>= 1;
 
     // DF27: LSRB 
     cpu.m_b >>= 1;
@@ -45180,18 +45125,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF28: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    label_DF28:
-    // DF28: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DF29: SBCB <$46
     // TODO: Convert SBCB <$46
-
-    // DF29: SBCB <$46
-    // TODO: Convert SBCB <$46
-
-    // DF2B: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // DF2B: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
@@ -45200,18 +45135,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF2C: XNCB 
     // TODO: Convert XNCB 
 
-    label_DF2C:
-    // DF2C: XNCB 
-    // TODO: Convert XNCB 
-
     // DF2D: LSRA 
     cpu.m_a >>= 1;
-
-    // DF2D: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF2E: BRA $DF7C
-    goto label_DF7C;
 
     // DF2E: BRA $DF7C
     goto label_DF7C;
@@ -45220,22 +45145,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF30: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    label_DF30:
-    // DF30: JMP $df30
-    goto label_DF30;
-
-    label_DF30:
-    // DF30: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DF31: COMB 
     cpu.m_b = ~cpu.m_b;
-
-    // DF31: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DF32: LSRA 
-    cpu.m_a >>= 1;
 
     // DF32: LSRA 
     cpu.m_a >>= 1;
@@ -45243,17 +45154,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF33: XNCB 
     // TODO: Convert XNCB 
 
-    // DF33: XNCB 
-    // TODO: Convert XNCB 
-
     // DF34: BRA $DF77
     goto label_DF77;
-
-    // DF34: BRA $DF77
-    goto label_DF77;
-
-    // DF36: LSRB 
-    cpu.m_b >>= 1;
 
     // DF36: LSRB 
     cpu.m_b >>= 1;
@@ -45261,17 +45163,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF37: BRA $DF7D
     goto label_DF7D;
 
-    // DF37: BRA $DF7D
-    goto label_DF7D;
-
     // DF39: LSRA 
     cpu.m_a >>= 1;
-
-    // DF39: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF3A: COMB 
-    cpu.m_b = ~cpu.m_b;
 
     // DF3A: COMB 
     cpu.m_b = ~cpu.m_b;
@@ -45279,22 +45172,10 @@ void global_routine_impl(CPU6809& cpu) {
     // DF3B: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // DF3B: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DF3C: XNCB 
-    // TODO: Convert XNCB 
-
     // DF3C: XNCB 
     // TODO: Convert XNCB 
 
     // DF3D: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF3D: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF3E: LSRA 
     cpu.m_a >>= 1;
 
     // DF3E: LSRA 
@@ -45303,18 +45184,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF3F: BRA $DF85
     goto label_DF85;
 
-    // DF3F: BRA $DF85
-    goto label_DF85;
-
     // DF41: LSRA 
     cpu.m_a >>= 1;
-
-    // DF41: LSRA 
-    cpu.m_a >>= 1;
-
-    label_DF42:
-    // DF42: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     label_DF42:
     // DF42: NEGA 
@@ -45323,17 +45194,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF43: LSRB 
     cpu.m_b >>= 1;
 
-    // DF43: LSRB 
-    cpu.m_b >>= 1;
-
     // DF44: ASLA 
     cpu.m_a <<= 1;
-
-    // DF44: ASLA 
-    cpu.m_a <<= 1;
-
-    // DF45: BRA $DF9A
-    goto label_DF9A;
 
     // DF45: BRA $DF9A
     goto label_DF9A;
@@ -45342,22 +45204,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF47: LSRB 
     cpu.m_b >>= 1;
 
-    label_DF47:
-    // DF47: JMP $df47
-    goto label_DF47;
-
-    label_DF47:
-    // DF47: LSRB 
-    cpu.m_b >>= 1;
-
     // DF48: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // DF48: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DF49: SBCB <$43
-    // TODO: Convert SBCB <$43
 
     // DF49: SBCB <$43
     // TODO: Convert SBCB <$43
@@ -45365,17 +45213,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF4B: CLRA 
     cpu.m_a = 0;
 
-    // DF4B: CLRA 
-    cpu.m_a = 0;
-
     // DF4C: LSRB 
     cpu.m_b >>= 1;
-
-    // DF4C: LSRB 
-    cpu.m_b >>= 1;
-
-    // DF4D: XCLRA 
-    // TODO: Convert XCLRA 
 
     // DF4D: XCLRA 
     // TODO: Convert XCLRA 
@@ -45383,17 +45222,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF4E: LSRB 
     cpu.m_b >>= 1;
 
-    // DF4E: LSRB 
-    cpu.m_b >>= 1;
-
     // DF4F: LSRA 
     cpu.m_a >>= 1;
-
-    // DF4F: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF50: CLRA 
-    cpu.m_a = 0;
 
     // DF50: CLRA 
     cpu.m_a = 0;
@@ -45401,17 +45231,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF51: ASRB 
     // TODO: Convert ASRB 
 
-    // DF51: ASRB 
-    // TODO: Convert ASRB 
-
     // DF52: LDU #$4541
     cpu.m_u = 0x4541;
-
-    // DF52: LDU #$4541
-    cpu.m_u = 0x4541;
-
-    // DF55: COMB 
-    cpu.m_b = ~cpu.m_b;
 
     // DF55: COMB 
     cpu.m_b = ~cpu.m_b;
@@ -45419,17 +45240,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DF56: ADCB <$4D
     // TODO: Convert ADCB <$4D
 
-    // DF56: ADCB <$4D
-    // TODO: Convert ADCB <$4D
-
     // DF58: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF58: LSRA 
-    cpu.m_a >>= 1;
-
-    label_DF59:
-    // DF59: LSRA 
     cpu.m_a >>= 1;
 
     label_DF59:
@@ -45439,17 +45250,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF5A: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // DF5A: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // DF5B: LSRB 
     cpu.m_b >>= 1;
-
-    // DF5B: LSRB 
-    cpu.m_b >>= 1;
-
-    // DF5C: XHCF 
-    // TODO: Convert XHCF 
 
     // DF5C: XHCF 
     // TODO: Convert XHCF 
@@ -45457,18 +45259,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF5D: ASLA 
     cpu.m_a <<= 1;
 
-    // DF5D: ASLA 
-    cpu.m_a <<= 1;
-
     // DF5E: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // DF5E: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    label_DF5F:
-    // DF5F: XNCB 
-    // TODO: Convert XNCB 
 
     label_DF5F:
     // DF5F: XNCB 
@@ -45478,24 +45270,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DF60: ANDB #$57
     cpu.m_b &= 0x57;
 
-    label_DF60:
-    // DF60: ANDB #$57
-    cpu.m_b &= 0x57;
-
-    // DF62: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DF62: NEGA 
     cpu.m_a = -cpu.m_a;
 
     // DF63: RORB 
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
-    // DF63: RORB 
-    cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
-    // DF64: LSRA 
-    cpu.m_a >>= 1;
 
     // DF64: LSRA 
     cpu.m_a >>= 1;
@@ -45504,18 +45283,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF65: BRA $DF18
     goto label_DF18;
 
-    label_DF65:
-    // DF65: BRA $DF18
-    goto label_DF18;
-
     // DF67: ASRB 
     // TODO: Convert ASRB 
-
-    // DF67: ASRB 
-    // TODO: Convert ASRB 
-
-    // DF68: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // DF68: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -45523,17 +45292,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF69: RORB 
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
-    // DF69: RORB 
-    cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
     // DF6A: LSRA 
     cpu.m_a >>= 1;
-
-    // DF6A: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF6B: BRA $DF20
-    // TODO: External jump to 0xDF20 - not implemented
 
     // DF6B: BRA $DF20
     // TODO: External jump to 0xDF20 - not implemented
@@ -45541,17 +45301,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF6D: ASRB 
     // TODO: Convert ASRB 
 
-    // DF6D: ASRB 
-    // TODO: Convert ASRB 
-
     // DF6E: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // DF6E: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DF6F: RORB 
-    cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // DF6F: RORB 
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
@@ -45559,17 +45310,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF70: LSRA 
     cpu.m_a >>= 1;
 
-    // DF70: LSRA 
-    cpu.m_a >>= 1;
-
     // DF71: BRA $DF28
     goto label_DF28;
-
-    // DF71: BRA $DF28
-    goto label_DF28;
-
-    // DF73: XNCA 
-    // TODO: Convert XNCA 
 
     // DF73: XNCA 
     // TODO: Convert XNCA 
@@ -45577,17 +45319,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF74: CLRA 
     cpu.m_a = 0;
 
-    // DF74: CLRA 
-    cpu.m_a = 0;
-
     // DF75: XCLRA 
     // TODO: Convert XCLRA 
-
-    // DF75: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // DF76: LSRB 
-    cpu.m_b >>= 1;
 
     // DF76: LSRB 
     cpu.m_b >>= 1;
@@ -45596,19 +45329,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF77: ADDD <$4E
     cpu.m_d += 0x4E;
 
-    label_DF77:
-    // DF77: ADDD <$4E
-    cpu.m_d += 0x4E;
-
     // DF79: CLRA 
     cpu.m_a = 0;
-
-    // DF79: CLRA 
-    cpu.m_a = 0;
-
-    label_DF7A:
-    // DF7A: BRA $DFBE
-    goto label_DFBE;
 
     label_DF7A:
     // DF7A: BRA $DFBE
@@ -45618,14 +45340,6 @@ void global_routine_impl(CPU6809& cpu) {
     // DF7C: CLRA 
     cpu.m_a = 0;
 
-    label_DF7C:
-    // DF7C: CLRA 
-    cpu.m_a = 0;
-
-    label_DF7D:
-    // DF7D: XCLRA 
-    // TODO: Convert XCLRA 
-
     label_DF7D:
     // DF7D: XCLRA 
     // TODO: Convert XCLRA 
@@ -45633,23 +45347,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DF7E: LSRB 
     cpu.m_b >>= 1;
 
-    // DF7E: LSRB 
-    cpu.m_b >>= 1;
-
-    // DF7F: ADDD <$34
-    cpu.m_d += 0x34;
-
     // DF7F: ADDD <$34
     cpu.m_d += 0x34;
 
     // DF81: LEAX -$10,Y
     // TODO: Fix comma operator: LEAX -$10,Y
-
-    // DF81: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
-
-    // DF83: BGE $DFB5
-    // TODO: External jump to 0xDFB5 - not implemented
 
     // DF83: BGE $DFB5
     // TODO: External jump to 0xDFB5 - not implemented
@@ -45658,18 +45360,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF85: LEAX [$3830,W]
     // TODO: Complex indexed addressing: [$3830,W]
 
-    label_DF85:
-    // DF85: LEAX [$3830,W]
-    // TODO: Complex indexed addressing: [$3830,W]
-
     // DF89: LEAX $C,Y
     // TODO: Fix comma operator: LEAX $C,Y
-
-    // DF89: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
-
-    // DF8B: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
 
     // DF8B: LEAX -$10,Y
     // TODO: Fix comma operator: LEAX -$10,Y
@@ -45677,16 +45369,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DF8D: SUBA $4D45
     cpu.m_a -= 0x4D45;
 
-    // DF8D: SUBA $4D45
-    cpu.m_a -= 0x4D45;
-
     // DF90: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DF90: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DF91: COMB 
     cpu.m_b = ~cpu.m_b;
 
     // DF91: COMB 
@@ -45695,17 +45378,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF92: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // DF92: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DF93: ASRA 
     // TODO: Convert ASRA 
-
-    // DF93: ASRA 
-    // TODO: Convert ASRA 
-
-    // DF94: LSRA 
-    cpu.m_a >>= 1;
 
     // DF94: LSRA 
     cpu.m_a >>= 1;
@@ -45713,23 +45387,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DF95: BRA $DFDD
     goto label_DFDD;
 
-    // DF95: BRA $DFDD
-    goto label_DFDD;
-
-    // DF97: XNCB 
-    // TODO: Convert XNCB 
-
     // DF97: XNCB 
     // TODO: Convert XNCB 
 
     // DF98: CLRA 
     cpu.m_a = 0;
-
-    // DF98: CLRA 
-    cpu.m_a = 0;
-
-    // DF99: TSTA 
-    cpu.test_a();
 
     // DF99: TSTA 
     cpu.test_a();
@@ -45738,18 +45400,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF9A: BRA $DFEE
     goto label_DFEE;
 
-    label_DF9A:
-    // DF9A: BRA $DFEE
-    goto label_DFEE;
-
     // DF9C: LSRA 
     cpu.m_a >>= 1;
-
-    // DF9C: LSRA 
-    cpu.m_a >>= 1;
-
-    // DF9D: XNCA 
-    // TODO: Convert XNCA 
 
     // DF9D: XNCA 
     // TODO: Convert XNCA 
@@ -45757,17 +45409,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DF9E: LSRA 
     cpu.m_a >>= 1;
 
-    // DF9E: LSRA 
-    cpu.m_a >>= 1;
-
     // DF9F: INCA 
     cpu.m_a++;
-
-    // DF9F: INCA 
-    cpu.m_a++;
-
-    // DFA0: BRA $DFE5
-    goto label_DFE5;
 
     // DFA0: BRA $DFE5
     goto label_DFE5;
@@ -45775,16 +45418,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DFA2: CLRA 
     cpu.m_a = 0;
 
-    // DFA2: CLRA 
-    cpu.m_a = 0;
-
     // DFA3: TSTA 
-    cpu.test_a();
-
-    // DFA3: TSTA 
-    cpu.test_a();
-
-    // DFA4: TSTA 
     cpu.test_a();
 
     // DFA4: TSTA 
@@ -45793,17 +45427,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFA5: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // DFA5: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DFA6: XCLRA 
     // TODO: Convert XCLRA 
-
-    // DFA6: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // DFA7: LSRA 
-    cpu.m_a >>= 1;
 
     // DFA7: LSRA 
     cpu.m_a >>= 1;
@@ -45811,17 +45436,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFA8: BRA $DFFA
     goto label_DFFA;
 
-    // DFA8: BRA $DFFA
-    goto label_DFFA;
-
     // DFAA: CLRA 
     cpu.m_a = 0;
-
-    // DFAA: CLRA 
-    cpu.m_a = 0;
-
-    // DFAB: COMB 
-    cpu.m_b = ~cpu.m_b;
 
     // DFAB: COMB 
     cpu.m_b = ~cpu.m_b;
@@ -45829,17 +45445,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFAC: ANDB <$59
     cpu.m_b &= 0x59;
 
-    // DFAC: ANDB <$59
-    cpu.m_b &= 0x59;
-
     // DFAE: CLRA 
     cpu.m_a = 0;
-
-    // DFAE: CLRA 
-    cpu.m_a = 0;
-
-    // DFAF: LSRB 
-    cpu.m_b >>= 1;
 
     // DFAF: LSRB 
     cpu.m_b >>= 1;
@@ -45847,17 +45454,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFB0: BRA $DFF3
     goto label_DFF3;
 
-    // DFB0: BRA $DFF3
-    goto label_DFF3;
-
     // DFB2: XNCB 
     // TODO: Convert XNCB 
-
-    // DFB2: XNCB 
-    // TODO: Convert XNCB 
-
-    // DFB3: LSRA 
-    cpu.m_a >>= 1;
 
     // DFB3: LSRA 
     cpu.m_a >>= 1;
@@ -45865,17 +45463,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFB4: BRA $DFF7
     goto label_DFF7;
 
-    // DFB4: BRA $DFF7
-    goto label_DFF7;
-
     // DFB6: BRA $E00C
     goto label_E00C;
-
-    // DFB6: BRA $E00C
-    goto label_E00C;
-
-    // DFB8: XNCB 
-    // TODO: Convert XNCB 
 
     // DFB8: XNCB 
     // TODO: Convert XNCB 
@@ -45883,23 +45472,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DFB9: LSRB 
     cpu.m_b >>= 1;
 
-    // DFB9: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFBA: LSRA 
-    cpu.m_a >>= 1;
-
     // DFBA: LSRA 
     cpu.m_a >>= 1;
 
     // DFBB: BRA $E00F
     goto label_E00F;
-
-    // DFBB: BRA $E00F
-    goto label_E00F;
-
-    // DFBD: LSRA 
-    cpu.m_a >>= 1;
 
     // DFBD: LSRA 
     cpu.m_a >>= 1;
@@ -45908,18 +45485,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFBE: XNCA 
     // TODO: Convert XNCA 
 
-    label_DFBE:
-    // DFBE: XNCA 
-    // TODO: Convert XNCA 
-
     // DFBF: LSRA 
     cpu.m_a >>= 1;
-
-    // DFBF: LSRA 
-    cpu.m_a >>= 1;
-
-    // DFC0: INCA 
-    cpu.m_a++;
 
     // DFC0: INCA 
     cpu.m_a++;
@@ -45927,17 +45494,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFC1: BRA $E013
     goto label_E013;
 
-    // DFC1: BRA $E013
-    goto label_E013;
-
     // DFC3: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFC3: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFC4: INCA 
-    cpu.m_a++;
 
     // DFC4: INCA 
     cpu.m_a++;
@@ -45945,17 +45503,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFC5: CLRA 
     cpu.m_a = 0;
 
-    // DFC5: CLRA 
-    cpu.m_a = 0;
-
     // DFC6: ANDB <$54
     cpu.m_b &= 0x54;
-
-    // DFC6: ANDB <$54
-    cpu.m_b &= 0x54;
-
-    // DFC8: ASLA 
-    cpu.m_a <<= 1;
 
     // DFC8: ASLA 
     cpu.m_a <<= 1;
@@ -45963,17 +45512,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFC9: LSRA 
     cpu.m_a >>= 1;
 
-    // DFC9: LSRA 
-    cpu.m_a >>= 1;
-
     // DFCA: BRA $E012
     goto label_E012;
-
-    // DFCA: BRA $E012
-    goto label_E012;
-
-    // DFCC: CLRA 
-    cpu.m_a = 0;
 
     // DFCC: CLRA 
     cpu.m_a = 0;
@@ -45981,17 +45521,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFCD: XNCB 
     // TODO: Convert XNCB 
 
-    // DFCD: XNCB 
-    // TODO: Convert XNCB 
-
     // DFCE: COMA 
     cpu.m_a = ~cpu.m_a;
-
-    // DFCE: COMA 
-    cpu.m_a = ~cpu.m_a;
-
-    // DFCF: LSRA 
-    cpu.m_a >>= 1;
 
     // DFCF: LSRA 
     cpu.m_a >>= 1;
@@ -45999,17 +45530,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFD0: BRA $E01B
     // TODO: External jump to 0xE01B - not implemented
 
-    // DFD0: BRA $E01B
-    // TODO: External jump to 0xE01B - not implemented
-
     // DFD2: COMB 
     cpu.m_b = ~cpu.m_b;
-
-    // DFD2: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DFD3: BRA $E02C
-    goto label_E02C;
 
     // DFD3: BRA $E02C
     goto label_E02C;
@@ -46017,17 +45539,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFD5: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // DFD5: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // DFD6: LSRB 
     cpu.m_b >>= 1;
-
-    // DFD6: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFD7: ASLA 
-    cpu.m_a <<= 1;
 
     // DFD7: ASLA 
     cpu.m_a <<= 1;
@@ -46035,17 +45548,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFD8: BRA $E033
     // TODO: External jump to 0xE033 - not implemented
 
-    // DFD8: BRA $E033
-    // TODO: External jump to 0xE033 - not implemented
-
     // DFDA: CLRA 
     cpu.m_a = 0;
-
-    // DFDA: CLRA 
-    cpu.m_a = 0;
-
-    // DFDB: BITB <$53
-    // TODO: Convert BITB <$53
 
     // DFDB: BITB <$53
     // TODO: Convert BITB <$53
@@ -46054,27 +45558,7 @@ void global_routine_impl(CPU6809& cpu) {
     // DFDD: ASLA 
     cpu.m_a <<= 1;
 
-    label_DFDD:
-    // DFDD: ASLA 
-    cpu.m_a <<= 1;
-
-    label_DFDD:
-    // DFDD: ASLA 
-    cpu.m_a <<= 1;
-
     // DFDE: CLRA 
-    cpu.m_a = 0;
-
-    // DFDE: CLRA 
-    cpu.m_a = 0;
-
-    // DFDE: CLRA 
-    cpu.m_a = 0;
-
-    // DFDF: CLRA 
-    cpu.m_a = 0;
-
-    // DFDF: CLRA 
     cpu.m_a = 0;
 
     // DFDF: CLRA 
@@ -46083,35 +45567,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DFE0: LSRB 
     cpu.m_b >>= 1;
 
-    // DFE0: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFE0: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFE1: BRA $E03C
-    goto label_E03C;
-
-    // DFE1: BRA $E03C
-    goto label_E03C;
-
     // DFE1: BRA $E03C
     goto label_E03C;
 
     // DFE3: CLRA 
     cpu.m_a = 0;
-
-    // DFE3: CLRA 
-    cpu.m_a = 0;
-
-    // DFE3: CLRA 
-    cpu.m_a = 0;
-
-    // DFE4: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFE4: LSRB 
-    cpu.m_b >>= 1;
 
     // DFE4: LSRB 
     cpu.m_b >>= 1;
@@ -46120,32 +45580,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFE5: XNCB 
     // TODO: Convert XNCB 
 
-    label_DFE5:
-    // DFE5: XNCB 
-    // TODO: Convert XNCB 
-
-    label_DFE5:
-    // DFE5: JMP $dfe5
-    goto label_DFE5;
-
-    label_DFE5:
-    // DFE5: XNCB 
-    // TODO: Convert XNCB 
-
     // DFE6: BRA $E031
     goto label_E031;
-
-    // DFE6: BRA $E031
-    goto label_E031;
-
-    // DFE6: BRA $E031
-    goto label_E031;
-
-    // DFE8: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // DFE8: XCLRA 
-    // TODO: Convert XCLRA 
 
     // DFE8: XCLRA 
     // TODO: Convert XCLRA 
@@ -46153,44 +45589,14 @@ void global_routine_impl(CPU6809& cpu) {
     // DFE9: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // DFE9: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFE9: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFEA: LSRB 
-    cpu.m_b >>= 1;
-
-    // DFEA: LSRB 
-    cpu.m_b >>= 1;
-
     // DFEA: LSRB 
     cpu.m_b >>= 1;
 
     // DFEB: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // DFEB: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFEB: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // DFEC: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // DFEC: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DFEC: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DFED: INCA 
-    cpu.m_a++;
-
-    // DFED: INCA 
-    cpu.m_a++;
 
     // DFED: INCA 
     cpu.m_a++;
@@ -46199,37 +45605,11 @@ void global_routine_impl(CPU6809& cpu) {
     // DFEE: ADDD <$50
     cpu.m_d += 0x50;
 
-    label_DFEE:
-    // DFEE: ADDD <$50
-    cpu.m_d += 0x50;
-
-    label_DFEE:
-    // DFEE: ADDD <$50
-    cpu.m_d += 0x50;
-
-    // DFF0: XNCB 
-    // TODO: Convert XNCB 
-
-    // DFF0: XNCB 
-    // TODO: Convert XNCB 
-
     // DFF0: XNCB 
     // TODO: Convert XNCB 
 
     // DFF1: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFF1: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFF1: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // DFF2: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // DFF2: XCLRA 
-    // TODO: Convert XCLRA 
 
     // DFF2: XCLRA 
     // TODO: Convert XCLRA 
@@ -46238,40 +45618,10 @@ void global_routine_impl(CPU6809& cpu) {
     // DFF3: COMA 
     cpu.m_a = ~cpu.m_a;
 
-    label_DFF3:
-    // DFF3: COMA 
-    cpu.m_a = ~cpu.m_a;
-
-    label_DFF3:
-    // DFF3: JMP $dff3
-    goto label_DFF3;
-
-    label_DFF3:
-    // DFF3: COMA 
-    cpu.m_a = ~cpu.m_a;
-
-    // DFF4: LSRA 
-    cpu.m_a >>= 1;
-
-    // DFF4: LSRA 
-    cpu.m_a >>= 1;
-
     // DFF4: LSRA 
     cpu.m_a >>= 1;
 
     // DFF5: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DFF5: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DFF5: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DFF6: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // DFF6: COMB 
     cpu.m_b = ~cpu.m_b;
 
     // DFF6: COMB 
@@ -46281,34 +45631,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFF7: BRA $E045
     goto label_E045;
 
-    label_DFF7:
-    // DFF7: BRA $E045
-    goto label_E045;
-
-    label_DFF7:
-    // DFF7: BRA $E045
-    goto label_E045;
-
     // DFF9: LSRA 
     cpu.m_a >>= 1;
-
-    // DFF9: LSRA 
-    cpu.m_a >>= 1;
-
-    // DFF9: LSRA 
-    cpu.m_a >>= 1;
-
-    label_DFFA:
-    // DFFA: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    label_DFFA:
-    // DFFA: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    label_DFFA:
-    // DFFA: JMP $dffa
-    goto label_DFFA;
 
     label_DFFA:
     // DFFA: ROLA 
@@ -46317,26 +45641,8 @@ void global_routine_impl(CPU6809& cpu) {
     // DFFB: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // DFFB: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // DFFB: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // DFFC: BEQ $E051
     // TODO: External jump to 0xE051 - not implemented
-
-    // DFFC: BEQ $E051
-    // TODO: External jump to 0xE051 - not implemented
-
-    // DFFC: BEQ $E051
-    // TODO: External jump to 0xE051 - not implemented
-
-    // DFFE: BRA $E052
-    goto label_E052;
-
-    // DFFE: BRA $E052
-    goto label_E052;
 
     // DFFE: BRA $E052
     goto label_E052;
@@ -46345,28 +45651,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E000: LSRA 
     cpu.m_a >>= 1;
 
-    label_E000:
-    // E000: LSRA 
-    cpu.m_a >>= 1;
-
-    label_E000:
-    // E000: LSRA 
-    cpu.m_a >>= 1;
-
     // E001: XNCA 
     // TODO: Convert XNCA 
-
-    // E001: XNCA 
-    // TODO: Convert XNCA 
-
-    // E001: XNCA 
-    // TODO: Convert XNCA 
-
-    // E002: LSRA 
-    cpu.m_a >>= 1;
-
-    // E002: LSRA 
-    cpu.m_a >>= 1;
 
     // E002: LSRA 
     cpu.m_a >>= 1;
@@ -46374,26 +45660,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E003: INCA 
     cpu.m_a++;
 
-    // E003: INCA 
-    cpu.m_a++;
-
-    // E003: INCA 
-    cpu.m_a++;
-
     // E004: BRA $E04C
     goto label_E04C;
-
-    // E004: BRA $E04C
-    goto label_E04C;
-
-    // E004: BRA $E04C
-    goto label_E04C;
-
-    // E006: CLRA 
-    cpu.m_a = 0;
-
-    // E006: CLRA 
-    cpu.m_a = 0;
 
     // E006: CLRA 
     cpu.m_a = 0;
@@ -46401,35 +45669,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E007: XNCB 
     // TODO: Convert XNCB 
 
-    // E007: XNCB 
-    // TODO: Convert XNCB 
-
-    // E007: XNCB 
-    // TODO: Convert XNCB 
-
-    // E008: COMA 
-    cpu.m_a = ~cpu.m_a;
-
-    // E008: COMA 
-    cpu.m_a = ~cpu.m_a;
-
     // E008: COMA 
     cpu.m_a = ~cpu.m_a;
 
     // E009: BITB #$50
     // TODO: Convert BITB #$50
-
-    // E009: BITB #$50
-    // TODO: Convert BITB #$50
-
-    // E009: BITB #$50
-    // TODO: Convert BITB #$50
-
-    // E00B: CLRA 
-    cpu.m_a = 0;
-
-    // E00B: CLRA 
-    cpu.m_a = 0;
 
     // E00B: CLRA 
     cpu.m_a = 0;
@@ -46438,28 +45682,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E00C: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    label_E00C:
-    // E00C: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    label_E00C:
-    // E00C: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E00D: XCLRA 
     // TODO: Convert XCLRA 
-
-    // E00D: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E00D: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E00E: LSRB 
-    cpu.m_b >>= 1;
-
-    // E00E: LSRB 
-    cpu.m_b >>= 1;
 
     // E00E: LSRB 
     cpu.m_b >>= 1;
@@ -46468,34 +45692,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E00F: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    label_E00F:
-    // E00F: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    label_E00F:
-    // E00F: JMP $e00f
-    goto label_E00F;
-
-    label_E00F:
-    // E00F: COMB 
-    cpu.m_b = ~cpu.m_b;
-
     // E010: BRA $E060
     goto label_E060;
-
-    // E010: BRA $E060
-    goto label_E060;
-
-    // E010: BRA $E060
-    goto label_E060;
-
-    label_E012:
-    // E012: LSRA 
-    cpu.m_a >>= 1;
-
-    label_E012:
-    // E012: LSRA 
-    cpu.m_a >>= 1;
 
     label_E012:
     // E012: LSRA 
@@ -46505,28 +45703,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E013: ASLB 
     cpu.m_b <<= 1;
 
-    label_E013:
-    // E013: ASLB 
-    cpu.m_b <<= 1;
-
-    label_E013:
-    // E013: ASLB 
-    cpu.m_b <<= 1;
-
     // E014: LSRB 
     cpu.m_b >>= 1;
-
-    // E014: LSRB 
-    cpu.m_b >>= 1;
-
-    // E014: LSRB 
-    cpu.m_b >>= 1;
-
-    // E015: BRA $E06B
-    goto label_E06B;
-
-    // E015: BRA $E06B
-    goto label_E06B;
 
     // E015: BRA $E06B
     goto label_E06B;
@@ -46534,26 +45712,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E017: CLRA 
     cpu.m_a = 0;
 
-    // E017: CLRA 
-    cpu.m_a = 0;
-
-    // E017: CLRA 
-    cpu.m_a = 0;
-
     // E018: ASRB 
     // TODO: Convert ASRB 
-
-    // E018: ASRB 
-    // TODO: Convert ASRB 
-
-    // E018: ASRB 
-    // TODO: Convert ASRB 
-
-    // E019: LSRA 
-    cpu.m_a >>= 1;
-
-    // E019: LSRA 
-    cpu.m_a >>= 1;
 
     // E019: LSRA 
     cpu.m_a >>= 1;
@@ -46561,26 +45721,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E01A: SBCB <$54
     // TODO: Convert SBCB <$54
 
-    // E01A: SBCB <$54
-    // TODO: Convert SBCB <$54
-
-    // E01A: SBCB <$54
-    // TODO: Convert SBCB <$54
-
     // E01C: CLRA 
     cpu.m_a = 0;
-
-    // E01C: CLRA 
-    cpu.m_a = 0;
-
-    // E01C: CLRA 
-    cpu.m_a = 0;
-
-    // E01D: ASRB 
-    // TODO: Convert ASRB 
-
-    // E01D: ASRB 
-    // TODO: Convert ASRB 
 
     // E01D: ASRB 
     // TODO: Convert ASRB 
@@ -46588,26 +45730,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E01E: LSRA 
     cpu.m_a >>= 1;
 
-    // E01E: LSRA 
-    cpu.m_a >>= 1;
-
-    // E01E: LSRA 
-    cpu.m_a >>= 1;
-
     // E01F: XNCB 
     // TODO: Convert XNCB 
-
-    // E01F: XNCB 
-    // TODO: Convert XNCB 
-
-    // E01F: XNCB 
-    // TODO: Convert XNCB 
-
-    // E020: ADDD <$43
-    cpu.m_d += 0x43;
-
-    // E020: ADDD <$43
-    cpu.m_d += 0x43;
 
     // E020: ADDD <$43
     cpu.m_d += 0x43;
@@ -46615,26 +45739,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E022: INCA 
     cpu.m_a++;
 
-    // E022: INCA 
-    cpu.m_a++;
-
-    // E022: INCA 
-    cpu.m_a++;
-
     // E023: LSRA 
     cpu.m_a >>= 1;
-
-    // E023: LSRA 
-    cpu.m_a >>= 1;
-
-    // E023: LSRA 
-    cpu.m_a >>= 1;
-
-    // E024: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // E024: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // E024: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -46642,25 +45748,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E025: XNCB 
     // TODO: Convert XNCB 
 
-    // E025: XNCB 
-    // TODO: Convert XNCB 
-
-    // E025: XNCB 
-    // TODO: Convert XNCB 
-
     // E026: LSRA 
-    cpu.m_a >>= 1;
-
-    // E026: LSRA 
-    cpu.m_a >>= 1;
-
-    // E026: LSRA 
-    cpu.m_a >>= 1;
-
-    // E027: LSRA 
-    cpu.m_a >>= 1;
-
-    // E027: LSRA 
     cpu.m_a >>= 1;
 
     // E027: LSRA 
@@ -46669,25 +45757,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E028: BRA $E06B
     goto label_E06B;
 
-    // E028: BRA $E06B
-    goto label_E06B;
-
-    // E028: BRA $E06B
-    goto label_E06B;
-
     // E02A: INCA 
-    cpu.m_a++;
-
-    // E02A: INCA 
-    cpu.m_a++;
-
-    // E02A: INCA 
-    cpu.m_a++;
-
-    // E02B: INCA 
-    cpu.m_a++;
-
-    // E02B: INCA 
     cpu.m_a++;
 
     // E02B: INCA 
@@ -46697,37 +45767,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E02C: BRA $E07A
     goto label_E07A;
 
-    label_E02C:
-    // E02C: BRA $E07A
-    goto label_E07A;
-
-    label_E02C:
-    // E02C: BRA $E07A
-    goto label_E07A;
-
-    // E02E: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // E02E: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E02E: NEGA 
     cpu.m_a = -cpu.m_a;
 
     // E02F: COMB 
     cpu.m_b = ~cpu.m_b;
-
-    // E02F: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E02F: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E030: LSRA 
-    cpu.m_a >>= 1;
-
-    // E030: LSRA 
-    cpu.m_a >>= 1;
 
     // E030: LSRA 
     cpu.m_a >>= 1;
@@ -46736,28 +45780,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E031: XNCB 
     // TODO: Convert XNCB 
 
-    label_E031:
-    // E031: XNCB 
-    // TODO: Convert XNCB 
-
-    label_E031:
-    // E031: XNCB 
-    // TODO: Convert XNCB 
-
     // E032: BRA $E088
     goto label_E088;
-
-    // E032: BRA $E088
-    goto label_E088;
-
-    // E032: BRA $E088
-    goto label_E088;
-
-    // E034: CLRA 
-    cpu.m_a = 0;
-
-    // E034: CLRA 
-    cpu.m_a = 0;
 
     // E034: CLRA 
     cpu.m_a = 0;
@@ -46765,44 +45789,14 @@ void global_routine_impl(CPU6809& cpu) {
     // E035: ASRB 
     // TODO: Convert ASRB 
 
-    // E035: ASRB 
-    // TODO: Convert ASRB 
-
-    // E035: ASRB 
-    // TODO: Convert ASRB 
-
-    // E036: LSRA 
-    cpu.m_a >>= 1;
-
-    // E036: LSRA 
-    cpu.m_a >>= 1;
-
     // E036: LSRA 
     cpu.m_a >>= 1;
 
     // E037: XNCB 
     // TODO: Convert XNCB 
 
-    // E037: XNCB 
-    // TODO: Convert XNCB 
-
-    // E037: XNCB 
-    // TODO: Convert XNCB 
-
     // E038: ADDD <$35
     cpu.m_d += 0x35;
-
-    // E038: ADDD <$35
-    cpu.m_d += 0x35;
-
-    // E038: ADDD <$35
-    cpu.m_d += 0x35;
-
-    // E03A: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
-
-    // E03A: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
 
     // E03A: LEAX $C,Y
     // TODO: Fix comma operator: LEAX $C,Y
@@ -46811,28 +45805,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E03C: LEAX -$10,Y
     // TODO: Fix comma operator: LEAX -$10,Y
 
-    label_E03C:
-    // E03C: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
-
-    label_E03C:
-    // E03C: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
-
     // E03E: LEAX $0,Y
     // TODO: Fix comma operator: LEAX $0,Y
-
-    // E03E: LEAX $0,Y
-    // TODO: Fix comma operator: LEAX $0,Y
-
-    // E03E: LEAX $0,Y
-    // TODO: Fix comma operator: LEAX $0,Y
-
-    // E040: RORA 
-    cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
-    // E040: RORA 
-    cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // E040: RORA 
     cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
@@ -46840,26 +45814,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E041: CLRA 
     cpu.m_a = 0;
 
-    // E041: CLRA 
-    cpu.m_a = 0;
-
-    // E041: CLRA 
-    cpu.m_a = 0;
-
     // E042: XNCB 
     // TODO: Convert XNCB 
-
-    // E042: XNCB 
-    // TODO: Convert XNCB 
-
-    // E042: XNCB 
-    // TODO: Convert XNCB 
-
-    // E043: BRA $E098
-    goto label_E098;
-
-    // E043: BRA $E098
-    goto label_E098;
 
     // E043: BRA $E098
     goto label_E098;
@@ -46868,27 +45824,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E045: ASLA 
     cpu.m_a <<= 1;
 
-    label_E045:
-    // E045: ASLA 
-    cpu.m_a <<= 1;
-
-    label_E045:
-    // E045: ASLA 
-    cpu.m_a <<= 1;
-
     // E046: CLRA 
-    cpu.m_a = 0;
-
-    // E046: CLRA 
-    cpu.m_a = 0;
-
-    // E046: CLRA 
-    cpu.m_a = 0;
-
-    // E047: CLRA 
-    cpu.m_a = 0;
-
-    // E047: CLRA 
     cpu.m_a = 0;
 
     // E047: CLRA 
@@ -46897,35 +45833,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E048: LSRB 
     cpu.m_b >>= 1;
 
-    // E048: LSRB 
-    cpu.m_b >>= 1;
-
-    // E048: LSRB 
-    cpu.m_b >>= 1;
-
-    // E049: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E049: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E049: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // E04A: XCLRA 
     // TODO: Convert XCLRA 
-
-    // E04A: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E04A: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E04B: ASRA 
-    // TODO: Convert ASRA 
-
-    // E04B: ASRA 
-    // TODO: Convert ASRA 
 
     // E04B: ASRA 
     // TODO: Convert ASRA 
@@ -46934,37 +45846,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E04C: BRA $E08F
     goto label_E08F;
 
-    label_E04C:
-    // E04C: BRA $E08F
-    goto label_E08F;
-
-    label_E04C:
-    // E04C: BRA $E08F
-    goto label_E08F;
-
-    // E04E: INCA 
-    cpu.m_a++;
-
-    // E04E: INCA 
-    cpu.m_a++;
-
     // E04E: INCA 
     cpu.m_a++;
 
     // E04F: INCA 
     cpu.m_a++;
-
-    // E04F: INCA 
-    cpu.m_a++;
-
-    // E04F: INCA 
-    cpu.m_a++;
-
-    // E050: BRA $E0A6
-    goto label_E0A6;
-
-    // E050: BRA $E0A6
-    goto label_E0A6;
 
     // E050: BRA $E0A6
     goto label_E0A6;
@@ -46973,18 +45859,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E052: CLRA 
     cpu.m_a = 0;
 
-    label_E052:
-    // E052: CLRA 
-    cpu.m_a = 0;
-
     // E053: ASRB 
     // TODO: Convert ASRB 
-
-    // E053: ASRB 
-    // TODO: Convert ASRB 
-
-    // E054: LSRA 
-    cpu.m_a >>= 1;
 
     // E054: LSRA 
     cpu.m_a >>= 1;
@@ -46992,17 +45868,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E055: XNCB 
     // TODO: Convert XNCB 
 
-    // E055: XNCB 
-    // TODO: Convert XNCB 
-
     // E056: ADDD <$45
     cpu.m_d += 0x45;
-
-    // E056: ADDD <$45
-    cpu.m_d += 0x45;
-
-    // E058: ASLB 
-    cpu.m_b <<= 1;
 
     // E058: ASLB 
     cpu.m_b <<= 1;
@@ -47010,17 +45877,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E059: ASLA 
     cpu.m_a <<= 1;
 
-    // E059: ASLA 
-    cpu.m_a <<= 1;
-
     // E05A: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // E05A: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // E05B: LSRB 
-    cpu.m_b >>= 1;
 
     // E05B: LSRB 
     cpu.m_b >>= 1;
@@ -47028,17 +45886,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E05C: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    // E05C: COMB 
-    cpu.m_b = ~cpu.m_b;
-
     // E05D: LSRB 
     cpu.m_b >>= 1;
-
-    // E05D: LSRB 
-    cpu.m_b >>= 1;
-
-    // E05E: BRA $E0B0
-    // TODO: External jump to 0xE0B0 - not implemented
 
     // E05E: BRA $E0B0
     // TODO: External jump to 0xE0B0 - not implemented
@@ -47047,18 +45896,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E060: CLRA 
     cpu.m_a = 0;
 
-    label_E060:
-    // E060: CLRA 
-    cpu.m_a = 0;
-
     // E061: XNCB 
     // TODO: Convert XNCB 
-
-    // E061: XNCB 
-    // TODO: Convert XNCB 
-
-    // E062: LSRB 
-    cpu.m_b >>= 1;
 
     // E062: LSRB 
     cpu.m_b >>= 1;
@@ -47066,17 +45905,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E063: BRA $E0A6
     goto label_E0A6;
 
-    // E063: BRA $E0A6
-    goto label_E0A6;
-
     // E065: ASLA 
     cpu.m_a <<= 1;
-
-    // E065: ASLA 
-    cpu.m_a <<= 1;
-
-    // E066: LSRA 
-    cpu.m_a >>= 1;
 
     // E066: LSRA 
     cpu.m_a >>= 1;
@@ -47084,17 +45914,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E067: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // E067: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E068: ANDB #$44
     cpu.m_b &= 0x44;
-
-    // E068: ANDB #$44
-    cpu.m_b &= 0x44;
-
-    // E06A: LSRA 
-    cpu.m_a >>= 1;
 
     // E06A: LSRA 
     cpu.m_a >>= 1;
@@ -47103,18 +45924,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E06B: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    label_E06B:
-    // E06B: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E06C: LSRB 
     cpu.m_b >>= 1;
-
-    // E06C: LSRB 
-    cpu.m_b >>= 1;
-
-    // E06D: ASLA 
-    cpu.m_a <<= 1;
 
     // E06D: ASLA 
     cpu.m_a <<= 1;
@@ -47122,17 +45933,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E06E: BRA $E0C3
     goto label_E0C3;
 
-    // E06E: BRA $E0C3
-    goto label_E0C3;
-
     // E070: LSRB 
     cpu.m_b >>= 1;
-
-    // E070: LSRB 
-    cpu.m_b >>= 1;
-
-    // E071: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // E071: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -47140,17 +45942,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E072: XNCB 
     // TODO: Convert XNCB 
 
-    // E072: XNCB 
-    // TODO: Convert XNCB 
-
     // E073: BRA $E0B9
     goto label_E0B9;
-
-    // E073: BRA $E0B9
-    goto label_E0B9;
-
-    // E075: LSRA 
-    cpu.m_a >>= 1;
 
     // E075: LSRA 
     cpu.m_a >>= 1;
@@ -47158,23 +45951,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E076: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    // E076: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E077: LSRB 
-    cpu.m_b >>= 1;
-
     // E077: LSRB 
     cpu.m_b >>= 1;
 
     // E078: XNCB 
     // TODO: Convert XNCB 
-
-    // E078: XNCB 
-    // TODO: Convert XNCB 
-
-    // E079: CLRA 
-    cpu.m_a = 0;
 
     // E079: CLRA 
     cpu.m_a = 0;
@@ -47183,18 +45964,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E07A: ROLB 
     cpu.m_b = (cpu.m_b << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    label_E07A:
-    // E07A: ROLB 
-    cpu.m_b = (cpu.m_b << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E07B: LSRA 
     cpu.m_a >>= 1;
-
-    // E07B: LSRA 
-    cpu.m_a >>= 1;
-
-    // E07C: ANDB #$45
-    cpu.m_b &= 0x45;
 
     // E07C: ANDB #$45
     cpu.m_b &= 0x45;
@@ -47202,17 +45973,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E07E: ASLB 
     cpu.m_b <<= 1;
 
-    // E07E: ASLB 
-    cpu.m_b <<= 1;
-
     // E07F: ASLA 
     cpu.m_a <<= 1;
-
-    // E07F: ASLA 
-    cpu.m_a <<= 1;
-
-    // E080: NEGA 
-    cpu.m_a = -cpu.m_a;
 
     // E080: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -47220,17 +45982,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E081: LSRB 
     cpu.m_b >>= 1;
 
-    // E081: LSRB 
-    cpu.m_b >>= 1;
-
     // E082: COMB 
     cpu.m_b = ~cpu.m_b;
-
-    // E082: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E083: LSRB 
-    cpu.m_b >>= 1;
 
     // E083: LSRB 
     cpu.m_b >>= 1;
@@ -47238,17 +45991,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E084: BRA $E0D6
     goto label_E0D6;
 
-    // E084: BRA $E0D6
-    goto label_E0D6;
-
     // E086: CLRA 
     cpu.m_a = 0;
-
-    // E086: CLRA 
-    cpu.m_a = 0;
-
-    // E087: XNCB 
-    // TODO: Convert XNCB 
 
     // E087: XNCB 
     // TODO: Convert XNCB 
@@ -47257,29 +46001,13 @@ void global_routine_impl(CPU6809& cpu) {
     // E088: LSRB 
     cpu.m_b >>= 1;
 
-    label_E088:
-    // E088: LSRB 
-    cpu.m_b >>= 1;
-
-    // E089: BRA $E0D8
-    goto label_E0D8;
-
     // E089: BRA $E0D8
     goto label_E0D8;
 
     // E08B: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // E08B: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E08C: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E08C: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E08D: COMB 
     cpu.m_b = ~cpu.m_b;
 
     // E08D: COMB 
@@ -47288,17 +46016,6 @@ void global_routine_impl(CPU6809& cpu) {
     // E08E: LSRA 
     cpu.m_a >>= 1;
 
-    // E08E: LSRA 
-    cpu.m_a >>= 1;
-
-    label_E08F:
-    // E08F: ANDB #$42
-    cpu.m_b &= 0x42;
-
-    label_E08F:
-    // E08F: JMP $e08f
-    goto label_E08F;
-
     label_E08F:
     // E08F: ANDB #$42
     cpu.m_b &= 0x42;
@@ -47306,17 +46023,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E091: CLRA 
     cpu.m_a = 0;
 
-    // E091: CLRA 
-    cpu.m_a = 0;
-
     // E092: XCLRA 
     // TODO: Convert XCLRA 
-
-    // E092: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E093: LSRB 
-    cpu.m_b >>= 1;
 
     // E093: LSRB 
     cpu.m_b >>= 1;
@@ -47324,17 +46032,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E094: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    // E094: COMB 
-    cpu.m_b = ~cpu.m_b;
-
     // E095: BRA $E0DD
     goto label_E0DD;
-
-    // E095: BRA $E0DD
-    goto label_E0DD;
-
-    // E097: CLRA 
-    cpu.m_a = 0;
 
     // E097: CLRA 
     cpu.m_a = 0;
@@ -47343,18 +46042,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E098: XNCB 
     // TODO: Convert XNCB 
 
-    label_E098:
-    // E098: XNCB 
-    // TODO: Convert XNCB 
-
     // E099: BRA $E0ED
     goto label_E0ED;
-
-    // E099: BRA $E0ED
-    goto label_E0ED;
-
-    // E09B: LSRA 
-    cpu.m_a >>= 1;
 
     // E09B: LSRA 
     cpu.m_a >>= 1;
@@ -47362,17 +46051,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E09C: TSTA 
     cpu.test_a();
 
-    // E09C: TSTA 
-    cpu.test_a();
-
     // E09D: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // E09D: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    // E09E: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // E09E: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
@@ -47380,17 +46060,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E09F: XCLRA 
     // TODO: Convert XCLRA 
 
-    // E09F: XCLRA 
-    // TODO: Convert XCLRA 
-
     // E0A0: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E0A0: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E0A1: XCLRA 
-    // TODO: Convert XCLRA 
 
     // E0A1: XCLRA 
     // TODO: Convert XCLRA 
@@ -47398,17 +46069,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0A2: ASRA 
     // TODO: Convert ASRA 
 
-    // E0A2: ASRA 
-    // TODO: Convert ASRA 
-
     // E0A3: BRA $E0EA
     goto label_E0EA;
-
-    // E0A3: BRA $E0EA
-    goto label_E0EA;
-
-    // E0A5: XCLRA 
-    // TODO: Convert XCLRA 
 
     // E0A5: XCLRA 
     // TODO: Convert XCLRA 
@@ -47417,18 +46079,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0A6: LSRA 
     cpu.m_a >>= 1;
 
-    label_E0A6:
-    // E0A6: LSRA 
-    cpu.m_a >>= 1;
-
     // E0A7: XNCB 
     // TODO: Convert XNCB 
-
-    // E0A7: XNCB 
-    // TODO: Convert XNCB 
-
-    // E0A8: ASRA 
-    // TODO: Convert ASRA 
 
     // E0A8: ASRA 
     // TODO: Convert ASRA 
@@ -47436,17 +46088,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0A9: ADCB <$35
     // TODO: Convert ADCB <$35
 
-    // E0A9: ADCB <$35
-    // TODO: Convert ADCB <$35
-
     // E0AB: BGE $E0DD
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xE0DD;
-
-    // E0AB: BGE $E0DD
-    if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xE0DD;
-
-    // E0AD: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
 
     // E0AD: LEAX -$10,Y
     // TODO: Fix comma operator: LEAX -$10,Y
@@ -47454,22 +46097,10 @@ void global_routine_impl(CPU6809& cpu) {
     // E0AF: BRA $E0D1
     goto label_E0D1;
 
-    // E0AF: BRA $E0D1
-    goto label_E0D1;
-
-    // E0B1: EORB <$41
-    cpu.m_b ^= 0x41;
-
     // E0B1: EORB <$41
     cpu.m_b ^= 0x41;
 
     // E0B3: LSRA 
-    cpu.m_a >>= 1;
-
-    // E0B3: LSRA 
-    cpu.m_a >>= 1;
-
-    // E0B4: LSRA 
     cpu.m_a >>= 1;
 
     // E0B4: LSRA 
@@ -47478,17 +46109,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0B5: LSRA 
     cpu.m_a >>= 1;
 
-    // E0B5: LSRA 
-    cpu.m_a >>= 1;
-
     // E0B6: LSRA 
     cpu.m_a >>= 1;
-
-    // E0B6: LSRA 
-    cpu.m_a >>= 1;
-
-    // E0B7: BRA $E10D
-    goto label_E10D;
 
     // E0B7: BRA $E10D
     goto label_E10D;
@@ -47497,18 +46119,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0B9: CLRA 
     cpu.m_a = 0;
 
-    label_E0B9:
-    // E0B9: CLRA 
-    cpu.m_a = 0;
-
     // E0BA: BRA $E100
     goto label_E100;
-
-    // E0BA: BRA $E100
-    goto label_E100;
-
-    // E0BC: LSRA 
-    cpu.m_a >>= 1;
 
     // E0BC: LSRA 
     cpu.m_a >>= 1;
@@ -47516,17 +46128,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0BD: RORA 
     cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
-    // E0BD: RORA 
-    cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
     // E0BE: INCA 
     cpu.m_a++;
-
-    // E0BE: INCA 
-    cpu.m_a++;
-
-    // E0BF: LSRA 
-    cpu.m_a >>= 1;
 
     // E0BF: LSRA 
     cpu.m_a >>= 1;
@@ -47534,17 +46137,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0C0: COMA 
     cpu.m_a = ~cpu.m_a;
 
-    // E0C0: COMA 
-    cpu.m_a = ~cpu.m_a;
-
     // E0C1: LSRB 
     cpu.m_b >>= 1;
-
-    // E0C1: LSRB 
-    cpu.m_b >>= 1;
-
-    // E0C2: CLRA 
-    cpu.m_a = 0;
 
     // E0C2: CLRA 
     cpu.m_a = 0;
@@ -47553,18 +46147,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0C3: XNCB 
     // TODO: Convert XNCB 
 
-    label_E0C3:
-    // E0C3: XNCB 
-    // TODO: Convert XNCB 
-
     // E0C4: BRA $E119
     goto label_E119;
-
-    // E0C4: BRA $E119
-    goto label_E119;
-
-    // E0C6: ASLA 
-    cpu.m_a <<= 1;
 
     // E0C6: ASLA 
     cpu.m_a <<= 1;
@@ -47572,17 +46156,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0C7: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // E0C7: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E0C8: LSRA 
     cpu.m_a >>= 1;
-
-    // E0C8: LSRA 
-    cpu.m_a >>= 1;
-
-    // E0C9: INCA 
-    cpu.m_a++;
 
     // E0C9: INCA 
     cpu.m_a++;
@@ -47590,17 +46165,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0CA: ANDB #$53
     cpu.m_b &= 0x53;
 
-    // E0CA: ANDB #$53
-    cpu.m_b &= 0x53;
-
     // E0CC: ASLA 
     cpu.m_a <<= 1;
-
-    // E0CC: ASLA 
-    cpu.m_a <<= 1;
-
-    // E0CD: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // E0CD: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
@@ -47608,17 +46174,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0CE: LSRA 
     cpu.m_a >>= 1;
 
-    // E0CE: LSRA 
-    cpu.m_a >>= 1;
-
     // E0CF: INCA 
     cpu.m_a++;
-
-    // E0CF: INCA 
-    cpu.m_a++;
-
-    // E0D0: LSRA 
-    cpu.m_a >>= 1;
 
     // E0D0: LSRA 
     cpu.m_a >>= 1;
@@ -47627,18 +46184,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0D1: BRA $E114
     goto label_E114;
 
-    label_E0D1:
-    // E0D1: BRA $E114
-    goto label_E114;
-
     // E0D3: LSRB 
     cpu.m_b >>= 1;
-
-    // E0D3: LSRB 
-    cpu.m_b >>= 1;
-
-    // E0D4: BRA $E11C
-    // TODO: External jump to 0xE11C - not implemented
 
     // E0D4: BRA $E11C
     // TODO: External jump to 0xE11C - not implemented
@@ -47647,23 +46194,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0D6: LSRB 
     cpu.m_b >>= 1;
 
-    label_E0D6:
-    // E0D6: LSRB 
-    cpu.m_b >>= 1;
-
     // E0D7: INCA 
     cpu.m_a++;
-
-    // E0D7: INCA 
-    cpu.m_a++;
-
-    label_E0D8:
-    // E0D8: INCA 
-    cpu.m_a++;
-
-    label_E0D8:
-    // E0D8: JMP $e0d8
-    goto label_E0D8;
 
     label_E0D8:
     // E0D8: INCA 
@@ -47672,17 +46204,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0D9: BRA $E12E
     goto label_E12E;
 
-    // E0D9: BRA $E12E
-    goto label_E12E;
-
     // E0DB: LSRB 
     cpu.m_b >>= 1;
-
-    // E0DB: LSRB 
-    cpu.m_b >>= 1;
-
-    // E0DC: XNCB 
-    // TODO: Convert XNCB 
 
     // E0DC: XNCB 
     // TODO: Convert XNCB 
@@ -47691,18 +46214,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0DD: LSRA 
     cpu.m_a >>= 1;
 
-    label_E0DD:
-    // E0DD: LSRA 
-    cpu.m_a >>= 1;
-
     // E0DE: XCLRA 
     // TODO: Convert XCLRA 
-
-    // E0DE: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E0DF: ASRA 
-    // TODO: Convert ASRA 
 
     // E0DF: ASRA 
     // TODO: Convert ASRA 
@@ -47710,17 +46223,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0E0: LSRB 
     cpu.m_b >>= 1;
 
-    // E0E0: LSRB 
-    cpu.m_b >>= 1;
-
     // E0E1: EORB #$53
     cpu.m_b ^= 0x53;
-
-    // E0E1: EORB #$53
-    cpu.m_b ^= 0x53;
-
-    // E0E3: LSRB 
-    cpu.m_b >>= 1;
 
     // E0E3: LSRB 
     cpu.m_b >>= 1;
@@ -47728,17 +46232,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0E4: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // E0E4: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E0E5: XNCB 
     // TODO: Convert XNCB 
-
-    // E0E5: XNCB 
-    // TODO: Convert XNCB 
-
-    // E0E6: LSRB 
-    cpu.m_b >>= 1;
 
     // E0E6: LSRB 
     cpu.m_b >>= 1;
@@ -47746,17 +46241,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0E7: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    // E0E7: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E0E8: XCLRA 
     // TODO: Convert XCLRA 
-
-    // E0E8: XCLRA 
-    // TODO: Convert XCLRA 
-
-    // E0E9: ASRA 
-    // TODO: Convert ASRA 
 
     // E0E9: ASRA 
     // TODO: Convert ASRA 
@@ -47765,19 +46251,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0EA: BRA $E143
     goto label_E143;
 
-    label_E0EA:
-    // E0EA: BRA $E143
-    goto label_E143;
-
     // E0EC: NEGA 
     cpu.m_a = -cpu.m_a;
-
-    // E0EC: NEGA 
-    cpu.m_a = -cpu.m_a;
-
-    label_E0ED:
-    // E0ED: RORB 
-    cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     label_E0ED:
     // E0ED: RORB 
@@ -47786,17 +46261,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0EE: LSRA 
     cpu.m_a >>= 1;
 
-    // E0EE: LSRA 
-    cpu.m_a >>= 1;
-
     // E0EF: BRA $E133
     goto label_E133;
-
-    // E0EF: BRA $E133
-    goto label_E133;
-
-    // E0F1: CLRA 
-    cpu.m_a = 0;
 
     // E0F1: CLRA 
     cpu.m_a = 0;
@@ -47804,17 +46270,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0F2: XCLRA 
     // TODO: Convert XCLRA 
 
-    // E0F2: XCLRA 
-    // TODO: Convert XCLRA 
-
     // E0F3: LSRB 
     cpu.m_b >>= 1;
-
-    // E0F3: LSRB 
-    cpu.m_b >>= 1;
-
-    // E0F4: ADDD <$53
-    cpu.m_d += 0x53;
 
     // E0F4: ADDD <$53
     cpu.m_d += 0x53;
@@ -47822,16 +46279,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E0F6: ASLA 
     cpu.m_a <<= 1;
 
-    // E0F6: ASLA 
-    cpu.m_a <<= 1;
-
     // E0F7: CLRA 
-    cpu.m_a = 0;
-
-    // E0F7: CLRA 
-    cpu.m_a = 0;
-
-    // E0F8: CLRA 
     cpu.m_a = 0;
 
     // E0F8: CLRA 
@@ -47840,17 +46288,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0F9: LSRB 
     cpu.m_b >>= 1;
 
-    // E0F9: LSRB 
-    cpu.m_b >>= 1;
-
     // E0FA: BRA $E142
     goto label_E142;
-
-    // E0FA: BRA $E142
-    goto label_E142;
-
-    // E0FC: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // E0FC: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
@@ -47858,17 +46297,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E0FD: XNCB 
     // TODO: Convert XNCB 
 
-    // E0FD: XNCB 
-    // TODO: Convert XNCB 
-
     // E0FE: LSRA 
     cpu.m_a >>= 1;
-
-    // E0FE: LSRA 
-    cpu.m_a >>= 1;
-
-    // E0FF: XNCA 
-    // TODO: Convert XNCA 
 
     // E0FF: XNCA 
     // TODO: Convert XNCA 
@@ -47877,17 +46307,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E100: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    label_E100:
-    // E100: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E101: INCA 
-    cpu.m_a++;
-
-    // E101: INCA 
-    cpu.m_a++;
-
-    // E102: INCA 
     cpu.m_a++;
 
     // E102: INCA 
@@ -47896,22 +46316,10 @@ void global_routine_impl(CPU6809& cpu) {
     // E103: ADDD <$53
     cpu.m_d += 0x53;
 
-    // E103: ADDD <$53
-    cpu.m_d += 0x53;
-
-    // E105: ASLA 
-    cpu.m_a <<= 1;
-
     // E105: ASLA 
     cpu.m_a <<= 1;
 
     // E106: CLRA 
-    cpu.m_a = 0;
-
-    // E106: CLRA 
-    cpu.m_a = 0;
-
-    // E107: CLRA 
     cpu.m_a = 0;
 
     // E107: CLRA 
@@ -47920,23 +46328,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E108: LSRB 
     cpu.m_b >>= 1;
 
-    // E108: LSRB 
-    cpu.m_b >>= 1;
-
-    // E109: BRA $E15F
-    goto label_E15F;
-
     // E109: BRA $E15F
     goto label_E15F;
 
     // E10B: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E10B: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E10C: LSRA 
-    cpu.m_a >>= 1;
 
     // E10C: LSRA 
     cpu.m_a >>= 1;
@@ -47945,18 +46341,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E10D: BRA $E155
     goto label_E155;
 
-    label_E10D:
-    // E10D: BRA $E155
-    goto label_E155;
-
     // E10F: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E10F: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E110: ASRA 
-    // TODO: Convert ASRA 
 
     // E110: ASRA 
     // TODO: Convert ASRA 
@@ -47964,17 +46350,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E111: ASLA 
     cpu.m_a <<= 1;
 
-    // E111: ASLA 
-    cpu.m_a <<= 1;
-
     // E112: LSRB 
     cpu.m_b >>= 1;
-
-    // E112: LSRB 
-    cpu.m_b >>= 1;
-
-    // E113: LSRA 
-    cpu.m_a >>= 1;
 
     // E113: LSRA 
     cpu.m_a >>= 1;
@@ -47983,24 +46360,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E114: XNCB 
     // TODO: Convert XNCB 
 
-    label_E114:
-    // E114: XNCB 
-    // TODO: Convert XNCB 
-
-    // E115: ADDD <$41
-    cpu.m_d += 0x41;
-
     // E115: ADDD <$41
     cpu.m_d += 0x41;
 
     // E117: RORB 
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
-    // E117: RORB 
-    cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
-
-    // E118: CLRA 
-    cpu.m_a = 0;
 
     // E118: CLRA 
     cpu.m_a = 0;
@@ -48009,18 +46373,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E119: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
-    label_E119:
-    // E119: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
     // E11A: LSRA 
     cpu.m_a >>= 1;
-
-    // E11A: LSRA 
-    cpu.m_a >>= 1;
-
-    // E11B: BRA $E160
-    // TODO: External jump to 0xE160 - not implemented
 
     // E11B: BRA $E160
     // TODO: External jump to 0xE160 - not implemented
@@ -48028,17 +46382,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E11D: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // E11D: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E11E: LSRB 
     cpu.m_b >>= 1;
-
-    // E11E: LSRB 
-    cpu.m_b >>= 1;
-
-    // E11F: ASRB 
-    // TODO: Convert ASRB 
 
     // E11F: ASRB 
     // TODO: Convert ASRB 
@@ -48046,17 +46391,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E120: NEGA 
     cpu.m_a = -cpu.m_a;
 
-    // E120: NEGA 
-    cpu.m_a = -cpu.m_a;
-
     // E121: INCA 
     cpu.m_a++;
-
-    // E121: INCA 
-    cpu.m_a++;
-
-    // E122: XDECA 
-    // TODO: Convert XDECA 
 
     // E122: XDECA 
     // TODO: Convert XDECA 
@@ -48064,17 +46400,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E123: ADDD <$55
     cpu.m_d += 0x55;
 
-    // E123: ADDD <$55
-    cpu.m_d += 0x55;
-
     // E125: COMB 
     cpu.m_b = ~cpu.m_b;
-
-    // E125: COMB 
-    cpu.m_b = ~cpu.m_b;
-
-    // E126: LSRA 
-    cpu.m_a >>= 1;
 
     // E126: LSRA 
     cpu.m_a >>= 1;
@@ -48082,29 +46409,14 @@ void global_routine_impl(CPU6809& cpu) {
     // E127: BRA $E17D
     goto label_E17D;
 
-    // E127: BRA $E17D
-    goto label_E17D;
-
-    // E129: ASLA 
-    cpu.m_a <<= 1;
-
     // E129: ASLA 
     cpu.m_a <<= 1;
 
     // E12A: LSRA 
     cpu.m_a >>= 1;
 
-    // E12A: LSRA 
-    cpu.m_a >>= 1;
-
     // E12B: BRA $E173
     goto label_E173;
-
-    // E12B: BRA $E173
-    goto label_E173;
-
-    // E12D: CLRA 
-    cpu.m_a = 0;
 
     // E12D: CLRA 
     cpu.m_a = 0;
@@ -48113,24 +46425,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E12E: XNCB 
     // TODO: Convert XNCB 
 
-    label_E12E:
-    // E12E: XNCB 
-    // TODO: Convert XNCB 
-
-    // E12F: COMA 
-    cpu.m_a = ~cpu.m_a;
-
     // E12F: COMA 
     cpu.m_a = ~cpu.m_a;
 
     // E130: BITB #$20
     // TODO: Convert BITB #$20
-
-    // E130: BITB #$20
-    // TODO: Convert BITB #$20
-
-    // E132: RORA 
-    cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // E132: RORA 
     cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
@@ -48139,18 +46438,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E133: CLRA 
     cpu.m_a = 0;
 
-    label_E133:
-    // E133: CLRA 
-    cpu.m_a = 0;
-
     // E134: XNCB 
     // TODO: Convert XNCB 
-
-    // E134: XNCB 
-    // TODO: Convert XNCB 
-
-    // E135: BRA $E18C
-    goto label_E18C;
 
     // E135: BRA $E18C
     goto label_E18C;
@@ -48158,17 +46447,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E137: COMB 
     cpu.m_b = ~cpu.m_b;
 
-    // E137: COMB 
-    cpu.m_b = ~cpu.m_b;
-
     // E138: ROLA 
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E138: ROLA 
-    cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
-
-    // E139: XCLRA 
-    // TODO: Convert XCLRA 
 
     // E139: XCLRA 
     // TODO: Convert XCLRA 
@@ -48176,17 +46456,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E13A: ASRA 
     // TODO: Convert ASRA 
 
-    // E13A: ASRA 
-    // TODO: Convert ASRA 
-
     // E13B: BRA $E191
     goto label_E191;
-
-    // E13B: BRA $E191
-    goto label_E191;
-
-    // E13D: ASLA 
-    cpu.m_a <<= 1;
 
     // E13D: ASLA 
     cpu.m_a <<= 1;
@@ -48194,24 +46465,11 @@ void global_routine_impl(CPU6809& cpu) {
     // E13E: LSRA 
     cpu.m_a >>= 1;
 
-    // E13E: LSRA 
-    cpu.m_a >>= 1;
-
-    // E13F: BRA $E187
-    goto label_E187;
-
     // E13F: BRA $E187
     goto label_E187;
 
     // E141: CLRA 
     cpu.m_a = 0;
-
-    // E141: CLRA 
-    cpu.m_a = 0;
-
-    label_E142:
-    // E142: XNCB 
-    // TODO: Convert XNCB 
 
     label_E142:
     // E142: XNCB 
@@ -48221,18 +46479,8 @@ void global_routine_impl(CPU6809& cpu) {
     // E143: COMA 
     cpu.m_a = ~cpu.m_a;
 
-    label_E143:
-    // E143: COMA 
-    cpu.m_a = ~cpu.m_a;
-
     // E144: BITB #$4F
     // TODO: Convert BITB #$4F
-
-    // E144: BITB #$4F
-    // TODO: Convert BITB #$4F
-
-    // E146: XNCA 
-    // TODO: Convert XNCA 
 
     // E146: XNCA 
     // TODO: Convert XNCA 
@@ -52061,11 +50309,14 @@ void global_routine_impl(CPU6809& cpu) {
     // E764: LDA ,X
     // TODO: Complex indexed addressing: ,X
 
-    // E765: JMP $e764
-    goto label_E764;
+    // E765: ANDA #$BD
+    cpu.m_a &= 0xBD;
 
     // E766: JSR $E790
     cpu.call_function(0xE790);
+
+    // E767: STB [,W]
+    // TODO: Handle indexed addressing: STB [,W]
 
     // E769: LDA <$AD
     cpu.m_a = cpu.read_memory(0xAD);
@@ -52129,10 +50380,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_E790:
     // E790: JMP $e790
     goto label_E790;
-
-    label_E790:
-    // E790: TFR A,B
-    cpu.m_b = cpu.m_a;
 
     // E792: LSRB 
     cpu.m_b >>= 1;
@@ -52225,10 +50472,6 @@ void global_routine_impl(CPU6809& cpu) {
     // E7C7: JMP $e7c7
     goto label_E7C7;
 
-    label_E7C7:
-    // E7C7: CMPB #$D6
-    cpu.compare_b(0xD6);
-
     // E7C9: BCC $E7D2
     if (!cpu.carry_flag()) cpu.m_pc = 0xE7D2;
 
@@ -52260,10 +50503,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_E7DC:
     // E7DC: JMP $e7dc
     goto label_E7DC;
-
-    label_E7DC:
-    // E7DC: RTS 
-    return;
 
     // E7DD: LDB $48AE
     cpu.m_b = cpu.read_memory(0x48AE);
@@ -52353,10 +50592,6 @@ void global_routine_impl(CPU6809& cpu) {
     // E811: JMP $e811
     goto label_E811;
 
-    label_E811:
-    // E811: STD ,Y++
-    cpu.write_memory16(cpu.m_y++, cpu.m_d);
-
     // E813: JSR $E821
     cpu.call_function(0xE821);
 
@@ -52394,10 +50629,6 @@ void global_routine_impl(CPU6809& cpu) {
     // E82B: JMP $e82b
     goto label_E82B;
 
-    label_E82B:
-    // E82B: LDB ,X+
-    // TODO: Complex indexed addressing: ,X+
-
     // E82D: STX $48B1
     cpu.write_memory16(0x48B1, cpu.m_x);
 
@@ -52431,8 +50662,9 @@ void global_routine_impl(CPU6809& cpu) {
     // E843: BRA $E888
     goto label_E888;
 
-    // E845: CMPB #$80
-    cpu.compare_b(0x80);
+    label_E845:
+    // E845: JMP $e845
+    goto label_E845;
 
     // E847: BNE $E84F
     if (!cpu.zero_flag()) cpu.m_pc = 0xE84F;
@@ -52470,6 +50702,7 @@ void global_routine_impl(CPU6809& cpu) {
     // E85F: BRA $E888
     goto label_E888;
 
+    label_E861:
     // E861: CMPB #$4E
     cpu.compare_b(0x4E);
 
@@ -52765,11 +50998,21 @@ void global_routine_impl(CPU6809& cpu) {
     // E928: SUBB D,U
     // TODO: Fix comma operator: SUBB D,U
 
+    label_E929:
+    // E929: ADDB #$E0
+    cpu.m_b += 0xE0;
+
     // E92A: SUBB ,-S
     // TODO: Complex indexed addressing: ,-S
 
+    // E92B: SBCB ,S+
+    // TODO: Convert SBCB ,S+
+
     // E92C: SUBB [B,S]
     // TODO: Complex indexed addressing: [B,S]
+
+    // E92D: BITB $E104
+    // TODO: Convert BITB $E104
 
     // E92E: CMPB $4,X
     // TODO: Fix comma operator: CMPB $4,X
@@ -52805,10 +51048,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert LSR <$E2
 
     // E945: BRA $E929
-    // TODO: External jump to 0xE929 - not implemented
+    goto label_E929;
 
     // E947: BNE $E92B
-    // TODO: External jump to 0xE92B - not implemented
+    if (!cpu.zero_flag()) cpu.m_pc = 0xE92B;
 
     // E949: CWAI #$E2
     // TODO: Convert CWAI #$E2
@@ -55164,10 +53407,6 @@ void global_routine_impl(CPU6809& cpu) {
     // EF7F: JMP $ef7f
     goto label_EF7F;
 
-    label_EF7F:
-    // EF7F: INC <$0A
-    // TODO: Convert INC <$0A
-
     // EF81: JSR $D776
     cpu.call_function(0xD776);
 
@@ -56208,10 +54447,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_F261:
     // F261: JMP $f261
     goto label_F261;
-
-    label_F261:
-    // F261: ORCC #$10
-    cpu.m_cc |= 0x10;
 
     // F263: CLR $4684
     cpu.write_memory(0x4684, 0);
@@ -58331,8 +56566,9 @@ void global_routine_impl(CPU6809& cpu) {
     // F8D7: STA <$C4
     cpu.write_memory(0xC4, cpu.m_a);
 
-    // F8D9: LDD #$6000
-    cpu.m_d = 0x6000;
+    label_F8D9:
+    // F8D9: JMP $f8d9
+    goto label_F8D9;
 
     // F8DC: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
@@ -58742,10 +56978,6 @@ void global_routine_impl(CPU6809& cpu) {
     label_FA19:
     // FA19: JMP $fa19
     goto label_FA19;
-
-    label_FA19:
-    // FA19: LEAX $8,X
-    // TODO: Fix comma operator: LEAX $8,X
 
     // FA1B: CMPX #$FB73
     cpu.compare_x(0xFB73);
@@ -59956,6 +58188,10 @@ void global_routine_impl(CPU6809& cpu) {
     // FDDD: TFR S,D
     cpu.m_d = cpu.m_sp;
 
+    label_FDDE:
+    // FDDE: NEGA 
+    cpu.m_a = -cpu.m_a;
+
     // FDDF: ANDA #$81
     cpu.m_a &= 0x81;
 
@@ -60102,7 +58338,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x20;
 
     // FE4E: BRA $FDDE
-    // TODO: External jump to 0xFDDE - not implemented
+    goto label_FDDE;
 
     // FE50: LDD $F158
     cpu.m_d = cpu.read_memory16(0xF158);

@@ -50,48 +50,59 @@ def collect_all_goto_targets(disasm_dir):
                             all_targets.add(target_addr)
                     except ValueError:
                         pass
-    
+
     print(f"  Found {len(all_targets)} unique goto targets")
     return sorted(all_targets)
 
 def collect_all_instructions(disasm_dir):
     """Collect all instructions from all disassembly files, sorted by address"""
     all_instructions = []
-    
+
     print("🔍 Collecting all instructions from disassembly files...")
-    
+
     for disasm_file in sorted(disasm_dir.glob("rom_disasm_*.md")):
         with open(disasm_file, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        
+
         for line in lines:
             parsed = parse_disassembly_line(line.strip())
             if parsed:
                 all_instructions.append(parsed)
-    
+
     # Sort by address
     all_instructions.sort(key=lambda x: int(x['address'], 16))
-    
+
     print(f"  Found {len(all_instructions)} instructions")
     return all_instructions
 
 def generate_global_routine(instructions, goto_targets, output_file):
     """Generate a single global routine function with all instructions and labels"""
-    
+
     print(f"📝 Generating global routine: {output_file}")
-    
+
+    # Deduplicate instructions by address - keep only the first occurrence
+    unique_instructions = {}
+    for instruction in instructions:
+        addr = int(instruction['address'], 16)
+        if addr not in unique_instructions:
+            unique_instructions[addr] = instruction
+
+    # Convert back to sorted list
+    instructions = sorted(unique_instructions.values(), key=lambda x: int(x['address'], 16))
+    print(f"  Deduplicated from {len(unique_instructions)} unique addresses")
+
     # Create set of all instruction addresses for validation
     instruction_addresses = set(int(inst['address'], 16) for inst in instructions)
-    
+
     # Filter goto targets to only include addresses that exist in our instructions
     valid_goto_targets = set(target for target in goto_targets if target in instruction_addresses)
     external_targets = set(target for target in goto_targets if target not in instruction_addresses)
-    
+
     if external_targets:
         print(f"⚠️  Found {len(external_targets)} external goto targets (will be skipped): {[hex(t) for t in sorted(external_targets)]}")
-    
+
     cpp_lines = []
-    
+
     # Header
     cpp_lines.append('#include "cpu_6809.h"')
     cpp_lines.append('')
@@ -99,33 +110,33 @@ def generate_global_routine(instructions, goto_targets, output_file):
     cpp_lines.append('')
     cpp_lines.append('void global_routine_impl(CPU6809& cpu) {')
     cpp_lines.append('')
-    
+
     # Process all instructions
     for instruction in instructions:
         current_address = instruction['address']
         current_address_int = int(current_address, 16)
-        
+
         # Add label if this address is a valid goto target
         if current_address_int in valid_goto_targets:
             cpp_lines.append(f'    label_{current_address_int:04X}:')
-        
+
         # Add comment with original assembly
         cpp_lines.append(f'    // {current_address}: {instruction["mnemonic"]} {instruction["operands"]}')
-        
+
         # Add C++ conversion
         cpp_code = convert_instruction(instruction, f'{current_address}: {instruction["mnemonic"]} {instruction["operands"]}', instruction_addresses)
         cpp_lines.append(cpp_code)
         cpp_lines.append('')
-    
+
     # Footer
     cpp_lines.append('}')
     cpp_lines.append('')
     cpp_lines.append('} // namespace StarWars')
-    
+
     # Write to file
     with open(output_file, 'w') as f:
         f.write('\n'.join(cpp_lines))
-    
+
     print(f"✓ Generated global routine with {len(instructions)} instructions")
 
 def regenerate_all_routines(build_files_only=False):
@@ -163,17 +174,17 @@ def regenerate_all_routines(build_files_only=False):
 
         # GLOBAL ROUTINE MODE: Generate single function with all code
         print("🌐 Generating global routine with all code")
-        
+
         # Collect all instructions
         all_instructions = collect_all_instructions(disasm_dir)
-        
+
         # Collect all goto targets
         all_goto_targets = collect_all_goto_targets(disasm_dir)
-        
+
         # Generate global routine
         global_output_file = output_dir / "global_routine.cpp"
         generate_global_routine(all_instructions, all_goto_targets, global_output_file)
-        
+
         print("🎉 Global routine generation complete!")
         return True
 
