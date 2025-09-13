@@ -101,7 +101,6 @@ void CPU6809::step() {
     execute_instruction();
 }
 
-
 void CPU6809::execute_instruction() {
     // Fetch and decode instruction
     uint8_t opcode = fetch_byte();
@@ -184,6 +183,20 @@ void CPU6809::execute_instruction() {
 
         case 0x54: // LSRB
             execute_lsrb();
+            break;
+
+        case 0xA6: // LDA indexed
+            {
+                uint8_t postbyte = fetch_byte();
+                execute_lda_indexed(postbyte);
+            }
+            break;
+
+        case 0xA7: // STA indexed
+            {
+                uint8_t postbyte = fetch_byte();
+                execute_sta_indexed(postbyte);
+            }
             break;
 
         case 0xed: // STD indexed
@@ -484,6 +497,230 @@ void CPU6809::execute_tfr(uint8_t postbyte) {
     }
     
     std::cout << std::endl;
+}
+
+void CPU6809::execute_lda_indexed(uint8_t postbyte) {
+    uint16_t address = 0;
+    
+    // Decode indexed addressing mode from postbyte
+    switch (postbyte & 0xE0) {
+        case 0x00: // No offset
+            if ((postbyte & 0x1F) == 0x04) { // ,X
+                address = m_x;
+                std::cout << "LDA ,X" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,Y
+                address = m_y;
+                std::cout << "LDA ,Y" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,U
+                address = m_u;
+                std::cout << "LDA ,U" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,S
+                address = m_sp;
+                std::cout << "LDA ,S" << std::endl;
+            } else {
+                std::cout << "LDA (unsupported indexed mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        case 0x20: // 5-bit offset
+            {
+                int8_t offset = postbyte & 0x1F;
+                if (offset > 15) offset -= 32; // Convert to signed
+                
+                if ((postbyte & 0x1F) == 0x04) { // 5-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "LDA " << (offset < 0 ? "-" : "") << "$" << std::hex << (offset < 0 ? -offset : offset) << ",X" << std::endl;
+                } else {
+                    std::cout << "LDA (unsupported 5-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x40: // 8-bit offset
+            {
+                int8_t offset = fetch_byte();
+                if ((postbyte & 0x1F) == 0x04) { // 8-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "LDA $" << std::hex << (int)(uint8_t)offset << ",X" << std::endl;
+                } else {
+                    std::cout << "LDA (unsupported 8-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x60: // 16-bit offset
+            {
+                int16_t offset = fetch_word();
+                if ((postbyte & 0x1F) == 0x04) { // 16-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "LDA $" << std::hex << offset << ",X" << std::endl;
+                } else {
+                    std::cout << "LDA (unsupported 16-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x80: // Post-increment
+            if ((postbyte & 0x1F) == 0x04) { // ,X+
+                address = m_x++;
+                std::cout << "LDA ,X+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,Y+
+                address = m_y++;
+                std::cout << "LDA ,Y+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,U+
+                address = m_u++;
+                std::cout << "LDA ,U+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,S+
+                address = m_sp++;
+                std::cout << "LDA ,S+" << std::endl;
+            } else {
+                std::cout << "LDA (unsupported post-increment mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        case 0xA0: // Pre-decrement
+            if ((postbyte & 0x1F) == 0x04) { // ,-X
+                address = --m_x;
+                std::cout << "LDA ,-X" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,-Y
+                address = --m_y;
+                std::cout << "LDA ,-Y" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,-U
+                address = --m_u;
+                std::cout << "LDA ,-U" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,-S
+                address = --m_sp;
+                std::cout << "LDA ,-S" << std::endl;
+            } else {
+                std::cout << "LDA (unsupported pre-decrement mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        default:
+            std::cout << "LDA (unsupported indexed addressing mode)" << std::endl;
+            return;
+    }
+    
+    // Load the A register from the calculated address
+    m_a = read_memory(address);
+}
+
+void CPU6809::execute_sta_indexed(uint8_t postbyte) {
+    uint16_t address = 0;
+    
+    // Decode indexed addressing mode from postbyte (same logic as LDA)
+    switch (postbyte & 0xE0) {
+        case 0x00: // No offset
+            if ((postbyte & 0x1F) == 0x04) { // ,X
+                address = m_x;
+                std::cout << "STA ,X" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,Y
+                address = m_y;
+                std::cout << "STA ,Y" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,U
+                address = m_u;
+                std::cout << "STA ,U" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,S
+                address = m_sp;
+                std::cout << "STA ,S" << std::endl;
+            } else {
+                std::cout << "STA (unsupported indexed mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        case 0x20: // 5-bit offset
+            {
+                int8_t offset = postbyte & 0x1F;
+                if (offset > 15) offset -= 32; // Convert to signed
+                
+                if ((postbyte & 0x1F) == 0x04) { // 5-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "STA " << (offset < 0 ? "-" : "") << "$" << std::hex << (offset < 0 ? -offset : offset) << ",X" << std::endl;
+                } else {
+                    std::cout << "STA (unsupported 5-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x40: // 8-bit offset
+            {
+                int8_t offset = fetch_byte();
+                if ((postbyte & 0x1F) == 0x04) { // 8-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "STA $" << std::hex << (int)(uint8_t)offset << ",X" << std::endl;
+                } else {
+                    std::cout << "STA (unsupported 8-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x60: // 16-bit offset
+            {
+                int16_t offset = fetch_word();
+                if ((postbyte & 0x1F) == 0x04) { // 16-bit offset,X
+                    address = m_x + offset;
+                    std::cout << "STA $" << std::hex << offset << ",X" << std::endl;
+                } else {
+                    std::cout << "STA (unsupported 16-bit indexed mode)" << std::endl;
+                    return;
+                }
+            }
+            break;
+            
+        case 0x80: // Post-increment
+            if ((postbyte & 0x1F) == 0x04) { // ,X+
+                address = m_x++;
+                std::cout << "STA ,X+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,Y+
+                address = m_y++;
+                std::cout << "STA ,Y+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,U+
+                address = m_u++;
+                std::cout << "STA ,U+" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,S+
+                address = m_sp++;
+                std::cout << "STA ,S+" << std::endl;
+            } else {
+                std::cout << "STA (unsupported post-increment mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        case 0xA0: // Pre-decrement
+            if ((postbyte & 0x1F) == 0x04) { // ,-X
+                address = --m_x;
+                std::cout << "STA ,-X" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x05) { // ,-Y
+                address = --m_y;
+                std::cout << "STA ,-Y" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x06) { // ,-U
+                address = --m_u;
+                std::cout << "STA ,-U" << std::endl;
+            } else if ((postbyte & 0x1F) == 0x07) { // ,-S
+                address = --m_sp;
+                std::cout << "STA ,-S" << std::endl;
+            } else {
+                std::cout << "STA (unsupported pre-decrement mode)" << std::endl;
+                return;
+            }
+            break;
+            
+        default:
+            std::cout << "STA (unsupported indexed addressing mode)" << std::endl;
+            return;
+    }
+    
+    // Store the A register to the calculated address
+    write_memory(address, m_a);
 }
 
 void CPU6809::execute_lsrb() {

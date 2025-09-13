@@ -456,6 +456,7 @@ public:
     void routine_f1fd(void);
     void routine_f261(void);
     void routine_f36e(void);
+    void routine_f448(void);
     void routine_f70d(void);
     void routine_f714(void);
     void routine_f720(void);
@@ -542,6 +543,8 @@ protected:
     void execute_cmps_immediate(uint16_t value);
     void execute_beq(uint16_t address);
     void execute_std_indexed(uint8_t postbyte);
+    void execute_lda_indexed(uint8_t postbyte);
+    void execute_sta_indexed(uint8_t postbyte);
     void execute_tfr(uint8_t postbyte);
     void execute_lsrb();
     void execute_stu_indexed(int8_t offset);
