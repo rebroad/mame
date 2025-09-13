@@ -16,7 +16,7 @@ import argparse
 import os
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
-from disassemble_routine import run_unidasm as dr_run_unidasm, find_routine_end as dr_find_routine_end
+from unidasm_wrapper import run_unidasm, find_routine_end, validate_unidasm
 
 class AutomatedDisassembler:
     def __init__(self, rom_file: str, arch: str = "m6809"):
@@ -28,6 +28,10 @@ class AutomatedDisassembler:
         project_root = script_dir.parent  # Go up one level from tools/ to starwars_analysis/
         self.disassembly_dir = project_root / "disassembly"
         self.disassembly_dir.mkdir(exist_ok=True)
+        
+        # Validate unidasm availability
+        if not validate_unidasm():
+            raise RuntimeError("unidasm not found. Please install unidasm.")
 
     def _get_disassembly_window(self, start_addr: str, max_count: int) -> List[str]:
         """Return disassembly lines starting at start_addr; if not found, start at next available address >= start.
@@ -38,7 +42,7 @@ class AutomatedDisassembler:
             start_int = int(start_addr, 16)
             end_int = (start_int + max_count) & 0xFFFF
             end_addr = f"{end_int:04x}"
-            lines = dr_run_unidasm(self.rom_file, start_addr, end_addr)
+            lines = run_unidasm(self.rom_file, start_addr, end_addr, self.arch)
             if lines:
                 return lines
         except Exception:
@@ -46,8 +50,9 @@ class AutomatedDisassembler:
 
         # Fallback: full unidasm, then pick the next address >= start
         try:
-            result = subprocess.run(["unidasm", "-arch", self.arch, self.rom_file], capture_output=True, text=True, check=True)
-            all_lines = [ln.strip() for ln in result.stdout.split('\n') if ln.strip()]
+            from unidasm_wrapper import run_unidasm_full
+            all_lines = run_unidasm_full(self.rom_file, self.arch)
+            all_lines = [ln.strip() for ln in all_lines if ln.strip()]
             start_int = int(start_addr, 16)
             window = []
             in_range = False
@@ -72,7 +77,7 @@ class AutomatedDisassembler:
 
         try:
             # Use our fixed disassembler with dd skip approach
-            lines = dr_run_unidasm(self.rom_file, start_addr)
+            lines = run_unidasm(self.rom_file, start_addr, arch=self.arch)
 
             # Find the actual start (first non-empty line with address)
             actual_start = None
@@ -183,7 +188,7 @@ class AutomatedDisassembler:
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
         """Get raw disassembly lines for a window starting at start_addr using our fixed disassembler."""
-        return dr_run_unidasm(self.rom_file, start_addr)
+        return run_unidasm(self.rom_file, start_addr, arch=self.arch)
 
     def calculate_byte_count(self, start_addr: str, end_addr: str) -> int:
         """Calculate the number of bytes between start and end addresses"""
