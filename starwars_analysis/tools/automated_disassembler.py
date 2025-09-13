@@ -23,6 +23,7 @@ import re
 import subprocess
 import argparse
 import os
+import time
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
 from unidasm_wrapper import run_unidasm, find_routine_end, validate_unidasm
@@ -335,7 +336,7 @@ class AutomatedDisassembler:
                 targets.append(addr)
         return targets
 
-    def graph_disassemble_from_reset(self):
+    def graph_disassemble_from_reset(self, verbose=False):
         """Traverse and disassemble routines starting from the reset vector, following JSR/JMP."""
         print("Step 0: Reading 6809 reset vector...")
         entry = self._read_reset_vector()
@@ -348,24 +349,53 @@ class AutomatedDisassembler:
         visited = set()
         discovered_entries = []
         disassembled = 0
+        last_progress_time = time.time()
+        total_jump_targets = 0
+        max_queue_size = 1000  # Safety limit to prevent infinite loops
+        start_time = time.time()
+        max_runtime = 300  # 5 minutes max runtime
 
         print(f"🚀 Starting traversal from reset vector ${entry}")
         print(f"📊 Initial queue: {len(to_visit)} addresses")
 
         while to_visit:
+            # Safety checks
+            if len(to_visit) > max_queue_size:
+                print(f"⚠️  Queue size exceeded {max_queue_size}, stopping to prevent infinite loop")
+                break
+            
+            if time.time() - start_time > max_runtime:
+                print(f"⚠️  Runtime exceeded {max_runtime}s, stopping")
+                break
             addr = to_visit.pop(0)
             if addr in visited:
                 continue
             visited.add(addr)
             discovered_entries.append(addr)
 
-            # Progress reporting every 50 files
-            if disassembled > 0 and disassembled % 50 == 0:
-                print(f"📊 Progress: {disassembled} files created, {len(to_visit)} addresses in queue")
+            # Progress reporting every 50 files or every second if verbose
+            current_time = time.time()
+            if disassembled > 0 and (disassembled % 50 == 0 or (verbose and current_time - last_progress_time >= 1.0)):
+                print(f"📊 Progress: {disassembled} files created, {len(to_visit)} addresses in queue, {total_jump_targets} jump targets collected")
+                last_progress_time = current_time
             
-            print(f"Traversing entry ${addr}... (Queue: {len(to_visit)})")
-            start, end, external_targets = self.find_routine_boundaries(addr, max_search=1500)
-            is_seed = (addr == entry)
+            if verbose:
+                print(f"🔍 Processing ${addr}... (Queue: {len(to_visit)}, Jump targets: {total_jump_targets}, Visited: {len(visited)})")
+            else:
+                print(f"Traversing entry ${addr}... (Queue: {len(to_visit)})")
+            try:
+                if verbose:
+                    print(f"  🔍 Finding boundaries for ${addr}...")
+                start, end, external_targets = self.find_routine_boundaries(addr, max_search=1500)
+                is_seed = (addr == entry)
+                if verbose:
+                    print(f"  ✅ Boundaries found: {start} to {end}, {len(external_targets)} external targets")
+            except subprocess.TimeoutExpired:
+                print(f"  ⏰ Timeout processing ${addr} - skipping")
+                continue
+            except Exception as e:
+                print(f"  ❌ Error processing ${addr}: {e}")
+                continue
 
             if start and end:
                 name = f"{start}_{end}"
@@ -374,7 +404,20 @@ class AutomatedDisassembler:
                 # Add external targets to the queue for exploration
                 for target in external_targets:
                     if target not in visited and target not in to_visit:
-                        to_visit.append(target)
+                        # Safety check: validate address format and range
+                        try:
+                            target_int = int(target, 16)
+                            if 0 <= target_int <= 0xFFFF:
+                                to_visit.append(target)
+                                total_jump_targets += 1
+                                if verbose:
+                                    print(f"  ➕ Added jump target: ${target}")
+                            else:
+                                if verbose:
+                                    print(f"  ⚠️  Skipping invalid target: ${target} (out of range)")
+                        except ValueError:
+                            if verbose:
+                                print(f"  ⚠️  Skipping invalid target: ${target} (not hex)")
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless
                     seed_lines = self._disassemble_lines(addr, 256)
@@ -388,6 +431,7 @@ class AutomatedDisassembler:
                         for t in self._extract_call_targets(seed_lines):
                             if t not in visited and t not in to_visit:
                                 to_visit.append(t)
+                                total_jump_targets += 1
                 elif ok:
                     disassembled += 1
                     # After saving, get lines again to discover new targets inside this routine
@@ -395,6 +439,7 @@ class AutomatedDisassembler:
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
+                            total_jump_targets += 1
             else:
                 # Fallback window: do NOT save; only extract targets to continue traversal
                 lines = self._disassemble_lines(addr, 256)
@@ -409,6 +454,7 @@ class AutomatedDisassembler:
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit:
                             to_visit.append(t)
+                            total_jump_targets += 1
                 else:
                     print(f"  Skipping ${addr}: unable to disassemble")
 
@@ -427,14 +473,14 @@ class AutomatedDisassembler:
         print(f"📂 All files saved in: {self.disassembly_dir}")
         return disassembled
 
-    def fully_automated_disassembly(self):
+    def fully_automated_disassembly(self, verbose=False):
         """Fully automated workflow to find and disassemble all meaningful routines"""
         print("=== FULLY AUTOMATED ROM DISASSEMBLY ===")
         print("This will find and disassemble all meaningful routines automatically.")
         print("")
 
         # Strict mode: traverse only from reset vector (no heuristic scanning)
-        traversed = self.graph_disassemble_from_reset()
+        traversed = self.graph_disassemble_from_reset(verbose=verbose)
 
         print(f"\n=== AUTOMATION COMPLETE ===")
         print(f"Disassembled {traversed} routines (reset traversal only)")
@@ -493,6 +539,7 @@ def main():
     parser.add_argument("--search", action="store_true", help="Search for common routine patterns")
     parser.add_argument("--known", action="store_true", help="Disassemble known routines")
     parser.add_argument("--full-auto", action="store_true", help="Fully automated disassembly of all meaningful routines")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose progress reporting")
 
     args = parser.parse_args()
 
@@ -536,32 +583,7 @@ def main():
         disassembler.disassemble_known_routines()
 
     elif args.full_auto:
-        # Capture all output to limit console display
-        import tempfile
-        import io
-
-        # Capture stdout to a string buffer
-        original_stdout = sys.stdout
-        captured_output = io.StringIO()
-        sys.stdout = captured_output
-
-        try:
-            disassembler.fully_automated_disassembly()
-        finally:
-            # Restore stdout
-            sys.stdout = original_stdout
-
-        # Get captured output and limit display
-        output_lines = captured_output.getvalue().split('\n')
-
-        if len(output_lines) <= 100:
-            # Show full output
-            print('\n'.join(output_lines))
-        else:
-            # Show summary
-            print('\n'.join(output_lines[:50]))
-            print(f"... ({len(output_lines) - 100} lines omitted) ...")
-            print('\n'.join(output_lines[-50:]))
+        disassembler.fully_automated_disassembly(verbose=args.verbose)
 
     else:
         print("No action specified. Use --search, --known, --full-auto, or --addr")

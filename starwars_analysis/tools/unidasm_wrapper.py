@@ -57,7 +57,7 @@ def run_unidasm(rom_file: str, start_addr: str, end_addr: Optional[str] = None, 
             
             # Run unidasm on the extracted window with correct base address
             unidasm_cmd = ["unidasm", "-arch", arch, temp_file_path, "-basepc", start_addr]
-            unidasm_result = subprocess.run(unidasm_cmd, capture_output=True, text=True, check=True)
+            unidasm_result = subprocess.run(unidasm_cmd, capture_output=True, text=True, check=True, timeout=30)
             
             lines = []
             for line in unidasm_result.stdout.split('\n'):
@@ -133,7 +133,7 @@ def run_unidasm_full(rom_file: str, arch: str = "m6809") -> List[str]:
     """
     try:
         result = subprocess.run(["unidasm", "-arch", arch, rom_file], 
-                              capture_output=True, text=True, check=True)
+                              capture_output=True, text=True, check=True, timeout=30)
         return result.stdout.split('\n')
     except subprocess.CalledProcessError as e:
         if "unidasm" in str(e):
