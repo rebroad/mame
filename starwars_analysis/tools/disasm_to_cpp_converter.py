@@ -148,7 +148,7 @@ def convert_operand(operands, mnemonic):
         if mnemonic in ['ADDA', 'ADDB', 'ADCA', 'ADCB', 'SUBA', 'SUBB', 'SBCA', 'SBCB', 'CMPA', 'CMPB', 'ANDA', 'ANDB', 'ORA', 'ORB', 'EORA', 'EORB']:
             return f"cpu.read_memory(0x{value.upper()})"
         else:
-        return f"0x{value.upper()}"
+            return f"0x{value.upper()}"
 
     # Handle direct page addressing
     if operands.startswith('<'):
