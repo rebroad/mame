@@ -239,7 +239,7 @@ def find_routine_end(rom_file: str, start_addr: str, arch: str = "m6809") -> Opt
     Returns:
         End address as hex string, or None if not found
     """
-    end_addr, _, _ = find_intelligent_boundaries(rom_file, start_addr, arch)
+    end_addr, _, _ = find_intelligent_boundaries(rom_file, start_addr, arch, None)
     return end_addr
 
 def _extract_jump_target(line: str) -> Optional[str]:

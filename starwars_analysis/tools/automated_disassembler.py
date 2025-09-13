@@ -191,7 +191,7 @@ class AutomatedDisassembler:
                             print(f"Found {pattern} at address {addr}")
 
                             # Find boundaries for this routine
-                            start, end, _ = self.find_routine_boundaries(addr)
+                            start, end, _, _ = self.find_routine_boundaries(addr)
                             if start and end:
                                 found_routines[pattern] = (start, end)
                                 print(f"  Boundaries: {start} to {end}")
