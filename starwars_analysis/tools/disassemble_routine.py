@@ -167,6 +167,7 @@ def main():
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
     parser.add_argument("--force", action="store_true", help="Force save even if routine appears invalid")
     parser.add_argument("--arch", default="m6809", help="CPU architecture (default: m6809)")
+    parser.add_argument("--jmp-target", help="Target address for JMP instruction to handle overlaps")
 
     args = parser.parse_args()
 
