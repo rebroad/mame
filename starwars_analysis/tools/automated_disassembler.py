@@ -79,7 +79,7 @@ class AutomatedDisassembler:
         except Exception:
             return []
 
-    def find_routine_boundaries(self, start_addr: str, max_search: int = 1000) -> Tuple[str, str]:
+    def find_routine_boundaries(self, start_addr: str, max_search: int = 1000) -> Tuple[str, str, set]:
         """Find the start and end boundaries of a routine with intelligent analysis"""
         print(f"Finding boundaries for routine at {start_addr}...")
 
@@ -98,14 +98,14 @@ class AutomatedDisassembler:
                 raise ValueError(f"Could not find start address in disassembly")
 
             # Intelligent boundary detection
-            end_addr_found = self._find_intelligent_end_boundary(lines, actual_start)
+            end_addr_found, external_targets = self._find_intelligent_end_boundary(lines, actual_start)
 
             if not end_addr_found:
                 # Fallback: use a small fixed window to seed traversal
                 start_int = int(actual_start, 16)
                 fallback_len = 128
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return actual_start, f"{end_int:04x}"
+                return actual_start, f"{end_int:04x}", set()
 
             # Validate routine size
             start_int = int(actual_start, 16)
@@ -115,23 +115,24 @@ class AutomatedDisassembler:
             if size < 3:
                 fallback_len = 64
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return actual_start, f"{end_int:04x}"
+                return actual_start, f"{end_int:04x}", set()
 
-            return actual_start, end_addr_found
+            return actual_start, end_addr_found, external_targets
 
         except Exception as e:
             print(f"Error finding boundaries: {e}")
             try:
                 start_int = int(start_addr, 16)
                 end_int = (start_int + 64 - 1) & 0xFFFF
-                return f"{start_int:04x}", f"{end_int:04x}"
+                return f"{start_int:04x}", f"{end_int:04x}", set()
             except Exception:
-                return None, None
+                return None, None, set()
 
-    def _find_intelligent_end_boundary(self, lines: List[str], start_addr: str) -> Optional[str]:
+    def _find_intelligent_end_boundary(self, lines: List[str], start_addr: str) -> Tuple[Optional[str], set]:
         """Intelligently find the end boundary of a routine"""
         start_int = int(start_addr, 16)
         end_candidates = []
+        jump_targets = set()  # Collect all jump targets as we process
 
         for i, line in enumerate(lines):
             if not re.match(r'^[0-9a-f]+:', line, re.IGNORECASE):
@@ -148,9 +149,19 @@ class AutomatedDisassembler:
             if addr_int < start_int:
                 continue
 
+            # Collect jump targets from this line
+            branch_matches = re.findall(r'\b(BEQ|BNE|BCC|BCS|BVC|BVS|BMI|BPL|BHI|BLS|BGE|BLT|BGT|BLE|BRA)\s+\$?([0-9A-Fa-f]{4})\b', line, re.IGNORECASE)
+            for _, target in branch_matches:
+                jump_targets.add(target.lower())
+
             # Look for end boundary instructions
             if re.search(r'\b(39.*RTS|3b.*RTI|3f.*SWI)\b', line, re.IGNORECASE):
-                end_candidates.append((addr, addr_int, "return"))
+                # Check if the next address is a jump target
+                next_addr = f"{addr_int + 1:04x}".lower()
+                
+                # Only stop at RTS if the next address is not a jump target
+                if next_addr not in jump_targets:
+                    end_candidates.append((addr, addr_int, "return"))
             elif re.search(r'\b(7e.*JMP)\b', line, re.IGNORECASE):
                 # Check if it's a jump to self (infinite loop) or external jump
                 jmp_target = self._extract_jump_target(line)
@@ -166,7 +177,7 @@ class AutomatedDisassembler:
                 end_candidates.append((addr, addr_int, "branch"))
 
         if not end_candidates:
-            return None
+            return None, set()
 
         # Prioritize end candidates: return > external_jump > branch > infinite_loop
         priority_order = ["return", "external_jump", "branch", "infinite_loop"]
@@ -175,10 +186,17 @@ class AutomatedDisassembler:
             for addr, addr_int, reason in end_candidates:
                 if reason == priority:
                     print(f"  Found {reason} boundary at {addr}")
-                    return addr
+                    # Filter jump targets that are outside the routine range
+                    end_int = addr_int
+                    external_targets = {target for target in jump_targets 
+                                      if int(target, 16) < start_int or int(target, 16) > end_int}
+                    return addr, external_targets
 
         # Fallback: return the first candidate
-        return end_candidates[0][0]
+        end_int = end_candidates[0][1]
+        external_targets = {target for target in jump_targets 
+                          if int(target, 16) < start_int or int(target, 16) > end_int}
+        return end_candidates[0][0], external_targets
 
     def _extract_jump_target(self, line: str) -> Optional[str]:
         """Extract the target address from a JMP instruction"""
@@ -266,7 +284,7 @@ class AutomatedDisassembler:
                             print(f"Found {pattern} at address {addr}")
 
                             # Find boundaries for this routine
-                            start, end = self.find_routine_boundaries(addr)
+                            start, end, _ = self.find_routine_boundaries(addr)
                             if start and end:
                                 found_routines[pattern] = (start, end)
                                 print(f"  Boundaries: {start} to {end}")
@@ -346,12 +364,17 @@ class AutomatedDisassembler:
                 print(f"📊 Progress: {disassembled} files created, {len(to_visit)} addresses in queue")
             
             print(f"Traversing entry ${addr}... (Queue: {len(to_visit)})")
-            start, end = self.find_routine_boundaries(addr, max_search=1500)
+            start, end, external_targets = self.find_routine_boundaries(addr, max_search=1500)
             is_seed = (addr == entry)
 
             if start and end:
                 name = f"{start}_{end}"
                 ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed)
+                
+                # Add external targets to the queue for exploration
+                for target in external_targets:
+                    if target not in visited and target not in to_visit:
+                        to_visit.append(target)
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless
                     seed_lines = self._disassemble_lines(addr, 256)
