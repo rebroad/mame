@@ -94,8 +94,11 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
         Tuple of (end_address, external_targets_set)
     """
     try:
-        # Get disassembly for a reasonable range
-        lines = run_unidasm(rom_file, start_addr, arch=arch)
+        # Get disassembly for a reasonable range (use larger default for long routines)
+        # For boundary detection, we need a larger range to find the actual end
+        start_int = int(start_addr, 16)
+        end_addr = f"{start_int + 2048:04X}"  # Use 2048 bytes instead of 512
+        lines = run_unidasm(rom_file, start_addr, end_addr, arch=arch)
         
         start_int = int(start_addr, 16)
         end_candidates = []
@@ -138,8 +141,17 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
                     # External jump - this might be the end
                     end_candidates.append((addr, addr_int, "external_jump"))
             elif re.search(r'\b(20.*BRA|16.*LBRA)\b', line, re.IGNORECASE):
-                # Estimate branch direction using the home-grown helper to cap the window
-                end_candidates.append((addr, addr_int, "branch"))
+                # Only consider BRA as routine end if it's jumping far away (external jump)
+                bra_target = _extract_branch_target(line)
+                if bra_target:
+                    try:
+                        target_int = int(bra_target, 16)
+                        # Only consider it a boundary if it's jumping far away (more than 128 bytes)
+                        # Short BRA instructions are internal control flow, not routine boundaries
+                        if abs(target_int - addr_int) > 128:
+                            end_candidates.append((addr, addr_int, "branch"))
+                    except ValueError:
+                        pass
         
         if not end_candidates:
             return None, set()
@@ -191,6 +203,18 @@ def find_routine_end(rom_file: str, start_addr: str, arch: str = "m6809") -> Opt
 def _extract_jump_target(line: str) -> Optional[str]:
     """Extract the target address from a JMP instruction"""
     match = re.search(r'\b7e\s+([0-9a-f]+)\b', line, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
+def _extract_branch_target(line: str) -> Optional[str]:
+    """Extract the target address from a BRA instruction"""
+    # Match BRA $XXXX pattern
+    match = re.search(r'\b20\s+([0-9a-f]{4})\b', line, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    # Match LBRA $XXXX pattern  
+    match = re.search(r'\b16\s+([0-9a-f]{4})\b', line, re.IGNORECASE)
     if match:
         return match.group(1)
     return None

@@ -259,7 +259,7 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
             if target_address <= 0xFFFF:
                 # Generate the appropriate branch code with the target address
                 if mnemonic == 'BRA':
-                    return f"    cpu.m_pc = 0x{target_address:04X};"
+                    return f"    goto label_{target_address:04X};"
                 elif mnemonic == 'BNE':
                     return f"    if (!cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
                 elif mnemonic == 'BEQ':
@@ -414,15 +414,9 @@ def convert_disassembly_file(input_file, output_file, function_name):
     with open(input_file, 'r') as f:
         lines = f.readlines()
     
-    cpp_lines = []
-    cpp_lines.append('#include "cpu_6809.h"')
-    cpp_lines.append('')
-    cpp_lines.append('namespace StarWars {')
-    cpp_lines.append('')
-    cpp_lines.append(f'void {function_name}_impl(CPU6809& cpu) {{')
-    cpp_lines.append(f'    // Converted from {input_file.name}')
-    cpp_lines.append(f'    // Address: 0x{function_name.upper().replace("ROUTINE_", "")}')
-    cpp_lines.append('')
+    # First pass: collect all jump targets and parse instructions
+    jump_targets = set()
+    parsed_instructions = []
     
     for line in lines:
         line = line.strip()
@@ -433,11 +427,40 @@ def convert_disassembly_file(input_file, output_file, function_name):
         if not parsed:
             continue
         
+        parsed_instructions.append(parsed)
+        
+        # Collect BRA targets for label generation
+        if parsed['mnemonic'] == 'BRA' and parsed['operands'].startswith('$'):
+            target_str = parsed['operands'][1:]  # Remove $ prefix
+            try:
+                target_address = int(target_str, 16)
+                if target_address <= 0xFFFF:
+                    jump_targets.add(target_address)
+            except ValueError:
+                pass
+    
+    cpp_lines = []
+    cpp_lines.append('#include "cpu_6809.h"')
+    cpp_lines.append('')
+    cpp_lines.append('namespace StarWars {')
+    cpp_lines.append('')
+    cpp_lines.append(f'void {function_name}_impl(CPU6809& cpu) {{')
+    cpp_lines.append(f'    // Converted from {input_file.name}')
+    cpp_lines.append(f'    // Address: 0x{function_name.upper().replace("ROUTINE_", "")}')
+    cpp_lines.append('')
+    
+    for parsed in parsed_instructions:
+        current_address = parsed['address']
+        
+        # Add label if this address is a jump target
+        if current_address in jump_targets:
+            cpp_lines.append(f'    label_{current_address:04X}:')
+        
         # Add comment with original assembly
         cpp_lines.append(f'    // {parsed["address"]}: {parsed["mnemonic"]} {parsed["operands"]}')
         
         # Add C++ conversion
-        cpp_code = convert_instruction(parsed, line)
+        cpp_code = convert_instruction(parsed, f'{parsed["address"]}: {parsed["mnemonic"]} {parsed["operands"]}')
         cpp_lines.append(cpp_code)
         cpp_lines.append('')
     
