@@ -148,7 +148,7 @@ def disassemble_routine(rom_file: str, start_addr: str, end_addr: Optional[str] 
         # Output to file or stdout
         if output_file:
             with open(output_file, 'w') as f:
-                f.write('\n'.join(output_lines))
+                f.write('\n'.join(output_lines) + '\n')
             if verbose:
                 print(f"✓ Created {output_file} with {len(lines)} lines")
         else:
