@@ -91,12 +91,12 @@ def parse_disassembly_line(line):
     match = re.match(r'^([0-9a-fA-F]{4}):\s+([0-9a-fA-F\s]+)\s+(\w+)\s+(.*)$', line)
     if not match:
         return None
-    
+
     addr = match.group(1).upper()
     bytes_str = match.group(2).strip()
     mnemonic = match.group(3).upper()
     operands = match.group(4).strip()
-    
+
     return {
         'address': addr,
         'bytes': bytes_str,
@@ -108,12 +108,12 @@ def convert_operand(operands, mnemonic):
     """Convert 6809 operand to C++ expression with robust handling"""
     if not operands:
         return ""
-    
+
     # Handle immediate values
     if operands.startswith('#$'):
         value = operands[2:]  # Remove #$ prefix
         return f"0x{value.upper()}"
-    
+
     # Handle direct page addressing
     if operands.startswith('<'):
         value = operands[1:]  # Remove < prefix
@@ -121,7 +121,7 @@ def convert_operand(operands, mnemonic):
         if value.startswith('$'):
             value = value[1:]  # Remove $ prefix
         return f"0x{value.upper()}"
-    
+
     # Handle extended addressing
     if operands.startswith('>'):
         value = operands[1:]  # Remove > prefix
@@ -129,7 +129,7 @@ def convert_operand(operands, mnemonic):
         if value.startswith('$'):
             value = value[1:]  # Remove $ prefix
         return f"0x{value.upper()}"
-    
+
     # Handle simple $ prefix
     if operands.startswith('$') and not operands.startswith('$x'):
         value = operands[1:]  # Remove $ prefix
@@ -137,32 +137,32 @@ def convert_operand(operands, mnemonic):
         if value.startswith('$'):
             value = value[1:]  # Remove second $ if present
         return f"0x{value.upper()}"
-    
+
     # Handle indexed addressing - complex cases
     if ',' in operands:
         # Handle simple indexed addressing like "A,X" or "B,Y"
         parts = operands.split(',')
         if len(parts) == 2:
             reg1, reg2 = parts[0].strip(), parts[1].strip()
-            
+
             # Handle register-to-register transfers
             if reg1 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S'] and reg2 in ['A', 'B', 'D', 'X', 'Y', 'U', 'S']:
                 return f"cpu.m_{reg1.lower()},cpu.m_{reg2.lower()}"
-            
+
             # Handle indexed addressing with offset
             if reg1.startswith('$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[1:]  # Remove $ prefix
                 if reg2 == 'S':
                     return f"0x{offset.upper()},cpu.m_sp"
                 return f"0x{offset.upper()},cpu.m_{reg2.lower()}"
-            
+
             # Handle negative offsets
             if reg1.startswith('-$') and reg2 in ['X', 'Y', 'U', 'S']:
                 offset = reg1[2:]  # Remove -$ prefix
                 if reg2 == 'S':
                     return f"-0x{offset.upper()},cpu.m_sp"
                 return f"-0x{offset.upper()},cpu.m_{reg2.lower()}"
-            
+
             # Handle post-increment
             if reg2.endswith('++') or reg2.endswith('--'):
                 reg = reg2[:-2]
@@ -170,7 +170,7 @@ def convert_operand(operands, mnemonic):
                     if reg == 'S':
                         return f"cpu.m_sp{reg2[-2:]}"
                     return f"cpu.m_{reg.lower()}{reg2[-2:]}"
-            
+
             # Handle pre-increment
             if reg1.endswith('++') or reg1.endswith('--'):
                 reg = reg1[:-2]
@@ -178,10 +178,10 @@ def convert_operand(operands, mnemonic):
                     if reg == 'S':
                         return f"cpu.m_sp{reg1[-2:]}"
                     return f"cpu.m_{reg.lower()}{reg1[-2:]}"
-        
+
         # For complex cases, return TODO
         return f"// TODO: Complex indexed addressing: {operands}"
-    
+
     # Handle register names
     if operands in ['A', 'B', 'D', 'X', 'Y', 'U', 'S', 'PC', 'CC', 'DP']:
         if operands == 'S':
@@ -189,11 +189,11 @@ def convert_operand(operands, mnemonic):
         elif operands == 'DP':
             return "cpu.m_dp"  # DP is direct page register
         return f"cpu.m_{operands.lower()}"
-    
+
     # Handle numeric values
     if operands.isdigit() or (operands.startswith('0x') and all(c in '0123456789ABCDEFabcdef' for c in operands[2:])):
         return operands
-    
+
     # Handle post-increment/decrement
     if operands.endswith('++') or operands.endswith('--'):
         reg = operands[:-2]
@@ -201,7 +201,7 @@ def convert_operand(operands, mnemonic):
             if reg == 'S':
                 return f"cpu.m_sp{operands[-2:]}"
             return f"cpu.m_{reg.lower()}{operands[-2:]}"
-    
+
     # For unrecognized cases, return TODO
     return f"// TODO: Unrecognized operand: {operands}"
 
@@ -248,7 +248,7 @@ def parse_branch_operand(operands):
 
 def convert_branch_instruction(mnemonic, operands, current_address, disassembly_line=None):
     """Convert branch instruction with relative offset to absolute address"""
-    
+
     # Check if operands already contain an absolute address (e.g., "$0018", "$002D")
     if operands.startswith('$'):
         target_str = operands[1:]  # Remove $ prefix
@@ -289,7 +289,7 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
         except ValueError:
             # If it's not a valid hex number, fall through to relative offset calculation
             pass
-    
+
     # Try to extract the actual byte offset from the disassembly line first
     if disassembly_line:
         actual_offset = extract_branch_offset_from_line(disassembly_line)
@@ -302,10 +302,10 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
     else:
         # Fallback to parsing operands
         offset = parse_branch_operand(operands)
-    
+
     if offset is None:
         return f"    // TODO: Invalid branch offset: {operands}"
-    
+
     # Convert current_address from hex string to integer
     if isinstance(current_address, str):
         try:
@@ -314,11 +314,11 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
             return f"    // TODO: Invalid address: {current_address}"
     else:
         current_addr_int = current_address
-    
+
     # Calculate target address: current_address + offset + 2 (for the instruction size)
     # For 6809, branch instructions are 2 bytes, so we add 2 to get the address after the instruction
     target_address = current_addr_int + offset + 2
-    
+
     # Generate the appropriate branch code
     if mnemonic == 'BRA':
         return f"    cpu.m_pc = 0x{target_address:04X};"
@@ -350,18 +350,18 @@ def convert_instruction(parsed, original_line=None):
     mnemonic = parsed['mnemonic']
     operands = parsed['operands']
     address = parsed.get('address', 0)
-    
+
     if mnemonic not in INSTRUCTION_MAP:
         return f"    // TODO: Convert {mnemonic} {operands}"
-    
+
     # Handle branch instructions specially - convert relative offsets to absolute addresses
     branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT', 'JMP']
     if mnemonic in branch_instructions:
         return convert_branch_instruction(mnemonic, operands, address, original_line)
-    
+
     # Handle immediate values differently from memory addressing
     is_immediate = operands.startswith('#')
-    
+
     # For immediate values, use direct assignment
     if is_immediate and mnemonic in ['LDA', 'LDB', 'LDD', 'LDX', 'LDY', 'LDU', 'LDS', 'CMPA', 'CMPB', 'CMPX']:
         cpp_operand = convert_operand(operands, mnemonic)
@@ -375,10 +375,10 @@ def convert_instruction(parsed, original_line=None):
             return f"    cpu.compare_x({cpp_operand});"
         else:  # LDD, LDX, LDY, LDU
             return f"    cpu.m_{mnemonic[2:].lower()} = {cpp_operand};"
-    
+
     cpp_template = INSTRUCTION_MAP[mnemonic]
     cpp_operand = convert_operand(operands, mnemonic)
-    
+
     # Handle special cases
     if mnemonic == 'TFR' and ',' in operands:
         src, dest = operands.split(',')
@@ -390,57 +390,75 @@ def convert_instruction(parsed, original_line=None):
         if dest == 'S':
             dest = 'sp'
         return f"    cpu.m_{dest.lower()} = cpu.m_{src.lower()};"
-    
+
     # Handle indexed addressing for memory operations
     if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
         # For now, simplify indexed addressing
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
-    
+
     # Handle comma operator issues (e.g., "cpu.state_.u += -0x1,cpu.state_.u")
     if ',' in cpp_operand and not cpp_operand.startswith('// TODO:'):
         # This is likely a malformed expression, convert to TODO
         return f"    // TODO: Fix comma operator: {mnemonic} {operands}"
-    
+
     # Handle complex addressing modes
     if cpp_operand.startswith('// TODO:'):
         return f"    {cpp_operand}"
-    
+
     # Replace operand placeholder
     cpp_code = cpp_template.format(operand=cpp_operand)
-    
+
     return f"    {cpp_code};"
 
 def convert_disassembly_file(input_file, output_file, function_name):
     """Convert a disassembly file to C++ function"""
-    
+
     with open(input_file, 'r') as f:
         lines = f.readlines()
-    
+
     # First pass: collect all jump targets and parse instructions
     jump_targets = set()
     parsed_instructions = []
-    
+
+    # Extract routine address range from function name (e.g., "routine_6005_6036" -> 6005 to 6036)
+    routine_start = None
+    routine_end = None
+    if '_' in function_name:
+        try:
+            parts = function_name.split('_')
+            if len(parts) >= 3 and parts[0] == 'routine':
+                routine_start = int(parts[1], 16)
+                routine_end = int(parts[2], 16)
+        except ValueError:
+            pass
+
     for line in lines:
         line = line.strip()
         if not line:
             continue
-        
+
         parsed = parse_disassembly_line(line)
         if not parsed:
             continue
-        
+
         parsed_instructions.append(parsed)
-        
+
         # Collect BRA and JMP targets for label generation
         if parsed['mnemonic'] in ['BRA', 'JMP'] and parsed['operands'].startswith('$'):
             target_str = parsed['operands'][1:]  # Remove $ prefix
             try:
                 target_address = int(target_str, 16)
                 if target_address <= 0xFFFF:
-                    jump_targets.add(target_address)
+                    # Only add to jump_targets if this address is within the current routine's range
+                    if routine_start is not None and routine_end is not None:
+                        if routine_start <= target_address <= routine_end:
+                            jump_targets.add(target_address)
+                    else:
+                        # If we can't determine routine range, assume all targets are internal
+                        jump_targets.add(target_address)
             except ValueError:
                 pass
-    
+
     cpp_lines = []
     cpp_lines.append('#include "cpu_6809.h"')
     cpp_lines.append('')
@@ -450,35 +468,36 @@ def convert_disassembly_file(input_file, output_file, function_name):
     cpp_lines.append(f'    // Converted from {input_file.name}')
     cpp_lines.append(f'    // Address: 0x{function_name.upper().replace("ROUTINE_", "")}')
     cpp_lines.append('')
-    
+
     for parsed in parsed_instructions:
         current_address = parsed['address']
-        
-        # Add label if this address is a jump target
-        if current_address in jump_targets:
-            cpp_lines.append(f'    label_{current_address:04X}:')
-        
+        current_address_int = int(current_address, 16)
+
+        # Add label if this address is a jump target OR if it's the start address of the routine
+        if current_address_int in jump_targets or (routine_start is not None and current_address_int == routine_start):
+            cpp_lines.append(f'    label_{current_address_int:04X}:')
+
         # Add comment with original assembly
         cpp_lines.append(f'    // {parsed["address"]}: {parsed["mnemonic"]} {parsed["operands"]}')
-        
+
         # Add C++ conversion
         cpp_code = convert_instruction(parsed, f'{parsed["address"]}: {parsed["mnemonic"]} {parsed["operands"]}')
         cpp_lines.append(cpp_code)
         cpp_lines.append('')
-    
+
     cpp_lines.append('}')
     cpp_lines.append('')
     cpp_lines.append('} // namespace StarWars')
-    
+
     # Generate new content
     new_content = '\n'.join(cpp_lines)
-    
+
     # Check if file exists and read existing content
     existing_content = None
     if output_file.exists():
         with open(output_file, 'r') as f:
             existing_content = f.read()
-    
+
     # Only write if content has changed
     if existing_content != new_content:
         with open(output_file, 'w') as f:
@@ -494,16 +513,16 @@ def main():
     parser.add_argument("input_file", help="Input disassembly file (rom_disasm_auto_*.md)")
     parser.add_argument("output_file", help="Output C++ file")
     parser.add_argument("function_name", help="C++ function name")
-    
+
     args = parser.parse_args()
-    
+
     input_path = Path(args.input_file)
     output_path = Path(args.output_file)
-    
+
     if not input_path.exists():
         print(f"ERROR: Input file not found: {input_path}")
         return 1
-    
+
     convert_disassembly_file(input_path, output_path, args.function_name)
     return 0
 
