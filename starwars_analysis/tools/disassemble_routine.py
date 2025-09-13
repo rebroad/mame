@@ -17,36 +17,24 @@ from pathlib import Path
 from unidasm_wrapper import run_unidasm, find_routine_end
 
 def _insert_jmp_for_overlap(lines: list, jmp_target: str, verbose: bool = False) -> list:
-    """Insert JMP instruction at the overlap point for handling routine overlaps."""
+    """Replace the last instruction with JMP instruction for handling routine overlaps."""
     if not jmp_target:
         return lines
 
     output_lines = lines.copy()
-    jmp_inserted = False
 
-    for i, line in enumerate(lines):
-        line = line.strip()
-        if not line or line.startswith(';'):
-            continue
+    # Find the last instruction and replace it with JMP
+    if lines:
+        last_line = lines[-1]
+        last_addr_match = re.match(r'^([0-9a-f]+):', last_line, re.IGNORECASE)
+        if last_addr_match:
+            last_addr = last_addr_match.group(1).upper()
+            jmp_addr = last_addr.lower()
 
-        # Extract address from line
-        addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
-        if not addr_match:
-            continue
-
-        addr = addr_match.group(1).upper()
-        addr_int = int(addr, 16)
-        jmp_target_int = int(jmp_target, 16)
-
-        # If this address matches the JMP target, insert JMP here
-        if addr_int == jmp_target_int:
-            jmp_addr = f"{addr_int:04X}"
-            # Insert JMP instruction before the existing instruction
-            output_lines.insert(i, f"{jmp_addr}: 7e {jmp_target}     JMP    ${jmp_target}")
+            # Replace the last instruction with JMP
+            output_lines[-1] = f"{jmp_addr}: 7e {jmp_target}     JMP    ${jmp_target}"
             if verbose:
-                print(f"  Added JMP ${jmp_target} at ${jmp_addr} for overlap handling")
-            jmp_inserted = True
-            break
+                print(f"  Replaced instruction at ${jmp_addr} with JMP ${jmp_target} for overlap handling")
 
     return output_lines
 

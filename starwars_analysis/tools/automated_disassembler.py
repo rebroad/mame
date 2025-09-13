@@ -137,12 +137,12 @@ class AutomatedDisassembler:
         success = disassemble_routine(
             rom_file=self.rom_file,
             start_addr=start_addr,
-            end_addr=None,  # Let auto_detect_end find the proper end
+            end_addr=end_addr if jmp_target else None,  # Use provided end_addr if JMP target (overlap detected)
             routine_name=routine_name,
             markdown=False,  # Use plain text for batch processing
             verbose=verbose,
             force_save=force_save,
-            auto_detect_end=True,  # Use intelligent boundary detection
+            auto_detect_end=not jmp_target,  # Only auto-detect if no JMP target (no overlap)
             arch=self.arch,
             jmp_target=jmp_target  # Pass the JMP target for overlap handling
         )
@@ -280,7 +280,7 @@ class AutomatedDisassembler:
             start_int = int(start_addr, 16)
             end_int = int(end_addr, 16)
             addresses_to_remove = []
-            
+
             for addr in to_visit:
                 try:
                     addr_int = int(addr, 16)
@@ -288,12 +288,12 @@ class AutomatedDisassembler:
                         addresses_to_remove.append(addr)
                 except ValueError:
                     pass
-            
+
             for addr in addresses_to_remove:
                 to_visit.remove(addr)
                 if verbose:
                     print(f"  🗑️  Removed covered address: ${addr}")
-            
+
             if addresses_to_remove:
                 print(f"  🧹 Removed {len(addresses_to_remove)} addresses covered by routine {routine_name} ({start_addr}-{end_addr})")
 

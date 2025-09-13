@@ -98,7 +98,7 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
         # Get disassembly for a reasonable range (use larger default for long routines)
         # For boundary detection, we need a larger range to find the actual end
         start_int = int(start_addr, 16)
-        end_addr = f"{start_int + 2048:04X}"  # Use 2048 bytes instead of 512
+        end_addr = f"{start_int + 2048:04x}"  # Use 2048 bytes instead of 512
         lines = run_unidasm(rom_file, start_addr, end_addr, arch=arch)
 
         start_int = int(start_addr, 16)
@@ -127,20 +127,15 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
                     existing_end_int = int(existing_end, 16)
 
                     if existing_start_int <= addr_int <= existing_end_int:
-                        # Found overlap! This routine should end before this address
-                        # Find the previous instruction as the end point
-                        prev_addr_int = addr_int - 1
-                        prev_addr = f"{prev_addr_int:04X}"
+                        # Found overlap! This routine should end at the overlap point
+                        # The JMP instruction will be inserted at this address
+                        overlap_addr = f"{addr_int:04x}"
 
                         # Set the JMP target to the overlapping routine's start
                         jmp_target_for_overlap = existing_start
 
                         # Add this as an end candidate with highest priority
-                        end_candidates.append((prev_addr, prev_addr_int, "overlap_jmp"))
-
-                        # Also add a JMP instruction at the overlap point
-                        jmp_addr = f"{addr_int:04X}"
-                        jmp_target_for_overlap = existing_start
+                        end_candidates.append((overlap_addr, addr_int, "overlap_jmp"))
                         break
 
                 if jmp_target_for_overlap:
