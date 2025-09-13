@@ -354,6 +354,20 @@ class AutomatedDisassembler:
         max_queue_size = 1000  # Safety limit to prevent infinite loops
         start_time = time.time()
         max_runtime = 300  # 5 minutes max runtime
+        processed_ranges = []  # List of (start, end) tuples for already processed routines
+
+        def is_address_covered(addr_str):
+            """Check if an address is already covered by a processed routine"""
+            try:
+                addr_int = int(addr_str, 16)
+                for start_str, end_str in processed_ranges:
+                    start_int = int(start_str, 16)
+                    end_int = int(end_str, 16)
+                    if start_int <= addr_int <= end_int:
+                        return True
+                return False
+            except ValueError:
+                return False
 
         print(f"🚀 Starting traversal from reset vector ${entry}")
         print(f"📊 Initial queue: {len(to_visit)} addresses")
@@ -370,6 +384,13 @@ class AutomatedDisassembler:
             addr = to_visit.pop(0)
             if addr in visited:
                 continue
+            
+            # Skip if address is already covered by a processed routine
+            if is_address_covered(addr):
+                if verbose:
+                    print(f"  ⏭️  Skipping ${addr} - already covered by processed routine")
+                continue
+                
             visited.add(addr)
             discovered_entries.append(addr)
 
@@ -401,9 +422,15 @@ class AutomatedDisassembler:
                 name = f"{start}_{end}"
                 ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed)
                 
+                if ok:
+                    # Add this routine range to the processed ranges
+                    processed_ranges.append((start, end))
+                    if verbose:
+                        print(f"  📝 Added routine range: {start} to {end}")
+                
                 # Add external targets to the queue for exploration
                 for target in external_targets:
-                    if target not in visited and target not in to_visit:
+                    if target not in visited and target not in to_visit and not is_address_covered(target):
                         # Safety check: validate address format and range
                         try:
                             target_int = int(target, 16)
@@ -418,6 +445,9 @@ class AutomatedDisassembler:
                         except ValueError:
                             if verbose:
                                 print(f"  ⚠️  Skipping invalid target: ${target} (not hex)")
+                    elif is_address_covered(target):
+                        if verbose:
+                            print(f"  ⏭️  Skipping target ${target} - already covered by processed routine")
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless
                     seed_lines = self._disassemble_lines(addr, 256)
@@ -429,7 +459,7 @@ class AutomatedDisassembler:
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
                         for t in self._extract_call_targets(seed_lines):
-                            if t not in visited and t not in to_visit:
+                            if t not in visited and t not in to_visit and not is_address_covered(t):
                                 to_visit.append(t)
                                 total_jump_targets += 1
                 elif ok:
@@ -437,7 +467,7 @@ class AutomatedDisassembler:
                     # After saving, get lines again to discover new targets inside this routine
                     lines = self._disassemble_lines(start, self.calculate_byte_count(start, end))
                     for t in self._extract_call_targets(lines):
-                        if t not in visited and t not in to_visit:
+                        if t not in visited and t not in to_visit and not is_address_covered(t):
                             to_visit.append(t)
                             total_jump_targets += 1
             else:
@@ -452,7 +482,7 @@ class AutomatedDisassembler:
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
                     for t in self._extract_call_targets(lines):
-                        if t not in visited and t not in to_visit:
+                        if t not in visited and t not in to_visit and not is_address_covered(t):
                             to_visit.append(t)
                             total_jump_targets += 1
                 else:
