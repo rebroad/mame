@@ -46,8 +46,8 @@ def update_cmake_lists(project_path: Path, routine_files: List[str]) -> bool:
 
     for line in lines[sources_start+1:sources_end]:
         if 'src/routine_' in line:
-            # Extract routine name from line like "    src/routine_f261.cpp"
-            match = re.search(r'src/routine_([a-f0-9]+)\.cpp', line)
+            # Extract routine name from line like "    src/routine_f261.cpp" or "    src/routine_6005_6036.cpp"
+            match = re.search(r'src/routine_([a-f0-9_]+)\.cpp', line)
             if match:
                 routine_name = match.group(1)
                 if routine_name in expected_routines:
@@ -67,7 +67,7 @@ def update_cmake_lists(project_path: Path, routine_files: List[str]) -> bool:
     existing_in_cmake = set()
     for line in new_lines:
         if 'src/routine_' in line:
-            match = re.search(r'src/routine_([a-f0-9]+)\.cpp', line)
+            match = re.search(r'src/routine_([a-f0-9_]+)\.cpp', line)
             if match:
                 existing_in_cmake.add(match.group(1))
 
@@ -324,12 +324,12 @@ def get_existing_routine_files(src_dir: Path) -> List[str]:
     """Get list of existing routine files in the src directory"""
     routine_files = []
     for file_path in src_dir.glob("routine_*.cpp"):
-        # Extract routine name from filename like "routine_f261.cpp"
-        match = re.match(r'routine_([a-f0-9]+)\.cpp', file_path.name)
+        # Extract routine name from filename like "routine_f261.cpp" or "routine_6005_6036.cpp"
+        match = re.match(r'routine_([a-f0-9_]+)\.cpp', file_path.name)
         if match:
             routine_files.append(match.group(1))
 
-    return sorted(routine_files, key=lambda x: int(x, 16))
+    return sorted(routine_files, key=lambda x: int(x.split('_')[0], 16))
 
 def cleanup_stale_files(src_dir: Path, expected_routines: Set[str]) -> int:
     """Remove routine files that are no longer expected"""
@@ -337,8 +337,8 @@ def cleanup_stale_files(src_dir: Path, expected_routines: Set[str]) -> int:
 
     removed_count = 0
     for file_path in src_dir.glob("routine_*.cpp"):
-        # Extract routine name from filename
-        match = re.match(r'routine_([a-f0-9]+)\.cpp', file_path.name)
+        # Extract routine name from filename like "routine_f261.cpp" or "routine_6005_6036.cpp"
+        match = re.match(r'routine_([a-f0-9_]+)\.cpp', file_path.name)
         if match:
             routine_name = match.group(1)
             if routine_name not in expected_routines:
