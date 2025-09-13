@@ -2,18 +2,19 @@
 """
 Automated ROM Disassembler
 
-This tool automates the process of finding and disassembling ROM routines
+This tool automates the process of finding and disassembling multiple ROM routines
 with proper boundary detection and validation.
 
+For single routine disassembly, use disassemble_routine.py instead.
+
 Usage:
-  # Single routine disassembly (replaces disassemble_routine.py)
-  python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin --find-end --markdown --output routine.md
-
-  # Batch disassembly (existing functionality)
-  python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin --name my_routine
-
-  # Search and automated modes
+  # Search for common routine patterns
   python3 automated_disassembler.py --rom complete_memory_map.bin --search
+
+  # Disassemble known routines
+  python3 automated_disassembler.py --rom complete_memory_map.bin --known
+
+  # Fully automated disassembly of all meaningful routines
   python3 automated_disassembler.py --rom complete_memory_map.bin --full-auto
 """
 
@@ -25,6 +26,7 @@ import os
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
 from unidasm_wrapper import run_unidasm, find_routine_end, validate_unidasm
+from disassemble_routine import disassemble_routine
 
 class AutomatedDisassembler:
     def __init__(self, rom_file: str, arch: str = "m6809"):
@@ -204,126 +206,30 @@ class AutomatedDisassembler:
         end_int = int(end_addr, 16)
         return end_int - start_int + 1
 
-    def disassemble_routine(self, start_addr: str, end_addr: Optional[str] = None,
-                           routine_name: Optional[str] = None, output_file: Optional[str] = None,
-                           markdown: bool = False, verbose: bool = True,
-                           force_save: bool = False, auto_detect_end: bool = False) -> bool:
-        """
-        Disassemble a routine with flexible options for output format and location.
+    def disassemble_routine_batch(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True, force_save: bool = False) -> bool:
+        """Disassemble a routine with proper boundaries using disassemble_routine.py"""
+        if verbose:
+            print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
 
-        Args:
-            start_addr: Start address (hex string)
-            end_addr: Optional end address (hex string)
-            routine_name: Optional routine name for default file naming
-            output_file: Optional custom output file path
-            markdown: Whether to format output as markdown with code blocks
-            verbose: Whether to print progress messages
-            force_save: Whether to save even if assembly appears invalid
-            auto_detect_end: Whether to auto-detect routine end if end_addr not provided
+        # Use the enhanced disassemble_routine function from disassemble_routine.py
+        success = disassemble_routine(
+            rom_file=self.rom_file,
+            start_addr=start_addr,
+            end_addr=end_addr,
+            routine_name=routine_name,
+            markdown=False,  # Use plain text for batch processing
+            verbose=verbose,
+            force_save=force_save,
+            auto_detect_end=False,  # We already have the end address
+            arch=self.arch
+        )
 
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            # Auto-detect end if requested and not provided
-            if auto_detect_end and not end_addr:
-                end_addr = find_routine_end(self.rom_file, start_addr, self.arch)
-                if end_addr:
-                    if verbose:
-                        print(f"Auto-detected routine end: {end_addr}")
-                else:
-                    if verbose:
-                        print("Could not auto-detect routine end, using default range")
-                    # Use a reasonable default range
-                    start_int = int(start_addr, 16)
-                    end_int = (start_int + 512) & 0xFFFF
-                    end_addr = f"0x{end_int:04x}"
+        if success and verbose:
+            # Validate the created file
+            output_file = self.disassembly_dir / f"rom_disasm_{routine_name}.md"
+            self.validate_routine(output_file)
 
-            # If no end_addr provided and not auto-detecting, use default range
-            if not end_addr:
-                start_int = int(start_addr, 16)
-                end_int = (start_int + 512) & 0xFFFF
-                end_addr = f"0x{end_int:04x}"
-
-            if verbose and routine_name:
-                print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
-            elif verbose:
-                print(f"Disassembling routine from {start_addr} to {end_addr}...")
-
-            # Get disassembly
-            lines = run_unidasm(self.rom_file, start_addr, end_addr, self.arch)
-
-            if not lines:
-                if verbose:
-                    print(f"No disassembly found for address {start_addr}")
-                return False
-
-            # Filter out empty lines
-            lines = [line for line in lines if line.strip()]
-
-            # Check if this looks like valid assembly (not all zeros) - only for batch processing
-            if routine_name and not force_save:
-                valid_assembly = False
-                for line in lines:
-                    m = re.match(r'^([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)*[0-9a-fA-F]{2})', line)
-                    if m:
-                        byte_str = m.group(2)
-                        bytes_list = [b.lower() for b in byte_str.split()]
-                        if any(b != '00' for b in bytes_list):
-                            valid_assembly = True
-                            break
-
-                if not valid_assembly:
-                    if verbose:
-                        print(f"⚠ Skipping {routine_name} - appears to be all zeros or invalid")
-                    return False
-
-            # Prepare output
-            if markdown:
-                output_lines = [
-                    f"# Disassembly of routine at {start_addr}",
-                    f"# ROM file: {self.rom_file}",
-                    f"# Start address: {start_addr}",
-                    f"# End address: {end_addr}",
-                    "",
-                    "```assembly",
-                ]
-
-                # Add disassembly lines
-                for line in lines:
-                    output_lines.append(line)
-
-                output_lines.append("```")
-            else:
-                # Plain text format
-                output_lines = lines
-
-            # Determine output file
-            if not output_file:
-                if routine_name:
-                    # Use default directory structure for batch processing
-                    output_file = self.disassembly_dir / f"rom_disasm_{routine_name}.md"
-                else:
-                    # For single routine mode, output to stdout
-                    print('\n'.join(output_lines))
-                    return True
-
-            # Save to file
-            with open(output_file, 'w') as f:
-                f.write('\n'.join(output_lines))
-
-            if verbose or force_save:
-                print(f"✓ Created {output_file} with {len(lines)} lines")
-
-            if verbose and routine_name:
-                self.validate_routine(Path(output_file))
-
-            return True
-
-        except Exception as e:
-            if verbose or force_save:
-                print(f"Error disassembling routine: {e}")
-            return False
+        return success
 
     def validate_routine(self, file_path: Path):
         """Validate a disassembly file using our validation tool"""
@@ -386,7 +292,7 @@ class AutomatedDisassembler:
         }
 
         for name, (start, end) in known_routines.items():
-            self.disassemble_routine(start, end, name, verbose=True, force_save=False)
+            self.disassemble_routine_batch(start, end, name)
 
     # --- NEW: Entry-point-driven traversal helpers ---
     def _read_reset_vector(self) -> Optional[str]:
@@ -440,8 +346,8 @@ class AutomatedDisassembler:
             is_seed = (addr == entry)
 
             if start and end:
-                name = start
-                ok = self.disassemble_routine(start, end, name, verbose=False, force_save=is_seed)
+                name = f"{start}_{end}"
+                ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed)
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless
                     seed_lines = self._disassemble_lines(addr, 256)
@@ -531,18 +437,25 @@ class AutomatedDisassembler:
 
         # Process routine starts
         for pattern, (start, end) in found_routines.items():
-            routine_name = f"routine_{start}"
-            self.disassemble_routine(start, end, routine_name, verbose=True, force_save=False)
+            routine_name = f"routine_{start}_{end}"
+            self.disassemble_routine_batch(start, end, routine_name)
 
         # Process subroutine calls (these might be callers of routines)
         for pattern, (start, end) in found_calls.items():
             if start and end and start != end:  # Only if we found actual boundaries
-                routine_name = f"caller_{start}"
-                self.disassemble_routine(start, end, routine_name, verbose=True, force_save=False)
+                routine_name = f"caller_{start}_{end}"
+                self.disassemble_routine_batch(start, end, routine_name)
 
 def main():
+    # Check if user tried to pass a positional argument (address) before parsing
+    if len(sys.argv) > 1 and not sys.argv[1].startswith('-') and sys.argv[1] not in ['--help', '-h']:
+        print("Error: This tool is for batch/automated disassembly only.")
+        print("For single routine disassembly, use disassemble_routine.py instead:")
+        print("  python3 disassemble_routine.py <rom_file> <address> [options]")
+        print("  python3 disassemble_routine.py complete_memory_map.bin 0xf448 --find-end --markdown")
+        return 1
+
     parser = argparse.ArgumentParser(description="Automated ROM Disassembler")
-    parser.add_argument("address", nargs="?", help="Address to disassemble (hex format, e.g., 0xf448)")
     parser.add_argument("--rom", help="Path to ROM file")
     parser.add_argument("--input", help="Path to ROM file (alternative to --rom)")
     parser.add_argument("--output-dir", help="Output directory for disassembly files")
@@ -550,19 +463,11 @@ def main():
     parser.add_argument("--search", action="store_true", help="Search for common routine patterns")
     parser.add_argument("--known", action="store_true", help="Disassemble known routines")
     parser.add_argument("--full-auto", action="store_true", help="Fully automated disassembly of all meaningful routines")
-    parser.add_argument("--addr", help="Disassemble specific address (alternative to positional argument)")
-    parser.add_argument("--name", help="Name for the routine (used with address)")
-    parser.add_argument("--find-end", action="store_true", help="Auto-detect routine end")
-    parser.add_argument("--output", "-o", help="Output file path (for single routine disassembly)")
-    parser.add_argument("--markdown", action="store_true", help="Output in markdown format with code blocks")
 
     args = parser.parse_args()
 
     # Determine ROM file path
     rom_file = args.input or args.rom
-
-    # Determine address (positional argument takes precedence over --addr)
-    address = args.address or args.addr
 
     # For --full-auto, try to find the ROM file automatically
     if not rom_file and args.full_auto:
@@ -594,46 +499,7 @@ def main():
         disassembler.disassembly_dir = Path(output_dir)
         disassembler.disassembly_dir.mkdir(exist_ok=True)
 
-    if address:
-        # Handle single routine disassembly
-        if args.output or args.markdown or args.find_end:
-            # Single routine mode with custom options
-            success = disassembler.disassemble_routine(
-                start_addr=address,
-                end_addr=None,  # Will be auto-detected if --find-end is used
-                routine_name=None,  # No routine name for single mode
-                output_file=args.output,
-                markdown=args.markdown,
-                verbose=True,
-                force_save=False,
-                auto_detect_end=args.find_end
-            )
-            return 0 if success else 1
-        else:
-            # Batch processing mode
-            if not args.name:
-                # Generate a default name from the address
-                addr_clean = address.replace("0x", "").replace("0X", "").upper()
-                args.name = f"routine_{addr_clean}"
-
-            # Find boundaries for the specific address
-            start, end = disassembler.find_routine_boundaries(address)
-            if start and end:
-                disassembler.disassemble_routine(
-                    start_addr=start,
-                    end_addr=end,
-                    routine_name=args.name,
-                    output_file=None,  # Use default directory structure
-                    markdown=False,
-                    verbose=True,
-                    force_save=False,
-                    auto_detect_end=False
-                )
-            else:
-                print(f"Error: Could not find boundaries for address {address}")
-                return 1
-
-    elif args.search:
+    if args.search:
         disassembler.search_for_common_patterns()
 
     elif args.known:
