@@ -87,15 +87,15 @@ INSTRUCTION_MAP = {
 
 def parse_disassembly_line(line):
     """Parse a disassembly line and extract instruction info"""
-    # Format: "f261: 1a 10           ORCC   #$10"
-    match = re.match(r'^([0-9a-fA-F]{4}):\s+([0-9a-fA-F\s]+)\s+(\w+)\s+(.*)$', line)
+    # Format: "f261: 1a 10           ORCC   #$10" or "6ef2: 53           COMB"
+    match = re.match(r'^([0-9a-fA-F]{4}):\s+([0-9a-fA-F\s]+)\s+(\w+)(?:\s+(.*))?$', line)
     if not match:
         return None
 
     addr = match.group(1).upper()
     bytes_str = match.group(2).strip()
     mnemonic = match.group(3).upper()
-    operands = match.group(4).strip()
+    operands = match.group(4).strip() if match.group(4) else ""
 
     return {
         'address': addr,
@@ -410,7 +410,7 @@ def convert_instruction(parsed, original_line=None):
 
     return f"    {cpp_code};"
 
-def convert_disassembly_file(input_file, output_file, function_name):
+def convert_disassembly_file(input_file, output_file, function_name, global_goto_targets=None):
     """Convert a disassembly file to C++ function"""
 
     with open(input_file, 'r') as f:
@@ -459,6 +459,18 @@ def convert_disassembly_file(input_file, output_file, function_name):
             except ValueError:
                 pass
 
+    # Second pass: collect all addresses that are jumped TO (goto targets)
+    goto_targets = set()
+    for parsed in parsed_instructions:
+        if parsed['mnemonic'] in ['BRA', 'JMP'] and parsed['operands'].startswith('$'):
+            target_str = parsed['operands'][1:]  # Remove $ prefix
+            try:
+                target_address = int(target_str, 16)
+                if target_address <= 0xFFFF:
+                    goto_targets.add(target_address)
+            except ValueError:
+                pass
+
     cpp_lines = []
     cpp_lines.append('#include "cpu_6809.h"')
     cpp_lines.append('')
@@ -473,8 +485,21 @@ def convert_disassembly_file(input_file, output_file, function_name):
         current_address = parsed['address']
         current_address_int = int(current_address, 16)
 
-        # Add label if this address is a jump target OR if it's the start address of the routine
-        if current_address_int in jump_targets or (routine_start is not None and current_address_int == routine_start):
+        # Add label if this address is jumped to from anywhere (global goto targets)
+        # OR if it's the start address of the routine (for external references)
+        should_generate_label = False
+
+        if global_goto_targets and current_address_int in global_goto_targets:
+            # This address is jumped TO from somewhere, so it needs a label
+            should_generate_label = True
+        elif current_address_int in goto_targets:
+            # This address is jumped TO within this routine, so it needs a label
+            should_generate_label = True
+        elif routine_start is not None and current_address_int == routine_start:
+            # This is the start address of the routine, generate label for external references
+            should_generate_label = True
+
+        if should_generate_label:
             cpp_lines.append(f'    label_{current_address_int:04X}:')
 
         # Add comment with original assembly
@@ -513,6 +538,7 @@ def main():
     parser.add_argument("input_file", help="Input disassembly file (rom_disasm_auto_*.md)")
     parser.add_argument("output_file", help="Output C++ file")
     parser.add_argument("function_name", help="C++ function name")
+    parser.add_argument("--global-goto-targets", help="Comma-separated list of global goto targets")
 
     args = parser.parse_args()
 
@@ -523,7 +549,15 @@ def main():
         print(f"ERROR: Input file not found: {input_path}")
         return 1
 
-    convert_disassembly_file(input_path, output_path, args.function_name)
+    global_goto_targets = None
+    if args.global_goto_targets:
+        try:
+            global_goto_targets = set(int(addr, 16) for addr in args.global_goto_targets.split(','))
+        except ValueError:
+            print("Error: Invalid global goto targets format")
+            return 1
+
+    convert_disassembly_file(input_path, output_path, args.function_name, global_goto_targets)
     return 0
 
 if __name__ == "__main__":

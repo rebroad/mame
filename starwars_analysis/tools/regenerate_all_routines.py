@@ -7,8 +7,47 @@ import subprocess
 import os
 import time
 import argparse
+import re
 from pathlib import Path
 from build_updater import update_build_files, get_existing_routine_files, cleanup_stale_files
+
+def collect_all_goto_targets(disasm_dir):
+    """Collect all goto targets from all disassembly files"""
+    all_targets = set()
+
+    print("🔍 First pass: Collecting all goto targets...")
+
+    for disasm_file in disasm_dir.glob("rom_disasm_*.md"):
+        with open(disasm_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Find all BRA and JMP instructions with absolute addresses
+        # Use simple string search instead of regex
+        lines = content.split('\n')
+        for line in lines:
+            if 'BRA' in line and '$' in line:
+                # Extract address after $
+                dollar_pos = line.find('$')
+                if dollar_pos != -1:
+                    addr_part = line[dollar_pos+1:].split()[0]
+                    try:
+                        target_addr = int(addr_part, 16)
+                        all_targets.add(target_addr)
+                    except ValueError:
+                        pass
+            elif 'JMP' in line and '$' in line:
+                # Extract address after $
+                dollar_pos = line.find('$')
+                if dollar_pos != -1:
+                    addr_part = line[dollar_pos+1:].split()[0]
+                    try:
+                        target_addr = int(addr_part, 16)
+                        all_targets.add(target_addr)
+                    except ValueError:
+                        pass
+
+    print(f"  Found {len(all_targets)} unique goto targets")
+    return sorted(all_targets)
 
 def regenerate_all_routines(build_files_only=False):
     """Regenerate all routine files with improved converter and update build files"""
@@ -25,13 +64,13 @@ def regenerate_all_routines(build_files_only=False):
 
     if build_files_only:
         print("🔧 Build files only mode - skipping C++ file regeneration")
-        
+
         # Find existing routine files instead of disassembly files
         existing_routines = get_existing_routine_files(output_dir)
         all_routine_names = set(existing_routines)
-        
+
         print(f"Found {len(existing_routines)} existing routine files")
-        
+
     else:
         # Find all rom_disasm_*.md files
         disasm_files = list(disasm_dir.glob("rom_disasm_*.md"))
@@ -43,10 +82,13 @@ def regenerate_all_routines(build_files_only=False):
         print(f"Found {len(disasm_files)} disassembly files to convert")
         print(f"📝 Detailed log: {log_file}")
 
+        # FIRST PASS: Collect all goto targets
+        all_goto_targets = collect_all_goto_targets(disasm_dir)
+
         # Track all routine names for build file updates
         all_routine_names = set()
 
-        # Convert each file with logging to file
+        # SECOND PASS: Convert each file with global goto targets
         success_count = 0
         error_count = 0
         updated_count = 0
@@ -66,20 +108,22 @@ def regenerate_all_routines(build_files_only=False):
                 # Create output C++ file
                 cpp_file = output_dir / f"{function_name}.cpp"
 
-                # Run the improved converter
+                # Run the improved converter with global goto targets
                 cmd = [
                     "python3",
                     str(converter),
                     str(disasm_file),
                     str(cpp_file),
-                    function_name
+                    function_name,
+                    "--global-goto-targets",
+                    ",".join(f"{addr:04x}" for addr in all_goto_targets)
                 ]
 
                 try:
                     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                     all_routine_names.add(addr)
                     success_count += 1
-                    
+
                     # Check if file was updated or skipped based on converter output
                     if "Updated" in result.stdout:
                         log.write(f"✓ Updated {disasm_file.name} -> {cpp_file.name}\n")
@@ -90,7 +134,7 @@ def regenerate_all_routines(build_files_only=False):
                     else:
                         log.write(f"✓ {disasm_file.name} -> {cpp_file.name}\n")
                         updated_count += 1
-                        
+
                 except subprocess.CalledProcessError as e:
                     log.write(f"✗ {disasm_file.name} -> {cpp_file.name}\n")
                     log.write(f"  Error: {e}\n")
@@ -136,11 +180,11 @@ def regenerate_all_routines(build_files_only=False):
 def main():
     """Main function with command line argument parsing"""
     parser = argparse.ArgumentParser(description="Regenerate all routine files and update build files")
-    parser.add_argument("--build-files-only", action="store_true", 
+    parser.add_argument("--build-files-only", action="store_true",
                        help="Only update build files, skip C++ file regeneration")
-    
+
     args = parser.parse_args()
-    
+
     return regenerate_all_routines(build_files_only=args.build_files_only)
 
 if __name__ == "__main__":
