@@ -82,7 +82,6 @@ class AutomatedDisassembler:
 
     def find_routine_boundaries(self, start_addr: str, max_search: int = 1000) -> Tuple[str, str, set]:
         """Find the start and end boundaries of a routine with intelligent analysis"""
-        print(f"Finding boundaries for routine at {start_addr}...")
 
         try:
             # Use the intelligent boundary detection from unidasm_wrapper
@@ -278,7 +277,7 @@ class AutomatedDisassembler:
             start_int = int(start_addr, 16)
             end_int = int(end_addr, 16)
             addresses_to_remove = []
-
+            
             for addr in to_visit:
                 try:
                     addr_int = int(addr, 16)
@@ -286,12 +285,12 @@ class AutomatedDisassembler:
                         addresses_to_remove.append(addr)
                 except ValueError:
                     pass
-
+            
             for addr in addresses_to_remove:
                 to_visit.remove(addr)
                 if verbose:
                     print(f"  🗑️  Removed covered address: ${addr}")
-
+            
             if addresses_to_remove:
                 print(f"  🧹 Removed {len(addresses_to_remove)} addresses covered by routine {routine_name} ({start_addr}-{end_addr})")
 
@@ -357,7 +356,7 @@ class AutomatedDisassembler:
                     # Remove all addresses from the queue that are within this routine's range
                     remove_covered_addresses(start, end, f"{start}-{end}")
 
-                # Add external targets to the queue for exploration
+                # Add external targets to the queue for exploration (only if not already covered)
                 for target in external_targets:
                     if target not in visited and target not in to_visit and not is_address_covered(target):
                         # Safety check: validate address format and range
@@ -384,6 +383,9 @@ class AutomatedDisassembler:
                     elif is_address_covered(target):
                         if verbose:
                             print(f"  ⏭️  Skipping target ${target} - already covered by processed routine")
+                    else:
+                        if verbose:
+                            print(f"  ⏭️  Skipping target ${target} - already visited or in queue")
                 if not ok and is_seed:
                     # Seed fallback: try raw window and save regardless
                     seed_lines = self._disassemble_lines(addr, 256)
