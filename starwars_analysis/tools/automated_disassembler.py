@@ -80,19 +80,19 @@ class AutomatedDisassembler:
         except Exception:
             return []
 
-    def find_routine_boundaries(self, start_addr: str, max_search: int = 1000) -> Tuple[str, str, set]:
+    def find_routine_boundaries(self, start_addr: str, max_search: int = 1000, existing_ranges: List[Tuple[str, str]] = None) -> Tuple[str, str, set, Optional[str]]:
         """Find the start and end boundaries of a routine with intelligent analysis"""
 
         try:
             # Use the intelligent boundary detection from unidasm_wrapper
-            end_addr_found, external_targets = find_intelligent_boundaries(self.rom_file, start_addr, self.arch)
+            end_addr_found, external_targets, jmp_target = find_intelligent_boundaries(self.rom_file, start_addr, self.arch, existing_ranges)
 
             if not end_addr_found:
                 # Fallback: use a small fixed window to seed traversal
                 start_int = int(start_addr, 16)
                 fallback_len = 128
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return start_addr, f"{end_int:04x}", set()
+                return start_addr, f"{end_int:04x}", set(), None
 
             # Validate routine size
             start_int = int(start_addr, 16)
@@ -102,18 +102,18 @@ class AutomatedDisassembler:
             if size < 3:
                 fallback_len = 64
                 end_int = (start_int + fallback_len - 1) & 0xFFFF
-                return start_addr, f"{end_int:04x}", set()
+                return start_addr, f"{end_int:04x}", set(), None
 
-            return start_addr, end_addr_found, external_targets
+            return start_addr, end_addr_found, external_targets, jmp_target
 
         except Exception as e:
             print(f"Error finding boundaries: {e}")
             try:
                 start_int = int(start_addr, 16)
                 end_int = (start_int + 64 - 1) & 0xFFFF
-                return f"{start_int:04x}", f"{end_int:04x}", set()
+                return f"{start_int:04x}", f"{end_int:04x}", set(), None
             except Exception:
-                return None, None, set()
+                return None, None, set(), None
 
 
     def _disassemble_lines(self, start_addr: str, count: int = 256) -> list:
@@ -126,10 +126,12 @@ class AutomatedDisassembler:
         end_int = int(end_addr, 16)
         return end_int - start_int + 1
 
-    def disassemble_routine_batch(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True, force_save: bool = False) -> bool:
+    def disassemble_routine_batch(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True, force_save: bool = False, jmp_target: str = None) -> bool:
         """Disassemble a routine with proper boundaries using disassemble_routine.py"""
         if verbose:
             print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
+            if jmp_target:
+                print(f"  Will add JMP to ${jmp_target} for overlap handling")
 
         # Use the enhanced disassemble_routine function from disassemble_routine.py
         success = disassemble_routine(
@@ -141,7 +143,8 @@ class AutomatedDisassembler:
             verbose=verbose,
             force_save=force_save,
             auto_detect_end=True,  # Use intelligent boundary detection
-            arch=self.arch
+            arch=self.arch,
+            jmp_target=jmp_target  # Pass the JMP target for overlap handling
         )
 
         if success and verbose:
@@ -332,10 +335,12 @@ class AutomatedDisassembler:
             try:
                 if verbose:
                     print(f"  🔍 Finding boundaries for ${addr}...")
-                start, end, external_targets = self.find_routine_boundaries(addr, max_search=1500)
+                start, end, external_targets, jmp_target = self.find_routine_boundaries(addr, max_search=1500, existing_ranges=processed_ranges)
                 is_seed = (addr == entry)
                 if verbose:
                     print(f"  ✅ Boundaries found: {start} to {end}, {len(external_targets)} external targets")
+                    if jmp_target:
+                        print(f"  🔗 Will add JMP to ${jmp_target} for overlap handling")
             except subprocess.TimeoutExpired:
                 print(f"  ⏰ Timeout processing ${addr} - skipping")
                 continue
@@ -345,7 +350,7 @@ class AutomatedDisassembler:
 
             if start and end:
                 name = f"{start}_{end}"
-                ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed)
+                ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed, jmp_target=jmp_target)
 
                 if ok:
                     # Add this routine range to the processed ranges

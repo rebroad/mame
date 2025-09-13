@@ -33,7 +33,7 @@ INSTRUCTION_MAP = {
     'LEAY': 'cpu.m_y += {operand}',
     'LEAS': 'cpu.m_sp += {operand}',
     'LEAU': 'cpu.m_u += {operand}',
-    'JMP': 'cpu.m_pc = {operand}',
+    'JMP': 'goto label_{operand}',
     'JSR': 'cpu.call_function({operand})',
     'RTS': 'cpu.return_from_function()',
     'BRA': 'cpu.m_pc = {operand}',
@@ -260,6 +260,8 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
                 # Generate the appropriate branch code with the target address
                 if mnemonic == 'BRA':
                     return f"    goto label_{target_address:04X};"
+                elif mnemonic == 'JMP':
+                    return f"    goto label_{target_address:04X};"
                 elif mnemonic == 'BNE':
                     return f"    if (!cpu.zero_flag()) cpu.m_pc = 0x{target_address:04X};"
                 elif mnemonic == 'BEQ':
@@ -353,7 +355,7 @@ def convert_instruction(parsed, original_line=None):
         return f"    // TODO: Convert {mnemonic} {operands}"
     
     # Handle branch instructions specially - convert relative offsets to absolute addresses
-    branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT']
+    branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT', 'JMP']
     if mnemonic in branch_instructions:
         return convert_branch_instruction(mnemonic, operands, address, original_line)
     
@@ -429,8 +431,8 @@ def convert_disassembly_file(input_file, output_file, function_name):
         
         parsed_instructions.append(parsed)
         
-        # Collect BRA targets for label generation
-        if parsed['mnemonic'] == 'BRA' and parsed['operands'].startswith('$'):
+        # Collect BRA and JMP targets for label generation
+        if parsed['mnemonic'] in ['BRA', 'JMP'] and parsed['operands'].startswith('$'):
             target_str = parsed['operands'][1:]  # Remove $ prefix
             try:
                 target_address = int(target_str, 16)
