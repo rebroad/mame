@@ -29,10 +29,10 @@ INSTRUCTION_MAP = {
     'LDS': 'cpu.m_sp = cpu.read_memory16({operand})',
     'STS': 'cpu.write_memory16({operand}, cpu.m_sp)',
     'TFR': 'cpu.m_{dest} = cpu.m_{src}',
-    'LEAX': 'cpu.m_x += {operand}',
-    'LEAY': 'cpu.m_y += {operand}',
-    'LEAS': 'cpu.m_sp += {operand}',
-    'LEAU': 'cpu.m_u += {operand}',
+    'LEAX': 'cpu.m_x = {operand}',
+    'LEAY': 'cpu.m_y = {operand}',
+    'LEAS': 'cpu.m_sp = {operand}',
+    'LEAU': 'cpu.m_u = {operand}',
     # Arithmetic operations
     'ADDA': 'cpu.add_a({operand})',
     'ADDB': 'cpu.add_b({operand})',
@@ -140,7 +140,7 @@ def convert_operand(operands, mnemonic):
     if operands.startswith('#$'):
         value = operands[2:]  # Remove #$ prefix
         return f"0x{value.upper()}"
-    
+
     # Handle memory addressing (no # prefix means memory access)
     if operands.startswith('$') and not operands.startswith('$x'):
         value = operands[1:]  # Remove $ prefix
@@ -148,7 +148,7 @@ def convert_operand(operands, mnemonic):
         if mnemonic in ['ADDA', 'ADDB', 'ADCA', 'ADCB', 'SUBA', 'SUBB', 'SBCA', 'SBCB', 'CMPA', 'CMPB', 'ANDA', 'ANDB', 'ORA', 'ORB', 'EORA', 'EORB']:
             return f"cpu.read_memory(0x{value.upper()})"
         else:
-            return f"0x{value.upper()}"
+        return f"0x{value.upper()}"
 
     # Handle direct page addressing
     if operands.startswith('<'):
@@ -433,11 +433,82 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
         return f"    cpu.m_{dest.lower()} = cpu.m_{src.lower()};"
 
     # Handle indexed addressing for memory operations
-    if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS', 'CMPA', 'CMPB', 'CMPD', 'CMPX', 'CMPY', 'CMPU', 'CMPS']:
+    if (',' in cpp_operand or ('[' in operands and ']' in operands)) and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS', 'CMPA', 'CMPB', 'CMPD', 'CMPX', 'CMPY', 'CMPU', 'CMPS', 'LEAX', 'LEAY', 'LEAS', 'LEAU']:
+        # Handle indirect addressing with brackets but no comma in expected format
+        if '[' in operands and ']' in operands and ',' not in operands:
+            # Simple indirect addressing: [$4441]
+            inner_expr = operands[1:-1]  # Remove brackets
+            if inner_expr.startswith('$'):
+                offset_val = int(inner_expr[1:], 16)
+                effective_addr = f"0x{offset_val:04X}"
+            else:
+                effective_addr = inner_expr
+
+            # Generate appropriate LEA instruction
+            if mnemonic == 'LEAX':
+                return f"    cpu.m_x = cpu.read_memory16({effective_addr});"
+            elif mnemonic == 'LEAY':
+                return f"    cpu.m_y = cpu.read_memory16({effective_addr});"
+            elif mnemonic == 'LEAS':
+                return f"    cpu.m_sp = cpu.read_memory16({effective_addr});"
+            elif mnemonic == 'LEAU':
+                return f"    cpu.m_u = cpu.read_memory16({effective_addr});"
+
         # Parse indexed addressing
-        parts = operands.split(',')
-        if len(parts) == 2:
-            offset_part, index_reg = parts[0].strip(), parts[1].strip()
+        # Handle brackets first - they contain commas that shouldn't be split
+        if '[' in operands and ']' in operands:
+            # Extract the part inside brackets
+            start_bracket = operands.find('[')
+            end_bracket = operands.find(']')
+            inner_expr = operands[start_bracket+1:end_bracket]
+
+            # Split the inner expression by comma
+            if ',' in inner_expr:
+                inner_parts = inner_expr.split(',')
+                if len(inner_parts) == 2:
+                    inner_offset, inner_reg = inner_parts[0].strip(), inner_parts[1].strip()
+                    if inner_reg == 'S':
+                        inner_reg = 'sp'
+                    elif inner_reg == 'W':
+                        # W register is 16-bit accumulator (D register)
+                        inner_reg = 'd'
+                    if inner_offset.startswith('$'):
+                        offset_val = int(inner_offset[1:], 16)
+                        effective_addr = f"cpu.m_{inner_reg} + 0x{offset_val:04X}"
+                    else:
+                        effective_addr = f"cpu.m_{inner_reg} + {inner_offset}"
+
+                    # Generate appropriate LEA instruction
+                    if mnemonic == 'LEAX':
+                        return f"    cpu.m_x = cpu.read_memory16({effective_addr});"
+                    elif mnemonic == 'LEAY':
+                        return f"    cpu.m_y = cpu.read_memory16({effective_addr});"
+                    elif mnemonic == 'LEAS':
+                        return f"    cpu.m_sp = cpu.read_memory16({effective_addr});"
+                    elif mnemonic == 'LEAU':
+                        return f"    cpu.m_u = cpu.read_memory16({effective_addr});"
+            else:
+                # Simple indirect: [$4441]
+                if inner_expr.startswith('$'):
+                    offset_val = int(inner_expr[1:], 16)
+                    effective_addr = f"0x{offset_val:04X}"
+                else:
+                    effective_addr = inner_expr
+
+                # Generate appropriate LEA instruction
+                if mnemonic == 'LEAX':
+                    return f"    cpu.m_x = cpu.read_memory16({effective_addr});"
+                elif mnemonic == 'LEAY':
+                    return f"    cpu.m_y = cpu.read_memory16({effective_addr});"
+                elif mnemonic == 'LEAS':
+                    return f"    cpu.m_sp = cpu.read_memory16({effective_addr});"
+                elif mnemonic == 'LEAU':
+                    return f"    cpu.m_u = cpu.read_memory16({effective_addr});"
+        else:
+            # Regular indexed addressing
+            parts = operands.split(',')
+            if len(parts) == 2:
+                offset_part, index_reg = parts[0].strip(), parts[1].strip()
 
             # Calculate effective address
             # Map S register to sp
@@ -456,6 +527,44 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
                 # Positive offset: $2,X
                 offset = int(offset_part[1:], 16)
                 effective_addr = f"cpu.m_{reg_name} + 0x{offset:02X}"
+            elif offset_part in ['A', 'B', 'D', 'X', 'Y', 'U', 'S']:
+                # Register indexed addressing: A,X or B,U
+                offset_reg = offset_part.lower()
+                if offset_reg == 's':
+                    offset_reg = 'sp'
+                effective_addr = f"cpu.m_{reg_name} + cpu.m_{offset_reg}"
+            elif index_reg == 'PCR':
+                # Program Counter Relative addressing: $7DF1,PCR
+                if offset_part.startswith('$'):
+                    offset = int(offset_part[1:], 16)
+                    effective_addr = f"cpu.m_pc + 0x{offset:04X}"
+                else:
+                    effective_addr = f"cpu.m_pc + {offset_part}"
+            elif offset_part.startswith('[') and offset_part.endswith(']'):
+                # Indirect addressing: [$33F9,S] or [$4441,W]
+                inner_expr = offset_part[1:-1]  # Remove brackets
+                if ',' in inner_expr:
+                    # Indirect indexed: [$33F9,S]
+                    inner_parts = inner_expr.split(',')
+                    if len(inner_parts) == 2:
+                        inner_offset, inner_reg = inner_parts[0].strip(), inner_parts[1].strip()
+                        if inner_reg == 'S':
+                            inner_reg = 'sp'
+                        elif inner_reg == 'W':
+                            # W register is 16-bit accumulator (D register)
+                            inner_reg = 'd'
+                        if inner_offset.startswith('$'):
+                            offset_val = int(inner_offset[1:], 16)
+                            effective_addr = f"cpu.m_{inner_reg} + 0x{offset_val:04X}"
+                        else:
+                            effective_addr = f"cpu.m_{inner_reg} + {inner_offset}"
+                else:
+                    # Simple indirect: [$4441]
+                    if inner_expr.startswith('$'):
+                        offset_val = int(inner_expr[1:], 16)
+                        effective_addr = f"0x{offset_val:04X}"
+                    else:
+                        effective_addr = inner_expr
             else:
                 # Fallback to TODO
                 return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
@@ -480,10 +589,24 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
                 dec_reg_name = index_reg_clean.lower()
                 if dec_reg_name == 's':
                     dec_reg_name = 'sp'
-                effective_addr = f"cpu.m_{dec_reg_name}"
-                # For ,--X do two decrements, for ,-X do one
-                pre_decrement = "    " + "cpu.m_{}--;\n    ".format(dec_reg_name) * num_dashes
-                pre_decrement = pre_decrement.rstrip()  # Remove trailing whitespace/newline
+
+                # Check if there's an offset
+                if offset_part and offset_part != '':
+                    # Pre-decrement with offset
+                    if offset_part.startswith('$'):
+                        offset = int(offset_part[1:], 16)
+                        effective_addr = f"cpu.m_{dec_reg_name} + 0x{offset:04X}"
+                    else:
+                        effective_addr = f"cpu.m_{dec_reg_name} + {offset_part}"
+                    # For ,--X do two decrements, for ,-X do one
+                    pre_decrement = "    " + "cpu.m_{}--;\n    ".format(dec_reg_name) * num_dashes
+                    pre_decrement = pre_decrement.rstrip()  # Remove trailing whitespace/newline
+                else:
+                    # Pre-decrement without offset - just use the register value
+                    effective_addr = f"cpu.m_{dec_reg_name}"
+                    # For ,--X do two decrements, for ,-X do one
+                    pre_decrement = "    " + "cpu.m_{}--;\n    ".format(dec_reg_name) * num_dashes
+                    pre_decrement = pre_decrement.rstrip()  # Remove trailing whitespace/newline
 
             # Generate appropriate store instruction
             if mnemonic == 'STA':
@@ -550,6 +673,28 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
                 return f"    cpu.execute_cmpu_immediate(cpu.read_memory16({effective_addr}));"
             elif mnemonic == 'CMPS':
                 return f"    cpu.execute_cmps_immediate(cpu.read_memory16({effective_addr}));"
+            # LEA operations with indexed addressing
+            elif mnemonic == 'LEAX':
+                # Check if this is indirect addressing (brackets in operands)
+                if '[' in operands and ']' in operands:
+                    return f"    cpu.m_x = cpu.read_memory16({effective_addr});"
+                else:
+                    return f"    cpu.m_x = {effective_addr};"
+            elif mnemonic == 'LEAY':
+                if '[' in operands and ']' in operands:
+                    return f"    cpu.m_y = cpu.read_memory16({effective_addr});"
+                else:
+                    return f"    cpu.m_y = {effective_addr};"
+            elif mnemonic == 'LEAS':
+                if '[' in operands and ']' in operands:
+                    return f"    cpu.m_sp = cpu.read_memory16({effective_addr});"
+                else:
+                    return f"    cpu.m_sp = {effective_addr};"
+            elif mnemonic == 'LEAU':
+                if '[' in operands and ']' in operands:
+                    return f"    cpu.m_u = cpu.read_memory16({effective_addr});"
+                else:
+                    return f"    cpu.m_u = {effective_addr};"
 
         # Fallback for complex cases
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"

@@ -402,13 +402,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_x + 0x02, cpu.m_b);
 
     // 6181: LEAU $20,U
-    // TODO: Fix comma operator: LEAU $20,U
+    cpu.m_u = cpu.m_u + 0x20;
 
     // 6184: ADDB #$04
     cpu.m_b += 0x04;
 
     // 6186: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 6189: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -435,13 +435,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: CLR $3,X
 
     // 619C: LEAU $8,U
-    // TODO: Fix comma operator: LEAU $8,U
+    cpu.m_u = cpu.m_u + 0x08;
 
     // 619E: ADDB #$01
     cpu.m_b += 0x01;
 
     // 61A0: LEAX $6,X
-    // TODO: Fix comma operator: LEAX $6,X
+    cpu.m_x = cpu.m_x + 0x06;
 
     // 61A2: CMPX #$496F
     cpu.compare_x(0x496F);
@@ -561,7 +561,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // 6207: LEAX $8,X
-    // TODO: Fix comma operator: LEAX $8,X
+    cpu.m_x = cpu.m_x + 0x08;
 
     // 6209: CMPX #$5DF0
     cpu.compare_x(0x5DF0);
@@ -600,7 +600,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // 6225: LEAX $8,X
-    // TODO: Fix comma operator: LEAX $8,X
+    cpu.m_x = cpu.m_x + 0x08;
 
     // 6227: CMPX #$5DF0
     cpu.compare_x(0x5DF0);
@@ -1984,7 +1984,7 @@ void global_routine_impl(CPU6809& cpu) {
     return;
 
     // 6668: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // 666A: CMPX #$659F
     cpu.compare_x(0x659F);
@@ -2591,7 +2591,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0x6911;
 
     // 6905: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 6908: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -4438,7 +4438,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4B3C, cpu.m_a);
 
     // 6EC3: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 6EC6: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -7168,7 +7168,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.rotate_left(0x4AD4);
 
     // 7749: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // 774B: BNE $772C
     if (!cpu.zero_flag()) cpu.m_pc = 0x772C;
@@ -7564,7 +7564,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x64);
 
     // 7878: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 787B: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -8980,7 +8980,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$00
 
     // 7D44: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     label_7D46:
     // 7D46: INC <$00
@@ -9011,7 +9011,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.increment_memory(0x02);
 
     // 7D58: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 7D5A: LSR <$01
     // TODO: Convert LSR <$01
@@ -9171,7 +9171,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$02
 
     // 7DC1: LEAS $E,X
-    // TODO: Fix comma operator: LEAS $E,X
+    cpu.m_sp = cpu.m_x + 0x0E;
 
     // 7DC3: XNC <$0E
     // TODO: Convert XNC <$0E
@@ -9192,7 +9192,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$32
 
     // 7DCF: LEAS $2,X
-    // TODO: Fix comma operator: LEAS $2,X
+    cpu.m_sp = cpu.m_x + 0x02;
 
     // 7DD1: XNC <$02
     // TODO: Convert XNC <$02
@@ -9237,7 +9237,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BHI $7DEE
 
     // 7DED: LEAU $7DF1,PCR
-    // TODO: Fix comma operator: LEAU $7DF1,PCR
+    cpu.m_u = cpu.m_pc + 0x7DF1;
 
     // 7DF0: SUBA $A,X
     // TODO: Fix comma operator: SUBA $A,X
@@ -9372,7 +9372,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.decrement_memory(0x02);
 
     // 7E44: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // 7E46: XNC <$00
     // TODO: Convert XNC <$00
@@ -9741,7 +9741,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$00
 
     // 7F3F: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // 7F41: SBCA #$28
     cpu.sub_a_with_carry(0x28);
@@ -9768,7 +9768,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.arithmetic_shift_left(0x01);
 
     // 7F51: LEAX $C,X
-    // TODO: Fix comma operator: LEAX $C,X
+    cpu.m_x = cpu.m_x + 0x0C;
 
     // 7F53: NEG <$2A
     // TODO: Convert NEG <$2A
@@ -10249,10 +10249,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$30
 
     // 808C: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // 808D: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 808E: XNC <$CC
     // TODO: Convert XNC <$CC
@@ -10264,10 +10264,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0233;
 
     // 8092: LEAU -$D,Y
-    // TODO: Fix comma operator: LEAU -$D,Y
+    cpu.m_u = cpu.m_y - 0x0D;
 
     // 8093: LEAU $1,X
-    // TODO: Fix comma operator: LEAU $1,X
+    cpu.m_u = cpu.m_x + 0x01;
 
     // 8094: NEG <$0C
     // TODO: Convert NEG <$0C
@@ -10437,7 +10437,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x30;
 
     // 80CB: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 80CC: XNC <$0A
     // TODO: Convert XNC <$0A
@@ -10452,7 +10452,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$30
 
     // 80D0: LEAX ,U+
-    // TODO: Complex indexed addressing: ,U+
+    cpu.m_x = cpu.m_u;
 
     // 80D1: SUBB #$01
     cpu.m_b -= 0x01;
@@ -10473,7 +10473,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x30;
 
     // 80D7: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 80D8: XNC <$0A
     // TODO: Convert XNC <$0A
@@ -10488,7 +10488,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$30
 
     // 80DC: LEAX ,U+
-    // TODO: Complex indexed addressing: ,U+
+    cpu.m_x = cpu.m_u;
 
     // 80DD: SUBB #$01
     cpu.m_b -= 0x01;
@@ -10509,7 +10509,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x30;
 
     // 80E3: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 80E4: XNC <$0A
     // TODO: Convert XNC <$0A
@@ -10554,7 +10554,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$30
 
     // 80F2: LEAX ,X+
-    // TODO: Complex indexed addressing: ,X+
+    cpu.m_x = cpu.m_x;
 
     // 80F3: SUBA #$02
     cpu.m_a -= 0x02;
@@ -10612,7 +10612,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x30;
 
     // 8105: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 8106: XNC <$02
     // TODO: Convert XNC <$02
@@ -10801,10 +10801,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$32
 
     // 8145: LEAS -$E,Y
-    // TODO: Fix comma operator: LEAS -$E,Y
+    cpu.m_sp = cpu.m_y - 0x0E;
 
     // 8146: LEAS $2,X
-    // TODO: Fix comma operator: LEAS $2,X
+    cpu.m_sp = cpu.m_x + 0x02;
 
     // 8147: XNC <$C8
     // TODO: Convert XNC <$C8
@@ -11143,7 +11143,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$02
 
     // 81C7: LEAX $C,X
-    // TODO: Fix comma operator: LEAX $C,X
+    cpu.m_x = cpu.m_x + 0x0C;
 
     // 81C9: NEG <$00
     // TODO: Convert NEG <$00
@@ -11158,7 +11158,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$0C
 
     // 81D1: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // 81D3: NEG <$00
     // TODO: Convert NEG <$00
@@ -11239,7 +11239,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x02;
 
     // 8208: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // 820A: NEG <$0C
     // TODO: Convert NEG <$0C
@@ -11263,7 +11263,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$30
 
     // 8218: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // 821A: INC <$0C
     cpu.increment_memory(0x0C);
@@ -11335,13 +11335,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$02
 
     // 8249: LEAS $C,X
-    // TODO: Fix comma operator: LEAS $C,X
+    cpu.m_sp = cpu.m_x + 0x0C;
 
     // 824B: NEG <$C0
     // TODO: Convert NEG <$C0
 
     // 824D: LEAS $2,X
-    // TODO: Fix comma operator: LEAS $2,X
+    cpu.m_sp = cpu.m_x + 0x02;
 
     // 824F: NEG <$00
     // TODO: Convert NEG <$00
@@ -11353,7 +11353,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $1,X
 
     // 8255: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 8257: XNC <$03
     // TODO: Convert XNC <$03
@@ -11874,7 +11874,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // 83C5: LEAU $4,U
-    // TODO: Fix comma operator: LEAU $4,U
+    cpu.m_u = cpu.m_u + 0x04;
 
     // 83C7: CMPU #$4B5F
     cpu.execute_cmpu_immediate(0x4B5F);
@@ -11896,7 +11896,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x49B3);
 
     // 83D5: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 83D7: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -11991,7 +11991,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(0x49B5, cpu.m_d);
 
     // 841F: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8421: LDB ,U
     // TODO: Complex indexed addressing: ,U
@@ -12006,7 +12006,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x49AB);
 
     // 842A: LEAU $2,U
-    // TODO: Fix comma operator: LEAU $2,U
+    cpu.m_u = cpu.m_u + 0x02;
 
     // 842C: STU $49AB
     cpu.write_memory16(0x49AB, cpu.m_u);
@@ -12136,7 +12136,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDA $1,U
 
     // 848B: STA B,X
-    // TODO: Handle indexed addressing: STA B,X
+    cpu.write_memory(cpu.m_x + cpu.m_b, cpu.m_a);
 
     // 848D: LDX #$4999
     cpu.m_x = 0x4999;
@@ -12145,7 +12145,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDA $2,U
 
     // 8492: STA B,X
-    // TODO: Handle indexed addressing: STA B,X
+    cpu.write_memory(cpu.m_x + cpu.m_b, cpu.m_a);
 
     // 8494: RTS 
     return;
@@ -12175,7 +12175,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x84B6;
 
     // 84A6: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // 84A8: LDA <$43
     cpu.m_a = cpu.read_memory(0x43);
@@ -12580,13 +12580,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x4989;
 
     // 85D7: STA B,X
-    // TODO: Handle indexed addressing: STA B,X
+    cpu.write_memory(cpu.m_x + cpu.m_b, cpu.m_a);
 
     // 85D9: LDX #$4999
     cpu.m_x = 0x4999;
 
     // 85DC: STA B,X
-    // TODO: Handle indexed addressing: STA B,X
+    cpu.write_memory(cpu.m_x + cpu.m_b, cpu.m_a);
 
     // 85DE: JSR $B3E4
     cpu.call_function(0xB3E4);
@@ -12785,7 +12785,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 8685: LEAU $4,U
-    // TODO: Fix comma operator: LEAU $4,U
+    cpu.m_u = cpu.m_u + 0x04;
 
     // 8687: CMPU #$86AE
     cpu.execute_cmpu_immediate(0x86AE);
@@ -12971,7 +12971,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_8711:
     // 8711: LEAU $4,U
-    // TODO: Fix comma operator: LEAU $4,U
+    cpu.m_u = cpu.m_u + 0x04;
 
     // 8713: CMPU #$8735
     cpu.execute_cmpu_immediate(0x8735);
@@ -13022,7 +13022,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // 8737: STX A,S
-    // TODO: Handle indexed addressing: STX A,S
+    cpu.write_memory16(cpu.m_sp + cpu.m_a, cpu.m_x);
 
     // 8739: ANDB #$C1
     cpu.m_b &= 0xC1;
@@ -13084,7 +13084,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(0x49B1, cpu.m_d);
 
     // 8767: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8769: STU $49AF
     cpu.write_memory16(0x49AF, cpu.m_u);
@@ -13114,7 +13114,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x49A9);
 
     // 877C: LEAU $2,U
-    // TODO: Fix comma operator: LEAU $2,U
+    cpu.m_u = cpu.m_u + 0x02;
 
     // 877E: STU $49A9
     cpu.write_memory16(0x49A9, cpu.m_u);
@@ -13411,7 +13411,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag()) cpu.m_pc = 0x889E;
 
     // 8882: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8884: LDB ,U
     // TODO: Complex indexed addressing: ,U
@@ -13432,7 +13432,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x49AD);
 
     // 8891: LEAU $2,U
-    // TODO: Fix comma operator: LEAU $2,U
+    cpu.m_u = cpu.m_u + 0x02;
 
     // 8893: STU $49AD
     cpu.write_memory16(0x49AD, cpu.m_u);
@@ -13719,7 +13719,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x89A8;
 
     // 8986: LEAU A,U
-    // TODO: Fix comma operator: LEAU A,U
+    cpu.m_u = cpu.m_u + cpu.m_a;
 
     // 8988: LDD ,U
     // TODO: Complex indexed addressing: ,U
@@ -13743,7 +13743,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x89A8;
 
     // 8998: LEAU A,U
-    // TODO: Fix comma operator: LEAU A,U
+    cpu.m_u = cpu.m_u + cpu.m_a;
 
     // 899A: LDD #$0000
     cpu.m_d = 0x0000;
@@ -14382,7 +14382,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8B4D: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // 8B4F: DEC <$01
     cpu.decrement_memory(0x01);
@@ -14446,7 +14446,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x5A);
 
     // 8B7D: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 8B80: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -14585,7 +14585,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x5A);
 
     // 8BD8: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 8BDB: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -14902,7 +14902,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x8D71;
 
     // 8CD9: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     label_8CDB:
     // 8CDB: LDA <$43
@@ -14951,7 +14951,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_8D05;
 
     // 8CFD: LEAU $6,U
-    // TODO: Fix comma operator: LEAU $6,U
+    cpu.m_u = cpu.m_u + 0x06;
 
     // 8CFF: CMPU #$496F
     cpu.execute_cmpu_immediate(0x496F);
@@ -15446,7 +15446,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_x + 0x13, cpu.m_d);
 
     // 8E56: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8E58: STU $D,X
     cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
@@ -15465,7 +15465,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.zero_flag()) cpu.m_pc = 0x8E32;
 
     // 8E62: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8E64: STU $D,X
     cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
@@ -15517,7 +15517,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0x8E94;
 
     // 8E89: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8E8B: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -15535,7 +15535,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_8E7B;
 
     // 8E94: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8E96: STU $D,X
     cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
@@ -15559,7 +15559,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDU $D,X
 
     // 8EA6: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8EA8: STU $17,X
     cpu.write_memory16(cpu.m_x + 0x17, cpu.m_u);
@@ -15601,7 +15601,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_x + 0x11, cpu.m_d);
 
     // 8EC7: LEAU $3,U
-    // TODO: Fix comma operator: LEAU $3,U
+    cpu.m_u = cpu.m_u + 0x03;
 
     // 8EC9: STU $D,X
     cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
@@ -15732,7 +15732,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(0xE2, cpu.m_d);
 
     // 8F22: LEAU $6,U
-    // TODO: Fix comma operator: LEAU $6,U
+    cpu.m_u = cpu.m_u + 0x06;
 
     // 8F24: STU <$E4
     cpu.write_memory16(0xE4, cpu.m_u);
@@ -15744,7 +15744,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x5A);
 
     // 8F2B: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 8F2E: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -15953,7 +15953,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x5A);
 
     // 8FBC: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 8FBF: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -15998,7 +15998,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(0xE2, cpu.m_d);
 
     // 8FDC: LEAU $6,U
-    // TODO: Fix comma operator: LEAU $6,U
+    cpu.m_u = cpu.m_u + 0x06;
 
     // 8FDE: STU <$E4
     cpu.write_memory16(0xE4, cpu.m_u);
@@ -19000,7 +19000,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0x983B;
 
     // 97BF: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     label_97C1:
     // 97C1: RTS 
@@ -19034,7 +19034,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0x97AC);
 
     // 97D8: LEAX -$1,U
-    // TODO: Fix comma operator: LEAX -$1,U
+    cpu.m_x = cpu.m_u - 0x01;
 
     // 97DA: JSR $E772
     cpu.call_function(0xE772);
@@ -19341,7 +19341,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: CLR $6,X
 
     // 98A7: LEAX $19,X
-    // TODO: Fix comma operator: LEAX $19,X
+    cpu.m_x = cpu.m_x + 0x19;
 
     // 98AA: CMPX #$494B
     cpu.compare_x(0x494B);
@@ -19449,7 +19449,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$07
 
     // 9916: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9918: SUBB #$00
     cpu.m_b -= 0x00;
@@ -19470,7 +19470,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$09
 
     // 9924: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9926: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -19713,7 +19713,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$1F
 
     // 99BE: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99C0: EORA #$00
     cpu.m_a ^= 0x00;
@@ -19734,7 +19734,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$01
 
     // 99CC: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99CE: EORA $0,X
     // TODO: Fix comma operator: EORA $0,X
@@ -19755,7 +19755,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$03
 
     // 99DA: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99DC: EORB $0,X
     // TODO: Fix comma operator: EORB $0,X
@@ -19776,7 +19776,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$05
 
     // 99E8: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99EA: ASL <$00
     cpu.arithmetic_shift_left(0x00);
@@ -19797,7 +19797,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$07
 
     // 99F6: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99F8: ASLA 
     cpu.m_a <<= 1;
@@ -19809,7 +19809,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert COM <$08
 
     // 99FD: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 99FF: ASLB 
     cpu.m_b <<= 1;
@@ -19821,7 +19821,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert COM <$09
 
     // 9A04: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9A06: ASL $0,X
     // TODO: Fix comma operator: ASL $0,X
@@ -20421,7 +20421,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$00
 
     // 9B87: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9B89: NEG <$00
     // TODO: Convert NEG <$00
@@ -20478,7 +20478,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$0A
 
     // 9BAF: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9BB1: EORA $0,X
     // TODO: Fix comma operator: EORA $0,X
@@ -20499,7 +20499,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$0C
 
     // 9BBD: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9BBF: ASL $0,X
     // TODO: Fix comma operator: ASL $0,X
@@ -20652,7 +20652,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$1B
 
     // 9C26: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9C28: EORB $0,X
     // TODO: Fix comma operator: EORB $0,X
@@ -20784,7 +20784,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$07
 
     // 9C7A: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9C7C: NEG <$00
     // TODO: Convert NEG <$00
@@ -21083,7 +21083,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$03
 
     // 9D3E: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9D40: SUBB $0,X
     // TODO: Fix comma operator: SUBB $0,X
@@ -21104,7 +21104,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$05
 
     // 9D4C: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9D4E: NEG >$0003
     // TODO: Convert NEG >$0003
@@ -21296,7 +21296,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert LBRA $FDC5
 
     // 9DC5: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9DC7: NEG <$01
     // TODO: Convert NEG <$01
@@ -21499,7 +21499,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$0A
 
     // 9E4F: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9E51: SUBA <$00
     cpu.m_a -= 0x00;
@@ -21779,7 +21779,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$05
 
     // 9F0C: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F0E: SUBA $0,X
     // TODO: Fix comma operator: SUBA $0,X
@@ -21800,7 +21800,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$07
 
     // 9F1A: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F1C: SUBB <$00
     cpu.m_b -= 0x00;
@@ -21821,7 +21821,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$09
 
     // 9F28: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F2A: NEG <$00
     // TODO: Convert NEG <$00
@@ -21842,10 +21842,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$0B
 
     // 9F36: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F38: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F3A: COM <$01
     // TODO: Convert COM <$01
@@ -21863,7 +21863,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$0D
 
     // 9F44: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9F46: NEG $0,X
     // TODO: Convert NEG $0,X
@@ -22096,7 +22096,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$03
 
     // 9FDE: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9FE0: SUBA <$00
     cpu.m_a -= 0x00;
@@ -22117,7 +22117,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$05
 
     // 9FEC: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // 9FEE: NEG >$0001
     // TODO: Convert NEG >$0001
@@ -22457,7 +22457,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$05
 
     // A0CC: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // A0CE: SUBA <$00
     cpu.m_a -= 0x00;
@@ -22478,7 +22478,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$07
 
     // A0DA: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // A0DC: NEG $0,X
     // TODO: Convert NEG $0,X
@@ -22634,7 +22634,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ASL $0,X
 
     // A137: LEAX $0,X
-    // TODO: Fix comma operator: LEAX $0,X
+    cpu.m_x = cpu.m_x + 0x00;
 
     // A139: NEG <$00
     // TODO: Convert NEG <$00
@@ -22861,7 +22861,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A1D5: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // A1D7: CMPU #$49E2
     cpu.execute_cmpu_immediate(0x49E2);
@@ -23113,7 +23113,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A2A0: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A2A2: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -23143,7 +23143,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A2B7: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A2B9: LDA $4B3D
     cpu.m_a = cpu.read_memory(0x4B3D);
@@ -23226,7 +23226,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x64);
 
     // A2EF: LEAX $7,X
-    // TODO: Fix comma operator: LEAX $7,X
+    cpu.m_x = cpu.m_x + 0x07;
 
     // A2F1: CMPX $2,U
     cpu.execute_cmpx_immediate(cpu.read_memory16(cpu.m_u + 0x02));
@@ -23275,7 +23275,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A313: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A315: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -23496,7 +23496,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A3B9: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A3BB: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -23786,7 +23786,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A4A4: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A4A6: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -23937,7 +23937,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A528: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A52A: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -24017,7 +24017,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A564: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A566: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -24090,7 +24090,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $6,X
 
     // A59C: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // A59E: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -24603,7 +24603,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.zero_flag()) cpu.m_pc = 0xA717;
 
     // A70E: LEAX $6,X
-    // TODO: Fix comma operator: LEAX $6,X
+    cpu.m_x = cpu.m_x + 0x06;
 
     // A710: CMPX #$496F
     cpu.compare_x(0x496F);
@@ -24612,7 +24612,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xA708;
 
     // A715: LEAS $2,S
-    // TODO: Fix comma operator: LEAS $2,S
+    cpu.m_sp = cpu.m_sp + 0x02;
 
     // A717: RTS 
     return;
@@ -25111,7 +25111,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0xA8);
 
     // A863: LEAX $6,X
-    // TODO: Fix comma operator: LEAX $6,X
+    cpu.m_x = cpu.m_x + 0x06;
 
     // A865: CMPX #$496F
     cpu.compare_x(0x496F);
@@ -26400,7 +26400,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0xA8);
 
     // AC36: LEAX $6,X
-    // TODO: Fix comma operator: LEAX $6,X
+    cpu.m_x = cpu.m_x + 0x06;
 
     // AC38: CMPX #$496F
     cpu.compare_x(0x496F);
@@ -26829,7 +26829,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0xCA);
 
     // AD5E: LEAX $6,X
-    // TODO: Fix comma operator: LEAX $6,X
+    cpu.m_x = cpu.m_x + 0x06;
 
     // AD60: CMPX #$496F
     cpu.compare_x(0x496F);
@@ -27564,7 +27564,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0xB04F;
 
     // AF8A: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // AF8C: LDA <$BD
     cpu.m_a = cpu.read_memory(0xBD);
@@ -29298,7 +29298,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xB47F;
 
     // B47C: LEAX -$10,X
-    // TODO: Fix comma operator: LEAX -$10,X
+    cpu.m_x = cpu.m_x - 0x10;
 
     // B47F: LDA ,X+
     // TODO: Complex indexed addressing: ,X+
@@ -29693,7 +29693,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xB5B9;
 
     // B5B6: LEAX -$10,X
-    // TODO: Fix comma operator: LEAX -$10,X
+    cpu.m_x = cpu.m_x - 0x10;
 
     // B5B9: LDA ,X+
     // TODO: Complex indexed addressing: ,X+
@@ -30192,7 +30192,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y + 0x1C, cpu.m_d);
 
     // B735: LEAY $1E,Y
-    // TODO: Fix comma operator: LEAY $1E,Y
+    cpu.m_y = cpu.m_y + 0x1E;
 
     // B738: RTS 
     return;
@@ -30884,7 +30884,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B940: LEAX $E,X
-    // TODO: Fix comma operator: LEAX $E,X
+    cpu.m_x = cpu.m_x + 0x0E;
 
     // B942: CMPX #$4A52
     cpu.compare_x(0x4A52);
@@ -30923,7 +30923,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x49E2;
 
     // B959: LEAX D,X
-    // TODO: Fix comma operator: LEAX D,X
+    cpu.m_x = cpu.m_x + cpu.m_d;
 
     // B95B: RTS 
     return;
@@ -31015,7 +31015,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: [B,U]
 
     // B9A1: LEAX $E,X
-    // TODO: Fix comma operator: LEAX $E,X
+    cpu.m_x = cpu.m_x + 0x0E;
 
     // B9A3: CMPX #$4A52
     cpu.compare_x(0x4A52);
@@ -31036,7 +31036,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_B95C;
 
     // B9B2: LEAX $E,X
-    // TODO: Fix comma operator: LEAX $E,X
+    cpu.m_x = cpu.m_x + 0x0E;
 
     // B9B4: CMPX #$4A52
     cpu.compare_x(0x4A52);
@@ -31201,7 +31201,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = cpu.read_memory16(0x64);
 
     // BA2A: LEAX $E,X
-    // TODO: Fix comma operator: LEAX $E,X
+    cpu.m_x = cpu.m_x + 0x0E;
 
     // BA2C: CMPX #$4A52
     cpu.compare_x(0x4A52);
@@ -32145,10 +32145,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // BCC1: LEAU -$2,U
-    // TODO: Fix comma operator: LEAU -$2,U
+    cpu.m_u = cpu.m_u - 0x02;
 
     // BCC3: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // BCC5: BNE $BCB0
     if (!cpu.zero_flag()) cpu.m_pc = 0xBCB0;
@@ -32193,7 +32193,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.m_d;
 
     // BCE4: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // BCE6: BNE $BCCA
     if (!cpu.zero_flag()) cpu.m_pc = 0xBCCA;
@@ -33344,7 +33344,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C097: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // C099: DECB 
     cpu.m_b--;
@@ -33476,7 +33476,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4B62);
 
     // C0F7: LEAX -$6,X
-    // TODO: Fix comma operator: LEAX -$6,X
+    cpu.m_x = cpu.m_x - 0x06;
 
     // C0F9: CMPX #$453C
     cpu.compare_x(0x453C);
@@ -33668,7 +33668,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.carry_flag()) cpu.m_pc = 0xC19E;
 
     // C197: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // C199: CMPX #$4586
     cpu.compare_x(0x4586);
@@ -33779,7 +33779,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C1DA: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // C1DC: CMPX #$4588
     cpu.compare_x(0x4588);
@@ -34172,7 +34172,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.execute_cmpb_immediate(cpu.read_memory(cpu.m_sp + 0x02));
 
     // C303: LEAS $3,S
-    // TODO: Fix comma operator: LEAS $3,S
+    cpu.m_sp = cpu.m_sp + 0x03;
 
     // C305: RTS 
     return;
@@ -34209,7 +34209,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // C320: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // C322: BNE $C31D
     if (!cpu.zero_flag()) cpu.m_pc = 0xC31D;
@@ -34227,7 +34227,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // C32F: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // C331: BNE $C32C
     if (!cpu.zero_flag()) cpu.m_pc = 0xC32C;
@@ -34949,7 +34949,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x4590;
 
     // C560: LEAX A,X
-    // TODO: Fix comma operator: LEAX A,X
+    cpu.m_x = cpu.m_x + cpu.m_a;
 
     // C562: LDA ,X
     // TODO: Complex indexed addressing: ,X
@@ -35087,7 +35087,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0xC737;
 
     // C5C1: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // C5C3: LDB $4AFA
     cpu.m_b = cpu.read_memory(0x4AFA);
@@ -35151,7 +35151,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0xC7F1;
 
     // C5EB: LEAX A,X
-    // TODO: Fix comma operator: LEAX A,X
+    cpu.m_x = cpu.m_x + cpu.m_a;
 
     // C5ED: ADDB ,X
     // TODO: Complex indexed addressing: ,X
@@ -35355,7 +35355,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x07D0;
 
     // C68B: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // C68D: BNE $C68B
     if (!cpu.zero_flag()) cpu.m_pc = 0xC68B;
@@ -35437,7 +35437,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0x6005);
 
     // C6CB: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // C6CD: CMPU #$0020
     cpu.execute_cmpu_immediate(0x0020);
@@ -35495,7 +35495,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.negative_flag()) cpu.m_pc = 0xC6DC;
 
     // C6F1: LEAX -$8,X
-    // TODO: Fix comma operator: LEAX -$8,X
+    cpu.m_x = cpu.m_x - 0x08;
 
     // C6F3: RTS 
     return;
@@ -35537,7 +35537,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.negative_flag()) cpu.m_pc = 0xC6FC;
 
     // C70B: LEAX -$6,X
-    // TODO: Fix comma operator: LEAX -$6,X
+    cpu.m_x = cpu.m_x - 0x06;
 
     // C70D: RTS 
     return;
@@ -35791,7 +35791,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xC7D6 - not implemented
 
     // C7AC: LEAX -$B,Y
-    // TODO: Fix comma operator: LEAX -$B,Y
+    cpu.m_x = cpu.m_y - 0x0B;
 
     // C7AE: ABX 
     // TODO: Convert ABX 
@@ -36369,7 +36369,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xE764);
 
     // C948: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // C94A: LDD #$8040
     cpu.m_d = 0x8040;
@@ -36447,7 +36447,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // C986: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // C988: CMPX #$CC10
     cpu.compare_x(0xCC10);
@@ -36822,7 +36822,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.carry_flag()) cpu.m_pc = 0xCAA5;
 
     // CA9D: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // CA9F: CMPX #$4AB6
     cpu.compare_x(0x4AB6);
@@ -36895,10 +36895,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_u + 0x02, cpu.m_a);
 
     // CAD5: LEAU -$3,U
-    // TODO: Fix comma operator: LEAU -$3,U
+    cpu.m_u = cpu.m_u - 0x03;
 
     // CAD7: LEAX -$4,X
-    // TODO: Fix comma operator: LEAX -$4,X
+    cpu.m_x = cpu.m_x - 0x04;
 
     // CAD9: CMPX $4AEC
     cpu.compare_x(cpu.read_memory16(0x4AEC));
@@ -37056,7 +37056,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4AEF, cpu.m_b);
 
     // CB49: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // CB4B: CMPX #$CC18
     cpu.compare_x(0xCC18);
@@ -38660,7 +38660,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: SUBB -$E,Y
 
     // D01F: LEAS -$1,X
-    // TODO: Fix comma operator: LEAS -$1,X
+    cpu.m_sp = cpu.m_x - 0x01;
 
     // D020: TFR inv,CC
     cpu.m_cc = cpu.m_inv;
@@ -39128,7 +39128,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0xE0, 0);
 
     // D173: LEAS $0,X
-    // TODO: Fix comma operator: LEAS $0,X
+    cpu.m_sp = cpu.m_x + 0x00;
 
     // D175: CLR <$FF
     cpu.write_memory(0xFF, 0);
@@ -39494,7 +39494,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,S+
 
     // D28D: LEAS $0,X
-    // TODO: Fix comma operator: LEAS $0,X
+    cpu.m_sp = cpu.m_x + 0x00;
 
     // D28F: DECB 
     cpu.m_b--;
@@ -40823,7 +40823,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xD634 - not implemented
 
     // D63B: LEAY [$33F9,S]
-    // TODO: Complex indexed addressing: [$33F9,S]
+    cpu.m_y = cpu.read_memory16(cpu.m_sp + 0x33F9);
 
     // D63F: PULS CC,DP,X,Y,U,PC
     // TODO: Convert PULS CC,DP,X,Y,U,PC
@@ -41660,7 +41660,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_D860:
     // D860: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // D862: CMPX #$480C
     cpu.compare_x(0x480C);
@@ -41825,7 +41825,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D8C0: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // D8C2: CMPX #$4815
     cpu.compare_x(0x4815);
@@ -41858,7 +41858,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_D8DE;
 
     // D8D7: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // D8D9: CMPX #$4815
     cpu.compare_x(0x4815);
@@ -41921,7 +41921,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BLS $D912
 
     // D907: LEAU -$1,U
-    // TODO: Fix comma operator: LEAU -$1,U
+    cpu.m_u = cpu.m_u - 0x01;
 
     // D909: LDA ,U
     // TODO: Complex indexed addressing: ,U
@@ -41933,7 +41933,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(0x4AD9, cpu.m_u);
 
     // D910: LEAX ,U
-    // TODO: Complex indexed addressing: ,U
+    cpu.m_x = cpu.m_u;
 
     label_D912:
     // D912: JMP $d912
@@ -42072,7 +42072,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // D97C: LEAU $5,U
-    // TODO: Fix comma operator: LEAU $5,U
+    cpu.m_u = cpu.m_u + 0x05;
 
     // D97E: CMPU $4ADD
     cpu.execute_cmpu_immediate(0x4ADD);
@@ -42186,7 +42186,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // D9D3: LEAU $4,U
-    // TODO: Fix comma operator: LEAU $4,U
+    cpu.m_u = cpu.m_u + 0x04;
 
     // D9D5: CMPU $4ADD
     cpu.execute_cmpu_immediate(0x4ADD);
@@ -42397,7 +42397,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y + 0x2E, cpu.m_d);
 
     // DA91: LEAY $30,Y
-    // TODO: Fix comma operator: LEAY $30,Y
+    cpu.m_y = cpu.m_y + 0x30;
 
     // DA94: LDX #$4A66
     cpu.m_x = 0x4A66;
@@ -42490,7 +42490,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x4ADD);
 
     // DADF: LEAU $5,U
-    // TODO: Fix comma operator: LEAU $5,U
+    cpu.m_u = cpu.m_u + 0x05;
 
     // DAE1: CMPU $4ADD
     cpu.execute_cmpu_immediate(0x4ADD);
@@ -42505,11 +42505,11 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xD971);
 
     // DAEC: LEAX -$5,X
-    // TODO: Fix comma operator: LEAX -$5,X
+    cpu.m_x = cpu.m_x - 0x05;
 
     label_DAEE:
     // DAEE: LEAX $5,X
-    // TODO: Fix comma operator: LEAX $5,X
+    cpu.m_x = cpu.m_x + 0x05;
 
     // DAF0: CMPX $4ADD
     cpu.compare_x(cpu.read_memory16(0x4ADD));
@@ -44459,7 +44459,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xDE57;
 
     // DE27: LEAX [$4441,W]
-    // TODO: Complex indexed addressing: [$4441,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x4441);
 
     // DE2B: XNCB 
     // TODO: Convert XNCB 
@@ -44529,7 +44529,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xDE79;
 
     // DE49: LEAX [$4C41,W]
-    // TODO: Complex indexed addressing: [$4C41,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x4C41);
 
     // DE4D: COMB 
     cpu.m_b = ~cpu.m_b;
@@ -44591,7 +44591,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_DE8A;
 
     // DE6A: LEAS -$10,Y
-    // TODO: Fix comma operator: LEAS -$10,Y
+    cpu.m_sp = cpu.m_y - 0x10;
 
     // DE6C: SUBA $4C41
     cpu.m_a -= cpu.read_memory(0x4C41);
@@ -44672,10 +44672,10 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_DEBF;
 
     // DE8C: LEAS -$10,Y
-    // TODO: Fix comma operator: LEAS -$10,Y
+    cpu.m_sp = cpu.m_y - 0x10;
 
     // DE8D: LEAX [$5452,W]
-    // TODO: Complex indexed addressing: [$5452,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x5452);
 
     // DE8E: SUBA $5452
     cpu.m_a -= cpu.read_memory(0x5452);
@@ -44751,7 +44751,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_DEE0;
 
     // DEAF: LEAX [$4649,W]
-    // TODO: Complex indexed addressing: [$4649,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x4649);
 
     // DEB3: XNCB 
     // TODO: Convert XNCB 
@@ -44847,7 +44847,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_DF05;
 
     // DED1: LEAU [,--Y]
-    // TODO: Complex indexed addressing: [,--Y]
+    cpu.m_u = cpu.read_memory16(cpu.m_--Y + );
 
     // DED2: SUBD $4558
     cpu.m_d -= 0x4558;
@@ -44952,7 +44952,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_DEEF:
     // DEEF: LEAS -$B,Y
-    // TODO: Fix comma operator: LEAS -$B,Y
+    cpu.m_sp = cpu.m_y - 0x0B;
 
     label_DEF0:
     // DEF0: PULS B,DP,Y
@@ -44963,10 +44963,10 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xDF23;
 
     // DEF2: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // DEF3: LEAX [$4445,W]
-    // TODO: Complex indexed addressing: [$4445,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x4445);
 
     // DEF4: SUBA $4445
     cpu.m_a -= cpu.read_memory(0x4445);
@@ -45050,10 +45050,10 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_DF47;
 
     // DF12: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
+    cpu.m_x = cpu.m_y + 0x0C;
 
     // DF14: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // DF16: SUBA $5345
     cpu.m_a -= cpu.read_memory(0x5345);
@@ -45329,20 +45329,20 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d += 0x34;
 
     // DF81: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // DF83: BGE $DFB5
     // TODO: External jump to 0xDFB5 - not implemented
 
     label_DF85:
     // DF85: LEAX [$3830,W]
-    // TODO: Complex indexed addressing: [$3830,W]
+    cpu.m_x = cpu.read_memory16(cpu.m_d + 0x3830);
 
     // DF89: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
+    cpu.m_x = cpu.m_y + 0x0C;
 
     // DF8B: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // DF8D: SUBA $4D45
     cpu.m_a -= cpu.read_memory(0x4D45);
@@ -45777,14 +45777,14 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d += 0x35;
 
     // E03A: LEAX $C,Y
-    // TODO: Fix comma operator: LEAX $C,Y
+    cpu.m_x = cpu.m_y + 0x0C;
 
     label_E03C:
     // E03C: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // E03E: LEAX $0,Y
-    // TODO: Fix comma operator: LEAX $0,Y
+    cpu.m_x = cpu.m_y + 0x00;
 
     // E040: RORA 
     cpu.m_a = (cpu.m_a >> 1) | (cpu.carry_flag() ? 0x80 : 0);
@@ -46070,7 +46070,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xE0DD;
 
     // E0AD: LEAX -$10,Y
-    // TODO: Fix comma operator: LEAX -$10,Y
+    cpu.m_x = cpu.m_y - 0x10;
 
     // E0AF: BRA $E0D1
     goto label_E0D1;
@@ -48397,7 +48397,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_E3FD;
 
     // E44C: LEAU $0,Y
-    // TODO: Fix comma operator: LEAU $0,Y
+    cpu.m_u = cpu.m_y + 0x00;
 
     // E44E: ASRA 
     // TODO: Convert ASRA 
@@ -49055,7 +49055,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.test_a();
 
     // E56A: LEAX $0,Y
-    // TODO: Fix comma operator: LEAX $0,Y
+    cpu.m_x = cpu.m_y + 0x00;
 
     // E56C: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49081,7 +49081,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.test_a();
 
     // E577: LEAY $0,Y
-    // TODO: Fix comma operator: LEAY $0,Y
+    cpu.m_y = cpu.m_y + 0x00;
 
     // E579: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49112,7 +49112,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_E584:
     // E584: LEAS $0,Y
-    // TODO: Fix comma operator: LEAS $0,Y
+    cpu.m_sp = cpu.m_y + 0x00;
 
     // E586: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49141,7 +49141,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_E591:
     // E591: LEAU $0,Y
-    // TODO: Fix comma operator: LEAU $0,Y
+    cpu.m_u = cpu.m_y + 0x00;
 
     label_E593:
     // E593: NEGA 
@@ -49296,7 +49296,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.test_a();
 
     // E5D3: LEAX $0,Y
-    // TODO: Fix comma operator: LEAX $0,Y
+    cpu.m_x = cpu.m_y + 0x00;
 
     // E5D5: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49340,7 +49340,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_E5E5:
     // E5E5: LEAY $0,Y
-    // TODO: Fix comma operator: LEAY $0,Y
+    cpu.m_y = cpu.m_y + 0x00;
 
     // E5E7: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49387,7 +49387,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_E5F8:
     // E5F8: LEAS $0,Y
-    // TODO: Fix comma operator: LEAS $0,Y
+    cpu.m_sp = cpu.m_y + 0x00;
 
     // E5FA: NEGA 
     cpu.m_a = -cpu.m_a;
@@ -49435,7 +49435,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.test_a();
 
     // E60B: LEAU $0,Y
-    // TODO: Fix comma operator: LEAU $0,Y
+    cpu.m_u = cpu.m_y + 0x00;
 
     label_E60D:
     // E60D: NEGA 
@@ -50001,7 +50001,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XHCF 
 
     // E6F2: LEAS $E,Y
-    // TODO: Fix comma operator: LEAS $E,Y
+    cpu.m_sp = cpu.m_y + 0x0E;
 
     // E6F4: BRA $E742
     goto label_E742;
@@ -51009,7 +51009,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.execute_cmpb_immediate(cpu.read_memory(cpu.m_sp + 0x03));
 
     // E93A: CMPB B,X
-    // TODO: Handle indexed addressing: CMPB B,X
+    cpu.execute_cmpb_immediate(cpu.read_memory(cpu.m_x + cpu.m_b));
 
     // E93C: CMPB E,Y
     // TODO: Handle indexed addressing: CMPB E,Y
@@ -53733,6 +53733,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     // F08A: STD ,--X
     cpu.m_x--;
+    cpu.m_x--;
     cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // F08C: CMPX #$0002
@@ -53755,6 +53756,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(cpu.m_u++);
 
     // F09C: STD ,--X
+    cpu.m_x--;
     cpu.m_x--;
     cpu.write_memory16(cpu.m_x, cpu.m_d);
 
@@ -54464,7 +54466,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F284: LEAU -$1,U
-    // TODO: Fix comma operator: LEAU -$1,U
+    cpu.m_u = cpu.m_u - 0x01;
 
     // F286: CMPU #$0000
     cpu.execute_cmpu_immediate(0x0000);
@@ -54572,7 +54574,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x0800;
 
     // F2E3: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F2E5: BNE $F2E3
     if (!cpu.zero_flag()) cpu.m_pc = 0xF2E3;
@@ -54897,17 +54899,17 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0xF3D6;
 
     // F3D2: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // F3D4: BRA $F3D8
     goto label_F3D8;
 
     // F3D6: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     label_F3D8:
     // F3D8: LEAY -$1,Y
-    // TODO: Fix comma operator: LEAY -$1,Y
+    cpu.m_y = cpu.m_y - 0x01;
 
     // F3DA: BNE $F38D
     if (!cpu.zero_flag()) cpu.m_pc = 0xF38D;
@@ -54986,17 +54988,17 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0xF41E;
 
     // F41A: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // F41C: BRA $F420
     goto label_F420;
 
     // F41E: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     label_F420:
     // F420: LEAY -$1,Y
-    // TODO: Fix comma operator: LEAY -$1,Y
+    cpu.m_y = cpu.m_y - 0x01;
 
     // F422: BNE $F3EB
     if (!cpu.zero_flag()) cpu.m_pc = 0xF3EB;
@@ -55124,7 +55126,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_F4B7;
 
     // F482: LEAY -$1,Y
-    // TODO: Fix comma operator: LEAY -$1,Y
+    cpu.m_y = cpu.m_y - 0x01;
 
     // F484: BNE $F46B
     if (!cpu.zero_flag()) cpu.m_pc = 0xF46B;
@@ -55148,7 +55150,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F494: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // F496: CMPX #$4600
     cpu.compare_x(0x4600);
@@ -55236,7 +55238,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F4D9: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F4DB: BNE $F4D6
     if (!cpu.zero_flag()) cpu.m_pc = 0xF4D6;
@@ -55254,7 +55256,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F4E8: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F4EA: BNE $F4E5
     if (!cpu.zero_flag()) cpu.m_pc = 0xF4E5;
@@ -55288,7 +55290,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F504: LEAY -$2,Y
-    // TODO: Fix comma operator: LEAY -$2,Y
+    cpu.m_y = cpu.m_y - 0x02;
 
     // F506: BNE $F4FD
     if (!cpu.zero_flag()) cpu.m_pc = 0xF4FD;
@@ -55341,7 +55343,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F52F: LEAY -$2,Y
-    // TODO: Fix comma operator: LEAY -$2,Y
+    cpu.m_y = cpu.m_y - 0x02;
 
     // F531: BNE $F528
     if (!cpu.zero_flag()) cpu.m_pc = 0xF528;
@@ -55617,7 +55619,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_b);
 
     // F604: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // F606: CMPU #$A000
     cpu.execute_cmpu_immediate(0xA000);
@@ -55626,7 +55628,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xF601;
 
     // F60C: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F60E: BNE $F5F2
     if (!cpu.zero_flag()) cpu.m_pc = 0xF5F2;
@@ -55663,7 +55665,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F627: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // F629: CMPU #$A000
     cpu.execute_cmpu_immediate(0xA000);
@@ -55672,7 +55674,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xF624;
 
     // F62F: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F631: BNE $F615
     if (!cpu.zero_flag()) cpu.m_pc = 0xF615;
@@ -55684,7 +55686,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F639: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // F63B: CMPU #$FF00
     cpu.execute_cmpu_immediate(0xFF00);
@@ -55739,7 +55741,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // F665: LEAX D,X
-    // TODO: Fix comma operator: LEAX D,X
+    cpu.m_x = cpu.m_x + cpu.m_d;
 
     // F667: CMPX #$0708
     cpu.compare_x(0x0708);
@@ -55784,7 +55786,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0xF69D;
 
     // F687: LEAU $2,U
-    // TODO: Fix comma operator: LEAU $2,U
+    cpu.m_u = cpu.m_u + 0x02;
 
     // F689: CMPU #$F735
     cpu.execute_cmpu_immediate(0xF735);
@@ -56104,7 +56106,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4400, cpu.m_a);
 
     // F76C: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // F76E: CMPX #$F36E
     cpu.compare_x(0xF36E);
@@ -56371,7 +56373,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // F840: LEAU D,U
-    // TODO: Fix comma operator: LEAU D,U
+    cpu.m_u = cpu.m_u + cpu.m_d;
 
     // F842: TFR U,D
     cpu.m_d = cpu.m_u;
@@ -56392,7 +56394,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x0014;
 
     // F851: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F853: BNE $F851
     if (!cpu.zero_flag()) cpu.m_pc = 0xF851;
@@ -56702,7 +56704,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // F94C: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // F94E: BNE $F94A
     if (!cpu.zero_flag()) cpu.m_pc = 0xF94A;
@@ -57176,7 +57178,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // FAC1: LEAX $4,X
-    // TODO: Fix comma operator: LEAX $4,X
+    cpu.m_x = cpu.m_x + 0x04;
 
     // FAC3: CMPX #$FB09
     cpu.compare_x(0xFB09);
@@ -57297,7 +57299,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_FA4E;
 
     // FB2D: LEAU $2,U
-    // TODO: Fix comma operator: LEAU $2,U
+    cpu.m_u = cpu.m_u + 0x02;
 
     // FB2F: CMPU #$0020
     cpu.execute_cmpu_immediate(0x0020);
@@ -57388,7 +57390,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$00
 
     // FB6A: LEAS -$B,U
-    // TODO: Fix comma operator: LEAS -$B,U
+    cpu.m_sp = cpu.m_u - 0x0B;
 
     // FB6C: LSRB 
     cpu.m_b >>= 1;
@@ -57615,7 +57617,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d += 0x0001;
 
     // FC27: LEAU $8,U
-    // TODO: Fix comma operator: LEAU $8,U
+    cpu.m_u = cpu.m_u + 0x08;
 
     // FC29: CMPU #$6000
     cpu.execute_cmpu_immediate(0x6000);
@@ -57690,7 +57692,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.m_u;
 
     // FC64: LEAU D,U
-    // TODO: Fix comma operator: LEAU D,U
+    cpu.m_u = cpu.m_u + cpu.m_d;
 
     // FC66: CMPU #$0200
     cpu.execute_cmpu_immediate(0x0200);
@@ -57777,7 +57779,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0xFCD1;
 
     // FCB1: LEAU B,U
-    // TODO: Fix comma operator: LEAU B,U
+    cpu.m_u = cpu.m_u + cpu.m_b;
 
     // FCB3: LDD ,U
     // TODO: Complex indexed addressing: ,U
@@ -57997,7 +57999,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = 0xFDBC;
 
     // FD5A: LEAU $1,U
-    // TODO: Fix comma operator: LEAU $1,U
+    cpu.m_u = cpu.m_u + 0x01;
 
     // FD5C: CMPU #$FDBC
     cpu.execute_cmpu_immediate(0xFDBC);
@@ -58042,7 +58044,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Invalid branch offset: [,X]
 
     // FD7B: LEAX $2,X
-    // TODO: Fix comma operator: LEAX $2,X
+    cpu.m_x = cpu.m_x + 0x02;
 
     // FD7D: CMPX #$FD9A
     cpu.compare_x(0xFD9A);
@@ -58343,7 +58345,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FE63: LEAY $1,Y
-    // TODO: Fix comma operator: LEAY $1,Y
+    cpu.m_y = cpu.m_y + 0x01;
 
     // FE65: CMPY #$0200
     cpu.execute_cmpy_immediate(0x0200);
@@ -58401,7 +58403,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FE92: LEAY $1,Y
-    // TODO: Fix comma operator: LEAY $1,Y
+    cpu.m_y = cpu.m_y + 0x01;
 
     // FE94: CMPY #$0200
     cpu.execute_cmpy_immediate(0x0200);
@@ -58484,7 +58486,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_x = 0x0100;
 
     // FED7: LEAX -$1,X
-    // TODO: Fix comma operator: LEAX -$1,X
+    cpu.m_x = cpu.m_x - 0x01;
 
     // FED9: BEQ $FF03
     if (cpu.zero_flag()) cpu.m_pc = 0xFF03;
@@ -58548,7 +58550,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FF09: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // FF0B: CMPX #$AC55
     cpu.compare_x(0xAC55);
@@ -58569,7 +58571,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FF1A: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // FF1C: CMPX #$AC55
     cpu.compare_x(0xAC55);
@@ -58600,7 +58602,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FF35: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // FF37: CMPX #$5600
     cpu.compare_x(0x5600);
@@ -58627,7 +58629,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory(0x4640, cpu.m_a);
 
     // FF4D: LEAX $1,X
-    // TODO: Fix comma operator: LEAX $1,X
+    cpu.m_x = cpu.m_x + 0x01;
 
     // FF4F: CMPX #$5600
     cpu.compare_x(0x5600);
