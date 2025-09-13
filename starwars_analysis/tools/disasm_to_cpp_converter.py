@@ -52,6 +52,14 @@ INSTRUCTION_MAP = {
     'XDECB': 'cpu.m_b--',
     'ASL': 'cpu.arithmetic_shift_left({operand})',
     'ROL': 'cpu.rotate_left({operand})',
+    # Compare operations
+    'CMPD': 'cpu.execute_cmpd_immediate({operand})',
+    'CMPU': 'cpu.execute_cmpu_immediate({operand})',
+    'CMPA': 'cpu.execute_cmpa_immediate({operand})',
+    'CMPB': 'cpu.execute_cmpb_immediate({operand})',
+    'CMPX': 'cpu.execute_cmpx_immediate({operand})',
+    'CMPY': 'cpu.execute_cmpy_immediate({operand})',
+    'CMPS': 'cpu.execute_cmps_immediate({operand})',
     'JMP': 'goto label_{operand}',
     'JSR': 'cpu.call_function({operand})',
     'RTS': 'return',
@@ -425,7 +433,7 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
         return f"    cpu.m_{dest.lower()} = cpu.m_{src.lower()};"
 
     # Handle indexed addressing for memory operations
-    if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
+    if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS', 'CMPA', 'CMPB', 'CMPD', 'CMPX', 'CMPY', 'CMPU', 'CMPS']:
         # Parse indexed addressing
         parts = operands.split(',')
         if len(parts) == 2:
@@ -464,15 +472,18 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
                     inc_reg_name = 'sp'
                 effective_addr = f"cpu.m_{inc_reg_name}"
                 post_increment = f"    cpu.m_{inc_reg_name}++;"
-            elif index_reg.startswith('--'):
-                # Pre-decrement: ,--X
-                index_reg = index_reg[2:]  # Remove --
-                # Map S register to sp for pre-decrement
-                dec_reg_name = index_reg.lower()
+            # Optimize pre-decrement handling by combining logic for ,-X and ,--X
+            elif index_reg.startswith('-'):
+                # Handles both ,-X and ,--X (single or double pre-decrement)
+                num_dashes = len(index_reg) - len(index_reg.lstrip('-'))
+                index_reg_clean = index_reg[num_dashes:]  # Remove leading dashes
+                dec_reg_name = index_reg_clean.lower()
                 if dec_reg_name == 's':
                     dec_reg_name = 'sp'
                 effective_addr = f"cpu.m_{dec_reg_name}"
-                pre_decrement = f"    cpu.m_{dec_reg_name}--;"
+                # For ,--X do two decrements, for ,-X do one
+                pre_decrement = "    " + "cpu.m_{}--;\n    ".format(dec_reg_name) * num_dashes
+                pre_decrement = pre_decrement.rstrip()  # Remove trailing whitespace/newline
 
             # Generate appropriate store instruction
             if mnemonic == 'STA':
@@ -524,6 +535,21 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
                     return f"    cpu.write_memory16({effective_addr}, cpu.m_sp);\n{post_increment}"
                 else:
                     return f"    cpu.write_memory16({effective_addr}, cpu.m_sp);"
+            # Compare operations with indexed addressing
+            elif mnemonic == 'CMPA':
+                return f"    cpu.execute_cmpa_immediate(cpu.read_memory({effective_addr}));"
+            elif mnemonic == 'CMPB':
+                return f"    cpu.execute_cmpb_immediate(cpu.read_memory({effective_addr}));"
+            elif mnemonic == 'CMPD':
+                return f"    cpu.execute_cmpd_immediate(cpu.read_memory16({effective_addr}));"
+            elif mnemonic == 'CMPX':
+                return f"    cpu.execute_cmpx_immediate(cpu.read_memory16({effective_addr}));"
+            elif mnemonic == 'CMPY':
+                return f"    cpu.execute_cmpy_immediate(cpu.read_memory16({effective_addr}));"
+            elif mnemonic == 'CMPU':
+                return f"    cpu.execute_cmpu_immediate(cpu.read_memory16({effective_addr}));"
+            elif mnemonic == 'CMPS':
+                return f"    cpu.execute_cmps_immediate(cpu.read_memory16({effective_addr}));"
 
         # Fallback for complex cases
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"

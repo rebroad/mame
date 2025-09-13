@@ -260,6 +260,15 @@ public:
 
     uint8_t m_inv;               // Invalid register (used in some routines)
 
+    // Compare operations
+    void execute_cmps_immediate(uint16_t value);
+    void execute_cmpd_immediate(uint16_t value);
+    void execute_cmpu_immediate(uint16_t value);
+    void execute_cmpa_immediate(uint8_t value);
+    void execute_cmpb_immediate(uint8_t value);
+    void execute_cmpx_immediate(uint16_t value);
+    void execute_cmpy_immediate(uint16_t value);
+
 protected:
 
     // CPU state
@@ -297,7 +306,6 @@ protected:
     void execute_lda_immediate(uint8_t value);
     void execute_lsr_direct(uint8_t address);
     void execute_bcc(uint16_t address);
-    void execute_cmps_immediate(uint16_t value);
     void execute_beq(uint16_t address);
     void execute_std_indexed(uint8_t postbyte);
     void execute_lda_indexed(uint8_t postbyte);
@@ -316,6 +324,7 @@ protected:
     void set_zero_flag(bool zero);
     void set_carry_flag(bool carry);
     void set_negative_flag(bool negative);
+    void set_overflow_flag(bool overflow);
     bool get_zero_flag() const;
     bool get_carry_flag() const;
 };

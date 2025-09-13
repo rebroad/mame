@@ -802,6 +802,14 @@ void CPU6809::set_negative_flag(bool negative) {
     }
 }
 
+void CPU6809::set_overflow_flag(bool overflow) {
+    if (overflow) {
+        m_cc |= 0x02;   // Set V flag
+    } else {
+        m_cc &= ~0x02;  // Clear V flag
+    }
+}
+
 bool CPU6809::get_zero_flag() const {
     return (m_cc & 0x04) != 0;
 }
@@ -1242,6 +1250,73 @@ void CPU6809::check_routine_termination() {
         std::cout << "CPU6809::check_routine_termination() - PC moved too far from routine start" << std::endl;
         set_instruction_mode();
     }
+}
+
+// Compare operations
+void CPU6809::execute_cmpd_immediate(uint16_t value) {
+    // CMPD #$XXXX - Compare D register with immediate 16-bit value
+    uint16_t result = m_d - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x8000);
+    set_carry_flag(result > m_d); // Borrow occurred
+    set_overflow_flag(((m_d ^ result) & (value ^ result) & 0x8000) != 0);
+}
+
+void CPU6809::execute_cmpu_immediate(uint16_t value) {
+    // CMPU #$XXXX - Compare U register with immediate 16-bit value
+    uint16_t result = m_u - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x8000);
+    set_carry_flag(result > m_u); // Borrow occurred
+    set_overflow_flag(((m_u ^ result) & (value ^ result) & 0x8000) != 0);
+}
+
+void CPU6809::execute_cmpa_immediate(uint8_t value) {
+    // CMPA #$XX - Compare A register with immediate 8-bit value
+    uint8_t result = m_a - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x80);
+    set_carry_flag(result > m_a); // Borrow occurred
+    set_overflow_flag(((m_a ^ result) & (value ^ result) & 0x80) != 0);
+}
+
+void CPU6809::execute_cmpb_immediate(uint8_t value) {
+    // CMPB #$XX - Compare B register with immediate 8-bit value
+    uint8_t result = m_b - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x80);
+    set_carry_flag(result > m_b); // Borrow occurred
+    set_overflow_flag(((m_b ^ result) & (value ^ result) & 0x80) != 0);
+}
+
+void CPU6809::execute_cmpx_immediate(uint16_t value) {
+    // CMPX #$XXXX - Compare X register with immediate 16-bit value
+    uint16_t result = m_x - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x8000);
+    set_carry_flag(result > m_x); // Borrow occurred
+    set_overflow_flag(((m_x ^ result) & (value ^ result) & 0x8000) != 0);
+}
+
+void CPU6809::execute_cmpy_immediate(uint16_t value) {
+    // CMPY #$XXXX - Compare Y register with immediate 16-bit value
+    uint16_t result = m_y - value;
+
+    // Set condition codes
+    set_zero_flag(result == 0);
+    set_negative_flag(result & 0x8000);
+    set_carry_flag(result > m_y); // Borrow occurred
+    set_overflow_flag(((m_y ^ result) & (value ^ result) & 0x8000) != 0);
 }
 
 } // namespace StarWars
