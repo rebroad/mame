@@ -55,6 +55,10 @@ public:
     uint8_t read_memory(uint16_t address);
     void write_memory(uint16_t address, uint8_t value);
 
+    // Test instructions
+    void test_a();  // TSTA - Test A register
+    void test_b();  // TSTB - Test B register
+
     // Native routine execution (address-perfect C++ implementations)
     bool execute_at_address(uint16_t address);
 

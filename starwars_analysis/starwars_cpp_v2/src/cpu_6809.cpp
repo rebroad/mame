@@ -79,7 +79,7 @@ void CPU6809::step() {
     if (m_execution_mode == ROUTINE_MODE) {
         // We're in routine mode - check for termination
         check_routine_termination();
-        
+
         if (m_execution_mode == ROUTINE_MODE) {
             // Still in routine mode - execute instruction by instruction within the routine
             std::cout << "  -> Executing within routine at 0x" << std::hex << m_pc << std::endl;
@@ -296,15 +296,15 @@ void CPU6809::execute_beq(uint16_t address) {
 }
 
 void CPU6809::execute_std_indexed(uint8_t postbyte) {
-    std::cout << "STD indexed (postbyte=0x" << std::hex << std::setw(2) << std::setfill('0') 
+    std::cout << "STD indexed (postbyte=0x" << std::hex << std::setw(2) << std::setfill('0')
               << static_cast<int>(postbyte) << ")" << std::endl;
-    
+
     // Decode indexed addressing mode from postbyte
     uint8_t mode = (postbyte >> 5) & 0x07;  // Bits 5-7: addressing mode
     uint8_t reg = postbyte & 0x1F;          // Bits 0-4: register and additional info
-    
+
     uint16_t address = 0;
-    
+
     switch (mode) {
         case 0x00: // ,R (no offset)
             switch (reg & 0x1F) {
@@ -317,7 +317,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                     return;
             }
             break;
-            
+
         case 0x01: // ,R+ (post-increment)
             switch (reg & 0x1F) {
                 case 0x00: address = m_x; m_x++; break;
@@ -329,7 +329,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                     return;
             }
             break;
-            
+
         case 0x02: // ,R++ (post-increment by 2)
             switch (reg & 0x1F) {
                 case 0x00: address = m_x; m_x += 2; break;
@@ -341,7 +341,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                     return;
             }
             break;
-            
+
         case 0x03: // ,-R (pre-decrement)
             switch (reg & 0x1F) {
                 case 0x00: m_x--; address = m_x; break;
@@ -353,7 +353,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                     return;
             }
             break;
-            
+
         case 0x04: // ,--R (pre-decrement by 2)
             switch (reg & 0x1F) {
                 case 0x00: m_x -= 2; address = m_x; break;
@@ -365,7 +365,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                     return;
             }
             break;
-            
+
         case 0x05: // ,R (5-bit offset)
             {
                 int8_t offset = static_cast<int8_t>(reg);
@@ -377,7 +377,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x06: // ,R (8-bit offset)
             {
                 int8_t offset = fetch_byte();
@@ -392,7 +392,7 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x07: // ,R (16-bit offset)
             {
                 uint16_t offset = fetch_word();
@@ -407,12 +407,12 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         default:
             std::cout << "  -> Unsupported STD indexed addressing mode" << std::endl;
             return;
     }
-    
+
     // Store the D register (A:B) at the calculated address
     write_memory16(address, m_d);
 }
@@ -420,13 +420,13 @@ void CPU6809::execute_std_indexed(uint8_t postbyte) {
 void CPU6809::execute_tfr(uint8_t postbyte) {
     uint8_t src_reg = (postbyte >> 4) & 0x0F;  // Source register (upper 4 bits)
     uint8_t dst_reg = postbyte & 0x0F;         // Destination register (lower 4 bits)
-    
+
     std::cout << "TFR ";
-    
+
     // Decode and execute the transfer based on register codes
     uint16_t src_value = 0;
     bool is_16bit = false;
-    
+
     // Read source register value
     switch (src_reg) {
         case 0x00: src_value = m_d; is_16bit = true; std::cout << "D,"; break;
@@ -444,64 +444,64 @@ void CPU6809::execute_tfr(uint8_t postbyte) {
             std::cout << " -> Unsupported source register in TFR" << std::endl;
             return;
     }
-    
+
     // Write to destination register
     switch (dst_reg) {
-        case 0x00: 
-            m_d = src_value; 
-            m_a = (m_d >> 8) & 0xFF; 
-            m_b = m_d & 0xFF; 
-            std::cout << "D"; 
+        case 0x00:
+            m_d = src_value;
+            m_a = (m_d >> 8) & 0xFF;
+            m_b = m_d & 0xFF;
+            std::cout << "D";
             break;
         case 0x01: m_x = src_value; std::cout << "X"; break;
         case 0x02: m_y = src_value; std::cout << "Y"; break;
         case 0x03: m_u = src_value; std::cout << "U"; break;
         case 0x04: m_sp = src_value; std::cout << "S"; break;
         case 0x05: m_pc = src_value; std::cout << "PC"; break;
-        case 0x08: 
+        case 0x08:
             if (is_16bit) {
                 m_a = src_value & 0xFF;  // Only transfer low byte for 16->8 bit transfer
             } else {
                 m_a = src_value;
             }
-            std::cout << "A"; 
+            std::cout << "A";
             break;
-        case 0x09: 
+        case 0x09:
             if (is_16bit) {
                 m_b = src_value & 0xFF;  // Only transfer low byte for 16->8 bit transfer
             } else {
                 m_b = src_value;
             }
-            std::cout << "B"; 
+            std::cout << "B";
             break;
-        case 0x0A: 
+        case 0x0A:
             if (is_16bit) {
                 m_cc = src_value & 0xFF;  // Only transfer low byte for 16->8 bit transfer
             } else {
                 m_cc = src_value;
             }
-            std::cout << "CC"; 
+            std::cout << "CC";
             break;
-        case 0x0B: 
+        case 0x0B:
             if (is_16bit) {
                 m_dp = src_value & 0xFF;  // Only transfer low byte for 16->8 bit transfer
             } else {
                 m_dp = src_value;
             }
-            std::cout << "DP"; 
+            std::cout << "DP";
             break;
         default:
             std::cout << "??";
             std::cout << " -> Unsupported destination register in TFR" << std::endl;
             return;
     }
-    
+
     std::cout << std::endl;
 }
 
 void CPU6809::execute_lda_indexed(uint8_t postbyte) {
     uint16_t address = 0;
-    
+
     // Decode indexed addressing mode from postbyte
     switch (postbyte & 0xE0) {
         case 0x00: // No offset
@@ -522,12 +522,12 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         case 0x20: // 5-bit offset
             {
                 int8_t offset = postbyte & 0x1F;
                 if (offset > 15) offset -= 32; // Convert to signed
-                
+
                 if ((postbyte & 0x1F) == 0x04) { // 5-bit offset,X
                     address = m_x + offset;
                     std::cout << "LDA " << (offset < 0 ? "-" : "") << "$" << std::hex << (offset < 0 ? -offset : offset) << ",X" << std::endl;
@@ -537,7 +537,7 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x40: // 8-bit offset
             {
                 int8_t offset = fetch_byte();
@@ -550,7 +550,7 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x60: // 16-bit offset
             {
                 int16_t offset = fetch_word();
@@ -563,7 +563,7 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x80: // Post-increment
             if ((postbyte & 0x1F) == 0x04) { // ,X+
                 address = m_x++;
@@ -582,7 +582,7 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         case 0xA0: // Pre-decrement
             if ((postbyte & 0x1F) == 0x04) { // ,-X
                 address = --m_x;
@@ -601,19 +601,19 @@ void CPU6809::execute_lda_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         default:
             std::cout << "LDA (unsupported indexed addressing mode)" << std::endl;
             return;
     }
-    
+
     // Load the A register from the calculated address
     m_a = read_memory(address);
 }
 
 void CPU6809::execute_sta_indexed(uint8_t postbyte) {
     uint16_t address = 0;
-    
+
     // Decode indexed addressing mode from postbyte (same logic as LDA)
     switch (postbyte & 0xE0) {
         case 0x00: // No offset
@@ -634,12 +634,12 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         case 0x20: // 5-bit offset
             {
                 int8_t offset = postbyte & 0x1F;
                 if (offset > 15) offset -= 32; // Convert to signed
-                
+
                 if ((postbyte & 0x1F) == 0x04) { // 5-bit offset,X
                     address = m_x + offset;
                     std::cout << "STA " << (offset < 0 ? "-" : "") << "$" << std::hex << (offset < 0 ? -offset : offset) << ",X" << std::endl;
@@ -649,7 +649,7 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x40: // 8-bit offset
             {
                 int8_t offset = fetch_byte();
@@ -662,7 +662,7 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x60: // 16-bit offset
             {
                 int16_t offset = fetch_word();
@@ -675,7 +675,7 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 }
             }
             break;
-            
+
         case 0x80: // Post-increment
             if ((postbyte & 0x1F) == 0x04) { // ,X+
                 address = m_x++;
@@ -694,7 +694,7 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         case 0xA0: // Pre-decrement
             if ((postbyte & 0x1F) == 0x04) { // ,-X
                 address = --m_x;
@@ -713,12 +713,12 @@ void CPU6809::execute_sta_indexed(uint8_t postbyte) {
                 return;
             }
             break;
-            
+
         default:
             std::cout << "STA (unsupported indexed addressing mode)" << std::endl;
             return;
     }
-    
+
     // Store the A register to the calculated address
     write_memory(address, m_a);
 }
@@ -860,21 +860,21 @@ void CPU6809::write_unknown_addresses_to_file() {
 bool CPU6809::is_potentially_valid_code_address(uint16_t address) {
     // This function checks if an address might contain executable code vs data
     // It's used for debugging to detect when PC points to obvious data
-    
+
     // RAM addresses (0x0000-0x2FFF) are typically data, not code
     if (address < 0x3000) {
         return false;
     }
-    
+
     // I/O port addresses (0x4300-0x47FF) are definitely not code
     if (address >= 0x4300 && address < 0x4800) {
         return false;
     }
-    
+
     // For ROM addresses, check if it looks like obvious data vs potentially code
     if (address >= 0x6000) {
         uint8_t byte = read_memory(address);
-        
+
         // Specific check for 0xF36E case: LDA $4320 (data pattern)
         if (address == 0xF36E && byte == 0xB6) {
             uint8_t next_byte = read_memory(address + 1);
@@ -882,30 +882,30 @@ bool CPU6809::is_potentially_valid_code_address(uint16_t address) {
                 return false;
             }
         }
-        
+
         // If we get here, assume it's potentially valid code
         return true;
     }
-    
+
     return false;
 }
 
 void CPU6809::validate_pc() {
     // Check for known problematic addresses
     if (m_pc == 0xF36E) {
-        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc 
+        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc
                   << " - This is a DATA address, not code!" << std::endl;
-        
+
         uint8_t byte = read_memory(m_pc);
         uint8_t next_byte = read_memory(m_pc + 1);
         std::cout << "    Bytes at PC: 0x" << std::hex << (int)byte << " 0x" << (int)next_byte << std::endl;
         std::cout << "    This is LDA $43xx - data pattern!" << std::endl;
         std::cout << "    PC corruption detected - check routine execution!" << std::endl;
     }
-    
+
     // Check if PC is in obviously invalid regions
     if (!is_potentially_valid_code_address(m_pc)) {
-        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc 
+        std::cout << "⚠️  WARNING: PC=0x" << std::hex << m_pc
                   << " - PC is in invalid code region!" << std::endl;
     }
 }
@@ -946,6 +946,37 @@ void CPU6809::compare_x(uint16_t value) {
     if (((m_x ^ value) & (m_x ^ result)) & 0x8000) m_cc |= 0x02;
 }
 
+void CPU6809::test_a() {
+    // TSTA - Test A register and set condition codes without modifying A
+    // Set zero flag if A is zero
+    set_zero_flag(m_a == 0);
+
+    // Set negative flag if bit 7 of A is set
+    set_negative_flag((m_a & 0x80) != 0);
+
+    // Clear carry flag (TSTA doesn't affect carry)
+    set_carry_flag(false);
+}
+
+void CPU6809::test_b() {
+    // TSTB - Test B register and set condition codes without modifying B
+    // Set zero flag if B is zero
+    set_zero_flag(m_b == 0);
+
+    // Set negative flag if bit 7 of B is set
+    set_negative_flag((m_b & 0x80) != 0);
+
+    // Clear carry flag (TSTB doesn't affect carry)
+    set_carry_flag(false);
+}
+
+bool CPU6809::execute_at_address(uint16_t address) {
+    // TODO: Implement address-based execution
+    // For now, just set PC and return true
+    m_pc = address;
+    return true;
+}
+
 void CPU6809::call_function(uint16_t address) {
     // JSR instruction - jump to subroutine
     // Push return address onto stack
@@ -980,13 +1011,13 @@ void CPU6809::check_routine_termination() {
     // Check if we've hit a termination condition
     // For now, we'll use a simple approach: check if PC is outside the routine
     // In a more sophisticated implementation, we'd detect RTS, JMP, etc.
-    
+
     // If PC has changed significantly from the routine start, we might have hit a jump/branch
     // For now, let's assume routines are relatively short and check if we've moved too far
-    uint16_t pc_delta = (m_pc > m_routine_start_pc) ? 
-                       (m_pc - m_routine_start_pc) : 
+    uint16_t pc_delta = (m_pc > m_routine_start_pc) ?
+                       (m_pc - m_routine_start_pc) :
                        (m_routine_start_pc - m_pc);
-    
+
     // If we've moved more than 512 bytes from the start, assume we've hit a jump/branch
     if (pc_delta > 512) {
         std::cout << "CPU6809::check_routine_termination() - PC moved too far from routine start" << std::endl;

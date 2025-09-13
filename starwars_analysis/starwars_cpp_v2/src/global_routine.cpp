@@ -311,7 +311,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
     // 6139: STD ,Y+
-    // TODO: Handle indexed addressing: STD ,Y+
+    cpu.write_memory16(cpu.m_y, cpu.m_d);
+    cpu.m_y++;
 
     // 613B: TFR Y,D
     cpu.m_d = cpu.m_y;
@@ -395,10 +396,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0x1C;
 
     // 617D: STU ,X
-    // TODO: Handle indexed addressing: STU ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_u);
 
     // 617F: STB $2,X
-    // TODO: Handle indexed addressing: STB $2,X
+    cpu.write_memory(cpu.m_x + 0x02, cpu.m_b);
 
     // 6181: LEAU $20,U
     // TODO: Fix comma operator: LEAU $20,U
@@ -426,10 +427,10 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_6196:
     // 6196: STU ,X
-    // TODO: Handle indexed addressing: STU ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_u);
 
     // 6198: STB $2,X
-    // TODO: Handle indexed addressing: STB $2,X
+    cpu.write_memory(cpu.m_x + 0x02, cpu.m_b);
 
     // 619A: CLR $3,X
     // TODO: Fix comma operator: CLR $3,X
@@ -541,7 +542,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // 61F9: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // 61FB: MUL 
     // TODO: Convert MUL 
@@ -550,7 +551,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x4703);
 
     // 61FF: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // 6201: MUL 
     // TODO: Convert MUL 
@@ -559,7 +560,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x4703);
 
     // 6205: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // 6207: LEAX $8,X
     // TODO: Fix comma operator: LEAX $8,X
@@ -584,7 +585,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // 6218: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // 621A: MUL 
     // TODO: Convert MUL 
@@ -593,13 +594,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x4703);
 
     // 621E: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // 6220: LDD #$0000
     cpu.m_d = 0x0000;
 
     // 6223: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // 6225: LEAX $8,X
     // TODO: Fix comma operator: LEAX $8,X
@@ -5239,7 +5240,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_710E:
     // 710E: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 7110: RTS 
     return;
@@ -5275,7 +5276,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x4E;
 
     // 7126: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 7128: LDD #$FA70
     cpu.m_d = 0xFA70;
@@ -5290,7 +5291,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x4E;
 
     // 7131: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 7133: LDD #$0590
     cpu.m_d = 0x0590;
@@ -5323,7 +5324,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x0E;
 
     // 714A: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 714C: LDD #$FF00
     cpu.m_d = 0xFF00;
@@ -5339,7 +5340,7 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_7153;
 
     // 7155: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 7157: LDD #$0100
     cpu.m_d = 0x0100;
@@ -5655,7 +5656,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x02ED;
 
     // 7257: STU $2,X
-    // TODO: Handle indexed addressing: STU $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_u);
 
     // 7259: STU $EE03
     cpu.write_memory16(0xEE03, cpu.m_u);
@@ -5664,7 +5665,7 @@ void global_routine_impl(CPU6809& cpu) {
     // NOP;
 
     // 725D: STD $3,X
-    // TODO: Handle indexed addressing: STD $3,X
+    cpu.write_memory16(cpu.m_x + 0x03, cpu.m_d);
 
     // 725F: BCC $724D
     // TODO: External jump to 0x724D - not implemented
@@ -7658,7 +7659,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x20;
 
     // 78B8: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 78BB: CMPU #$0100
     // TODO: Convert CMPU #$0100
@@ -7673,7 +7674,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x04;
 
     // 78C6: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 78C9: CMPU #$00A0
     // TODO: Convert CMPU #$00A0
@@ -7813,7 +7814,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x10;
 
     // 7949: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 794C: LDA $4B3B
     cpu.m_a = cpu.read_memory(0x4B3B);
@@ -8034,7 +8035,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x08;
 
     // 79E6: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 79E9: LDX <$64
     cpu.m_x = cpu.read_memory16(0x64);
@@ -11739,7 +11740,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // 834C: STA ,X+
-    // TODO: Handle indexed addressing: STA ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_a);
+    cpu.m_x++;
 
     // 834E: CMPX #$49A9
     cpu.compare_x(0x49A9);
@@ -11881,7 +11883,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDD A,X
 
     // 83C3: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // 83C5: LEAU $4,U
     // TODO: Fix comma operator: LEAU $4,U
@@ -13879,7 +13881,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 89F0: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 89F2: LDD -$8,U
     // TODO: Fix comma operator: LDD -$8,U
@@ -13891,7 +13893,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 89F9: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 89FB: LDD ,U
     // TODO: Complex indexed addressing: ,U
@@ -13903,7 +13905,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8A02: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8A04: RTS 
     return;
@@ -13918,7 +13920,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8A0C: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8A0E: LDD -$8,U
     // TODO: Fix comma operator: LDD -$8,U
@@ -13930,7 +13932,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8A15: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8A17: LDD ,U
     // TODO: Complex indexed addressing: ,U
@@ -13942,7 +13944,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8A1E: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8A20: RTS 
     return;
@@ -13957,7 +13959,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8A28: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8A2A: LDD -$4,U
     // TODO: Fix comma operator: LDD -$4,U
@@ -13969,7 +13971,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8A31: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8A33: LDD $4,U
     // TODO: Fix comma operator: LDD $4,U
@@ -13981,7 +13983,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8A3A: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8A3C: RTS 
     return;
@@ -13996,7 +13998,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8A44: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8A46: LDD -$4,U
     // TODO: Fix comma operator: LDD -$4,U
@@ -14008,7 +14010,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8A4D: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8A4F: LDD $4,U
     // TODO: Fix comma operator: LDD $4,U
@@ -14020,7 +14022,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8A56: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8A58: RTS 
     return;
@@ -14038,7 +14040,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8A63: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8A65: LDD #$0000
     cpu.m_d = 0x0000;
@@ -14053,7 +14055,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8A6F: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8A71: LDD #$0000
     cpu.m_d = 0x0000;
@@ -14068,7 +14070,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8A7B: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8A7D: RTS 
     return;
@@ -14086,7 +14088,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8A88: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8A8A: LDD #$0000
     cpu.m_d = 0x0000;
@@ -14101,7 +14103,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8A94: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8A96: LDD #$0000
     cpu.m_d = 0x0000;
@@ -14116,7 +14118,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8AA0: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8AA2: RTS 
     return;
@@ -14167,7 +14169,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $8ABE
 
     // 8ABC: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // 8ABE: LDD -$2,U
     // TODO: Fix comma operator: LDD -$2,U
@@ -14179,7 +14181,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $8AC6
 
     // 8AC4: STD $A,U
-    // TODO: Handle indexed addressing: STD $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_d);
 
     // 8AC6: LDD $C,U
     // TODO: Fix comma operator: LDD $C,U
@@ -14191,7 +14193,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $8ACE
 
     // 8ACC: STD $C,U
-    // TODO: Handle indexed addressing: STD $C,U
+    cpu.write_memory16(cpu.m_u + 0x0C, cpu.m_d);
 
     // 8ACE: RTS 
     return;
@@ -14237,7 +14239,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b |= 0x01;
 
     // 8AEA: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8AED: LDX <$C2
     cpu.m_x = cpu.read_memory16(0xC2);
@@ -14255,7 +14257,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x05;
 
     // 8AF9: STA $7,X
-    // TODO: Handle indexed addressing: STA $7,X
+    cpu.write_memory(cpu.m_x + 0x07, cpu.m_a);
 
     // 8AFB: JSR $97ED
     cpu.call_function(0x97ED);
@@ -14264,10 +14266,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x1F;
 
     // 8B00: STA $9,X
-    // TODO: Handle indexed addressing: STA $9,X
+    cpu.write_memory(cpu.m_x + 0x09, cpu.m_a);
 
     // 8B02: STA $6,X
-    // TODO: Handle indexed addressing: STA $6,X
+    cpu.write_memory(cpu.m_x + 0x06, cpu.m_a);
 
     // 8B04: LDX #$5090
     cpu.m_x = 0x5090;
@@ -14282,13 +14284,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0000;
 
     // 8B0E: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8B10: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8B12: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8B14: LDA #$02
     cpu.m_a = 0x02;
@@ -14324,7 +14326,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$A,U
 
     // 8B27: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8B29: LDA <$53
     cpu.m_a = cpu.read_memory(0x53);
@@ -14357,7 +14359,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD -$2,U
 
     // 8B39: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8B3B: LDA <$54
     cpu.m_a = cpu.read_memory(0x54);
@@ -14390,7 +14392,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,U
 
     // 8B4B: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8B4D: LEAX $2,X
     // TODO: Fix comma operator: LEAX $2,X
@@ -14508,7 +14510,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x02;
 
     // 8BA1: STA $A,U
-    // TODO: Handle indexed addressing: STA $A,U
+    cpu.write_memory(cpu.m_u + 0x0A, cpu.m_a);
 
     // 8BA3: LDA $C,U
     // TODO: Fix comma operator: LDA $C,U
@@ -14532,7 +14534,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x03;
 
     // 8BB1: STA $C,U
-    // TODO: Handle indexed addressing: STA $C,U
+    cpu.write_memory(cpu.m_u + 0x0C, cpu.m_a);
 
     // 8BB3: LDD $8,U
     // TODO: Fix comma operator: LDD $8,U
@@ -14544,7 +14546,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $8BBE
 
     // 8BBA: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // 8BBC: BRA $8BD6
     goto label_8BD6;
@@ -14589,7 +14591,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // 8BD4: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     label_8BD6:
     // 8BD6: LDX <$5A
@@ -14638,7 +14640,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b &= 0x30;
 
     // 8BF9: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8BFC: LDA $9,X
     // TODO: Fix comma operator: LDA $9,X
@@ -14650,7 +14652,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.negative_flag()) cpu.m_pc = 0x8C15;
 
     // 8C01: STA $9,X
-    // TODO: Handle indexed addressing: STA $9,X
+    cpu.write_memory(cpu.m_x + 0x09, cpu.m_a);
 
     // 8C03: LDD #$1640
     cpu.m_d = 0x1640;
@@ -14832,7 +14834,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b |= 0x08;
 
     // 8C97: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8C9A: LDD $5072
     cpu.m_d = cpu.read_memory16(0x5072);
@@ -14853,7 +14855,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b |= 0x04;
 
     // 8CAB: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8CAE: LDD $15,X
     // TODO: Fix comma operator: LDD $15,X
@@ -14953,7 +14955,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b |= 0x40;
 
     // 8CF5: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8CF8: JSR $A68B
     cpu.call_function(0xA68B);
@@ -15111,7 +15113,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0xEF;
 
     // 8D6D: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     // 8D70: RTS 
     return;
@@ -15234,13 +15236,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0000;
 
     // 8DAF: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // 8DB1: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // 8DB3: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // 8DB5: LSR <$50
     // TODO: Convert LSR <$50
@@ -15327,7 +15329,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x8300;
 
     // 8DF5: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // 8DF7: LDD $A,U
     // TODO: Fix comma operator: LDD $A,U
@@ -15351,7 +15353,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x8300;
 
     // 8E07: STD $A,U
-    // TODO: Handle indexed addressing: STD $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_d);
 
     // 8E09: LDD $C,U
     // TODO: Fix comma operator: LDD $C,U
@@ -15375,7 +15377,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x8300;
 
     // 8E19: STD $C,U
-    // TODO: Handle indexed addressing: STD $C,U
+    cpu.write_memory16(cpu.m_u + 0x0C, cpu.m_d);
 
     // 8E1B: RTS 
     return;
@@ -15396,16 +15398,16 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0000;
 
     // 8E26: STD $11,X
-    // TODO: Handle indexed addressing: STD $11,X
+    cpu.write_memory16(cpu.m_x + 0x11, cpu.m_d);
 
     // 8E29: STA $10,X
-    // TODO: Handle indexed addressing: STA $10,X
+    cpu.write_memory(cpu.m_x + 0x10, cpu.m_a);
 
     // 8E2C: STD $13,X
-    // TODO: Handle indexed addressing: STD $13,X
+    cpu.write_memory16(cpu.m_x + 0x13, cpu.m_d);
 
     // 8E2F: STD $15,X
-    // TODO: Handle indexed addressing: STD $15,X
+    cpu.write_memory16(cpu.m_x + 0x15, cpu.m_d);
 
     label_8E32:
     // 8E32: LDU $D,X
@@ -15415,7 +15417,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // 8E36: STA $F,X
-    // TODO: Handle indexed addressing: STA $F,X
+    cpu.write_memory(cpu.m_x + 0x0F, cpu.m_a);
 
     // 8E38: BEQ $8E51
     if (cpu.zero_flag()) cpu.m_pc = 0x8E51;
@@ -15454,13 +15456,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDD $1,U
 
     // 8E53: STD $13,X
-    // TODO: Handle indexed addressing: STD $13,X
+    cpu.write_memory16(cpu.m_x + 0x13, cpu.m_d);
 
     // 8E56: LEAU $3,U
     // TODO: Fix comma operator: LEAU $3,U
 
     // 8E58: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8E5A: BRA $8E32
     goto label_8E32;
@@ -15479,7 +15481,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LEAU $3,U
 
     // 8E64: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8E66: BRA $8E5E
     goto label_8E5E;
@@ -15549,7 +15551,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LEAU $3,U
 
     // 8E96: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8E98: JMP $8E32
     goto label_8E32;
@@ -15561,7 +15563,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDU $1,U
 
     // 8E9F: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8EA1: JMP $8E32
     goto label_8E32;
@@ -15573,13 +15575,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LEAU $3,U
 
     // 8EA8: STU $17,X
-    // TODO: Handle indexed addressing: STU $17,X
+    cpu.write_memory16(cpu.m_x + 0x17, cpu.m_u);
 
     // 8EAB: LDU -$2,U
     // TODO: Fix comma operator: LDU -$2,U
 
     // 8EAD: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8EAF: JMP $8E32
     goto label_8E32;
@@ -15588,7 +15590,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDU $17,X
 
     // 8EB5: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8EB7: JMP $8E32
     goto label_8E32;
@@ -15603,19 +15605,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b >>= 1;
 
     // 8EBF: STB $10,X
-    // TODO: Handle indexed addressing: STB $10,X
+    cpu.write_memory(cpu.m_x + 0x10, cpu.m_b);
 
     // 8EC2: LDD $1,U
     // TODO: Fix comma operator: LDD $1,U
 
     // 8EC4: STD $11,X
-    // TODO: Handle indexed addressing: STD $11,X
+    cpu.write_memory16(cpu.m_x + 0x11, cpu.m_d);
 
     // 8EC7: LEAU $3,U
     // TODO: Fix comma operator: LEAU $3,U
 
     // 8EC9: STU $D,X
-    // TODO: Handle indexed addressing: STU $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_u);
 
     // 8ECB: INC $F,X
     // TODO: Convert INC $F,X
@@ -15770,7 +15772,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x01;
 
     // 8F36: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // 8F38: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -15785,28 +15787,28 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0xC0;
 
     // 8F41: STA -$10,U
-    // TODO: Handle indexed addressing: STA -$10,U
+    cpu.write_memory(cpu.m_u - 0x10, cpu.m_a);
 
     // 8F43: STA -$6,U
-    // TODO: Handle indexed addressing: STA -$6,U
+    cpu.write_memory(cpu.m_u - 0x06, cpu.m_a);
 
     // 8F45: CLRA 
     cpu.m_a = 0;
 
     // 8F46: STA $9,X
-    // TODO: Handle indexed addressing: STA $9,X
+    cpu.write_memory(cpu.m_x + 0x09, cpu.m_a);
 
     // 8F48: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 8F4A: STA $6,X
-    // TODO: Handle indexed addressing: STA $6,X
+    cpu.write_memory(cpu.m_x + 0x06, cpu.m_a);
 
     // 8F4C: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // 8F4E: STA $B,X
-    // TODO: Handle indexed addressing: STA $B,X
+    cpu.write_memory(cpu.m_x + 0x0B, cpu.m_a);
 
     // 8F50: LDU <$E0
     cpu.m_u = cpu.read_memory16(0xE0);
@@ -15815,7 +15817,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDA $1,U
 
     // 8F54: STA $7,X
-    // TODO: Handle indexed addressing: STA $7,X
+    cpu.write_memory(cpu.m_x + 0x07, cpu.m_a);
 
     // 8F56: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -15827,19 +15829,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // 8F5C: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // 8F5E: LDD $2,X
     // TODO: Fix comma operator: LDD $2,X
 
     // 8F60: STD $A,U
-    // TODO: Handle indexed addressing: STD $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_d);
 
     // 8F62: LDD $4,X
     // TODO: Fix comma operator: LDD $4,X
 
     // 8F64: STD $C,U
-    // TODO: Handle indexed addressing: STD $C,U
+    cpu.write_memory16(cpu.m_u + 0x0C, cpu.m_d);
 
     // 8F66: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
@@ -15848,7 +15850,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(0xDE);
 
     // 8F6A: STD $D,X
-    // TODO: Handle indexed addressing: STD $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_d);
 
     // 8F6C: JSR $8E23
     cpu.call_function(0x8E23);
@@ -15860,7 +15862,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Unrecognized operand: [$48E0]
 
     // 8F75: STB $4,X
-    // TODO: Handle indexed addressing: STB $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_b);
 
     // 8F77: JSR $CCCC
     cpu.call_function(0xCCCC);
@@ -16018,7 +16020,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x01;
 
     // 8FE2: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // 8FE4: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -16033,28 +16035,28 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0xC0;
 
     // 8FED: STA -$10,U
-    // TODO: Handle indexed addressing: STA -$10,U
+    cpu.write_memory(cpu.m_u - 0x10, cpu.m_a);
 
     // 8FEF: STA -$6,U
-    // TODO: Handle indexed addressing: STA -$6,U
+    cpu.write_memory(cpu.m_u - 0x06, cpu.m_a);
 
     // 8FF1: CLRA 
     cpu.m_a = 0;
 
     // 8FF2: STA $9,X
-    // TODO: Handle indexed addressing: STA $9,X
+    cpu.write_memory(cpu.m_x + 0x09, cpu.m_a);
 
     // 8FF4: STA $8,X
-    // TODO: Handle indexed addressing: STA $8,X
+    cpu.write_memory(cpu.m_x + 0x08, cpu.m_a);
 
     // 8FF6: STA $6,X
-    // TODO: Handle indexed addressing: STA $6,X
+    cpu.write_memory(cpu.m_x + 0x06, cpu.m_a);
 
     // 8FF8: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // 8FFA: STA $B,X
-    // TODO: Handle indexed addressing: STA $B,X
+    cpu.write_memory(cpu.m_x + 0x0B, cpu.m_a);
 
     // 8FFC: LDU <$E0
     cpu.m_u = cpu.read_memory16(0xE0);
@@ -16063,7 +16065,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDA $1,U
 
     // 9000: STA $7,X
-    // TODO: Handle indexed addressing: STA $7,X
+    cpu.write_memory(cpu.m_x + 0x07, cpu.m_a);
 
     // 9002: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -16075,19 +16077,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // 9008: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // 900A: LDD $2,X
     // TODO: Fix comma operator: LDD $2,X
 
     // 900C: STD $A,U
-    // TODO: Handle indexed addressing: STD $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_d);
 
     // 900E: LDD $4,X
     // TODO: Fix comma operator: LDD $4,X
 
     // 9010: STD $C,U
-    // TODO: Handle indexed addressing: STD $C,U
+    cpu.write_memory16(cpu.m_u + 0x0C, cpu.m_d);
 
     // 9012: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
@@ -16096,7 +16098,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(0xDE);
 
     // 9016: STD $D,X
-    // TODO: Handle indexed addressing: STD $D,X
+    cpu.write_memory16(cpu.m_x + 0x0D, cpu.m_d);
 
     // 9018: JSR $8E23
     cpu.call_function(0x8E23);
@@ -16108,7 +16110,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Unrecognized operand: [$48E0]
 
     // 9021: STB $4,X
-    // TODO: Handle indexed addressing: STB $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_b);
 
     label_9023:
     // 9023: RTS 
@@ -22869,7 +22871,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // A1D3: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A1D5: LEAU $1,U
     // TODO: Fix comma operator: LEAU $1,U
@@ -23203,7 +23205,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_A2D8:
     // A2D8: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     label_A2DA:
     // A2DA: LDB $4B13
@@ -24037,7 +24039,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x04;
 
     // A56A: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A56C: LDA $4,X
     // TODO: Fix comma operator: LDA $4,X
@@ -24180,7 +24182,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x08;
 
     // A5DB: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A5DD: RTS 
     return;
@@ -24207,7 +24209,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0xF7;
 
     // A5ED: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A5EF: LDA $4703
     cpu.m_a = cpu.read_memory(0x4703);
@@ -24289,7 +24291,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x08;
 
     // A630: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A632: RTS 
     return;
@@ -24316,7 +24318,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0xF7;
 
     // A642: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // A644: LDA $4703
     cpu.m_a = cpu.read_memory(0x4703);
@@ -24415,19 +24417,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0x40;
 
     // A68F: STB $5,U
-    // TODO: Handle indexed addressing: STB $5,U
+    cpu.write_memory(cpu.m_u + 0x05, cpu.m_b);
 
     // A691: LDB #$01
     cpu.m_b = 0x01;
 
     // A693: STB $3,U
-    // TODO: Handle indexed addressing: STB $3,U
+    cpu.write_memory(cpu.m_u + 0x03, cpu.m_b);
 
     // A695: LDB #$01
     cpu.m_b = 0x01;
 
     // A697: STB $4,U
-    // TODO: Handle indexed addressing: STB $4,U
+    cpu.write_memory(cpu.m_u + 0x04, cpu.m_b);
 
     // A699: LDA $4B3C
     cpu.m_a = cpu.read_memory(0x4B3C);
@@ -24463,7 +24465,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d -= 0x5098;
 
     // A6B4: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A6B6: LDD $A,X
     // TODO: Fix comma operator: LDD $A,X
@@ -24472,7 +24474,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d -= 0x509A;
 
     // A6BB: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A6BD: LDD $C,X
     // TODO: Fix comma operator: LDD $C,X
@@ -24481,7 +24483,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d -= 0x509C;
 
     // A6C2: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // A6C4: JSR $BE02
     cpu.call_function(0xBE02);
@@ -24673,13 +24675,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x70;
 
     // A72D: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // A72F: LDA #$05
     cpu.m_a = 0x05;
 
     // A731: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // A733: LDU <$64
     cpu.m_u = cpu.read_memory16(0x64);
@@ -24707,7 +24709,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_A744:
     // A744: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A746: LDX ,X
     // TODO: Complex indexed addressing: ,X
@@ -24728,19 +24730,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $1,U
 
     // A753: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // A755: LDD $2,U
     // TODO: Fix comma operator: LDD $2,U
 
     // A757: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // A759: LDD #$0200
     cpu.m_d = 0x0200;
 
     // A75C: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // A75E: LDD $2,X
     // TODO: Fix comma operator: LDD $2,X
@@ -24749,7 +24751,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d -= 0x509A;
 
     // A763: STA $6,X
-    // TODO: Handle indexed addressing: STA $6,X
+    cpu.write_memory(cpu.m_x + 0x06, cpu.m_a);
 
     // A765: BPL $A76B
     if (!cpu.negative_flag()) cpu.m_pc = 0xA76B;
@@ -24797,7 +24799,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0;
 
     // A784: STA $7,X
-    // TODO: Handle indexed addressing: STA $7,X
+    cpu.write_memory(cpu.m_x + 0x07, cpu.m_a);
 
     // A786: LDA <$7D
     cpu.m_a = cpu.read_memory(0x7D);
@@ -24842,7 +24844,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0xFF;
 
     // A7A0: STA $6,X
-    // TODO: Handle indexed addressing: STA $6,X
+    cpu.write_memory(cpu.m_x + 0x06, cpu.m_a);
 
     // A7A2: LDX <$01
     cpu.m_x = cpu.read_memory16(0x01);
@@ -24867,7 +24869,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_A7B0:
     // A7B0: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     label_A7B2:
     // A7B2: JSR $BE11
@@ -24883,7 +24885,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x03;
 
     // A7BB: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A7BD: BRA $A7D1
     goto label_A7D1;
@@ -24895,7 +24897,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x04;
 
     // A7C4: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A7C6: BRA $A7D1
     goto label_A7D1;
@@ -24907,7 +24909,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x05;
 
     // A7CD: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A7CF: BRA $A7D1
     goto label_A7D1;
@@ -24917,13 +24919,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x70;
 
     // A7D3: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // A7D5: LDA #$05
     cpu.m_a = 0x05;
 
     // A7D7: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // A7D9: LDU <$64
     cpu.m_u = cpu.read_memory16(0x64);
@@ -24947,19 +24949,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $1,U
 
     // A7E8: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // A7EA: LDD $2,U
     // TODO: Fix comma operator: LDD $2,U
 
     // A7EC: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // A7EE: LDD $5044
     cpu.m_d = cpu.read_memory16(0x5044);
 
     // A7F1: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // A7F3: JSR $BE11
     cpu.call_function(0xBE11);
@@ -24987,7 +24989,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x09;
 
     // A805: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A807: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -25015,7 +25017,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x0A;
 
     // A819: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // A81B: LDU ,X
     // TODO: Complex indexed addressing: ,X
@@ -25028,31 +25030,31 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(0x5078);
 
     // A822: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A824: LDD $507A
     cpu.m_d = cpu.read_memory16(0x507A);
 
     // A827: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A829: LDD $507C
     cpu.m_d = cpu.read_memory16(0x507C);
 
     // A82C: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // A82E: LDA #$40
     cpu.m_a = 0x40;
 
     // A830: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // A832: LDA #$05
     cpu.m_a = 0x05;
 
     // A834: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // A836: LDA $4703
     cpu.m_a = cpu.read_memory(0x4703);
@@ -25073,7 +25075,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // A843: STA $6,U
-    // TODO: Handle indexed addressing: STA $6,U
+    cpu.write_memory(cpu.m_u + 0x06, cpu.m_a);
 
     // A845: JSR $BE11
     cpu.call_function(0xBE11);
@@ -25144,10 +25146,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0;
 
     // A870: STB $3,X
-    // TODO: Handle indexed addressing: STB $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_b);
 
     // A872: STB $5,X
-    // TODO: Handle indexed addressing: STB $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_b);
 
     // A874: RTS 
     return;
@@ -25162,10 +25164,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0;
 
     // A87A: STB $3,X
-    // TODO: Handle indexed addressing: STB $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_b);
 
     // A87C: STB $5,X
-    // TODO: Handle indexed addressing: STB $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_b);
 
     // A87E: BRA $A8A6
     goto label_A8A6;
@@ -25186,7 +25188,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // A88C: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A88E: LDD #$0000
     cpu.m_d = 0x0000;
@@ -25201,7 +25203,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A898: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A89A: LDD #$0000
     cpu.m_d = 0x0000;
@@ -25216,7 +25218,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // A8A4: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     label_A8A6:
     // A8A6: RTS 
@@ -25232,10 +25234,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0;
 
     // A8AC: STB $3,X
-    // TODO: Handle indexed addressing: STB $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_b);
 
     // A8AE: STB $5,X
-    // TODO: Handle indexed addressing: STB $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_b);
 
     // A8B0: BRA $A8D5
     goto label_A8D5;
@@ -25256,7 +25258,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $A8D6
 
     // A8BD: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A8BF: LDD $2,U
     // TODO: Fix comma operator: LDD $2,U
@@ -25271,7 +25273,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $A8D6
 
     // A8C8: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A8CA: LDD $4,U
     // TODO: Fix comma operator: LDD $4,U
@@ -25286,7 +25288,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $A8D6
 
     // A8D3: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     label_A8D5:
     // A8D5: RTS 
@@ -25296,7 +25298,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0;
 
     // A8D7: STB $3,X
-    // TODO: Handle indexed addressing: STB $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_b);
 
     // A8D9: RTS 
     return;
@@ -25311,7 +25313,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // A8E1: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A8E3: JMP $AA7D
     goto label_AA7D;
@@ -25326,7 +25328,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // A8ED: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A8EF: LDD #$FF00
     cpu.m_d = 0xFF00;
@@ -25335,7 +25337,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A8F4: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A8F6: JMP $AA7D
     goto label_AA7D;
@@ -25350,7 +25352,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // A900: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A902: LDD #$0100
     cpu.m_d = 0x0100;
@@ -25359,7 +25361,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A907: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A909: JMP $AA7D
     goto label_AA7D;
@@ -25392,7 +25394,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // A91D: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // A91F: RTS 
     return;
@@ -25416,7 +25418,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A930: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A932: RTS 
     return;
@@ -25440,7 +25442,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // A943: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A945: RTS 
     return;
@@ -25528,7 +25530,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_A986:
     // A986: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A988: LDD $509C
     cpu.m_d = cpu.read_memory16(0x509C);
@@ -25558,7 +25560,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // A9A0: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // A9A2: RTS 
     return;
@@ -25646,7 +25648,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_A9E3:
     // A9E3: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // A9E5: LDD $509C
     cpu.m_d = cpu.read_memory16(0x509C);
@@ -25676,7 +25678,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // A9FD: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // A9FF: RTS 
     return;
@@ -25691,7 +25693,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // AA07: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // AA09: LDD $509C
     cpu.m_d = cpu.read_memory16(0x509C);
@@ -25721,7 +25723,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // AA21: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // AA23: BRA $AA7D
     goto label_AA7D;
@@ -25736,7 +25738,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // AA2C: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // AA2E: LDD #$FF00
     cpu.m_d = 0xFF00;
@@ -25745,7 +25747,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // AA33: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // AA35: LDD $509C
     cpu.m_d = cpu.read_memory16(0x509C);
@@ -25775,7 +25777,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // AA4D: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // AA4F: BRA $AA7D
     goto label_AA7D;
@@ -25790,7 +25792,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // AA58: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // AA5A: LDD #$0100
     cpu.m_d = 0x0100;
@@ -25799,7 +25801,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // AA5F: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // AA61: LDD $509C
     cpu.m_d = cpu.read_memory16(0x509C);
@@ -25829,7 +25831,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // AA79: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // AA7B: BRA $AA7D
     goto label_AA7D;
@@ -25872,7 +25874,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // AA97: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // AA99: LDA $4B19
     cpu.m_a = cpu.read_memory(0x4B19);
@@ -25906,7 +25908,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // AAB1: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // AAB3: BRA $AA7D
     goto label_AA7D;
@@ -25933,7 +25935,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $4,U
 
     // AAC6: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // AAC8: LDA $4B19
     cpu.m_a = cpu.read_memory(0x4B19);
@@ -25967,7 +25969,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,U
 
     // AAE0: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // AAE2: BRA $AA7D
     goto label_AA7D;
@@ -26405,7 +26407,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_AC32:
     // AC32: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     label_AC34:
     // AC34: LDX <$A8
@@ -26675,31 +26677,31 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDD -$4,Y
 
     // ACE4: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // ACE6: LDD -$2,Y
     // TODO: Fix comma operator: LDD -$2,Y
 
     // ACE8: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // ACEA: LDA #$10
     cpu.m_a = 0x10;
 
     // ACEC: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // ACEE: LDA #$0F
     cpu.m_a = 0x0F;
 
     // ACF0: STA $5,X
-    // TODO: Handle indexed addressing: STA $5,X
+    cpu.write_memory(cpu.m_x + 0x05, cpu.m_a);
 
     // ACF2: LDA #$00
     cpu.m_a = 0x00;
 
     // ACF4: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // ACF6: JSR $9874
     cpu.call_function(0x9874);
@@ -26775,19 +26777,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a |= 0x20;
 
     // AD2A: STA $3,U
-    // TODO: Handle indexed addressing: STA $3,U
+    cpu.write_memory(cpu.m_u + 0x03, cpu.m_a);
 
     // AD2C: LDA #$0F
     cpu.m_a = 0x0F;
 
     // AD2E: STA $5,U
-    // TODO: Handle indexed addressing: STA $5,U
+    cpu.write_memory(cpu.m_u + 0x05, cpu.m_a);
 
     // AD30: LDA #$00
     cpu.m_a = 0x00;
 
     // AD32: STA $4,U
-    // TODO: Handle indexed addressing: STA $4,U
+    cpu.write_memory(cpu.m_u + 0x04, cpu.m_a);
 
     // AD34: JSR $BE07
     cpu.call_function(0xBE07);
@@ -27160,10 +27162,12 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b |= 0x70;
 
     // AE4C: STB ,Y+
-    // TODO: Handle indexed addressing: STB ,Y+
+    cpu.write_memory(cpu.m_y, cpu.m_b);
+    cpu.m_y++;
 
     // AE4E: STA ,Y+
-    // TODO: Handle indexed addressing: STA ,Y+
+    cpu.write_memory(cpu.m_y, cpu.m_a);
+    cpu.m_y++;
 
     // AE50: LDD #$A016
     cpu.m_d = 0xA016;
@@ -27626,7 +27630,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // AFAA: STD ,Y
-    // TODO: Handle indexed addressing: STD ,Y
+    cpu.write_memory16(cpu.m_y, cpu.m_d);
 
     // AFAC: COMA 
     cpu.m_a = ~cpu.m_a;
@@ -27668,7 +27672,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = (cpu.m_b >> 1) | (cpu.carry_flag() ? 0x80 : 0);
 
     // AFC3: STD ,Y
-    // TODO: Handle indexed addressing: STD ,Y
+    cpu.write_memory16(cpu.m_y, cpu.m_d);
 
     // AFC5: COMA 
     cpu.m_a = ~cpu.m_a;
@@ -28636,7 +28640,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a ^= 0x02;
 
     // B2B7: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // B2B9: JSR $97F2
     cpu.call_function(0x97F2);
@@ -28660,7 +28664,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a ^= 0x02;
 
     // B2C9: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // B2CB: JSR $97FC
     cpu.call_function(0x97FC);
@@ -29382,7 +29386,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x49C1);
 
     // B4B3: STA -$1,Y
-    // TODO: Handle indexed addressing: STA -$1,Y
+    cpu.write_memory(cpu.m_y - 0x01, cpu.m_a);
 
     // B4B5: LDD $5078
     cpu.m_d = cpu.read_memory16(0x5078);
@@ -29778,7 +29782,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x49C1);
 
     // B5ED: STA -$1,Y
-    // TODO: Handle indexed addressing: STA -$1,Y
+    cpu.write_memory(cpu.m_y - 0x01, cpu.m_a);
 
     // B5EF: LDD $5078
     cpu.m_d = cpu.read_memory16(0x5078);
@@ -30112,19 +30116,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0x1F;
 
     // B6EC: STD $2,Y
-    // TODO: Handle indexed addressing: STD $2,Y
+    cpu.write_memory16(cpu.m_y + 0x02, cpu.m_d);
 
     // B6EE: STD $8,Y
-    // TODO: Handle indexed addressing: STD $8,Y
+    cpu.write_memory16(cpu.m_y + 0x08, cpu.m_d);
 
     // B6F0: STD $E,Y
-    // TODO: Handle indexed addressing: STD $E,Y
+    cpu.write_memory16(cpu.m_y + 0x0E, cpu.m_d);
 
     // B6F2: STD $14,Y
-    // TODO: Handle indexed addressing: STD $14,Y
+    cpu.write_memory16(cpu.m_y + 0x14, cpu.m_d);
 
     // B6F5: STD $1A,Y
-    // TODO: Handle indexed addressing: STD $1A,Y
+    cpu.write_memory16(cpu.m_y + 0x1A, cpu.m_d);
 
     // B6F8: LDA <$7F
     cpu.m_a = cpu.read_memory(0x7F);
@@ -30163,49 +30167,49 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0x1F;
 
     // B70D: STD ,Y
-    // TODO: Handle indexed addressing: STD ,Y
+    cpu.write_memory16(cpu.m_y, cpu.m_d);
 
     // B70F: STD $6,Y
-    // TODO: Handle indexed addressing: STD $6,Y
+    cpu.write_memory16(cpu.m_y + 0x06, cpu.m_d);
 
     // B711: STD $C,Y
-    // TODO: Handle indexed addressing: STD $C,Y
+    cpu.write_memory16(cpu.m_y + 0x0C, cpu.m_d);
 
     // B713: STD $12,Y
-    // TODO: Handle indexed addressing: STD $12,Y
+    cpu.write_memory16(cpu.m_y + 0x12, cpu.m_d);
 
     // B716: STD $18,Y
-    // TODO: Handle indexed addressing: STD $18,Y
+    cpu.write_memory16(cpu.m_y + 0x18, cpu.m_d);
 
     // B719: LDD #$BAAC
     cpu.m_d = 0xBAAC;
 
     // B71C: STD $4,Y
-    // TODO: Handle indexed addressing: STD $4,Y
+    cpu.write_memory16(cpu.m_y + 0x04, cpu.m_d);
 
     // B71E: LDD #$BA0D
     cpu.m_d = 0xBA0D;
 
     // B721: STD $A,Y
-    // TODO: Handle indexed addressing: STD $A,Y
+    cpu.write_memory16(cpu.m_y + 0x0A, cpu.m_d);
 
     // B723: LDD #$BB33
     cpu.m_d = 0xBB33;
 
     // B726: STD $10,Y
-    // TODO: Handle indexed addressing: STD $10,Y
+    cpu.write_memory16(cpu.m_y + 0x10, cpu.m_d);
 
     // B729: LDD #$BAE6
     cpu.m_d = 0xBAE6;
 
     // B72C: STD $16,Y
-    // TODO: Handle indexed addressing: STD $16,Y
+    cpu.write_memory16(cpu.m_y + 0x16, cpu.m_d);
 
     // B72F: LDD #$BA5A
     cpu.m_d = 0xBA5A;
 
     // B732: STD $1C,Y
-    // TODO: Handle indexed addressing: STD $1C,Y
+    cpu.write_memory16(cpu.m_y + 0x1C, cpu.m_d);
 
     // B735: LEAY $1E,Y
     // TODO: Fix comma operator: LEAY $1E,Y
@@ -30217,7 +30221,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // B73B: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // B73D: JSR $8E1C
     cpu.call_function(0x8E1C);
@@ -30289,13 +30293,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x06;
 
     // B773: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B775: LDA #$18
     cpu.m_a = 0x18;
 
     // B777: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B779: LDD #$0000
     cpu.m_d = 0x0000;
@@ -30307,13 +30311,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B781: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B783: ADDD $8,U
     // TODO: Fix comma operator: ADDD $8,U
 
     // B785: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B787: LDD #$0000
     cpu.m_d = 0x0000;
@@ -30325,13 +30329,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B78F: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B791: ADDD $A,U
     // TODO: Fix comma operator: ADDD $A,U
 
     // B793: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B795: LDD #$0000
     cpu.m_d = 0x0000;
@@ -30343,13 +30347,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B79D: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B79F: ADDD $C,U
     // TODO: Fix comma operator: ADDD $C,U
 
     // B7A1: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B7A3: JSR $B83F
     cpu.call_function(0xB83F);
@@ -30361,13 +30365,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x07;
 
     // B7AB: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B7AD: LDA #$18
     cpu.m_a = 0x18;
 
     // B7AF: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B7B1: LDD -$E,U
     // TODO: Fix comma operator: LDD -$E,U
@@ -30376,13 +30380,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B7B6: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B7B8: ADDD $8,U
     // TODO: Fix comma operator: ADDD $8,U
 
     // B7BA: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B7BC: LDD -$6,U
     // TODO: Fix comma operator: LDD -$6,U
@@ -30391,13 +30395,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B7C1: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B7C3: ADDD $A,U
     // TODO: Fix comma operator: ADDD $A,U
 
     // B7C5: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B7C7: LDD $2,U
     // TODO: Fix comma operator: LDD $2,U
@@ -30406,13 +30410,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCD9C);
 
     // B7CC: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B7CE: ADDD $C,U
     // TODO: Fix comma operator: ADDD $C,U
 
     // B7D0: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B7D2: JSR $B83F
     cpu.call_function(0xB83F);
@@ -30424,40 +30428,40 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x08;
 
     // B7DA: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B7DC: LDA #$10
     cpu.m_a = 0x10;
 
     // B7DE: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B7E0: LDD $8,U
     // TODO: Fix comma operator: LDD $8,U
 
     // B7E2: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B7E4: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B7E6: LDD $A,U
     // TODO: Fix comma operator: LDD $A,U
 
     // B7E8: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B7EA: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B7EC: LDD $C,U
     // TODO: Fix comma operator: LDD $C,U
 
     // B7EE: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B7F0: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B7F2: LDA $6,X
     // TODO: Fix comma operator: LDA $6,X
@@ -30545,7 +30549,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B824: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B826: LDD $8,X
     // TODO: Fix comma operator: LDD $8,X
@@ -30560,7 +30564,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B830: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B832: LDD $A,X
     // TODO: Fix comma operator: LDD $A,X
@@ -30575,7 +30579,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B83C: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B83E: RTS 
     return;
@@ -30587,7 +30591,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,X
 
     // B843: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B845: LDD -$2,U
     // TODO: Fix comma operator: LDD -$2,U
@@ -30596,7 +30600,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $8,X
 
     // B849: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B84B: LDD $6,U
     // TODO: Fix comma operator: LDD $6,U
@@ -30605,7 +30609,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $A,X
 
     // B84F: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B851: RTS 
     return;
@@ -30645,19 +30649,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x01);
 
     // B86D: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B86F: LDA #$20
     cpu.m_a = 0x20;
 
     // B871: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B873: LDD $5018
     cpu.m_d = cpu.read_memory16(0x5018);
 
     // B876: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B878: LDD $501A
     cpu.m_d = cpu.read_memory16(0x501A);
@@ -30666,13 +30670,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0xFE;
 
     // B87D: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B87F: LDD $501C
     cpu.m_d = cpu.read_memory16(0x501C);
 
     // B882: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B884: LDD $5098
     cpu.m_d = cpu.read_memory16(0x5098);
@@ -30690,7 +30694,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B892: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B894: LDD $509A
     cpu.m_d = cpu.read_memory16(0x509A);
@@ -30708,7 +30712,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B8A2: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B8A4: LDA <$04
     cpu.m_a = cpu.read_memory(0x04);
@@ -30720,7 +30724,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCDB5);
 
     // B8AC: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B8AE: JSR $B948
     cpu.call_function(0xB948);
@@ -30729,13 +30733,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x02);
 
     // B8B3: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B8B5: LDA #$20
     cpu.m_a = 0x20;
 
     // B8B7: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B8B9: LDD $5018
     cpu.m_d = cpu.read_memory16(0x5018);
@@ -30744,19 +30748,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x02;
 
     // B8BE: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B8C0: LDD $501A
     cpu.m_d = cpu.read_memory16(0x501A);
 
     // B8C3: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B8C5: LDD $501C
     cpu.m_d = cpu.read_memory16(0x501C);
 
     // B8C8: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B8CA: LDD $5098
     cpu.m_d = cpu.read_memory16(0x5098);
@@ -30774,7 +30778,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B8D8: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B8DA: LDD $509A
     cpu.m_d = cpu.read_memory16(0x509A);
@@ -30789,7 +30793,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B8E6: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B8E8: LDA <$04
     cpu.m_a = cpu.read_memory(0x04);
@@ -30801,7 +30805,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCDB5);
 
     // B8F0: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B8F2: JSR $B948
     cpu.call_function(0xB948);
@@ -30810,19 +30814,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x03);
 
     // B8F7: STA $C,X
-    // TODO: Handle indexed addressing: STA $C,X
+    cpu.write_memory(cpu.m_x + 0x0C, cpu.m_a);
 
     // B8F9: LDA #$20
     cpu.m_a = 0x20;
 
     // B8FB: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B8FD: LDD $5018
     cpu.m_d = cpu.read_memory16(0x5018);
 
     // B900: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B902: LDD $501A
     cpu.m_d = cpu.read_memory16(0x501A);
@@ -30831,13 +30835,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x02;
 
     // B907: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B909: LDD $501C
     cpu.m_d = cpu.read_memory16(0x501C);
 
     // B90C: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B90E: LDD $5098
     cpu.m_d = cpu.read_memory16(0x5098);
@@ -30855,7 +30859,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B91C: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B91E: LDD $509A
     cpu.m_d = cpu.read_memory16(0x509A);
@@ -30873,7 +30877,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = cpu.read_memory(0x4703);
 
     // B92C: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B92E: LDA <$04
     cpu.m_a = cpu.read_memory(0x04);
@@ -30885,7 +30889,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.call_function(0xCDB5);
 
     // B936: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B938: RTS 
     return;
@@ -30897,7 +30901,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // B93E: STA $D,X
-    // TODO: Handle indexed addressing: STA $D,X
+    cpu.write_memory(cpu.m_x + 0x0D, cpu.m_a);
 
     // B940: LEAX $E,X
     // TODO: Fix comma operator: LEAX $E,X
@@ -31076,7 +31080,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // B9C4: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // B9C6: LDD #$0000
     cpu.m_d = 0x0000;
@@ -31091,7 +31095,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $6,X
 
     // B9D0: STD $6,X
-    // TODO: Handle indexed addressing: STD $6,X
+    cpu.write_memory16(cpu.m_x + 0x06, cpu.m_d);
 
     // B9D2: LDD $8,X
     // TODO: Fix comma operator: LDD $8,X
@@ -31100,7 +31104,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $2,X
 
     // B9D6: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // B9D8: LDD #$0000
     cpu.m_d = 0x0000;
@@ -31115,7 +31119,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $8,X
 
     // B9E2: STD $8,X
-    // TODO: Handle indexed addressing: STD $8,X
+    cpu.write_memory16(cpu.m_x + 0x08, cpu.m_d);
 
     // B9E4: LDD $4,X
     // TODO: Fix comma operator: LDD $4,X
@@ -31133,7 +31137,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0000;
 
     // B9EF: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // B9F1: LDD $A,X
     // TODO: Fix comma operator: LDD $A,X
@@ -31142,7 +31146,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d -= 0x00C8;
 
     // B9F6: STD $A,X
-    // TODO: Handle indexed addressing: STD $A,X
+    cpu.write_memory16(cpu.m_x + 0x0A, cpu.m_d);
 
     // B9F8: RTS 
     return;
@@ -31157,7 +31161,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $BA01
 
     // B9FF: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // BA01: LDD $8,X
     // TODO: Fix comma operator: LDD $8,X
@@ -31169,7 +31173,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $BA09
 
     // BA07: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // BA09: LDD $A,X
     // TODO: Fix comma operator: LDD $A,X
@@ -31181,7 +31185,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $BA11
 
     // BA0F: STD $4,X
-    // TODO: Handle indexed addressing: STD $4,X
+    cpu.write_memory16(cpu.m_x + 0x04, cpu.m_d);
 
     // BA11: RTS 
     return;
@@ -33242,7 +33246,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert DAA 
 
     // C041: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C043: BCS $C04A
     if (cpu.carry_flag()) cpu.m_pc = 0xC04A;
@@ -33357,7 +33361,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert DAA 
 
     // C095: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C097: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
@@ -33705,7 +33709,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert DAA 
 
     // C1A5: STA $1,X
-    // TODO: Handle indexed addressing: STA $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_a);
 
     // C1A7: ANDA #$F0
     cpu.m_a &= 0xF0;
@@ -33726,7 +33730,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert DAA 
 
     // C1B2: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C1B4: ANDA #$F0
     cpu.m_a &= 0xF0;
@@ -33777,7 +33781,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a >>= 1;
 
     // C1D2: STA $1,X
-    // TODO: Handle indexed addressing: STA $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_a);
 
     // C1D4: LSRA 
     cpu.m_a >>= 1;
@@ -33792,7 +33796,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a >>= 1;
 
     // C1D8: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // C1DA: LEAX $2,X
     // TODO: Fix comma operator: LEAX $2,X
@@ -33807,13 +33811,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x05;
 
     // C1E3: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // C1E5: LDA #$00
     cpu.m_a = 0x00;
 
     // C1E7: STA $1,U
-    // TODO: Handle indexed addressing: STA $1,U
+    cpu.write_memory(cpu.m_u + 0x01, cpu.m_a);
 
     // C1E9: LDA $4866
     cpu.m_a = cpu.read_memory(0x4866);
@@ -33980,7 +33984,8 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // C276: STB ,X+
-    // TODO: Handle indexed addressing: STB ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_b);
+    cpu.m_x++;
 
     // C278: CMPX $4AFA
     cpu.compare_x(cpu.read_memory16(0x4AFA));
@@ -34063,7 +34068,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.zero_flag()) cpu.m_pc = 0xC2C2;
 
     // C2B8: STB $1,X
-    // TODO: Handle indexed addressing: STB $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_b);
 
     // C2BA: LSRB 
     cpu.m_b >>= 1;
@@ -34078,7 +34083,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b >>= 1;
 
     // C2BE: STB ,X
-    // TODO: Handle indexed addressing: STB ,X
+    cpu.write_memory(cpu.m_x, cpu.m_b);
 
     // C2C0: LDB #$FF
     cpu.m_b = 0xFF;
@@ -34106,7 +34111,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b -= 0x02;
 
     // C2D1: STB ,S
-    // TODO: Handle indexed addressing: STB ,S
+    cpu.write_memory(cpu.m_sp, cpu.m_b);
 
     // C2D3: LDB A,X
     // TODO: Fix comma operator: LDB A,X
@@ -34121,7 +34126,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b = 0x00;
 
     // C2DB: STB $1,S
-    // TODO: Handle indexed addressing: STB $1,S
+    cpu.write_memory(cpu.m_sp + 0x01, cpu.m_b);
 
     // C2DD: ORCC #$01
     cpu.m_cc |= 0x01;
@@ -34136,7 +34141,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ADCB $1,S
 
     // C2E5: STB $1,S
-    // TODO: Handle indexed addressing: STB $1,S
+    cpu.write_memory(cpu.m_sp + 0x01, cpu.m_b);
 
     // C2E7: DEC ,S
     // TODO: Convert DEC ,S
@@ -34148,7 +34153,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ADCB #$00
 
     // C2ED: STB $1,S
-    // TODO: Handle indexed addressing: STB $1,S
+    cpu.write_memory(cpu.m_sp + 0x01, cpu.m_b);
 
     // C2EF: LDB ,X
     // TODO: Complex indexed addressing: ,X
@@ -34166,7 +34171,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b <<= 1;
 
     // C2F5: STB $2,S
-    // TODO: Handle indexed addressing: STB $2,S
+    cpu.write_memory(cpu.m_sp + 0x02, cpu.m_b);
 
     // C2F7: LDB $1,X
     // TODO: Fix comma operator: LDB $1,X
@@ -34178,7 +34183,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDB $2,S
 
     // C2FD: STB $2,S
-    // TODO: Handle indexed addressing: STB $2,S
+    cpu.write_memory(cpu.m_sp + 0x02, cpu.m_b);
 
     // C2FF: LDB $1,S
     // TODO: Fix comma operator: LDB $1,S
@@ -34414,7 +34419,8 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // C3BF: STB ,X+
-    // TODO: Handle indexed addressing: STB ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_b);
+    cpu.m_x++;
 
     // C3C1: DEC $4B02
     // TODO: Convert DEC $4B02
@@ -34511,7 +34517,8 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_C409;
 
     // C40B: STB ,X+
-    // TODO: Handle indexed addressing: STB ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_b);
+    cpu.m_x++;
 
     // C40D: CMPX $4AFA
     cpu.compare_x(cpu.read_memory16(0x4AFA));
@@ -34758,7 +34765,8 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // C4D3: STB ,X+
-    // TODO: Handle indexed addressing: STB ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_b);
+    cpu.m_x++;
 
     // C4D5: DEC $4B02
     // TODO: Convert DEC $4B02
@@ -35004,7 +35012,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b ^= 0x4AFB;
 
     // C57E: STB $1,X
-    // TODO: Handle indexed addressing: STB $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_b);
 
     // C580: LSRB 
     cpu.m_b >>= 1;
@@ -35019,7 +35027,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b >>= 1;
 
     // C584: STB ,X
-    // TODO: Handle indexed addressing: STB ,X
+    cpu.write_memory(cpu.m_x, cpu.m_b);
 
     // C586: LDA #$03
     cpu.m_a = 0x03;
@@ -35200,7 +35208,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = ~cpu.m_a;
 
     // C607: STA ,X+
-    // TODO: Handle indexed addressing: STA ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_a);
+    cpu.m_x++;
 
     // C609: CMPX #$4600
     cpu.compare_x(0x4600);
@@ -35230,7 +35239,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = ~cpu.m_a;
 
     // C620: STA ,X+
-    // TODO: Handle indexed addressing: STA ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_a);
+    cpu.m_x++;
 
     // C622: CMPX #$4600
     cpu.compare_x(0x4600);
@@ -35484,7 +35494,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a <<= 1;
 
     // C6E2: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // C6E4: LDA ,X+
     // TODO: Complex indexed addressing: ,X+
@@ -35496,7 +35506,8 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // C6EA: STA ,U+
-    // TODO: Handle indexed addressing: STA ,U+
+    cpu.write_memory(cpu.m_u, cpu.m_a);
+    cpu.m_u++;
 
     // C6EC: DEC $4B02
     // TODO: Convert DEC $4B02
@@ -35523,7 +35534,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U+
 
     // C6FE: STA $1,X
-    // TODO: Handle indexed addressing: STA $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_a);
 
     // C700: LSRA 
     cpu.m_a >>= 1;
@@ -35589,13 +35600,15 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0xB8;
 
     // C723: STA ,Y+
-    // TODO: Handle indexed addressing: STA ,Y+
+    cpu.write_memory(cpu.m_y, cpu.m_a);
+    cpu.m_y++;
 
     // C725: LDA #$DF
     cpu.m_a = 0xDF;
 
     // C727: STA ,Y+
-    // TODO: Handle indexed addressing: STA ,Y+
+    cpu.write_memory(cpu.m_y, cpu.m_a);
+    cpu.m_y++;
 
     // C729: CLRA 
     cpu.m_a = 0;
@@ -36884,25 +36897,25 @@ void global_routine_impl(CPU6809& cpu) {
     goto label_CAC5;
 
     // CAC7: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // CAC9: LDD -$2,X
     // TODO: Fix comma operator: LDD -$2,X
 
     // CACB: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // CACD: LDD -$3,U
     // TODO: Fix comma operator: LDD -$3,U
 
     // CACF: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // CAD1: LDA -$1,U
     // TODO: Fix comma operator: LDA -$1,U
 
     // CAD3: STA $2,U
-    // TODO: Handle indexed addressing: STA $2,U
+    cpu.write_memory(cpu.m_u + 0x02, cpu.m_a);
 
     // CAD5: LEAU -$3,U
     // TODO: Fix comma operator: LEAU -$3,U
@@ -36923,25 +36936,25 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // CAE3: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // CAE5: LDD #$0000
     cpu.m_d = 0x0000;
 
     // CAE8: STD $1,U
-    // TODO: Handle indexed addressing: STD $1,U
+    cpu.write_memory16(cpu.m_u + 0x01, cpu.m_d);
 
     // CAEA: LDD <$5C
     cpu.m_d = cpu.read_memory16(0x5C);
 
     // CAEC: STD ,X
-    // TODO: Handle indexed addressing: STD ,X
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // CAEE: LDD <$5E
     cpu.m_d = cpu.read_memory16(0x5E);
 
     // CAF0: STD $2,X
-    // TODO: Handle indexed addressing: STD $2,X
+    cpu.write_memory16(cpu.m_x + 0x02, cpu.m_d);
 
     // CAF2: RTS 
     return;
@@ -37084,7 +37097,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.carry_flag()) cpu.m_pc = 0xCB59;
 
     // CB57: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // CB59: LDA <$AC
     cpu.m_a = cpu.read_memory(0xAC);
@@ -37117,7 +37130,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // CB6F: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // CB71: LDA $4AEE
     cpu.m_a = cpu.read_memory(0x4AEE);
@@ -37132,7 +37145,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // CB7B: STA -$1,U
-    // TODO: Handle indexed addressing: STA -$1,U
+    cpu.write_memory(cpu.m_u - 0x01, cpu.m_a);
 
     // CB7D: JSR $BDF8
     cpu.call_function(0xBDF8);
@@ -37815,52 +37828,52 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0000;
 
     // CDC6: STD -$A,U
-    // TODO: Handle indexed addressing: STD -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_d);
 
     // CDC8: STD -$2,U
-    // TODO: Handle indexed addressing: STD -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_d);
 
     // CDCA: STD $6,U
-    // TODO: Handle indexed addressing: STD $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_d);
 
     // CDCC: STD $8,U
-    // TODO: Handle indexed addressing: STD $8,U
+    cpu.write_memory16(cpu.m_u + 0x08, cpu.m_d);
 
     // CDCE: STD $A,U
-    // TODO: Handle indexed addressing: STD $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_d);
 
     // CDD0: STD $C,U
-    // TODO: Handle indexed addressing: STD $C,U
+    cpu.write_memory16(cpu.m_u + 0x0C, cpu.m_d);
 
     // CDD2: STD -$E,U
-    // TODO: Handle indexed addressing: STD -$E,U
+    cpu.write_memory16(cpu.m_u - 0x0E, cpu.m_d);
 
     // CDD4: STD -$C,U
-    // TODO: Handle indexed addressing: STD -$C,U
+    cpu.write_memory16(cpu.m_u - 0x0C, cpu.m_d);
 
     // CDD6: STD -$8,U
-    // TODO: Handle indexed addressing: STD -$8,U
+    cpu.write_memory16(cpu.m_u - 0x08, cpu.m_d);
 
     // CDD8: STD -$4,U
-    // TODO: Handle indexed addressing: STD -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_d);
 
     // CDDA: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // CDDC: STD $2,U
-    // TODO: Handle indexed addressing: STD $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_d);
 
     // CDDE: LDA #$40
     cpu.m_a = 0x40;
 
     // CDE0: STD -$10,U
-    // TODO: Handle indexed addressing: STD -$10,U
+    cpu.write_memory16(cpu.m_u - 0x10, cpu.m_d);
 
     // CDE2: STD -$6,U
-    // TODO: Handle indexed addressing: STD -$6,U
+    cpu.write_memory16(cpu.m_u - 0x06, cpu.m_d);
 
     // CDE4: STD $4,U
-    // TODO: Handle indexed addressing: STD $4,U
+    cpu.write_memory16(cpu.m_u + 0x04, cpu.m_d);
 
     // CDE6: RTS 
     return;
@@ -38034,7 +38047,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a >>= 1;
 
     // CE64: STA -$2,Y
-    // TODO: Handle indexed addressing: STA -$2,Y
+    cpu.write_memory(cpu.m_y - 0x02, cpu.m_a);
 
     // CE66: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
@@ -39927,19 +39940,19 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_cc |= 0xB9;
 
     // D3C1: STU -$A,U
-    // TODO: Handle indexed addressing: STU -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_u);
 
     // D3C3: BHI $D37E
     // TODO: Convert BHI $D37E
 
     // D3C5: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D3C7: BPL $D382
     // TODO: External jump to 0xD382 - not implemented
 
     // D3C9: STU $6,U
-    // TODO: Handle indexed addressing: STU $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_u);
 
     // D3CB: LSR <$C0
     // TODO: Convert LSR <$C0
@@ -39951,7 +39964,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert LSR <$B9
 
     // D3D1: STU -$2,U
-    // TODO: Handle indexed addressing: STU -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_u);
 
     // D3D3: PSHU PC,S,Y,X,D
     // TODO: Convert PSHU PC,S,Y,X,D
@@ -39972,7 +39985,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert LSR <$B9
 
     // D3DF: STU -$1,U
-    // TODO: Handle indexed addressing: STU -$1,U
+    cpu.write_memory16(cpu.m_u - 0x01, cpu.m_u);
 
     // D3E1: RTI 
     // TODO: Convert RTI 
@@ -40030,7 +40043,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$B9
 
     // D401: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D403: XRES 
     // TODO: Convert XRES 
@@ -40048,7 +40061,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xD3C6 - not implemented
 
     // D40D: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D40F: ROR <$C0
     // TODO: Convert ROR <$C0
@@ -40057,19 +40070,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$B9
 
     // D413: STU -$6,U
-    // TODO: Handle indexed addressing: STU -$6,U
+    cpu.write_memory16(cpu.m_u - 0x06, cpu.m_u);
 
     // D415: ANDCC #$B9
     // TODO: Convert ANDCC #$B9
 
     // D417: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D419: BPL $D3D4
     // TODO: External jump to 0xD3D4 - not implemented
 
     // D41B: STU -$1,U
-    // TODO: Handle indexed addressing: STU -$1,U
+    cpu.write_memory16(cpu.m_u - 0x01, cpu.m_u);
 
     // D41D: NOP 
     // NOP;
@@ -40081,7 +40094,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$B9
 
     // D423: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D425: XRES 
     // TODO: Convert XRES 
@@ -40093,7 +40106,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.negative_flag()) cpu.m_pc = 0xD3E4;
 
     // D42B: STU -$7,U
-    // TODO: Handle indexed addressing: STU -$7,U
+    cpu.write_memory16(cpu.m_u - 0x07, cpu.m_u);
 
     // D42D: LBSR $8E1F
     // TODO: Convert LBSR $8E1F
@@ -40109,7 +40122,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ADCA $EF42
 
     // D433: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D435: DEC <$C0
     // TODO: Convert DEC <$C0
@@ -40121,7 +40134,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ROR <$B9
 
     // D43B: STU -$2,U
-    // TODO: Handle indexed addressing: STU -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_u);
 
     // D43D: PSHU PC,S,Y,X,D
     // TODO: Convert PSHU PC,S,Y,X,D
@@ -40139,7 +40152,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BVS $D3FE
 
     // D445: STU -$2,U
-    // TODO: Handle indexed addressing: STU -$2,U
+    cpu.write_memory16(cpu.m_u - 0x02, cpu.m_u);
 
     // D447: LBRA $8E39
     // TODO: Convert LBRA $8E39
@@ -40151,13 +40164,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BHI $D406
 
     // D44D: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D44F: DEC <$B9
     // TODO: Convert DEC <$B9
 
     // D451: STU $3,U
-    // TODO: Handle indexed addressing: STU $3,U
+    cpu.write_memory16(cpu.m_u + 0x03, cpu.m_u);
 
     // D453: PULS CC,DP,X,Y,PC
     // TODO: Convert PULS CC,DP,X,Y,PC
@@ -40169,7 +40182,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert SBCB <$B9
 
     // D459: STU -$1,U
-    // TODO: Handle indexed addressing: STU -$1,U
+    cpu.write_memory16(cpu.m_u - 0x01, cpu.m_u);
 
     // D45B: NOP 
     // NOP;
@@ -40181,7 +40194,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xD418 - not implemented
 
     // D45F: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D461: SWI 
     // TODO: Convert SWI 
@@ -40202,7 +40215,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$B9
 
     // D46D: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D46F: SWI 
     // TODO: Convert SWI 
@@ -40214,19 +40227,19 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: External jump to 0xD42E - not implemented
 
     // D475: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D477: BNE $D432
     if (!cpu.zero_flag()) cpu.m_pc = 0xD432;
 
     // D479: STU -$5,U
-    // TODO: Handle indexed addressing: STU -$5,U
+    cpu.write_memory16(cpu.m_u - 0x05, cpu.m_u);
 
     // D47B: BRN $D436
     // TODO: Convert BRN $D436
 
     // D47D: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D47F: TFR PC,inv
     cpu.m_inv = cpu.m_pc;
@@ -40248,7 +40261,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$B9
 
     // D489: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D48B: XRES 
     // TODO: Convert XRES 
@@ -40260,19 +40273,19 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xD44A;
 
     // D491: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D493: BNE $D44E
     // TODO: External jump to 0xD44E - not implemented
 
     // D495: STU -$6,U
-    // TODO: Handle indexed addressing: STU -$6,U
+    cpu.write_memory16(cpu.m_u - 0x06, cpu.m_u);
 
     // D497: CWAI #$B9
     // TODO: Convert CWAI #$B9
 
     // D499: STU -$1,U
-    // TODO: Handle indexed addressing: STU -$1,U
+    cpu.write_memory16(cpu.m_u - 0x01, cpu.m_u);
 
     // D49B: RTI 
     // TODO: Convert RTI 
@@ -40290,7 +40303,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$B9
 
     // D4A3: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D4A5: XRES 
     // TODO: Convert XRES 
@@ -40305,13 +40318,13 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_cc |= 0xB9;
 
     // D4AD: STU -$6,U
-    // TODO: Handle indexed addressing: STU -$6,U
+    cpu.write_memory16(cpu.m_u - 0x06, cpu.m_u);
 
     // D4AF: ANDCC #$B9
     // TODO: Convert ANDCC #$B9
 
     // D4B1: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D4B3: XRES 
     // TODO: Convert XRES 
@@ -40323,13 +40336,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$B9
 
     // D4B9: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D4BB: BPL $D476
     // TODO: External jump to 0xD476 - not implemented
 
     // D4BD: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D4BF: TFR inv,inv
     cpu.m_inv = cpu.m_inv;
@@ -40350,13 +40363,13 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0xD486;
 
     // D4CD: STU $6,U
-    // TODO: Handle indexed addressing: STU $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_u);
 
     // D4CF: BCC $D48A
     // TODO: External jump to 0xD48A - not implemented
 
     // D4D1: STU -$A,U
-    // TODO: Handle indexed addressing: STU -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_u);
 
     // D4D3: BHI $D4CB
     // TODO: Convert BHI $D4CB
@@ -40371,13 +40384,13 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert ANDCC #$B9
 
     // D4DB: STU $2,U
-    // TODO: Handle indexed addressing: STU $2,U
+    cpu.write_memory16(cpu.m_u + 0x02, cpu.m_u);
 
     // D4DD: BPL $D498
     // TODO: External jump to 0xD498 - not implemented
 
     // D4DF: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D4E1: SWI 
     // TODO: Convert SWI 
@@ -40389,7 +40402,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert PSHU PC,Y,X,DP,CC
 
     // D4E7: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D4E9: SWI 
     // TODO: Convert SWI 
@@ -40407,25 +40420,25 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_cc |= 0xB9;
 
     // D4F3: STU -$5,U
-    // TODO: Handle indexed addressing: STU -$5,U
+    cpu.write_memory16(cpu.m_u - 0x05, cpu.m_u);
 
     // D4F5: BRN $D4B0
     // TODO: Convert BRN $D4B0
 
     // D4F7: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D4F9: BNE $D4B4
     if (!cpu.zero_flag()) cpu.m_pc = 0xD4B4;
 
     // D4FB: STU $6,U
-    // TODO: Handle indexed addressing: STU $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_u);
 
     // D4FD: BCC $D4B8
     // TODO: External jump to 0xD4B8 - not implemented
 
     // D4FF: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D501: SWI 
     // TODO: Convert SWI 
@@ -40437,25 +40450,25 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_cc |= 0xB9;
 
     // D507: STU -$A,U
-    // TODO: Handle indexed addressing: STU -$A,U
+    cpu.write_memory16(cpu.m_u - 0x0A, cpu.m_u);
 
     // D509: BHI $D4C4
     // TODO: Convert BHI $D4C4
 
     // D50B: STU $6,U
-    // TODO: Handle indexed addressing: STU $6,U
+    cpu.write_memory16(cpu.m_u + 0x06, cpu.m_u);
 
     // D50D: BCC $D4C8
     if (!cpu.carry_flag()) cpu.m_pc = 0xD4C8;
 
     // D50F: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D511: BNE $D4CC
     // TODO: External jump to 0xD4CC - not implemented
 
     // D513: STU $A,U
-    // TODO: Handle indexed addressing: STU $A,U
+    cpu.write_memory16(cpu.m_u + 0x0A, cpu.m_u);
 
     // D515: XRES 
     // TODO: Convert XRES 
@@ -40467,7 +40480,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert NEG <$B9
 
     // D51B: STU $5,U
-    // TODO: Handle indexed addressing: STU $5,U
+    cpu.write_memory16(cpu.m_u + 0x05, cpu.m_u);
 
     // D51D: SWI 
     // TODO: Convert SWI 
@@ -40488,7 +40501,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.carry_flag()) cpu.m_pc = 0xD4E2;
 
     // D529: STU -$4,U
-    // TODO: Handle indexed addressing: STU -$4,U
+    cpu.write_memory16(cpu.m_u - 0x04, cpu.m_u);
 
     // D52B: ROR <$C0
     // TODO: Convert ROR <$C0
@@ -41325,7 +41338,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert XNC <$41
 
     // D773: STD -$1,U
-    // TODO: Handle indexed addressing: STD -$1,U
+    cpu.write_memory16(cpu.m_u - 0x01, cpu.m_d);
 
     // D775: LDA $4300
     cpu.m_a = cpu.read_memory(0x4300);
@@ -41506,7 +41519,7 @@ void global_routine_impl(CPU6809& cpu) {
 
     label_D7EF:
     // D7EF: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D7F1: LDA $4300
     cpu.m_a = cpu.read_memory(0x4300);
@@ -41537,10 +41550,10 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // D804: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D806: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // D808: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
@@ -41585,7 +41598,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x1F;
 
     // D824: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D826: LDB $3,X
     // TODO: Fix comma operator: LDB $3,X
@@ -41594,7 +41607,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x78;
 
     // D82A: STA $3,X
-    // TODO: Handle indexed addressing: STA $3,X
+    cpu.write_memory(cpu.m_x + 0x03, cpu.m_a);
 
     // D82C: TSTB 
     cpu.test_b();
@@ -41842,7 +41855,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_b++;
 
     // D8BE: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D8C0: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
@@ -41872,7 +41885,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a += 0x7F;
 
     // D8D3: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D8D5: BRA $D8DE
     goto label_D8DE;
@@ -41916,7 +41929,8 @@ void global_routine_impl(CPU6809& cpu) {
     if (cpu.carry_flag()) cpu.m_pc = 0xD8E7;
 
     // D8F1: STA ,X+
-    // TODO: Handle indexed addressing: STA ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_a);
+    cpu.m_x++;
 
     // D8F3: STX $4AD9
     cpu.write_memory16(0x4AD9, cpu.m_x);
@@ -41946,7 +41960,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,U
 
     // D90B: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // D90D: STU $4AD9
     cpu.write_memory16(0x4AD9, cpu.m_u);
@@ -42056,7 +42070,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_u = cpu.read_memory16(0x4ADD);
 
     // D961: STA ,U+
-    // TODO: Handle indexed addressing: STA ,U+
+    cpu.write_memory(cpu.m_u, cpu.m_a);
+    cpu.m_u++;
 
     // D963: LDD #$0000
     cpu.m_d = 0x0000;
@@ -42089,7 +42104,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // D97A: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // D97C: LEAU $5,U
     // TODO: Fix comma operator: LEAU $5,U
@@ -42321,100 +42336,100 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0198;
 
     // DA39: STD ,Y
-    // TODO: Handle indexed addressing: STD ,Y
+    cpu.write_memory16(cpu.m_y, cpu.m_d);
 
     // DA3B: STD $8,Y
-    // TODO: Handle indexed addressing: STD $8,Y
+    cpu.write_memory16(cpu.m_y + 0x08, cpu.m_d);
 
     // DA3D: STD $10,Y
-    // TODO: Handle indexed addressing: STD $10,Y
+    cpu.write_memory16(cpu.m_y + 0x10, cpu.m_d);
 
     // DA40: STD $18,Y
-    // TODO: Handle indexed addressing: STD $18,Y
+    cpu.write_memory16(cpu.m_y + 0x18, cpu.m_d);
 
     // DA43: STD $20,Y
-    // TODO: Handle indexed addressing: STD $20,Y
+    cpu.write_memory16(cpu.m_y + 0x20, cpu.m_d);
 
     // DA46: STD $28,Y
-    // TODO: Handle indexed addressing: STD $28,Y
+    cpu.write_memory16(cpu.m_y + 0x28, cpu.m_d);
 
     // DA49: LDD #$0000
     cpu.m_d = 0x0000;
 
     // DA4C: STD $2,Y
-    // TODO: Handle indexed addressing: STD $2,Y
+    cpu.write_memory16(cpu.m_y + 0x02, cpu.m_d);
 
     // DA4E: STD $A,Y
-    // TODO: Handle indexed addressing: STD $A,Y
+    cpu.write_memory16(cpu.m_y + 0x0A, cpu.m_d);
 
     // DA50: STD $12,Y
-    // TODO: Handle indexed addressing: STD $12,Y
+    cpu.write_memory16(cpu.m_y + 0x12, cpu.m_d);
 
     // DA53: STD $1A,Y
-    // TODO: Handle indexed addressing: STD $1A,Y
+    cpu.write_memory16(cpu.m_y + 0x1A, cpu.m_d);
 
     // DA56: STD $22,Y
-    // TODO: Handle indexed addressing: STD $22,Y
+    cpu.write_memory16(cpu.m_y + 0x22, cpu.m_d);
 
     // DA59: STD $2A,Y
-    // TODO: Handle indexed addressing: STD $2A,Y
+    cpu.write_memory16(cpu.m_y + 0x2A, cpu.m_d);
 
     // DA5C: LDD $4AE8
     cpu.m_d = cpu.read_memory16(0x4AE8);
 
     // DA5F: STD $4,Y
-    // TODO: Handle indexed addressing: STD $4,Y
+    cpu.write_memory16(cpu.m_y + 0x04, cpu.m_d);
 
     // DA61: STD $C,Y
-    // TODO: Handle indexed addressing: STD $C,Y
+    cpu.write_memory16(cpu.m_y + 0x0C, cpu.m_d);
 
     // DA63: STD $14,Y
-    // TODO: Handle indexed addressing: STD $14,Y
+    cpu.write_memory16(cpu.m_y + 0x14, cpu.m_d);
 
     // DA66: STD $1C,Y
-    // TODO: Handle indexed addressing: STD $1C,Y
+    cpu.write_memory16(cpu.m_y + 0x1C, cpu.m_d);
 
     // DA69: STD $24,Y
-    // TODO: Handle indexed addressing: STD $24,Y
+    cpu.write_memory16(cpu.m_y + 0x24, cpu.m_d);
 
     // DA6C: STD $2C,Y
-    // TODO: Handle indexed addressing: STD $2C,Y
+    cpu.write_memory16(cpu.m_y + 0x2C, cpu.m_d);
 
     // DA6F: LDD #$B400
     cpu.m_d = 0xB400;
 
     // DA72: STD $6,Y
-    // TODO: Handle indexed addressing: STD $6,Y
+    cpu.write_memory16(cpu.m_y + 0x06, cpu.m_d);
 
     // DA74: LDD #$B434
     cpu.m_d = 0xB434;
 
     // DA77: STD $E,Y
-    // TODO: Handle indexed addressing: STD $E,Y
+    cpu.write_memory16(cpu.m_y + 0x0E, cpu.m_d);
 
     // DA79: LDD #$B458
     cpu.m_d = 0xB458;
 
     // DA7C: STD $16,Y
-    // TODO: Handle indexed addressing: STD $16,Y
+    cpu.write_memory16(cpu.m_y + 0x16, cpu.m_d);
 
     // DA7F: LDD #$B488
     cpu.m_d = 0xB488;
 
     // DA82: STD $1E,Y
-    // TODO: Handle indexed addressing: STD $1E,Y
+    cpu.write_memory16(cpu.m_y + 0x1E, cpu.m_d);
 
     // DA85: LDD #$B4AE
     cpu.m_d = 0xB4AE;
 
     // DA88: STD $26,Y
-    // TODO: Handle indexed addressing: STD $26,Y
+    cpu.write_memory16(cpu.m_y + 0x26, cpu.m_d);
 
     // DA8B: LDD #$B4D2
     cpu.m_d = 0xB4D2;
 
     // DA8E: STD $2E,Y
-    // TODO: Handle indexed addressing: STD $2E,Y
+    cpu.write_memory16(cpu.m_y + 0x2E, cpu.m_d);
 
     // DA91: LEAY $30,Y
     // TODO: Fix comma operator: LEAY $30,Y
@@ -42450,7 +42465,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $3,X
 
     // DAAF: STD $1,X
-    // TODO: Handle indexed addressing: STD $1,X
+    cpu.write_memory16(cpu.m_x + 0x01, cpu.m_d);
 
     // DAB1: BRA $DAEE
     goto label_DAEE;
@@ -42477,7 +42492,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $3,X
 
     // DAC5: STD $1,X
-    // TODO: Handle indexed addressing: STD $1,X
+    cpu.write_memory16(cpu.m_x + 0x01, cpu.m_d);
 
     // DAC7: CMPD #$F000
     // TODO: Convert CMPD #$F000
@@ -42505,7 +42520,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0400;
 
     // DADA: STD $3,U
-    // TODO: Handle indexed addressing: STD $3,U
+    cpu.write_memory16(cpu.m_u + 0x03, cpu.m_d);
 
     // DADC: LDU $4ADD
     cpu.m_u = cpu.read_memory16(0x4ADD);
@@ -51270,10 +51285,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert BITB ,S
 
     // E9E3: STU ,S
-    // TODO: Handle indexed addressing: STU ,S
+    cpu.write_memory16(cpu.m_sp, cpu.m_u);
 
     // E9E5: STU ,S
-    // TODO: Handle indexed addressing: STU ,S
+    cpu.write_memory16(cpu.m_sp, cpu.m_u);
 
     // E9E7: SUBB $E4FA
     cpu.m_b -= 0xE4FA;
@@ -51390,10 +51405,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Unrecognized operand: [$E70D]
 
     // EA3C: STB $7,Y
-    // TODO: Handle indexed addressing: STB $7,Y
+    cpu.write_memory(cpu.m_y + 0x07, cpu.m_b);
 
     // EA3E: STB $3,U
-    // TODO: Handle indexed addressing: STB $3,U
+    cpu.write_memory(cpu.m_u + 0x03, cpu.m_b);
 
     // EA40: LDU $9CFE
     cpu.m_u = cpu.read_memory16(0x9CFE);
@@ -53462,7 +53477,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a &= 0x30;
 
     // EFAF: STA -$1,S
-    // TODO: Handle indexed addressing: STA -$1,S
+    cpu.write_memory(cpu.m_sp - 0x01, cpu.m_a);
 
     // EFB1: LDA $481E
     cpu.m_a = cpu.read_memory(0x481E);
@@ -53756,7 +53771,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(cpu.m_u++);
 
     // F08A: STD ,--X
-    // TODO: Handle indexed addressing: STD ,--X
+    cpu.m_x--;
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // F08C: CMPX #$0002
     cpu.compare_x(0x0002);
@@ -53778,7 +53794,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = cpu.read_memory16(cpu.m_u++);
 
     // F09C: STD ,--X
-    // TODO: Handle indexed addressing: STD ,--X
+    cpu.m_x--;
+    cpu.write_memory16(cpu.m_x, cpu.m_d);
 
     // F09E: BRA $F094
     goto label_F094;
@@ -53989,10 +54006,10 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // F135: STB $1,X
-    // TODO: Handle indexed addressing: STB $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_b);
 
     // F137: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // F139: ANDA $1,X
     // TODO: Fix comma operator: ANDA $1,X
@@ -54001,7 +54018,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ORA $2,X
 
     // F13D: STA $2,X
-    // TODO: Handle indexed addressing: STA $2,X
+    cpu.write_memory(cpu.m_x + 0x02, cpu.m_a);
 
     // F13F: ORB ,X++
     cpu.m_b |= cpu.m_x++;
@@ -54010,7 +54027,8 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Complex indexed addressing: ,X
 
     // F143: STB ,X+
-    // TODO: Handle indexed addressing: STB ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_b);
+    cpu.m_x++;
 
     // F145: RTS 
     return;
@@ -54037,7 +54055,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = cpu.read_memory(0x4380);
 
     // F158: STA $1,Y
-    // TODO: Handle indexed addressing: STA $1,Y
+    cpu.write_memory(cpu.m_y + 0x01, cpu.m_a);
 
     // F15A: CMPA ,Y
     // TODO: Complex indexed addressing: ,Y
@@ -54061,7 +54079,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $1,Y
 
     // F168: STB ,Y
-    // TODO: Handle indexed addressing: STB ,Y
+    cpu.write_memory(cpu.m_y, cpu.m_b);
 
     // F16A: BRA $F178
     goto label_F178;
@@ -54082,7 +54100,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB $1,Y
 
     // F176: STB ,Y
-    // TODO: Handle indexed addressing: STB ,Y
+    cpu.write_memory(cpu.m_y, cpu.m_b);
 
     label_F178:
     // F178: CMPY #$4829
@@ -54144,7 +54162,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x98;
 
     // F1A4: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // F1A6: JSR $F1FD
     cpu.call_function(0xF1FD);
@@ -54183,7 +54201,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x90;
 
     // F1C0: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // F1C2: JSR $F1FD
     cpu.call_function(0xF1FD);
@@ -54207,7 +54225,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Convert DEC ,X
 
     // F1D0: STA $1,X
-    // TODO: Handle indexed addressing: STA $1,X
+    cpu.write_memory(cpu.m_x + 0x01, cpu.m_a);
 
     // F1D2: CMPA ,X
     // TODO: Complex indexed addressing: ,X
@@ -54274,7 +54292,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a -= 0x80;
 
     // F1FA: STA $4,X
-    // TODO: Handle indexed addressing: STA $4,X
+    cpu.write_memory(cpu.m_x + 0x04, cpu.m_a);
 
     // F1FC: RTS 
     return;
@@ -54349,7 +54367,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: ADDD $5,X
 
     // F228: STD $5,X
-    // TODO: Handle indexed addressing: STD $5,X
+    cpu.write_memory16(cpu.m_x + 0x05, cpu.m_d);
 
     // F22A: RTS 
     return;
@@ -54852,7 +54870,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // F3A1: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // F3A3: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -55115,7 +55133,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = (cpu.m_a << 1) | (cpu.carry_flag() ? 1 : 0);
 
     // F46C: STA ,X
-    // TODO: Handle indexed addressing: STA ,X
+    cpu.write_memory(cpu.m_x, cpu.m_a);
 
     // F46E: TFR A,B
     cpu.m_b = cpu.m_a;
@@ -55368,7 +55386,7 @@ void global_routine_impl(CPU6809& cpu) {
     if (!cpu.zero_flag()) cpu.m_pc = 0xF528;
 
     // F533: STD $5593,U
-    // TODO: Handle indexed addressing: STD $5593,U
+    cpu.write_memory16(cpu.m_u + 0x5593, cpu.m_d);
 
     // F537: BEQ $F543
     if (cpu.zero_flag()) cpu.m_pc = 0xF543;
@@ -57630,7 +57648,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_d = 0x0005;
 
     // FC22: STD ,U
-    // TODO: Handle indexed addressing: STD ,U
+    cpu.write_memory16(cpu.m_u, cpu.m_d);
 
     // FC24: ADDD #$0001
     cpu.m_d += 0x0001;
@@ -58117,7 +58135,7 @@ void global_routine_impl(CPU6809& cpu) {
     // TODO: Fix comma operator: LDB -$A,X
 
     // FDA8: STB -$9,X
-    // TODO: Handle indexed addressing: STB -$9,X
+    cpu.write_memory(cpu.m_x - 0x09, cpu.m_b);
 
     // FDAA: EORB -$8,X
     // TODO: Fix comma operator: EORB -$8,X
@@ -58232,7 +58250,8 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // FDFF: STA ,X+
-    // TODO: Handle indexed addressing: STA ,X+
+    cpu.write_memory(cpu.m_x, cpu.m_a);
+    cpu.m_x++;
 
     // FE01: ADDA #$05
     cpu.m_a += 0x05;
@@ -58559,7 +58578,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0x00;
 
     // FF01: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // FF03: LDX #$0000
     cpu.m_x = 0x0000;
@@ -58580,7 +58599,7 @@ void global_routine_impl(CPU6809& cpu) {
     cpu.m_a = 0xFF;
 
     // FF12: STA ,U
-    // TODO: Handle indexed addressing: STA ,U
+    cpu.write_memory(cpu.m_u, cpu.m_a);
 
     // FF14: LDX #$0000
     cpu.m_x = 0x0000;

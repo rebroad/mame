@@ -261,7 +261,7 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
                 if valid_addresses and target_address not in valid_addresses:
                     # External address - skip the goto
                     return f"    // TODO: External jump to 0x{target_address:04X} - not implemented"
-                
+
                 # Generate the appropriate branch code with the target address
                 if mnemonic == 'BRA':
                     return f"    goto label_{target_address:04X};"
@@ -398,7 +398,106 @@ def convert_instruction(parsed, original_line=None, valid_addresses=None):
 
     # Handle indexed addressing for memory operations
     if ',' in cpp_operand and mnemonic in ['STA', 'STB', 'STD', 'STX', 'STY', 'STU', 'STS']:
-        # For now, simplify indexed addressing
+        # Parse indexed addressing
+        parts = operands.split(',')
+        if len(parts) == 2:
+            offset_part, index_reg = parts[0].strip(), parts[1].strip()
+
+            # Calculate effective address
+            # Map S register to sp
+            reg_name = index_reg.lower()
+            if reg_name == 's':
+                reg_name = 'sp'
+
+            if offset_part == '':
+                # No offset: ,X or ,Y
+                effective_addr = f"cpu.m_{reg_name}"
+            elif offset_part.startswith('-$'):
+                # Negative offset: -$2,X
+                offset = int(offset_part[2:], 16)
+                effective_addr = f"cpu.m_{reg_name} - 0x{offset:02X}"
+            elif offset_part.startswith('$'):
+                # Positive offset: $2,X
+                offset = int(offset_part[1:], 16)
+                effective_addr = f"cpu.m_{reg_name} + 0x{offset:02X}"
+            else:
+                # Fallback to TODO
+                return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
+
+            # Handle post-increment and pre-decrement
+            post_increment = ""
+            pre_decrement = ""
+            if index_reg.endswith('+'):
+                # Post-increment: ,Y+
+                index_reg = index_reg[:-1]  # Remove +
+                # Map S register to sp for post-increment
+                inc_reg_name = index_reg.lower()
+                if inc_reg_name == 's':
+                    inc_reg_name = 'sp'
+                effective_addr = f"cpu.m_{inc_reg_name}"
+                post_increment = f"    cpu.m_{inc_reg_name}++;"
+            elif index_reg.startswith('--'):
+                # Pre-decrement: ,--X
+                index_reg = index_reg[2:]  # Remove --
+                # Map S register to sp for pre-decrement
+                dec_reg_name = index_reg.lower()
+                if dec_reg_name == 's':
+                    dec_reg_name = 'sp'
+                effective_addr = f"cpu.m_{dec_reg_name}"
+                pre_decrement = f"    cpu.m_{dec_reg_name}--;"
+
+            # Generate appropriate store instruction
+            if mnemonic == 'STA':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory({effective_addr}, cpu.m_a);"
+                elif post_increment:
+                    return f"    cpu.write_memory({effective_addr}, cpu.m_a);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory({effective_addr}, cpu.m_a);"
+            elif mnemonic == 'STB':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory({effective_addr}, cpu.m_b);"
+                elif post_increment:
+                    return f"    cpu.write_memory({effective_addr}, cpu.m_b);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory({effective_addr}, cpu.m_b);"
+            elif mnemonic == 'STD':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory16({effective_addr}, cpu.m_d);"
+                elif post_increment:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_d);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_d);"
+            elif mnemonic == 'STX':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory16({effective_addr}, cpu.m_x);"
+                elif post_increment:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_x);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_x);"
+            elif mnemonic == 'STY':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory16({effective_addr}, cpu.m_y);"
+                elif post_increment:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_y);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_y);"
+            elif mnemonic == 'STU':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory16({effective_addr}, cpu.m_u);"
+                elif post_increment:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_u);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_u);"
+            elif mnemonic == 'STS':
+                if pre_decrement:
+                    return f"{pre_decrement}\n    cpu.write_memory16({effective_addr}, cpu.m_sp);"
+                elif post_increment:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_sp);\n{post_increment}"
+                else:
+                    return f"    cpu.write_memory16({effective_addr}, cpu.m_sp);"
+
+        # Fallback for complex cases
         return f"    // TODO: Handle indexed addressing: {mnemonic} {operands}"
 
     # Handle comma operator issues (e.g., "cpu.state_.u += -0x1,cpu.state_.u")
