@@ -39,9 +39,7 @@ class AutomatedDisassembler:
         self.disassembly_dir = project_root / "disassembly"
         self.disassembly_dir.mkdir(exist_ok=True)
 
-        # Validate unidasm availability
-        if not validate_unidasm():
-            raise RuntimeError("unidasm not found. Please install unidasm.")
+        # Note: unidasm validation is done when actually needed, not during initialization
 
     def _get_disassembly_window(self, start_addr: str, max_count: int) -> List[str]:
         """Return disassembly lines starting at start_addr; if not found, start at next available address >= start.
@@ -308,11 +306,12 @@ class AutomatedDisassembler:
             return None
 
     def _extract_call_targets(self, lines: list) -> list:
-        """Extract absolute target addresses from JSR/JMP instructions in disassembly lines."""
+        """Extract absolute target addresses from JSR/JMP and conditional branch instructions in disassembly lines."""
         targets = []
         for line in lines:
             # Expect format like: f261: 7e f2 61     JMP    $F261
-            m = re.search(r'\b(JSR|JMP)\s+\$?([0-9A-Fa-f]{4})\b', line)
+            # or: 6017: 27 01        BEQ    $601A
+            m = re.search(r'\b(JSR|JMP|BEQ|BNE|BCC|BCS|BVC|BVS|BMI|BPL|BHI|BLS|BGE|BLT|BGT|BLE|BRA|LBRN|LBCC|LBCS|LBEQ|LBNE|LBMI|LBPL|LBVC|LBVS|LBHI|LBLS|LBGE|LBLT|LBGT|LBLE|LBSR)\s+\$?([0-9A-Fa-f]{4})\b', line)
             if m:
                 addr = m.group(2).lower()
                 targets.append(addr)
