@@ -16,6 +16,40 @@ from typing import List, Tuple, Optional
 from pathlib import Path
 from unidasm_wrapper import run_unidasm, find_routine_end
 
+def _insert_jmp_for_overlap(lines: list, jmp_target: str, verbose: bool = False) -> list:
+    """Insert JMP instruction at the overlap point for handling routine overlaps."""
+    if not jmp_target:
+        return lines
+
+    output_lines = lines.copy()
+    jmp_inserted = False
+
+    for i, line in enumerate(lines):
+        line = line.strip()
+        if not line or line.startswith(';'):
+            continue
+
+        # Extract address from line
+        addr_match = re.match(r'^([0-9a-f]+):', line, re.IGNORECASE)
+        if not addr_match:
+            continue
+
+        addr = addr_match.group(1).upper()
+        addr_int = int(addr, 16)
+        jmp_target_int = int(jmp_target, 16)
+
+        # If this address matches the JMP target, insert JMP here
+        if addr_int == jmp_target_int:
+            jmp_addr = f"{addr_int:04X}"
+            # Insert JMP instruction before the existing instruction
+            output_lines.insert(i, f"{jmp_addr}: 7e {jmp_target}     JMP    ${jmp_target}")
+            if verbose:
+                print(f"  Added JMP ${jmp_target} at ${jmp_addr} for overlap handling")
+            jmp_inserted = True
+            break
+
+    return output_lines
+
 def disassemble_routine(rom_file: str, start_addr: str, end_addr: Optional[str] = None,
                        output_file: Optional[str] = None, routine_name: Optional[str] = None,
                        markdown: bool = True, verbose: bool = True, force_save: bool = False,
@@ -99,17 +133,10 @@ def disassemble_routine(rom_file: str, start_addr: str, end_addr: Optional[str] 
 
             # Add JMP instruction for overlap handling if specified
             if jmp_target:
-                # Find the last address in the disassembly to calculate the JMP address
-                last_line = lines[-1] if lines else ""
-                last_addr_match = re.match(r'^([0-9a-f]+):', last_line, re.IGNORECASE)
-                if last_addr_match:
-                    last_addr = last_addr_match.group(1).upper()
-                    last_addr_int = int(last_addr, 16)
-                    jmp_addr_int = last_addr_int + 1
-                    jmp_addr = f"{jmp_addr_int:04X}"
-                    output_lines.append(f"{jmp_addr}: 7e {jmp_target}     JMP    ${jmp_target}")
-                    if verbose:
-                        print(f"  Added JMP ${jmp_target} at ${jmp_addr} for overlap handling")
+                # Insert JMP at the overlap point
+                jmp_lines = _insert_jmp_for_overlap(lines, jmp_target, verbose)
+                # Replace the disassembly lines with the JMP-enhanced version
+                output_lines = output_lines[:-len(lines)] + jmp_lines
 
             output_lines.append("```")
         else:
@@ -118,17 +145,8 @@ def disassemble_routine(rom_file: str, start_addr: str, end_addr: Optional[str] 
 
             # Add JMP instruction for overlap handling if specified
             if jmp_target:
-                # Find the last address in the disassembly to calculate the JMP address
-                last_line = lines[-1] if lines else ""
-                last_addr_match = re.match(r'^([0-9a-f]+):', last_line, re.IGNORECASE)
-                if last_addr_match:
-                    last_addr = last_addr_match.group(1).upper()
-                    last_addr_int = int(last_addr, 16)
-                    jmp_addr_int = last_addr_int + 1
-                    jmp_addr = f"{jmp_addr_int:04X}"
-                    output_lines.append(f"{jmp_addr}: 7e {jmp_target}     JMP    ${jmp_target}")
-                    if verbose:
-                        print(f"  Added JMP ${jmp_target} at ${jmp_addr} for overlap handling")
+                # Insert JMP at the overlap point
+                output_lines = _insert_jmp_for_overlap(lines, jmp_target, verbose)
 
         # Determine output file if not provided
         if not output_file and routine_name:
@@ -211,7 +229,8 @@ def main():
         verbose=not args.quiet,
         force_save=args.force,
         auto_detect_end=args.find_end,
-        arch=args.arch
+        arch=args.arch,
+        jmp_target=args.jmp_target
     )
     return 0 if success else 1
 

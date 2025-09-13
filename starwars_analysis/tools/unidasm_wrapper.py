@@ -137,6 +137,10 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
 
                         # Add this as an end candidate with highest priority
                         end_candidates.append((prev_addr, prev_addr_int, "overlap_jmp"))
+
+                        # Also add a JMP instruction at the overlap point
+                        jmp_addr = f"{addr_int:04X}"
+                        jmp_target_for_overlap = existing_start
                         break
 
                 if jmp_target_for_overlap:
