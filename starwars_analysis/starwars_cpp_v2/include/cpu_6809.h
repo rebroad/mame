@@ -216,6 +216,7 @@ public:
     void compare_b(uint8_t value);
     void compare_x(uint16_t value);
     void call_function(uint16_t address);
+    void return_from_function();
 
     // Execution mode management
     void set_routine_mode(uint16_t start_pc);

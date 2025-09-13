@@ -9,16 +9,14 @@ void routine_d3e4_d3ed_impl(CPU6809& cpu) {
     label_D3E4:
     // D3E4: LDB $7C5C
     cpu.m_b = cpu.read_memory(0x7C5C);
-
     // D3E7: ROR <$45
     // TODO: Convert ROR <$45
-
+    // D3E9: SWI 
+    // TODO: Convert SWI 
     // D3EA: ADCA $EF5F
     // TODO: Convert ADCA $EF5F
-
     // D3ED: JMP $d3ec
     goto label_D3EC;
-
 }
 
 } // namespace StarWars

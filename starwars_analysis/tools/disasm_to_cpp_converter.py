@@ -35,7 +35,7 @@ INSTRUCTION_MAP = {
     'LEAU': 'cpu.m_u += {operand}',
     'JMP': 'goto label_{operand}',
     'JSR': 'cpu.call_function({operand})',
-    'RTS': 'cpu.return_from_function()',
+    'RTS': 'return',
     'BRA': 'cpu.m_pc = {operand}',
     'BNE': 'if (!cpu.zero_flag()) cpu.m_pc = {operand}',
     'BEQ': 'if (cpu.zero_flag()) cpu.m_pc = {operand}',
@@ -246,7 +246,7 @@ def parse_branch_operand(operands):
             return None
     return None
 
-def convert_branch_instruction(mnemonic, operands, current_address, disassembly_line=None):
+def convert_branch_instruction(mnemonic, operands, current_address, disassembly_line=None, valid_addresses=None):
     """Convert branch instruction with relative offset to absolute address"""
 
     # Check if operands already contain an absolute address (e.g., "$0018", "$002D")
@@ -257,6 +257,11 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
             target_address = int(target_str, 16)
             # Validate that it's within 16-bit range
             if target_address <= 0xFFFF:
+                # Check if target address is valid (exists in our instruction set)
+                if valid_addresses and target_address not in valid_addresses:
+                    # External address - skip the goto
+                    return f"    // TODO: External jump to 0x{target_address:04X} - not implemented"
+                
                 # Generate the appropriate branch code with the target address
                 if mnemonic == 'BRA':
                     return f"    goto label_{target_address:04X};"
@@ -345,7 +350,7 @@ def convert_branch_instruction(mnemonic, operands, current_address, disassembly_
     else:
         return f"    // TODO: Unsupported branch instruction: {mnemonic}"
 
-def convert_instruction(parsed, original_line=None):
+def convert_instruction(parsed, original_line=None, valid_addresses=None):
     """Convert a parsed instruction to C++ code with robust handling"""
     mnemonic = parsed['mnemonic']
     operands = parsed['operands']
@@ -357,7 +362,7 @@ def convert_instruction(parsed, original_line=None):
     # Handle branch instructions specially - convert relative offsets to absolute addresses
     branch_instructions = ['BRA', 'BNE', 'BEQ', 'BCS', 'BCC', 'BMI', 'BPL', 'BLE', 'BGT', 'BGE', 'BLT', 'JMP']
     if mnemonic in branch_instructions:
-        return convert_branch_instruction(mnemonic, operands, address, original_line)
+        return convert_branch_instruction(mnemonic, operands, address, original_line, valid_addresses)
 
     # Handle immediate values differently from memory addressing
     is_immediate = operands.startswith('#')

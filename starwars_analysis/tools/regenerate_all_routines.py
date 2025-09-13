@@ -10,6 +10,7 @@ import argparse
 import re
 from pathlib import Path
 from build_updater import update_build_files, get_existing_routine_files, cleanup_stale_files
+from disasm_to_cpp_converter import parse_disassembly_line, convert_instruction
 
 def collect_all_goto_targets(disasm_dir):
     """Collect all goto targets from all disassembly files"""
@@ -25,29 +26,107 @@ def collect_all_goto_targets(disasm_dir):
         # Use simple string search instead of regex
         lines = content.split('\n')
         for line in lines:
-            if 'BRA' in line and '$' in line:
-                # Extract address after $
+            if 'BRA' in line and '$' in line and '<' not in line:
+                # Extract address after $ (absolute addressing only)
                 dollar_pos = line.find('$')
                 if dollar_pos != -1:
                     addr_part = line[dollar_pos+1:].split()[0]
                     try:
                         target_addr = int(addr_part, 16)
-                        all_targets.add(target_addr)
+                        # Filter out obviously invalid low addresses
+                        if target_addr >= 0x1000:  # Only addresses >= 4KB
+                            all_targets.add(target_addr)
                     except ValueError:
                         pass
-            elif 'JMP' in line and '$' in line:
-                # Extract address after $
+            elif 'JMP' in line and '$' in line and '<' not in line:
+                # Extract address after $ (absolute addressing only)
                 dollar_pos = line.find('$')
                 if dollar_pos != -1:
                     addr_part = line[dollar_pos+1:].split()[0]
                     try:
                         target_addr = int(addr_part, 16)
-                        all_targets.add(target_addr)
+                        # Filter out obviously invalid low addresses
+                        if target_addr >= 0x1000:  # Only addresses >= 4KB
+                            all_targets.add(target_addr)
                     except ValueError:
                         pass
-
+    
     print(f"  Found {len(all_targets)} unique goto targets")
     return sorted(all_targets)
+
+def collect_all_instructions(disasm_dir):
+    """Collect all instructions from all disassembly files, sorted by address"""
+    all_instructions = []
+    
+    print("🔍 Collecting all instructions from disassembly files...")
+    
+    for disasm_file in sorted(disasm_dir.glob("rom_disasm_*.md")):
+        with open(disasm_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        for line in lines:
+            parsed = parse_disassembly_line(line.strip())
+            if parsed:
+                all_instructions.append(parsed)
+    
+    # Sort by address
+    all_instructions.sort(key=lambda x: int(x['address'], 16))
+    
+    print(f"  Found {len(all_instructions)} instructions")
+    return all_instructions
+
+def generate_global_routine(instructions, goto_targets, output_file):
+    """Generate a single global routine function with all instructions and labels"""
+    
+    print(f"📝 Generating global routine: {output_file}")
+    
+    # Create set of all instruction addresses for validation
+    instruction_addresses = set(int(inst['address'], 16) for inst in instructions)
+    
+    # Filter goto targets to only include addresses that exist in our instructions
+    valid_goto_targets = set(target for target in goto_targets if target in instruction_addresses)
+    external_targets = set(target for target in goto_targets if target not in instruction_addresses)
+    
+    if external_targets:
+        print(f"⚠️  Found {len(external_targets)} external goto targets (will be skipped): {[hex(t) for t in sorted(external_targets)]}")
+    
+    cpp_lines = []
+    
+    # Header
+    cpp_lines.append('#include "cpu_6809.h"')
+    cpp_lines.append('')
+    cpp_lines.append('namespace StarWars {')
+    cpp_lines.append('')
+    cpp_lines.append('void global_routine_impl(CPU6809& cpu) {')
+    cpp_lines.append('')
+    
+    # Process all instructions
+    for instruction in instructions:
+        current_address = instruction['address']
+        current_address_int = int(current_address, 16)
+        
+        # Add label if this address is a valid goto target
+        if current_address_int in valid_goto_targets:
+            cpp_lines.append(f'    label_{current_address_int:04X}:')
+        
+        # Add comment with original assembly
+        cpp_lines.append(f'    // {current_address}: {instruction["mnemonic"]} {instruction["operands"]}')
+        
+        # Add C++ conversion
+        cpp_code = convert_instruction(instruction, f'{current_address}: {instruction["mnemonic"]} {instruction["operands"]}', instruction_addresses)
+        cpp_lines.append(cpp_code)
+        cpp_lines.append('')
+    
+    # Footer
+    cpp_lines.append('}')
+    cpp_lines.append('')
+    cpp_lines.append('} // namespace StarWars')
+    
+    # Write to file
+    with open(output_file, 'w') as f:
+        f.write('\n'.join(cpp_lines))
+    
+    print(f"✓ Generated global routine with {len(instructions)} instructions")
 
 def regenerate_all_routines(build_files_only=False):
     """Regenerate all routine files with improved converter and update build files"""
@@ -82,100 +161,21 @@ def regenerate_all_routines(build_files_only=False):
         print(f"Found {len(disasm_files)} disassembly files to convert")
         print(f"📝 Detailed log: {log_file}")
 
-        # FIRST PASS: Collect all goto targets
+        # GLOBAL ROUTINE MODE: Generate single function with all code
+        print("🌐 Generating global routine with all code")
+        
+        # Collect all instructions
+        all_instructions = collect_all_instructions(disasm_dir)
+        
+        # Collect all goto targets
         all_goto_targets = collect_all_goto_targets(disasm_dir)
-
-        # Track all routine names for build file updates
-        all_routine_names = set()
-
-        # SECOND PASS: Convert each file with global goto targets
-        success_count = 0
-        error_count = 0
-        updated_count = 0
-        skipped_count = 0
-
-        with open(log_file, 'w') as log:
-            log.write(f"Regeneration started at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            log.write(f"Processing {len(disasm_files)} disassembly files\n\n")
-
-            for i, disasm_file in enumerate(disasm_files):
-                # Extract address from filename (e.g., rom_disasm_f261.md -> f261)
-                addr = disasm_file.stem.replace('rom_disasm_', '')
-
-                # Create function name (e.g., f261 -> routine_f261)
-                function_name = f"routine_{addr}"
-
-                # Create output C++ file
-                cpp_file = output_dir / f"{function_name}.cpp"
-
-                # Run the improved converter with global goto targets
-                cmd = [
-                    "python3",
-                    str(converter),
-                    str(disasm_file),
-                    str(cpp_file),
-                    function_name,
-                    "--global-goto-targets",
-                    ",".join(f"{addr:04x}" for addr in all_goto_targets)
-                ]
-
-                try:
-                    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                    all_routine_names.add(addr)
-                    success_count += 1
-
-                    # Check if file was updated or skipped based on converter output
-                    if "Updated" in result.stdout:
-                        log.write(f"✓ Updated {disasm_file.name} -> {cpp_file.name}\n")
-                        updated_count += 1
-                    elif "Skipped" in result.stdout:
-                        log.write(f"⏭️  Skipped {disasm_file.name} -> {cpp_file.name} (no changes)\n")
-                        skipped_count += 1
-                    else:
-                        log.write(f"✓ {disasm_file.name} -> {cpp_file.name}\n")
-                        updated_count += 1
-
-                except subprocess.CalledProcessError as e:
-                    log.write(f"✗ {disasm_file.name} -> {cpp_file.name}\n")
-                    log.write(f"  Error: {e}\n")
-                    if e.stderr:
-                        log.write(f"  stderr: {e.stderr}\n")
-                    error_count += 1
-
-                # Show progress every 50 files
-                if (i + 1) % 50 == 0:
-                    print(f"📊 Progress: {i + 1}/{len(disasm_files)} files processed...")
-
-        print(f"\n📊 Conversion complete: {success_count}/{len(disasm_files)} files processed successfully")
-        print(f"   • {updated_count} files updated")
-        print(f"   • {skipped_count} files skipped (no changes)")
-
-        if error_count > 0:
-            print(f"⚠️  {error_count} files failed to convert (see {log_file} for details)")
-            return False
-
-        # Clean up stale routine files
-        cleanup_stale_files(output_dir, all_routine_names)
-
-    # Update build files with all routine files
-    routine_list = sorted(list(all_routine_names), key=lambda x: int(x, 16))
-    build_success = update_build_files(project_root, routine_list)
-
-    if build_success:
-        if build_files_only:
-            print(f"\n🎉 Build files updated successfully!")
-            print(f"   • {len(all_routine_names)} routine files found")
-            print(f"   • Build files updated")
-            print(f"   • Ready to compile!")
-        else:
-            print(f"\n🎉 Complete regeneration successful!")
-            print(f"   • {len(all_routine_names)} routine files generated")
-            print(f"   • Build files updated")
-            print(f"   • Ready to compile!")
-    else:
-        print(f"\n⚠️  Regeneration completed with build file update issues")
-
-    return build_success
+        
+        # Generate global routine
+        global_output_file = output_dir / "global_routine.cpp"
+        generate_global_routine(all_instructions, all_goto_targets, global_output_file)
+        
+        print("🎉 Global routine generation complete!")
+        return True
 
 def main():
     """Main function with command line argument parsing"""

@@ -956,6 +956,14 @@ void CPU6809::call_function(uint16_t address) {
     m_pc = address;
 }
 
+void CPU6809::return_from_function() {
+    // RTS instruction - return from subroutine
+    // Pop return address from stack
+    uint16_t return_addr = (m_hardware->read_memory(m_sp) << 8) | m_hardware->read_memory(m_sp + 1);
+    m_sp += 2;
+    m_pc = return_addr;
+}
+
 void CPU6809::set_routine_mode(uint16_t start_pc) {
     m_execution_mode = ROUTINE_MODE;
     m_routine_start_pc = start_pc;

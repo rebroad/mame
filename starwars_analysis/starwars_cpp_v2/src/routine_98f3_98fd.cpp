@@ -9,19 +9,16 @@ void routine_98f3_98fd_impl(CPU6809& cpu) {
     label_98F3:
     // 98F3: NEG <$50
     // TODO: Convert NEG <$50
-
     // 98F6: NEG <$03
     // TODO: Convert NEG <$03
-
     // 98F8: NEG <$03
     // TODO: Convert NEG <$03
-
+    // 98FA: X18 
+    // TODO: Convert X18 
     // 98FB: NEG <$A0
     // TODO: Convert NEG <$A0
-
     // 98FD: JMP $98fc
     goto label_98FC;
-
 }
 
 } // namespace StarWars
