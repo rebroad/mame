@@ -251,11 +251,9 @@ class AutomatedDisassembler:
         print("Searching for routine patterns in ROM...")
 
         # Get full disassembly to search for patterns with consistent base address
-        cmd = ["unidasm", "-arch", self.arch, self.rom_file, "-basepc", "0x0000"]
-
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            lines = result.stdout.strip().split('\n')
+            from unidasm_wrapper import run_unidasm_full
+            lines = run_unidasm_full(self.rom_file, self.arch)
 
             found_routines = {}
 
