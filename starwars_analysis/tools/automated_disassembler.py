@@ -136,12 +136,12 @@ class AutomatedDisassembler:
         success = disassemble_routine(
             rom_file=self.rom_file,
             start_addr=start_addr,
-            end_addr=end_addr,
+            end_addr=None,  # Let auto_detect_end find the proper end
             routine_name=routine_name,
             markdown=False,  # Use plain text for batch processing
             verbose=verbose,
             force_save=force_save,
-            auto_detect_end=False,  # We already have the end address
+            auto_detect_end=True,  # Use intelligent boundary detection
             arch=self.arch
         )
 
@@ -339,10 +339,17 @@ class AutomatedDisassembler:
                         try:
                             target_int = int(target, 16)
                             if 0 <= target_int <= 0xFFFF:
-                                to_visit.append(target)
-                                total_jump_targets += 1
-                                if verbose:
-                                    print(f"  ➕ Added jump target: ${target}")
+                                # Check if target is within current routine range
+                                current_start_int = int(start, 16)
+                                current_end_int = int(end, 16)
+                                if current_start_int <= target_int <= current_end_int:
+                                    if verbose:
+                                        print(f"  ⏭️  Skipping internal target: ${target} (within current routine {start}-{end})")
+                                else:
+                                    to_visit.append(target)
+                                    total_jump_targets += 1
+                                    if verbose:
+                                        print(f"  ➕ Added jump target: ${target}")
                             else:
                                 if verbose:
                                     print(f"  ⚠️  Skipping invalid target: ${target} (out of range)")
@@ -362,6 +369,13 @@ class AutomatedDisassembler:
                                 f.write(line + '\n')
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
+                        
+                        # Add this routine range to the processed ranges (seed window)
+                        seed_end = addr  # For seed, use a small range around the address
+                        processed_ranges.append((addr, seed_end))
+                        if verbose:
+                            print(f"  📝 Added seed routine range: {addr} to {seed_end}")
+                        
                         for t in self._extract_call_targets(seed_lines):
                             if t not in visited and t not in to_visit and not is_address_covered(t):
                                 to_visit.append(t)
@@ -385,6 +399,13 @@ class AutomatedDisassembler:
                                 f.write(line + '\n')
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
+                        
+                        # Add this routine range to the processed ranges (fallback seed)
+                        fallback_end = addr  # For fallback, use a small range around the address
+                        processed_ranges.append((addr, fallback_end))
+                        if verbose:
+                            print(f"  📝 Added fallback routine range: {addr} to {fallback_end}")
+                    
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit and not is_address_covered(t):
                             to_visit.append(t)

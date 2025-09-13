@@ -41,7 +41,7 @@ def run_unidasm(rom_file: str, start_addr: str, end_addr: Optional[str] = None, 
         # Calculate the number of bytes to extract
         if end_addr:
             end_int = int(end_addr, 16)
-            count = end_int - start_int
+            count = end_int - start_int + 1  # Include the end address
         else:
             # Default to 512 bytes if no end address specified
             count = 512
