@@ -160,15 +160,15 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
         priority_order = ["return", "external_jump", "branch", "infinite_loop"]
         
         for priority in priority_order:
-            # Find the LAST (furthest) boundary of this priority type
-            last_boundary = None
+            # Find the FIRST (closest) boundary of this priority type
+            first_boundary = None
             for addr, addr_int, reason in end_candidates:
                 if reason == priority:
-                    if last_boundary is None or addr_int > last_boundary[1]:
-                        last_boundary = (addr, addr_int, reason)
+                    if first_boundary is None or addr_int < first_boundary[1]:
+                        first_boundary = (addr, addr_int, reason)
             
-            if last_boundary:
-                addr, addr_int, reason = last_boundary
+            if first_boundary:
+                addr, addr_int, reason = first_boundary
                 # Filter jump targets that are outside the routine range
                 end_int = addr_int
                 external_targets = {target for target in jump_targets 
