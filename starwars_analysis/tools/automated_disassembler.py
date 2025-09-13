@@ -273,6 +273,28 @@ class AutomatedDisassembler:
             except ValueError:
                 return False
 
+        def remove_covered_addresses(start_addr, end_addr, routine_name):
+            """Remove all addresses from the queue that are within the given routine's range"""
+            start_int = int(start_addr, 16)
+            end_int = int(end_addr, 16)
+            addresses_to_remove = []
+
+            for addr in to_visit:
+                try:
+                    addr_int = int(addr, 16)
+                    if start_int <= addr_int <= end_int:
+                        addresses_to_remove.append(addr)
+                except ValueError:
+                    pass
+
+            for addr in addresses_to_remove:
+                to_visit.remove(addr)
+                if verbose:
+                    print(f"  🗑️  Removed covered address: ${addr}")
+
+            if addresses_to_remove:
+                print(f"  🧹 Removed {len(addresses_to_remove)} addresses covered by routine {routine_name} ({start_addr}-{end_addr})")
+
         print(f"🚀 Starting traversal from reset vector ${entry}")
         print(f"📊 Initial queue: {len(to_visit)} addresses")
 
@@ -281,20 +303,20 @@ class AutomatedDisassembler:
             if len(to_visit) > max_queue_size:
                 print(f"⚠️  Queue size exceeded {max_queue_size}, stopping to prevent infinite loop")
                 break
-            
+
             if time.time() - start_time > max_runtime:
                 print(f"⚠️  Runtime exceeded {max_runtime}s, stopping")
                 break
             addr = to_visit.pop(0)
             if addr in visited:
                 continue
-            
+
             # Skip if address is already covered by a processed routine
             if is_address_covered(addr):
                 if verbose:
                     print(f"  ⏭️  Skipping ${addr} - already covered by processed routine")
                 continue
-                
+
             visited.add(addr)
             discovered_entries.append(addr)
 
@@ -303,7 +325,7 @@ class AutomatedDisassembler:
             if disassembled > 0 and (disassembled % 50 == 0 or (verbose and current_time - last_progress_time >= 1.0)):
                 print(f"📊 Progress: {disassembled} files created, {len(to_visit)} addresses in queue, {total_jump_targets} jump targets collected")
                 last_progress_time = current_time
-            
+
             if verbose:
                 print(f"🔍 Processing ${addr}... (Queue: {len(to_visit)}, Jump targets: {total_jump_targets}, Visited: {len(visited)})")
             else:
@@ -325,13 +347,16 @@ class AutomatedDisassembler:
             if start and end:
                 name = f"{start}_{end}"
                 ok = self.disassemble_routine_batch(start, end, name, verbose=False, force_save=is_seed)
-                
+
                 if ok:
                     # Add this routine range to the processed ranges
                     processed_ranges.append((start, end))
                     if verbose:
                         print(f"  📝 Added routine range: {start} to {end}")
-                
+
+                    # Remove all addresses from the queue that are within this routine's range
+                    remove_covered_addresses(start, end, f"{start}-{end}")
+
                 # Add external targets to the queue for exploration
                 for target in external_targets:
                     if target not in visited and target not in to_visit and not is_address_covered(target):
@@ -369,13 +394,16 @@ class AutomatedDisassembler:
                                 f.write(line + '\n')
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
-                        
+
                         # Add this routine range to the processed ranges (seed window)
                         seed_end = addr  # For seed, use a small range around the address
                         processed_ranges.append((addr, seed_end))
                         if verbose:
                             print(f"  📝 Added seed routine range: {addr} to {seed_end}")
-                        
+
+                        # Remove all addresses from the queue that are within this seed routine's range
+                        remove_covered_addresses(addr, seed_end, f"seed-{addr}")
+
                         for t in self._extract_call_targets(seed_lines):
                             if t not in visited and t not in to_visit and not is_address_covered(t):
                                 to_visit.append(t)
@@ -399,13 +427,13 @@ class AutomatedDisassembler:
                                 f.write(line + '\n')
                         print(f"✓ Created {output_file} (seed window)")
                         disassembled += 1
-                        
+
                         # Add this routine range to the processed ranges (fallback seed)
                         fallback_end = addr  # For fallback, use a small range around the address
                         processed_ranges.append((addr, fallback_end))
                         if verbose:
                             print(f"  📝 Added fallback routine range: {addr} to {fallback_end}")
-                    
+
                     for t in self._extract_call_targets(lines):
                         if t not in visited and t not in to_visit and not is_address_covered(t):
                             to_visit.append(t)
