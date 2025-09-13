@@ -5,8 +5,16 @@ Automated ROM Disassembler
 This tool automates the process of finding and disassembling ROM routines
 with proper boundary detection and validation.
 
-Usage: python3 automated_disassembler.py <address> --rom <rom_file> [options]
-       python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin
+Usage:
+  # Single routine disassembly (replaces disassemble_routine.py)
+  python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin --find-end --markdown --output routine.md
+
+  # Batch disassembly (existing functionality)
+  python3 automated_disassembler.py 0xf448 --rom complete_memory_map.bin --name my_routine
+
+  # Search and automated modes
+  python3 automated_disassembler.py --rom complete_memory_map.bin --search
+  python3 automated_disassembler.py --rom complete_memory_map.bin --full-auto
 """
 
 import sys
@@ -28,7 +36,7 @@ class AutomatedDisassembler:
         project_root = script_dir.parent  # Go up one level from tools/ to starwars_analysis/
         self.disassembly_dir = project_root / "disassembly"
         self.disassembly_dir.mkdir(exist_ok=True)
-        
+
         # Validate unidasm availability
         if not validate_unidasm():
             raise RuntimeError("unidasm not found. Please install unidasm.")
@@ -196,55 +204,125 @@ class AutomatedDisassembler:
         end_int = int(end_addr, 16)
         return end_int - start_int + 1
 
-    def disassemble_routine(self, start_addr: str, end_addr: str, routine_name: str, verbose: bool = True, force_save: bool = False) -> bool:
-        """Disassemble a routine with proper boundaries"""
-        if verbose:
-            print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
+    def disassemble_routine(self, start_addr: str, end_addr: Optional[str] = None,
+                           routine_name: Optional[str] = None, output_file: Optional[str] = None,
+                           markdown: bool = False, verbose: bool = True,
+                           force_save: bool = False, auto_detect_end: bool = False) -> bool:
+        """
+        Disassemble a routine with flexible options for output format and location.
 
-        byte_count = self.calculate_byte_count(start_addr, end_addr)
+        Args:
+            start_addr: Start address (hex string)
+            end_addr: Optional end address (hex string)
+            routine_name: Optional routine name for default file naming
+            output_file: Optional custom output file path
+            markdown: Whether to format output as markdown with code blocks
+            verbose: Whether to print progress messages
+            force_save: Whether to save even if assembly appears invalid
+            auto_detect_end: Whether to auto-detect routine end if end_addr not provided
 
+        Returns:
+            True if successful, False otherwise
+        """
         try:
-            # Use home-grown decoder to get lines in range
-            lines = self._disassemble_lines(start_addr, byte_count)
+            # Auto-detect end if requested and not provided
+            if auto_detect_end and not end_addr:
+                end_addr = find_routine_end(self.rom_file, start_addr, self.arch)
+                if end_addr:
+                    if verbose:
+                        print(f"Auto-detected routine end: {end_addr}")
+                else:
+                    if verbose:
+                        print("Could not auto-detect routine end, using default range")
+                    # Use a reasonable default range
+                    start_int = int(start_addr, 16)
+                    end_int = (start_int + 512) & 0xFFFF
+                    end_addr = f"0x{end_int:04x}"
+
+            # If no end_addr provided and not auto-detecting, use default range
+            if not end_addr:
+                start_int = int(start_addr, 16)
+                end_int = (start_int + 512) & 0xFFFF
+                end_addr = f"0x{end_int:04x}"
+
+            if verbose and routine_name:
+                print(f"Disassembling {routine_name} from {start_addr} to {end_addr}...")
+            elif verbose:
+                print(f"Disassembling routine from {start_addr} to {end_addr}...")
+
+            # Get disassembly
+            lines = run_unidasm(self.rom_file, start_addr, end_addr, self.arch)
+
+            if not lines:
+                if verbose:
+                    print(f"No disassembly found for address {start_addr}")
+                return False
 
             # Filter out empty lines
             lines = [line for line in lines if line.strip()]
 
-            # Check if this looks like valid assembly (not all zeros)
-            valid_assembly = False
-            for line in lines:
-                m = re.match(r'^([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)*[0-9a-fA-F]{2})', line)
-                if m:
-                    byte_str = m.group(2)
-                    bytes_list = [b.lower() for b in byte_str.split()]
-                    if any(b != '00' for b in bytes_list):
-                        valid_assembly = True
-                        break
-            if not valid_assembly and lines and force_save:
-                valid_assembly = True
+            # Check if this looks like valid assembly (not all zeros) - only for batch processing
+            if routine_name and not force_save:
+                valid_assembly = False
+                for line in lines:
+                    m = re.match(r'^([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}\s+)*[0-9a-fA-F]{2})', line)
+                    if m:
+                        byte_str = m.group(2)
+                        bytes_list = [b.lower() for b in byte_str.split()]
+                        if any(b != '00' for b in bytes_list):
+                            valid_assembly = True
+                            break
 
-            if not valid_assembly:
-                if verbose or force_save:
-                    print(f"⚠ Skipping {routine_name} - appears to be all zeros or invalid")
-                return False
+                if not valid_assembly:
+                    if verbose:
+                        print(f"⚠ Skipping {routine_name} - appears to be all zeros or invalid")
+                    return False
+
+            # Prepare output
+            if markdown:
+                output_lines = [
+                    f"# Disassembly of routine at {start_addr}",
+                    f"# ROM file: {self.rom_file}",
+                    f"# Start address: {start_addr}",
+                    f"# End address: {end_addr}",
+                    "",
+                    "```assembly",
+                ]
+
+                # Add disassembly lines
+                for line in lines:
+                    output_lines.append(line)
+
+                output_lines.append("```")
+            else:
+                # Plain text format
+                output_lines = lines
+
+            # Determine output file
+            if not output_file:
+                if routine_name:
+                    # Use default directory structure for batch processing
+                    output_file = self.disassembly_dir / f"rom_disasm_{routine_name}.md"
+                else:
+                    # For single routine mode, output to stdout
+                    print('\n'.join(output_lines))
+                    return True
 
             # Save to file
-            output_file = self.disassembly_dir / f"rom_disasm_{routine_name}.md"
             with open(output_file, 'w') as f:
-                for line in lines:
-                    f.write(line + '\n')
+                f.write('\n'.join(output_lines))
 
             if verbose or force_save:
                 print(f"✓ Created {output_file} with {len(lines)} lines")
 
-            if verbose:
-                self.validate_routine(output_file)
+            if verbose and routine_name:
+                self.validate_routine(Path(output_file))
 
             return True
 
         except Exception as e:
             if verbose or force_save:
-                print(f"Error disassembling {routine_name}: {e}")
+                print(f"Error disassembling routine: {e}")
             return False
 
     def validate_routine(self, file_path: Path):
@@ -308,7 +386,7 @@ class AutomatedDisassembler:
         }
 
         for name, (start, end) in known_routines.items():
-            self.disassemble_routine(start, end, name)
+            self.disassemble_routine(start, end, name, verbose=True, force_save=False)
 
     # --- NEW: Entry-point-driven traversal helpers ---
     def _read_reset_vector(self) -> Optional[str]:
@@ -454,13 +532,13 @@ class AutomatedDisassembler:
         # Process routine starts
         for pattern, (start, end) in found_routines.items():
             routine_name = f"routine_{start}"
-            self.disassemble_routine(start, end, routine_name)
+            self.disassemble_routine(start, end, routine_name, verbose=True, force_save=False)
 
         # Process subroutine calls (these might be callers of routines)
         for pattern, (start, end) in found_calls.items():
             if start and end and start != end:  # Only if we found actual boundaries
                 routine_name = f"caller_{start}"
-                self.disassemble_routine(start, end, routine_name)
+                self.disassemble_routine(start, end, routine_name, verbose=True, force_save=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Automated ROM Disassembler")
@@ -474,31 +552,34 @@ def main():
     parser.add_argument("--full-auto", action="store_true", help="Fully automated disassembly of all meaningful routines")
     parser.add_argument("--addr", help="Disassemble specific address (alternative to positional argument)")
     parser.add_argument("--name", help="Name for the routine (used with address)")
+    parser.add_argument("--find-end", action="store_true", help="Auto-detect routine end")
+    parser.add_argument("--output", "-o", help="Output file path (for single routine disassembly)")
+    parser.add_argument("--markdown", action="store_true", help="Output in markdown format with code blocks")
 
     args = parser.parse_args()
-    
+
     # Determine ROM file path
     rom_file = args.input or args.rom
-    
+
     # Determine address (positional argument takes precedence over --addr)
     address = args.address or args.addr
-    
+
     # For --full-auto, try to find the ROM file automatically
     if not rom_file and args.full_auto:
         # Look for complete_memory_map.bin in the parent directory
         script_dir = Path(__file__).parent
         project_root = script_dir.parent
         auto_rom_file = project_root / "complete_memory_map.bin"
-        
+
         if auto_rom_file.exists():
             rom_file = str(auto_rom_file)
             print(f"Auto-detected ROM file: {rom_file}")
         else:
             parser.error("ROM file path required (use --rom or --input). Auto-detection failed - complete_memory_map.bin not found in project root.")
-    
+
     if not rom_file:
         parser.error("ROM file path required (use --rom or --input)")
-    
+
     # Set output directory if provided
     output_dir = args.output_dir
 
@@ -507,25 +588,50 @@ def main():
         return 1
 
     disassembler = AutomatedDisassembler(rom_file, args.arch)
-    
+
     # Override output directory if provided
     if output_dir:
         disassembler.disassembly_dir = Path(output_dir)
         disassembler.disassembly_dir.mkdir(exist_ok=True)
 
     if address:
-        if not args.name:
-            # Generate a default name from the address
-            addr_clean = address.replace("0x", "").replace("0X", "").upper()
-            args.name = f"routine_{addr_clean}"
-
-        # Find boundaries for the specific address
-        start, end = disassembler.find_routine_boundaries(address)
-        if start and end:
-            disassembler.disassemble_routine(start, end, args.name)
+        # Handle single routine disassembly
+        if args.output or args.markdown or args.find_end:
+            # Single routine mode with custom options
+            success = disassembler.disassemble_routine(
+                start_addr=address,
+                end_addr=None,  # Will be auto-detected if --find-end is used
+                routine_name=None,  # No routine name for single mode
+                output_file=args.output,
+                markdown=args.markdown,
+                verbose=True,
+                force_save=False,
+                auto_detect_end=args.find_end
+            )
+            return 0 if success else 1
         else:
-            print(f"Error: Could not find boundaries for address {address}")
-            return 1
+            # Batch processing mode
+            if not args.name:
+                # Generate a default name from the address
+                addr_clean = address.replace("0x", "").replace("0X", "").upper()
+                args.name = f"routine_{addr_clean}"
+
+            # Find boundaries for the specific address
+            start, end = disassembler.find_routine_boundaries(address)
+            if start and end:
+                disassembler.disassemble_routine(
+                    start_addr=start,
+                    end_addr=end,
+                    routine_name=args.name,
+                    output_file=None,  # Use default directory structure
+                    markdown=False,
+                    verbose=True,
+                    force_save=False,
+                    auto_detect_end=False
+                )
+            else:
+                print(f"Error: Could not find boundaries for address {address}")
+                return 1
 
     elif args.search:
         disassembler.search_for_common_patterns()
@@ -537,21 +643,21 @@ def main():
         # Capture all output to limit console display
         import tempfile
         import io
-        
+
         # Capture stdout to a string buffer
         original_stdout = sys.stdout
         captured_output = io.StringIO()
         sys.stdout = captured_output
-        
+
         try:
             disassembler.fully_automated_disassembly()
         finally:
             # Restore stdout
             sys.stdout = original_stdout
-        
+
         # Get captured output and limit display
         output_lines = captured_output.getvalue().split('\n')
-        
+
         if len(output_lines) <= 100:
             # Show full output
             print('\n'.join(output_lines))
