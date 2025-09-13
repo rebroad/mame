@@ -6,6 +6,7 @@ void routine_c542_c65b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c542_c65b.md
     // Address: 0xC542_C65B
 
+    label_C542:
     // C542: STA $4AF5
     cpu.write_memory(0x4AF5, cpu.m_a);
 
@@ -153,6 +154,7 @@ void routine_c542_c65b_impl(CPU6809& cpu) {
     // C5D8: ADDB $4AFB
     cpu.m_b += 0x4AFB;
 
+    label_C5DB:
     // C5DB: DEC $4AFA
     // TODO: Convert DEC $4AFA
 
@@ -297,6 +299,7 @@ void routine_c542_c65b_impl(CPU6809& cpu) {
     // C656: STA $4AF7
     cpu.write_memory(0x4AF7, cpu.m_a);
 
+    label_C65B:
     // C65B: JMP $c65b
     goto label_C65B;
 

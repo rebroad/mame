@@ -6,6 +6,7 @@ void routine_cea3_ceb8_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cea3_ceb8.md
     // Address: 0xCEA3_CEB8
 
+    label_CEA3:
     // CEA3: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 

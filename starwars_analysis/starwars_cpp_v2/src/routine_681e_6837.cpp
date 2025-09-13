@@ -6,6 +6,7 @@ void routine_681e_6837_impl(CPU6809& cpu) {
     // Converted from rom_disasm_681e_6837.md
     // Address: 0x681E_6837
 
+    label_681E:
     // 681E: STA $4B14
     cpu.write_memory(0x4B14, cpu.m_a);
 

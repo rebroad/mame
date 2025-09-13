@@ -6,6 +6,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9558_9890.md
     // Address: 0x9558_9890
 
+    label_9558:
     // 9558: LDA <$8B
     cpu.m_a = cpu.read_memory(0x8B);
 
@@ -174,6 +175,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 95D4: JSR $960F
     cpu.call_function(0x960F);
 
+    label_95D7:
     // 95D7: LDD #$1FD0
     cpu.m_d = 0x1FD0;
 
@@ -207,6 +209,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 95F0: LDU B,X
     // TODO: Fix comma operator: LDU B,X
 
+    label_95F2:
     // 95F2: STU ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
@@ -228,6 +231,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 9601: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_9604:
     // 9604: LDD #$7100
     cpu.m_d = 0x7100;
 
@@ -858,6 +862,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 980E: BRA $9810
     goto label_9810;
 
+    label_9810:
     // 9810: LDA $2,U
     // TODO: Fix comma operator: LDA $2,U
 
@@ -939,6 +944,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 984E: BRA $9850
     goto label_9850;
 
+    label_9850:
     // 9850: NEG <$00
     // TODO: Convert NEG <$00
 
@@ -1029,6 +1035,7 @@ void routine_9558_9890_impl(CPU6809& cpu) {
     // 988E: STB <$62
     cpu.write_memory(0x62, cpu.m_b);
 
+    label_9890:
     // 9890: JMP $9890
     goto label_9890;
 

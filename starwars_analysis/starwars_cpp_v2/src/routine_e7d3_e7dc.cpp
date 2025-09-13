@@ -6,6 +6,7 @@ void routine_e7d3_e7dc_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e7d3_e7dc.md
     // Address: 0xE7D3_E7DC
 
+    label_E7D3:
     // E7D3: CMPB #$D6
     cpu.compare_b(0xD6);
 
@@ -18,6 +19,7 @@ void routine_e7d3_e7dc_impl(CPU6809& cpu) {
     // E7DA: BSR $E7EA
     // TODO: Convert BSR $E7EA
 
+    label_E7DC:
     // E7DC: JMP $e7dc
     goto label_E7DC;
 

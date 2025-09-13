@@ -6,6 +6,7 @@ void routine_623c_624b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_623c_624b.md
     // Address: 0x623C_624B
 
+    label_623C:
     // 623C: BRA $624B
     goto label_624B;
 
@@ -27,6 +28,7 @@ void routine_623c_624b_impl(CPU6809& cpu) {
     // 6249: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_624B:
     // 624B: JMP $624b
     goto label_624B;
 

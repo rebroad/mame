@@ -12,6 +12,7 @@ void routine_dfe5_dff3_impl(CPU6809& cpu) {
     // DFEE: ADDD <$50
     cpu.m_d += 0x50;
 
+    label_DFF3:
     // DFF3: JMP $dff3
     goto label_DFF3;
 

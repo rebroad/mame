@@ -6,6 +6,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_83ce_868b.md
     // Address: 0x83CE_868B
 
+    label_83CE:
     // 83CE: LDA <$92
     cpu.m_a = cpu.read_memory(0x92);
 
@@ -63,6 +64,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 83F6: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_83F9:
     // 83F9: ADDD $49B7
     cpu.m_d += 0x49B7;
 
@@ -99,6 +101,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 8416: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_8419:
     // 8419: ADDD $49B5
     cpu.m_d += 0x49B5;
 
@@ -219,6 +222,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 8475: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_8478:
     // 8478: ADDD $49B5
     cpu.m_d += 0x49B5;
 
@@ -420,6 +424,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 851F: JSR $A7F7
     cpu.call_function(0xA7F7);
 
+    label_8522:
     // 8522: LDD $507C
     cpu.m_d = cpu.read_memory16(0x507C);
 
@@ -519,6 +524,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 8575: JSR $A80B
     cpu.call_function(0xA80B);
 
+    label_8578:
     // 8578: LDD $507C
     cpu.m_d = cpu.read_memory16(0x507C);
 
@@ -612,6 +618,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 85D0: BNE $85C5
     if (!cpu.zero_flag()) cpu.m_pc = 0x85C5;
 
+    label_85D2:
     // 85D2: LDA #$00
     cpu.m_a = 0x00;
 
@@ -696,6 +703,7 @@ void routine_83ce_868b_impl(CPU6809& cpu) {
     // 8618: LDD #$7000
     cpu.m_d = 0x7000;
 
+    label_861B:
     // 861B: STD $5078
     cpu.write_memory16(0x5078, cpu.m_d);
 

@@ -6,6 +6,7 @@ void routine_adbd_add3_impl(CPU6809& cpu) {
     // Converted from rom_disasm_adbd_add3.md
     // Address: 0xADBD_ADD3
 
+    label_ADBD:
     // ADBD: STD $507A
     cpu.write_memory16(0x507A, cpu.m_d);
 

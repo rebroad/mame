@@ -6,6 +6,7 @@ void routine_d8df_d8f6_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d8df_d8f6.md
     // Address: 0xD8DF_D8F6
 
+    label_D8DF:
     // D8DF: LDX #$4A52
     cpu.m_x = 0x4A52;
 

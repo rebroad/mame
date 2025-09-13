@@ -6,6 +6,7 @@ void routine_66ce_66e3_impl(CPU6809& cpu) {
     // Converted from rom_disasm_66ce_66e3.md
     // Address: 0x66CE_66E3
 
+    label_66CE:
     // 66CE: LDD $4B0E
     cpu.m_d = cpu.read_memory16(0x4B0E);
 
@@ -27,6 +28,7 @@ void routine_66ce_66e3_impl(CPU6809& cpu) {
     // 66E0: STD $4AEC
     cpu.write_memory16(0x4AEC, cpu.m_d);
 
+    label_66E3:
     // 66E3: JMP $66e3
     goto label_66E3;
 

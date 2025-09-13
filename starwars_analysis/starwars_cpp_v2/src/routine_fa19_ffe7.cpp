@@ -6,6 +6,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // Converted from rom_disasm_fa19_ffe7.md
     // Address: 0xFA19_FFE7
 
+    label_FA19:
     // FA19: LEAX $8,X
     // TODO: Fix comma operator: LEAX $8,X
 
@@ -39,6 +40,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FA33: LDB #$C6
     cpu.m_b = 0xC6;
 
+    label_FA35:
     // FA35: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -66,6 +68,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FA4C: JMP [,X]
     // TODO: Invalid branch offset: [,X]
 
+    label_FA4E:
     // FA4E: BEQ $FAC1
     if (cpu.zero_flag()) cpu.m_pc = 0xFAC1;
 
@@ -141,6 +144,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FA88: LDU $3032
     cpu.m_u = cpu.read_memory16(0x3032);
 
+    label_FA8B:
     // FA8B: STU ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
@@ -177,6 +181,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FAA7: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_FAA9:
     // FAA9: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
 
@@ -231,6 +236,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FAD6: LDB #$C7
     cpu.m_b = 0xC7;
 
+    label_FAD8:
     // FAD8: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -336,6 +342,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FB35: JMP $FA4E
     goto label_FA4E;
 
+    label_FB38:
     // FB38: LDD ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -543,6 +550,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FBF3: JMP $FB73
     goto label_FB73;
 
+    label_FBF6:
     // FBF6: LDA #$5A
     cpu.m_a = 0x5A;
 
@@ -567,6 +575,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FC0A: STD $5018
     cpu.write_memory16(0x5018, cpu.m_d);
 
+    label_FC0D:
     // FC0D: STD $5018
     cpu.write_memory16(0x5018, cpu.m_d);
 
@@ -828,6 +837,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FD04: CMPX [$FCB3,PCR]
     // TODO: Complex indexed addressing: [$FCB3,PCR]
 
+    label_FD07:
     // FD07: LDA $4300
     cpu.m_a = cpu.read_memory(0x4300);
 
@@ -1182,6 +1192,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FE31: STA $4600
     cpu.write_memory(0x4600, cpu.m_a);
 
+    label_FE34:
     // FE34: JMP $FD07
     goto label_FD07;
 
@@ -1224,6 +1235,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FE58: CMPX #$FD07
     cpu.compare_x(0xFD07);
 
+    label_FE5B:
     // FE5B: BCS $FE60
     if (cpu.carry_flag()) cpu.m_pc = 0xFE60;
 
@@ -1251,6 +1263,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FE71: LDS #$FE58
     cpu.m_sp = 0xFE58;
 
+    label_FE75:
     // FE75: TFR X,D
     cpu.m_d = cpu.m_x;
 
@@ -1296,6 +1309,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FEA0: LDS #$FE87
     cpu.m_sp = 0xFE87;
 
+    label_FEA4:
     // FEA4: JMP $FB38
     goto label_FB38;
 
@@ -1314,6 +1328,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FEB0: STB $46E0
     cpu.write_memory(0x46E0, cpu.m_b);
 
+    label_FEB3:
     // FEB3: TFR X,U
     cpu.m_u = cpu.m_x;
 
@@ -1404,6 +1419,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FEFC: JMP $FEFF
     goto label_FEFF;
 
+    label_FEFF:
     // FEFF: LDA #$00
     cpu.m_a = 0x00;
 
@@ -1449,6 +1465,7 @@ void routine_fa19_ffe7_impl(CPU6809& cpu) {
     // FF21: JMP $FD07
     goto label_FD07;
 
+    label_FF24:
     // FF24: LDA #$00
     cpu.m_a = 0x00;
 

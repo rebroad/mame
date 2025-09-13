@@ -6,6 +6,7 @@ void routine_d912_d95d_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d912_d95d.md
     // Address: 0xD912_D95D
 
+    label_D912:
     // D912: LEAX $1,X
     // TODO: Fix comma operator: LEAX $1,X
 
@@ -87,6 +88,7 @@ void routine_d912_d95d_impl(CPU6809& cpu) {
     // D95B: BCS $D94B
     if (cpu.carry_flag()) cpu.m_pc = 0xD94B;
 
+    label_D95D:
     // D95D: JMP $d95d
     goto label_D95D;
 

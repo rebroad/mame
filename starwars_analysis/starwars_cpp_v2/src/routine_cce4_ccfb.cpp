@@ -6,6 +6,7 @@ void routine_cce4_ccfb_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cce4_ccfb.md
     // Address: 0xCCE4_CCFB
 
+    label_CCE4:
     // CCE4: ORCC #$01
     cpu.m_cc |= 0x01;
 

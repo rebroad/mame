@@ -6,6 +6,7 @@ void routine_7105_72c7_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7105_72c7.md
     // Address: 0x7105_72C7
 
+    label_7105:
     // 7105: BRA $710E
     goto label_710E;
 
@@ -18,6 +19,7 @@ void routine_7105_72c7_impl(CPU6809& cpu) {
     // 710C: LDA #$81
     cpu.m_a = 0x81;
 
+    label_710E:
     // 710E: STA $8,X
     // TODO: Handle indexed addressing: STA $8,X
 
@@ -519,6 +521,7 @@ void routine_7105_72c7_impl(CPU6809& cpu) {
     // 72C5: SUBA <$C2
     cpu.m_a -= 0xC2;
 
+    label_72C7:
     // 72C7: JMP $72c7
     goto label_72C7;
 

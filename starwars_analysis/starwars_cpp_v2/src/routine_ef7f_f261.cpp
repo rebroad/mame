@@ -6,6 +6,7 @@ void routine_ef7f_f261_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ef7f_f261.md
     // Address: 0xEF7F_F261
 
+    label_EF7F:
     // EF7F: INC <$0A
     // TODO: Convert INC <$0A
 
@@ -333,6 +334,7 @@ void routine_ef7f_f261_impl(CPU6809& cpu) {
     // F091: LDX #$0022
     cpu.m_x = 0x0022;
 
+    label_F094:
     // F094: CMPU #$D640
     // TODO: Convert CMPU #$D640
 
@@ -528,6 +530,7 @@ void routine_ef7f_f261_impl(CPU6809& cpu) {
     // F12D: STA <$40
     cpu.write_memory(0x40, cpu.m_a);
 
+    label_F12F:
     // F12F: STA $4660
     cpu.write_memory(0x4660, cpu.m_a);
 
@@ -624,6 +627,7 @@ void routine_ef7f_f261_impl(CPU6809& cpu) {
     // F176: STB ,Y
     // TODO: Handle indexed addressing: STB ,Y
 
+    label_F178:
     // F178: CMPY #$4829
     // TODO: Convert CMPY #$4829
 
@@ -912,6 +916,7 @@ void routine_ef7f_f261_impl(CPU6809& cpu) {
     // F25D: STD >$0028
     cpu.write_memory16(0x0028, cpu.m_d);
 
+    label_F261:
     // F261: JMP $f261
     goto label_F261;
 

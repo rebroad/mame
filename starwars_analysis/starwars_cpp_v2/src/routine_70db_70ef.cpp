@@ -6,6 +6,7 @@ void routine_70db_70ef_impl(CPU6809& cpu) {
     // Converted from rom_disasm_70db_70ef.md
     // Address: 0x70DB_70EF
 
+    label_70DB:
     // 70DB: ORCC #$10
     cpu.m_cc |= 0x10;
 

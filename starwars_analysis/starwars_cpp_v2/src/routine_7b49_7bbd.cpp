@@ -6,6 +6,7 @@ void routine_7b49_7bbd_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7b49_7bbd.md
     // Address: 0x7B49_7BBD
 
+    label_7B49:
     // 7B49: EORB #$80
     cpu.m_b ^= 0x80;
 
@@ -156,6 +157,7 @@ void routine_7b49_7bbd_impl(CPU6809& cpu) {
     // 7BBB: LDB <$83
     cpu.m_b = cpu.read_memory(0x83);
 
+    label_7BBD:
     // 7BBD: JMP $7bbd
     goto label_7BBD;
 

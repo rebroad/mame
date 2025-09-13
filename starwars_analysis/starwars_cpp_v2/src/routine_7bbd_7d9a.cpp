@@ -6,6 +6,7 @@ void routine_7bbd_7d9a_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7bbd_7d9a.md
     // Address: 0x7BBD_7D9A
 
+    label_7BBD:
     // 7BBD: BCS $7C3D
     if (cpu.carry_flag()) cpu.m_pc = 0x7C3D;
 
@@ -525,6 +526,7 @@ void routine_7bbd_7d9a_impl(CPU6809& cpu) {
     // 7D44: LEAX $2,X
     // TODO: Fix comma operator: LEAX $2,X
 
+    label_7D46:
     // 7D46: INC <$00
     // TODO: Convert INC <$00
 
@@ -561,6 +563,7 @@ void routine_7bbd_7d9a_impl(CPU6809& cpu) {
     // 7D5C: NEG <$00
     // TODO: Convert NEG <$00
 
+    label_7D5E:
     // 7D5E: XNC <$A0
     // TODO: Convert XNC <$A0
 
@@ -648,6 +651,7 @@ void routine_7bbd_7d9a_impl(CPU6809& cpu) {
     // 7D98: NEG <$0A
     // TODO: Convert NEG <$0A
 
+    label_7D9A:
     // 7D9A: JMP $7d9a
     goto label_7D9A;
 

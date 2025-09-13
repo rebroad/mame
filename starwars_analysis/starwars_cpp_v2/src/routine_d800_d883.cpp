@@ -6,6 +6,7 @@ void routine_d800_d883_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d800_d883.md
     // Address: 0xD800_D883
 
+    label_D800:
     // D800: DEC <$0B
     // TODO: Convert DEC <$0B
 
@@ -138,6 +139,7 @@ void routine_d800_d883_impl(CPU6809& cpu) {
     // D85E: INC $9,X
     // TODO: Convert INC $9,X
 
+    label_D860:
     // D860: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 

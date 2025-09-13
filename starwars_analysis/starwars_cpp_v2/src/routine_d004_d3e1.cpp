@@ -6,6 +6,7 @@ void routine_d004_d3e1_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d004_d3e1.md
     // Address: 0xD004_D3E1
 
+    label_D004:
     // D004: STU $BA00
     cpu.write_memory16(0xBA00, cpu.m_u);
 

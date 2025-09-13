@@ -6,6 +6,7 @@ void routine_7a48_7a7a_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7a48_7a7a.md
     // Address: 0x7A48_7A7A
 
+    label_7A48:
     // 7A48: LDU #$5090
     cpu.m_u = 0x5090;
 

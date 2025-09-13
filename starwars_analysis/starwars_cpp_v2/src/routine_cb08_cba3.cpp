@@ -6,6 +6,7 @@ void routine_cb08_cba3_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cb08_cba3.md
     // Address: 0xCB08_CBA3
 
+    label_CB08:
     // CB08: LDX #$CBA4
     cpu.m_x = 0xCBA4;
 

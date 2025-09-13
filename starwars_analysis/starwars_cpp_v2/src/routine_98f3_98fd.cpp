@@ -6,6 +6,7 @@ void routine_98f3_98fd_impl(CPU6809& cpu) {
     // Converted from rom_disasm_98f3_98fd.md
     // Address: 0x98F3_98FD
 
+    label_98F3:
     // 98F3: NEG <$50
     // TODO: Convert NEG <$50
 

@@ -6,6 +6,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7d9a_83a3.md
     // Address: 0x7D9A_83A3
 
+    label_7D9A:
     // 7D9A: DEC <$01
     // TODO: Convert DEC <$01
 
@@ -684,6 +685,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 7F6B: NEG <$A8
     // TODO: Convert NEG <$A8
 
+    label_7F6D:
     // 7F6D: EORA $1,X
     // TODO: Fix comma operator: EORA $1,X
 
@@ -1041,6 +1043,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 8060: BRA $8082
     goto label_8082;
 
+    label_8062:
     // 8062: XNC <$00
     // TODO: Convert XNC <$00
 
@@ -1101,6 +1104,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 8089: SUBB #$C0
     cpu.m_b -= 0xC0;
 
+    label_808B:
     // 808B: XNC <$30
     // TODO: Convert XNC <$30
 
@@ -1266,6 +1270,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 80F8: SBCB #$0A
     // TODO: Convert SBCB #$0A
 
+    label_80FA:
     // 80FA: NEG <$02
     // TODO: Convert NEG <$02
 
@@ -1437,6 +1442,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 816D: ORB $FA02
     cpu.m_b |= 0xFA02;
 
+    label_8170:
     // 8170: DEC <$00
     // TODO: Convert DEC <$00
 
@@ -2133,6 +2139,7 @@ void routine_7d9a_83a3_impl(CPU6809& cpu) {
     // 8365: LDU ,X
     // TODO: Complex indexed addressing: ,X
 
+    label_8367:
     // 8367: STU $49A9
     cpu.write_memory16(0x49A9, cpu.m_u);
 

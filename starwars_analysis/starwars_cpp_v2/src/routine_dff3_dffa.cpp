@@ -9,6 +9,7 @@ void routine_dff3_dffa_impl(CPU6809& cpu) {
     // DFF7: BRA $E045
     goto label_E045;
 
+    label_DFFA:
     // DFFA: JMP $dffa
     goto label_DFFA;
 

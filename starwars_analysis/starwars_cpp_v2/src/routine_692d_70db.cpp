@@ -6,6 +6,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // Converted from rom_disasm_692d_70db.md
     // Address: 0x692D_70DB
 
+    label_692D:
     // 692D: JSR $BDEE
     cpu.call_function(0xBDEE);
 
@@ -120,6 +121,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6993: LDA #$29
     cpu.m_a = 0x29;
 
+    label_6995:
     // 6995: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
@@ -675,6 +677,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6B7E: JSR $BD76
     cpu.call_function(0xBD76);
 
+    label_6B81:
     // 6B81: BRA $6B96
     goto label_6B96;
 
@@ -702,6 +705,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6B93: JSR $BD62
     cpu.call_function(0xBD62);
 
+    label_6B96:
     // 6B96: INC $4B0E
     // TODO: Convert INC $4B0E
 
@@ -1173,6 +1177,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6D36: LDA #$05
     cpu.m_a = 0x05;
 
+    label_6D38:
     // 6D38: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
@@ -1365,6 +1370,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6DE1: LDD #$FB01
     cpu.m_d = 0xFB01;
 
+    label_6DE4:
     // 6DE4: STD $5022
     cpu.write_memory16(0x5022, cpu.m_d);
 
@@ -1410,6 +1416,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6E09: LDD #$FB01
     cpu.m_d = 0xFB01;
 
+    label_6E0C:
     // 6E0C: STD $5022
     cpu.write_memory16(0x5022, cpu.m_d);
 
@@ -1443,6 +1450,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6E29: BRA $6E2C
     goto label_6E2C;
 
+    label_6E2C:
     // 6E2C: STA <$63
     cpu.write_memory(0x63, cpu.m_a);
 
@@ -1521,6 +1529,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6E6B: LDD #$FFF0
     cpu.m_d = 0xFFF0;
 
+    label_6E6E:
     // 6E6E: BRA $6E88
     goto label_6E88;
 
@@ -1551,6 +1560,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6E85: LDD #$FFCE
     cpu.m_d = 0xFFCE;
 
+    label_6E88:
     // 6E88: TFR B,A
     cpu.m_a = cpu.m_b;
 
@@ -1653,6 +1663,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6EDD: SUBB $5084
     cpu.m_b -= 0x5084;
 
+    label_6EE0:
     // 6EE0: STB $486D
     cpu.write_memory(0x486D, cpu.m_b);
 
@@ -1677,6 +1688,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6EF3: STB $4876
     cpu.write_memory(0x4876, cpu.m_b);
 
+    label_6EF7:
     // 6EF7: LDA #$10
     cpu.m_a = 0x10;
 
@@ -1914,6 +1926,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6FD6: LDD #$0200
     cpu.m_d = 0x0200;
 
+    label_6FD9:
     // 6FD9: STD $509C
     cpu.write_memory16(0x509C, cpu.m_d);
 
@@ -1953,6 +1966,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 6FFD: STD $509C
     cpu.write_memory16(0x509C, cpu.m_d);
 
+    label_7000:
     // 7000: LDD $5086
     cpu.m_d = cpu.read_memory16(0x5086);
 
@@ -1992,6 +2006,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 7023: LDD #$F448
     cpu.m_d = 0xF448;
 
+    label_7026:
     // 7026: STD $5022
     cpu.write_memory16(0x5022, cpu.m_d);
 
@@ -2157,6 +2172,7 @@ void routine_692d_70db_impl(CPU6809& cpu) {
     // 70D7: JSR $CE3A
     cpu.call_function(0xCE3A);
 
+    label_70DB:
     // 70DB: JMP $70db
     goto label_70DB;
 

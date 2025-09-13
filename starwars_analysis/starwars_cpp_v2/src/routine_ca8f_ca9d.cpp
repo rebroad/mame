@@ -6,6 +6,7 @@ void routine_ca8f_ca9d_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ca8f_ca9d.md
     // Address: 0xCA8F_CA9D
 
+    label_CA8F:
     // CA8F: LDD <$5C
     cpu.m_d = cpu.read_memory16(0x5C);
 
@@ -27,6 +28,7 @@ void routine_ca8f_ca9d_impl(CPU6809& cpu) {
     // CA9B: BCC $CAA5
     if (!cpu.carry_flag()) cpu.m_pc = 0xCAA5;
 
+    label_CA9D:
     // CA9D: JMP $ca9d
     goto label_CA9D;
 

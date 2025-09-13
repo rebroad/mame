@@ -6,6 +6,7 @@ void routine_bd12_c24e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_bd12_c24e.md
     // Address: 0xBD12_C24E
 
+    label_BD12:
     // BD12: LDA #$06
     cpu.m_a = 0x06;
 
@@ -846,6 +847,7 @@ void routine_bd12_c24e_impl(CPU6809& cpu) {
     // BFF4: LDD #$0064
     cpu.m_d = 0x0064;
 
+    label_BFF7:
     // BFF7: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -1482,12 +1484,14 @@ void routine_bd12_c24e_impl(CPU6809& cpu) {
     // C246: STD $4B06
     cpu.write_memory16(0x4B06, cpu.m_d);
 
+    label_C249:
     // C249: LDA #$02
     cpu.m_a = 0x02;
 
     // C24B: JMP $C2B3
     goto label_C2B3;
 
+    label_C24E:
     // C24E: JMP $c24e
     goto label_C24E;
 

@@ -6,6 +6,7 @@ void routine_cac5_caf2_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cac5_caf2.md
     // Address: 0xCAC5_CAF2
 
+    label_CAC5:
     // CAC5: LDD -$4,X
     // TODO: Fix comma operator: LDD -$4,X
 

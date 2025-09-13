@@ -6,6 +6,7 @@ void routine_c434_c542_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c434_c542.md
     // Address: 0xC434_C542
 
+    label_C434:
     // C434: LDU ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -276,6 +277,7 @@ void routine_c434_c542_impl(CPU6809& cpu) {
     // C516: STB $4AF6
     cpu.write_memory(0x4AF6, cpu.m_b);
 
+    label_C519:
     // C519: LDX #$C797
     cpu.m_x = 0xC797;
 
@@ -321,6 +323,7 @@ void routine_c434_c542_impl(CPU6809& cpu) {
     // C540: LDB #$00
     cpu.m_b = 0x00;
 
+    label_C542:
     // C542: JMP $c542
     goto label_C542;
 

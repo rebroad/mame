@@ -1065,6 +1065,7 @@ void routine_d486_d800_impl(CPU6809& cpu) {
     // D7FE: BEQ $D808
     if (cpu.zero_flag()) cpu.m_pc = 0xD808;
 
+    label_D800:
     // D800: JMP $d800
     goto label_D800;
 

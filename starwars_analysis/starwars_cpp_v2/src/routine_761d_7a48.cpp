@@ -6,6 +6,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // Converted from rom_disasm_761d_7a48.md
     // Address: 0x761D_7A48
 
+    label_761D:
     // 761D: LDD #$B9F2
     cpu.m_d = 0xB9F2;
 
@@ -225,6 +226,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 76D0: JSR $E7C7
     cpu.call_function(0xE7C7);
 
+    label_76D3:
     // 76D3: LDA $4B13
     cpu.m_a = cpu.read_memory(0x4B13);
 
@@ -582,6 +584,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 7819: LDD #$6630
     cpu.m_d = 0x6630;
 
+    label_781C:
     // 781C: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -615,6 +618,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 7836: LDU #$B754
     cpu.m_u = 0xB754;
 
+    label_7839:
     // 7839: JSR $785B
     cpu.call_function(0x785B);
 
@@ -648,6 +652,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 7854: LDU #$B788
     cpu.m_u = 0xB788;
 
+    label_7857:
     // 7857: JSR $785B
     cpu.call_function(0x785B);
 
@@ -837,6 +842,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 78FA: JSR $BDDA
     cpu.call_function(0xBDDA);
 
+    label_78FD:
     // 78FD: BRA $7909
     goto label_7909;
 
@@ -852,6 +858,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 7906: CLR $4B38
     cpu.write_memory(0x4B38, 0);
 
+    label_7909:
     // 7909: LDD $5000
     cpu.m_d = cpu.read_memory16(0x5000);
 
@@ -954,12 +961,14 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 796A: JSR $BD2B
     cpu.call_function(0xBD2B);
 
+    label_796D:
     // 796D: BRA $7972
     goto label_7972;
 
     // 796F: JSR $BD1C
     cpu.call_function(0xBD1C);
 
+    label_7972:
     // 7972: LDA $2,X
     // TODO: Fix comma operator: LDA $2,X
 
@@ -1245,6 +1254,7 @@ void routine_761d_7a48_impl(CPU6809& cpu) {
     // 7A46: ASR ,U+
     // TODO: Convert ASR ,U+
 
+    label_7A48:
     // 7A48: JMP $7a48
     goto label_7A48;
 

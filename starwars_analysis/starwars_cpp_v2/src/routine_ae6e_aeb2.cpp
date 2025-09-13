@@ -6,6 +6,7 @@ void routine_ae6e_aeb2_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ae6e_aeb2.md
     // Address: 0xAE6E_AEB2
 
+    label_AE6E:
     // AE6E: LDA #$00
     cpu.m_a = 0x00;
 
@@ -102,6 +103,7 @@ void routine_ae6e_aeb2_impl(CPU6809& cpu) {
     // AEAF: JSR $BE16
     cpu.call_function(0xBE16);
 
+    label_AEB2:
     // AEB2: JMP $aeb2
     goto label_AEB2;
 

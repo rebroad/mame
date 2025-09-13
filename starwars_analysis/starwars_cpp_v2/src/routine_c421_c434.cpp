@@ -6,6 +6,7 @@ void routine_c421_c434_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c421_c434.md
     // Address: 0xC421_C434
 
+    label_C421:
     // C421: LDD ,X++
     cpu.m_d = cpu.read_memory16(cpu.m_x++);
 
@@ -27,6 +28,7 @@ void routine_c421_c434_impl(CPU6809& cpu) {
     // C430: LDY #$4C00
     cpu.m_y = 0x4C00;
 
+    label_C434:
     // C434: JMP $c434
     goto label_C434;
 

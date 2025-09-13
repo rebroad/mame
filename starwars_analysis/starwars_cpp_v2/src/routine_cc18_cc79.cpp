@@ -6,6 +6,7 @@ void routine_cc18_cc79_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cc18_cc79.md
     // Address: 0xCC18_CC79
 
+    label_CC18:
     // CC18: JSR $CC5B
     cpu.call_function(0xCC5B);
 

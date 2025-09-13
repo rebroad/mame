@@ -6,6 +6,7 @@ void routine_655d_656b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_655d_656b.md
     // Address: 0x655D_656B
 
+    label_655D:
     // 655D: LDA $481E
     cpu.m_a = cpu.read_memory(0x481E);
 
@@ -24,6 +25,7 @@ void routine_655d_656b_impl(CPU6809& cpu) {
     // 6569: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_656B:
     // 656B: JMP $656b
     goto label_656B;
 

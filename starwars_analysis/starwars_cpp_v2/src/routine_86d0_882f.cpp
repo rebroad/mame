@@ -6,6 +6,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // Converted from rom_disasm_86d0_882f.md
     // Address: 0x86D0_882F
 
+    label_86D0:
     // 86D0: STD $5078
     cpu.write_memory16(0x5078, cpu.m_d);
 
@@ -78,6 +79,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // 870E: JSR $CCFC
     cpu.call_function(0xCCFC);
 
+    label_8711:
     // 8711: LEAU $4,U
     // TODO: Fix comma operator: LEAU $4,U
 
@@ -150,6 +152,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // 8748: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_874B:
     // 874B: ADDD $49B1
     cpu.m_d += 0x49B1;
 
@@ -177,6 +180,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // 875E: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_8761:
     // 8761: ADDD $49B1
     cpu.m_d += 0x49B1;
 
@@ -342,6 +346,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // 87FE: STD $507C
     cpu.write_memory16(0x507C, cpu.m_d);
 
+    label_8801:
     // 8801: LDA <$92
     cpu.m_a = cpu.read_memory(0x92);
 
@@ -390,6 +395,7 @@ void routine_86d0_882f_impl(CPU6809& cpu) {
     // 882D: SBCA #$FF
     // TODO: Convert SBCA #$FF
 
+    label_882F:
     // 882F: JMP $882f
     goto label_882F;
 

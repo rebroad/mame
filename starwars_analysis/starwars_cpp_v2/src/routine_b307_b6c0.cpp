@@ -6,6 +6,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // Converted from rom_disasm_b307_b6c0.md
     // Address: 0xB307_B6C0
 
+    label_B307:
     // B307: LDD <$D0
     cpu.m_d = cpu.read_memory16(0xD0);
 
@@ -84,6 +85,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B342: JMP $AD20
     goto label_AD20;
 
+    label_B345:
     // B345: LDA #$04
     cpu.m_a = 0x04;
 
@@ -312,6 +314,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B428: LDA #$0C
     cpu.m_a = 0x0C;
 
+    label_B42A:
     // B42A: STA <$DC
     cpu.write_memory(0xDC, cpu.m_a);
 
@@ -321,6 +324,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B42E: JSR $CD38
     cpu.call_function(0xCD38);
 
+    label_B431:
     // B431: JSR $B43F
     cpu.call_function(0xB43F);
 
@@ -582,6 +586,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B510: JSR $CD50
     cpu.call_function(0xCD50);
 
+    label_B513:
     // B513: JSR $CD74
     cpu.call_function(0xCD74);
 
@@ -630,6 +635,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B53E: BNE $B533
     if (!cpu.zero_flag()) cpu.m_pc = 0xB533;
 
+    label_B540:
     // B540: LDA $49BD
     cpu.m_a = cpu.read_memory(0x49BD);
 
@@ -939,6 +945,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B64A: JSR $CD50
     cpu.call_function(0xCD50);
 
+    label_B64D:
     // B64D: JSR $CD74
     cpu.call_function(0xCD74);
 
@@ -987,6 +994,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B678: BNE $B66D
     if (!cpu.zero_flag()) cpu.m_pc = 0xB66D;
 
+    label_B67A:
     // B67A: LDA $49BD
     cpu.m_a = cpu.read_memory(0x49BD);
 
@@ -1065,6 +1073,7 @@ void routine_b307_b6c0_impl(CPU6809& cpu) {
     // B6BC: JSR $B6D7
     cpu.call_function(0xB6D7);
 
+    label_B6C0:
     // B6C0: JMP $b6c0
     goto label_B6C0;
 

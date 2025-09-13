@@ -6,6 +6,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // Converted from rom_disasm_b1a6_b307.md
     // Address: 0xB1A6_B307
 
+    label_B1A6:
     // B1A6: STD <$05
     cpu.write_memory16(0x05, cpu.m_d);
 
@@ -150,6 +151,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // B221: BLT $B260
     if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB260;
 
+    label_B223:
     // B223: STD <$05
     cpu.write_memory16(0x05, cpu.m_d);
 
@@ -222,6 +224,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // B25D: JMP $B261
     goto label_B261;
 
+    label_B261:
     // B261: LDA <$BC
     cpu.m_a = cpu.read_memory(0xBC);
 
@@ -291,6 +294,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // B299: BNE $B285
     if (!cpu.zero_flag()) cpu.m_pc = 0xB285;
 
+    label_B29C:
     // B29C: LDA <$01
     cpu.m_a = cpu.read_memory(0x01);
 
@@ -387,6 +391,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // B2E1: BRA $B2E4
     goto label_B2E4;
 
+    label_B2E4:
     // B2E4: LDD <$C4
     cpu.m_d = cpu.read_memory16(0xC4);
 
@@ -435,6 +440,7 @@ void routine_b1a6_b307_impl(CPU6809& cpu) {
     // B304: JMP $A54B
     goto label_A54B;
 
+    label_B307:
     // B307: JMP $b307
     goto label_B307;
 

@@ -6,6 +6,7 @@ void routine_ca9d_cac5_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ca9d_cac5.md
     // Address: 0xCA9D_CAC5
 
+    label_CA9D:
     // CA9D: LEAX $4,X
     // TODO: Fix comma operator: LEAX $4,X
 
@@ -48,6 +49,7 @@ void routine_ca9d_cac5_impl(CPU6809& cpu) {
     // CAC3: BEQ $CADE
     if (cpu.zero_flag()) cpu.m_pc = 0xCADE;
 
+    label_CAC5:
     // CAC5: JMP $cac5
     goto label_CAC5;
 

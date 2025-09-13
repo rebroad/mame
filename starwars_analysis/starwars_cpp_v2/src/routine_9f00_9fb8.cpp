@@ -6,6 +6,7 @@ void routine_9f00_9fb8_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9f00_9fb8.md
     // Address: 0x9F00_9FB8
 
+    label_9F00:
     // 9F00: NEG $0,X
     // TODO: Convert NEG $0,X
 
@@ -264,6 +265,7 @@ void routine_9f00_9fb8_impl(CPU6809& cpu) {
     // 9FB6: BRA $9FB8
     goto label_9FB8;
 
+    label_9FB8:
     // 9FB8: JMP $9fb8
     goto label_9FB8;
 

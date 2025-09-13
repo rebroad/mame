@@ -6,6 +6,7 @@ void routine_e764_e790_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e764_e790.md
     // Address: 0xE764_E790
 
+    label_E764:
     // E764: LDA ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -57,6 +58,7 @@ void routine_e764_e790_impl(CPU6809& cpu) {
     // E78E: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
+    label_E790:
     // E790: JMP $e790
     goto label_E790;
 

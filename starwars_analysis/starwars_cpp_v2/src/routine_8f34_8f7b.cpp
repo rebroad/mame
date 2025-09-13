@@ -6,6 +6,7 @@ void routine_8f34_8f7b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_8f34_8f7b.md
     // Address: 0x8F34_8F7B
 
+    label_8F34:
     // 8F34: LDA #$01
     cpu.m_a = 0x01;
 
@@ -102,6 +103,7 @@ void routine_8f34_8f7b_impl(CPU6809& cpu) {
     // 8F77: JSR $CCCC
     cpu.call_function(0xCCCC);
 
+    label_8F7B:
     // 8F7B: JMP $8f7b
     goto label_8F7B;
 

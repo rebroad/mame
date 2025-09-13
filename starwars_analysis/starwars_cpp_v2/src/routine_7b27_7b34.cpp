@@ -24,6 +24,7 @@ void routine_7b27_7b34_impl(CPU6809& cpu) {
     // 7B32: SBCA #$67
     // TODO: Convert SBCA #$67
 
+    label_7B34:
     // 7B34: JMP $7b34
     goto label_7B34;
 

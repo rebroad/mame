@@ -9,6 +9,7 @@ void routine_dfdd_dfe5_impl(CPU6809& cpu) {
     // DFE1: BRA $E03C
     goto label_E03C;
 
+    label_DFE5:
     // DFE5: JMP $dfe5
     goto label_DFE5;
 

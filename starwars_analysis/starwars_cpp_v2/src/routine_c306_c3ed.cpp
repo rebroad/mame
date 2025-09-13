@@ -6,6 +6,7 @@ void routine_c306_c3ed_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c306_c3ed.md
     // Address: 0xC306_C3ED
 
+    label_C306:
     // C306: LDX #$4500
     cpu.m_x = 0x4500;
 
@@ -210,6 +211,7 @@ void routine_c306_c3ed_impl(CPU6809& cpu) {
     // C3B4: LDX #$4500
     cpu.m_x = 0x4500;
 
+    label_C3B7:
     // C3B7: LDB $C7B7
     cpu.m_b = cpu.read_memory(0xC7B7);
 

@@ -6,6 +6,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // Converted from rom_disasm_72c7_761d.md
     // Address: 0x72C7_761D
 
+    label_72C7:
     // 72C7: JSR $6112
     cpu.call_function(0x6112);
 
@@ -51,6 +52,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 72EB: LDB #$4D
     cpu.m_b = 0x4D;
 
+    label_72ED:
     // 72ED: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -435,6 +437,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 7461: JSR $E7C7
     cpu.call_function(0xE7C7);
 
+    label_7464:
     // 7464: LDA $4B2D
     cpu.m_a = cpu.read_memory(0x4B2D);
 
@@ -492,6 +495,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 748C: LDB #$4E
     cpu.m_b = 0x4E;
 
+    label_748E:
     // 748E: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -540,6 +544,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 74B3: JSR $97C2
     cpu.call_function(0x97C2);
 
+    label_74B6:
     // 74B6: JSR $95A7
     cpu.call_function(0x95A7);
 
@@ -801,6 +806,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 7597: LDB #$49
     cpu.m_b = 0x49;
 
+    label_7599:
     // 7599: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -942,6 +948,7 @@ void routine_72c7_761d_impl(CPU6809& cpu) {
     // 7619: JSR $612F
     cpu.call_function(0x612F);
 
+    label_761D:
     // 761D: JMP $761d
     goto label_761D;
 

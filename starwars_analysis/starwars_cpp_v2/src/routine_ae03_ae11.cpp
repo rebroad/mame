@@ -6,6 +6,7 @@ void routine_ae03_ae11_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ae03_ae11.md
     // Address: 0xAE03_AE11
 
+    label_AE03:
     // AE03: SUBD $5000
     cpu.m_d -= 0x5000;
 
@@ -21,6 +22,7 @@ void routine_ae03_ae11_impl(CPU6809& cpu) {
     // AE0F: SBCA #$FF
     // TODO: Convert SBCA #$FF
 
+    label_AE11:
     // AE11: JMP $ae11
     goto label_AE11;
 

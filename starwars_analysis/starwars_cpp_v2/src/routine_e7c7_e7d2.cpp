@@ -6,6 +6,7 @@ void routine_e7c7_e7d2_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e7c7_e7d2.md
     // Address: 0xE7C7_E7D2
 
+    label_E7C7:
     // E7C7: CMPB #$D6
     cpu.compare_b(0xD6);
 

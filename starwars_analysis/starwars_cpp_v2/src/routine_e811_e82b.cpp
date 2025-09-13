@@ -6,6 +6,7 @@ void routine_e811_e82b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e811_e82b.md
     // Address: 0xE811_E82B
 
+    label_E811:
     // E811: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -33,6 +34,7 @@ void routine_e811_e82b_impl(CPU6809& cpu) {
     // E829: LDX ,X
     // TODO: Complex indexed addressing: ,X
 
+    label_E82B:
     // E82B: JMP $e82b
     goto label_E82B;
 

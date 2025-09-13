@@ -6,6 +6,7 @@ void routine_6901_6911_impl(CPU6809& cpu) {
     // Converted from rom_disasm_6901_6911.md
     // Address: 0x6901_6911
 
+    label_6901:
     // 6901: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
@@ -27,6 +28,7 @@ void routine_6901_6911_impl(CPU6809& cpu) {
     // 690F: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_6911:
     // 6911: JMP $6911
     goto label_6911;
 

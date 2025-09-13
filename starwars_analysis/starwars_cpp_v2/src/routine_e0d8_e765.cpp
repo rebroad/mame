@@ -78,6 +78,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E15B: BRA $E19F
     goto label_E19F;
 
+    label_E15F:
     // E15F: BRA $E1A9
     goto label_E1A9;
 
@@ -90,6 +91,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E16E: BRA $E1B6
     goto label_E1B6;
 
+    label_E173:
     // E173: BRA $E1CC
     goto label_E1CC;
 
@@ -108,6 +110,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E18F: BEQ $E1E4
     if (cpu.zero_flag()) cpu.m_pc = 0xE1E4;
 
+    label_E191:
     // E191: BRA $E1D7
     goto label_E1D7;
 
@@ -168,6 +171,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E1F4: BRA $E249
     goto label_E249;
 
+    label_E1F9:
     // E1F9: BRA $E24F
     goto label_E24F;
 
@@ -192,6 +196,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E21B: BRA $E276
     goto label_E276;
 
+    label_E21F:
     // E21F: LDX $1,U
     // TODO: Fix comma operator: LDX $1,U
 
@@ -207,9 +212,11 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E23F: BRA $E284
     goto label_E284;
 
+    label_E244:
     // E244: ADDD <$4C
     cpu.m_d += 0x4C;
 
+    label_E249:
     // E249: BRA $E298
     goto label_E298;
 
@@ -231,6 +238,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E269: BRA $E2AE
     goto label_E2AE;
 
+    label_E26F:
     // E26F: BRA $E2C1
     goto label_E2C1;
 
@@ -243,6 +251,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E27F: ANDB #$48
     cpu.m_b &= 0x48;
 
+    label_E284:
     // E284: BRA $E2DD
     goto label_E2DD;
 
@@ -252,9 +261,11 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E28E: BRA $E2D7
     goto label_E2D7;
 
+    label_E293:
     // E293: BRA $E2E9
     goto label_E2E9;
 
+    label_E298:
     // E298: BRA $E2BA
     goto label_E2BA;
 
@@ -282,9 +293,11 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E2B6: BRA $E30C
     goto label_E30C;
 
+    label_E2BA:
     // E2BA: BITB #$54
     // TODO: Convert BITB #$54
 
+    label_E2C0:
     // E2C0: BRA $E316
     goto label_E316;
 
@@ -318,15 +331,19 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E2E7: BRA $E339
     goto label_E339;
 
+    label_E2EC:
     // E2EC: BRA $E30E
     goto label_E30E;
 
+    label_E2EE:
     // E2EE: BRA $E310
     goto label_E310;
 
+    label_E2F0:
     // E2F0: BRA $E342
     goto label_E342;
 
+    label_E2F7:
     // E2F7: ANDB <$48
     cpu.m_b &= 0x48;
 
@@ -339,6 +356,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E307: BRA $E35D
     goto label_E35D;
 
+    label_E30C:
     // E30C: ADDD <$47
     cpu.m_d += 0x47;
 
@@ -357,6 +375,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E323: BRA $E368
     goto label_E368;
 
+    label_E327:
     // E327: LDU #$4C45
     cpu.m_u = 0x4C45;
 
@@ -393,12 +412,14 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E365: BRA $E3AB
     goto label_E3AB;
 
+    label_E36F:
     // E36F: ADCB <$42
     // TODO: Convert ADCB <$42
 
     // E375: BRA $E3CA
     goto label_E3CA;
 
+    label_E37B:
     // E37B: ANDB #$4D
     cpu.m_b &= 0x4D;
 
@@ -408,6 +429,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E384: BRA $E3C7
     goto label_E3C7;
 
+    label_E38B:
     // E38B: ANDB <$52
     cpu.m_b &= 0x52;
 
@@ -462,6 +484,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E3ED: BRA $E432
     goto label_E432;
 
+    label_E3F4:
     // E3F4: BRA $E449
     goto label_E449;
 
@@ -471,15 +494,18 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E400: BRA $E452
     goto label_E452;
 
+    label_E404:
     // E404: ADCB <$32
     // TODO: Convert ADCB <$32
 
+    label_E406:
     // E406: BRA $E44B
     goto label_E44B;
 
     // E40D: ADDD <$31
     cpu.m_d += 0x31;
 
+    label_E40F:
     // E40F: BRA $E454
     goto label_E454;
 
@@ -495,6 +521,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E41F: SBCA $B1B4
     // TODO: Convert SBCA $B1B4
 
+    label_E422:
     // E422: BITA $B64E
     // TODO: Convert BITA $B64E
 
@@ -639,6 +666,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E4F4: BRA $E54A
     goto label_E54A;
 
+    label_E4F9:
     // E4F9: SBCB #$52
     // TODO: Convert SBCB #$52
 
@@ -696,6 +724,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E553: BRA $E58A
     goto label_E58A;
 
+    label_E555:
     // E555: LDB #$4D
     cpu.m_b = 0x4D;
 
@@ -711,6 +740,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E563: EORB #$56
     cpu.m_b ^= 0x56;
 
+    label_E566:
     // E566: BRA $E5BA
     goto label_E5BA;
 
@@ -723,6 +753,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E570: LDD #$5647
     cpu.m_d = 0x5647;
 
+    label_E573:
     // E573: BRA $E5C7
     goto label_E5C7;
 
@@ -735,18 +766,21 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E580: BRA $E5D4
     goto label_E5D4;
 
+    label_E584:
     // E584: LEAS $0,Y
     // TODO: Fix comma operator: LEAS $0,Y
 
     // E588: BRA $E5BD
     goto label_E5BD;
 
+    label_E58A:
     // E58A: SUBB <$56
     cpu.m_b -= 0x56;
 
     // E58D: BRA $E5E1
     goto label_E5E1;
 
+    label_E591:
     // E591: LEAU $0,Y
     // TODO: Fix comma operator: LEAU $0,Y
 
@@ -789,6 +823,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E5C5: BRA $E5F8
     goto label_E5F8;
 
+    label_E5C7:
     // E5C7: BITB #$50
     // TODO: Convert BITB #$50
 
@@ -804,9 +839,11 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E5D9: LDB #$50
     cpu.m_b = 0x50;
 
+    label_E5E1:
     // E5E1: BRA $E635
     goto label_E635;
 
+    label_E5E5:
     // E5E5: LEAY $0,Y
     // TODO: Fix comma operator: LEAY $0,Y
 
@@ -819,6 +856,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E5F4: BRA $E648
     goto label_E648;
 
+    label_E5F8:
     // E5F8: LEAS $0,Y
     // TODO: Fix comma operator: LEAS $0,Y
 
@@ -837,6 +875,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E60F: BRA $E642
     goto label_E642;
 
+    label_E612:
     // E612: LDD #$5052
     cpu.m_d = 0x5052;
 
@@ -879,9 +918,11 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E653: BITB #$44
     // TODO: Convert BITB #$44
 
+    label_E65B:
     // E65B: BRA $E6A2
     goto label_E6A2;
 
+    label_E661:
     // E661: ADDD <$4E
     cpu.m_d += 0x4E;
 
@@ -900,6 +941,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E679: BRA $E69B
     goto label_E69B;
 
+    label_E67B:
     // E67B: BRA $E69D
     goto label_E69D;
 
@@ -915,12 +957,14 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E68B: BRA $E6D2
     goto label_E6D2;
 
+    label_E690:
     // E690: SBCB <$4D
     // TODO: Convert SBCB <$4D
 
     // E697: BRA $E6DE
     goto label_E6DE;
 
+    label_E69D:
     // E69D: ADDD <$4E
     cpu.m_d += 0x4E;
 
@@ -948,6 +992,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E6C4: ADDD <$53
     cpu.m_d += 0x53;
 
+    label_E6CA:
     // E6CA: BRA $E720
     goto label_E720;
 
@@ -1005,6 +1050,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E71B: BRA $E771
     goto label_E771;
 
+    label_E71E:
     // E71E: BRA $E763
     goto label_E763;
 
@@ -1026,6 +1072,7 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E73E: BRA $E794
     goto label_E794;
 
+    label_E742:
     // E742: ANDB <$50
     cpu.m_b &= 0x50;
 
@@ -1038,12 +1085,14 @@ void routine_e0d8_e765_impl(CPU6809& cpu) {
     // E752: BRA $E7A8
     goto label_E7A8;
 
+    label_E755:
     // E755: BRA $E7A7
     goto label_E7A7;
 
     // E75D: BRA $E7B1
     goto label_E7B1;
 
+    label_E763:
     // E763: ADDD <$A6
     cpu.m_d += 0xA6;
 

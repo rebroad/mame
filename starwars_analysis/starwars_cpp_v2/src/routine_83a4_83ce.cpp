@@ -6,6 +6,7 @@ void routine_83a4_83ce_impl(CPU6809& cpu) {
     // Converted from rom_disasm_83a4_83ce.md
     // Address: 0x83A4_83CE
 
+    label_83A4:
     // 83A4: LDU #$4B3F
     cpu.m_u = 0x4B3F;
 
@@ -51,6 +52,7 @@ void routine_83a4_83ce_impl(CPU6809& cpu) {
     // 83CB: BCS $83BA
     if (cpu.carry_flag()) cpu.m_pc = 0x83BA;
 
+    label_83CE:
     // 83CE: JMP $83ce
     goto label_83CE;
 

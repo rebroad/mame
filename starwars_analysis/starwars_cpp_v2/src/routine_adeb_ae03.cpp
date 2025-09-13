@@ -6,6 +6,7 @@ void routine_adeb_ae03_impl(CPU6809& cpu) {
     // Converted from rom_disasm_adeb_ae03.md
     // Address: 0xADEB_AE03
 
+    label_ADEB:
     // ADEB: LDD $5000
     cpu.m_d = cpu.read_memory16(0x5000);
 
@@ -30,6 +31,7 @@ void routine_adeb_ae03_impl(CPU6809& cpu) {
     // AE01: SBCA #$FF
     // TODO: Convert SBCA #$FF
 
+    label_AE03:
     // AE03: JMP $ae03
     goto label_AE03;
 

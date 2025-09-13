@@ -6,6 +6,7 @@ void routine_e08f_e0d8_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e08f_e0d8.md
     // Address: 0xE08F_E0D8
 
+    label_E08F:
     // E08F: ANDB #$42
     cpu.m_b &= 0x42;
 
@@ -45,12 +46,14 @@ void routine_e08f_e0d8_impl(CPU6809& cpu) {
     // E0CA: ANDB #$53
     cpu.m_b &= 0x53;
 
+    label_E0D1:
     // E0D1: BRA $E114
     goto label_E114;
 
     // E0D4: BRA $E11C
     goto label_E11C;
 
+    label_E0D8:
     // E0D8: JMP $e0d8
     goto label_E0D8;
 

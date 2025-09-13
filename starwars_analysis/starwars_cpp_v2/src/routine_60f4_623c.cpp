@@ -6,6 +6,7 @@ void routine_60f4_623c_impl(CPU6809& cpu) {
     // Converted from rom_disasm_60f4_623c.md
     // Address: 0x60F4_623C
 
+    label_60F4:
     // 60F4: JSR $70DB
     cpu.call_function(0x70DB);
 
@@ -387,6 +388,7 @@ void routine_60f4_623c_impl(CPU6809& cpu) {
     // 623A: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_623C:
     // 623C: JMP $623c
     goto label_623C;
 

@@ -231,6 +231,7 @@ void routine_d95d_dad3_impl(CPU6809& cpu) {
     // DA27: LDD $4AE4
     cpu.m_d = cpu.read_memory16(0x4AE4);
 
+    label_DA2A:
     // DA2A: ORA #$73
     cpu.m_a |= 0x73;
 
@@ -420,6 +421,7 @@ void routine_d95d_dad3_impl(CPU6809& cpu) {
     // DAD0: LDU #$4A66
     cpu.m_u = 0x4A66;
 
+    label_DAD3:
     // DAD3: JMP $dad3
     goto label_DAD3;
 

@@ -6,6 +6,7 @@ void routine_70f5_7105_impl(CPU6809& cpu) {
     // Converted from rom_disasm_70f5_7105.md
     // Address: 0x70F5_7105
 
+    label_70F5:
     // 70F5: LDB #$80
     cpu.m_b = 0x80;
 
@@ -24,6 +25,7 @@ void routine_70f5_7105_impl(CPU6809& cpu) {
     // 7103: LDA #$7F
     cpu.m_a = 0x7F;
 
+    label_7105:
     // 7105: JMP $7105
     goto label_7105;
 

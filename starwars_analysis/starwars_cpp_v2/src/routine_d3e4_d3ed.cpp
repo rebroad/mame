@@ -6,6 +6,7 @@ void routine_d3e4_d3ed_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d3e4_d3ed.md
     // Address: 0xD3E4_D3ED
 
+    label_D3E4:
     // D3E4: LDB $7C5C
     cpu.m_b = cpu.read_memory(0x7C5C);
 

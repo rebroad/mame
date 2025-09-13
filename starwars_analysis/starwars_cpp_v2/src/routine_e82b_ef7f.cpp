@@ -6,6 +6,7 @@ void routine_e82b_ef7f_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e82b_ef7f.md
     // Address: 0xE82B_EF7F
 
+    label_E82B:
     // E82B: LDB ,X+
     // TODO: Complex indexed addressing: ,X+
 
@@ -126,6 +127,7 @@ void routine_e82b_ef7f_impl(CPU6809& cpu) {
     // E885: LDX #$2FF4
     cpu.m_x = 0x2FF4;
 
+    label_E888:
     // E888: LDD B,X
     // TODO: Fix comma operator: LDD B,X
 
@@ -2685,6 +2687,7 @@ void routine_e82b_ef7f_impl(CPU6809& cpu) {
     // EF52: SUBA -$6,X
     // TODO: Fix comma operator: SUBA -$6,X
 
+    label_EF54:
     // EF54: BRA $EF54
     goto label_EF54;
 
@@ -2739,6 +2742,7 @@ void routine_e82b_ef7f_impl(CPU6809& cpu) {
     // EF7C: BVC $EF7F
     // TODO: Convert BVC $EF7F
 
+    label_EF7F:
     // EF7F: JMP $ef7f
     goto label_EF7F;
 

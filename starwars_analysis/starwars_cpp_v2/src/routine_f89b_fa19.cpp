@@ -6,6 +6,7 @@ void routine_f89b_fa19_impl(CPU6809& cpu) {
     // Converted from rom_disasm_f89b_fa19.md
     // Address: 0xF89B_FA19
 
+    label_F89B:
     // F89B: STB <$CE
     cpu.write_memory(0xCE, cpu.m_b);
 
@@ -165,6 +166,7 @@ void routine_f89b_fa19_impl(CPU6809& cpu) {
     // F915: LDB #$7F
     cpu.m_b = 0x7F;
 
+    label_F917:
     // F917: ORA #$70
     cpu.m_a |= 0x70;
 
@@ -204,6 +206,7 @@ void routine_f89b_fa19_impl(CPU6809& cpu) {
     // F932: LDB #$CD
     cpu.m_b = 0xCD;
 
+    label_F934:
     // F934: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -387,6 +390,7 @@ void routine_f89b_fa19_impl(CPU6809& cpu) {
     // F9CE: LDU $3032
     cpu.m_u = cpu.read_memory16(0x3032);
 
+    label_F9D1:
     // F9D1: STU ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
@@ -474,6 +478,7 @@ void routine_f89b_fa19_impl(CPU6809& cpu) {
     // FA17: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_FA19:
     // FA19: JMP $fa19
     goto label_FA19;
 

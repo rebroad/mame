@@ -6,6 +6,7 @@ void routine_d432_d487_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d432_d487.md
     // Address: 0xD432_D487
 
+    label_D432:
     // D432: ADCA $EF42
     // TODO: Convert ADCA $EF42
 

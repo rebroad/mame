@@ -6,6 +6,7 @@ void routine_9898_98af_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9898_98af.md
     // Address: 0x9898_98AF
 
+    label_9898:
     // 9898: LDA <$43
     cpu.m_a = cpu.read_memory(0x43);
 

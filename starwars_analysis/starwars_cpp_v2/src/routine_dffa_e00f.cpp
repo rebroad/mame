@@ -18,6 +18,7 @@ void routine_dffa_e00f_impl(CPU6809& cpu) {
     // E009: BITB #$50
     // TODO: Convert BITB #$50
 
+    label_E00F:
     // E00F: JMP $e00f
     goto label_E00F;
 

@@ -6,6 +6,7 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c65b_c8a5.md
     // Address: 0xC65B_C8A5
 
+    label_C65B:
     // C65B: LEAX -$1,X
     // TODO: Fix comma operator: LEAX -$1,X
 
@@ -111,6 +112,7 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C6B2: LDB #$9D
     cpu.m_b = 0x9D;
 
+    label_C6B4:
     // C6B4: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -570,6 +572,7 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C81B: LDD #$CA78
     cpu.m_d = 0xCA78;
 
+    label_C81E:
     // C81E: STD $4AF1
     cpu.write_memory16(0x4AF1, cpu.m_d);
 
@@ -618,6 +621,7 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C847: LDD $4B10
     cpu.m_d = cpu.read_memory16(0x4B10);
 
+    label_C84A:
     // C84A: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -660,12 +664,14 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C869: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
+    label_C86B:
     // C86B: BRA $C86F
     goto label_C86F;
 
     // C86D: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
+    label_C86F:
     // C86F: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -690,12 +696,14 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C87F: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
 
+    label_C882:
     // C882: BRA $C887
     goto label_C887;
 
     // C885: LDD A,U
     // TODO: Fix comma operator: LDD A,U
 
+    label_C887:
     // C887: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -732,9 +740,11 @@ void routine_c65b_c8a5_impl(CPU6809& cpu) {
     // C8A1: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
+    label_C8A3:
     // C8A3: BRA $C8A7
     goto label_C8A7;
 
+    label_C8A5:
     // C8A5: JMP $c8a5
     goto label_C8A5;
 

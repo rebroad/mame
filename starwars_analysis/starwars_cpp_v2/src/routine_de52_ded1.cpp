@@ -78,27 +78,35 @@ void routine_de52_ded1_impl(CPU6809& cpu) {
     // DE95: BRA $DEEB
     goto label_DEEB;
 
+    label_DE9D:
     // DE9D: BRA $DEBF
     goto label_DEBF;
 
+    label_DE9F:
     // DE9F: BRA $DEC1
     goto label_DEC1;
 
+    label_DEA1:
     // DEA1: BRA $DEC3
     goto label_DEC3;
 
+    label_DEA3:
     // DEA3: BRA $DEC5
     goto label_DEC5;
 
+    label_DEA5:
     // DEA5: BRA $DEC7
     goto label_DEC7;
 
+    label_DEA7:
     // DEA7: BRA $DEC9
     goto label_DEC9;
 
+    label_DEA9:
     // DEA9: BRA $DECB
     goto label_DECB;
 
+    label_DEAB:
     // DEAB: BRA $DECD
     goto label_DECD;
 
@@ -129,6 +137,7 @@ void routine_de52_ded1_impl(CPU6809& cpu) {
     // DEC6: BRA $DEE8
     goto label_DEE8;
 
+    label_DEC8:
     // DEC8: BRA $DEEA
     goto label_DEEA;
 

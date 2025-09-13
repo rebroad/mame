@@ -6,6 +6,7 @@ void routine_d882_d8df_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d882_d8df.md
     // Address: 0xD882_D8DF
 
+    label_D882:
     // D882: SUBA #$24
     cpu.m_a -= 0x24;
 
@@ -129,6 +130,7 @@ void routine_d882_d8df_impl(CPU6809& cpu) {
     // D8DC: BGE $D8CD
     if (cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xD8CD;
 
+    label_D8DF:
     // D8DF: JMP $d8df
     goto label_D8DF;
 

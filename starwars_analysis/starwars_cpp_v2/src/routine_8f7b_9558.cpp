@@ -6,6 +6,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // Converted from rom_disasm_8f7b_9558.md
     // Address: 0x8F7B_9558
 
+    label_8F7B:
     // 8F7B: LDU <$E4
     cpu.m_u = cpu.read_memory16(0xE4);
 
@@ -48,6 +49,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 8F9D: LDX #$907A
     cpu.m_x = 0x907A;
 
+    label_8FA0:
     // 8FA0: LDX ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -1026,6 +1028,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 9246: LSR <$44
     // TODO: Convert LSR <$44
 
+    label_9248:
     // 9248: SUBA -$10,X
     // TODO: Fix comma operator: SUBA -$10,X
 
@@ -1557,6 +1560,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 93D3: NEG <$00
     // TODO: Convert NEG <$00
 
+    label_93D5:
     // 93D5: NEG <$01
     // TODO: Convert NEG <$01
 
@@ -1671,6 +1675,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 9435: NEG <$44
     // TODO: Convert NEG <$44
 
+    label_9437:
     // 9437: SUBA #$33
     cpu.m_a -= 0x33;
 
@@ -1758,6 +1763,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 9477: BRA $9479
     goto label_9479;
 
+    label_9479:
     // 9479: ASL <$44
     // TODO: Convert ASL <$44
 
@@ -1770,6 +1776,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 9482: NEG <$10
     // TODO: Convert NEG <$10
 
+    label_9484:
     // 9484: NEG <$00
     // TODO: Convert NEG <$00
 
@@ -1998,6 +2005,7 @@ void routine_8f7b_9558_impl(CPU6809& cpu) {
     // 9555: STA <$61
     cpu.write_memory(0x61, cpu.m_a);
 
+    label_9558:
     // 9558: JMP $9558
     goto label_9558;
 

@@ -90,6 +90,7 @@ void routine_6512_655d_impl(CPU6809& cpu) {
     // 655A: JMP $F261
     goto label_F261;
 
+    label_655D:
     // 655D: JMP $655d
     goto label_655D;
 

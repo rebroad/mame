@@ -6,6 +6,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // Converted from rom_disasm_8b6d_8ed6.md
     // Address: 0x8B6D_8ED6
 
+    label_8B6D:
     // 8B6D: LDX #$4900
     cpu.m_x = 0x4900;
 
@@ -147,6 +148,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8BD4: STA $3,X
     // TODO: Handle indexed addressing: STA $3,X
 
+    label_8BD6:
     // 8BD6: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
 
@@ -279,6 +281,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8C41: JSR $8971
     cpu.call_function(0x8971);
 
+    label_8C44:
     // 8C44: JSR $8D9D
     cpu.call_function(0x8D9D);
 
@@ -354,6 +357,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8C83: JSR $CDBA
     cpu.call_function(0xCDBA);
 
+    label_8C86:
     // 8C86: LDD $5000
     cpu.m_d = cpu.read_memory16(0x5000);
 
@@ -453,6 +457,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8CD9: LEAU B,U
     // TODO: Fix comma operator: LEAU B,U
 
+    label_8CDB:
     // 8CDB: LDA <$43
     cpu.m_a = cpu.read_memory(0x43);
 
@@ -507,6 +512,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8D03: BCS $8CEA
     if (cpu.carry_flag()) cpu.m_pc = 0x8CEA;
 
+    label_8D05:
     // 8D05: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
 
@@ -540,6 +546,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8D1C: JSR $8971
     cpu.call_function(0x8971);
 
+    label_8D1F:
     // 8D1F: LDA <$4E
     cpu.m_a = cpu.read_memory(0x4E);
 
@@ -573,6 +580,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8D37: JSR $8969
     cpu.call_function(0x8969);
 
+    label_8D3A:
     // 8D3A: LDA <$4D
     cpu.m_a = cpu.read_memory(0x4D);
 
@@ -594,6 +602,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8D48: JSR $8959
     cpu.call_function(0x8959);
 
+    label_8D4B:
     // 8D4B: LDA <$4E
     cpu.m_a = cpu.read_memory(0x4E);
 
@@ -627,6 +636,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8D63: JSR $8961
     cpu.call_function(0x8961);
 
+    label_8D66:
     // 8D66: LDX <$5A
     cpu.m_x = cpu.read_memory16(0x5A);
 
@@ -867,6 +877,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8E2F: STD $15,X
     // TODO: Handle indexed addressing: STD $15,X
 
+    label_8E32:
     // 8E32: LDU $D,X
     // TODO: Fix comma operator: LDU $D,X
 
@@ -924,6 +935,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8E5C: LDU $D,X
     // TODO: Fix comma operator: LDU $D,X
 
+    label_8E5E:
     // 8E5E: LDA ,U
     // TODO: Complex indexed addressing: ,U
 
@@ -960,6 +972,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8E79: LDU $D,X
     // TODO: Fix comma operator: LDU $D,X
 
+    label_8E7B:
     // 8E7B: LDD $1,U
     // TODO: Fix comma operator: LDD $1,U
 
@@ -1071,6 +1084,7 @@ void routine_8b6d_8ed6_impl(CPU6809& cpu) {
     // 8ED1: LBMI $8E32
     // TODO: Convert LBMI $8E32
 
+    label_8ED6:
     // 8ED6: JMP $8ed6
     goto label_8ED6;
 

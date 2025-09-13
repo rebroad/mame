@@ -6,6 +6,7 @@ void routine_d8fa_d912_impl(CPU6809& cpu) {
     // Converted from rom_disasm_d8fa_d912.md
     // Address: 0xD8FA_D912
 
+    label_D8FA:
     // D8FA: CMPA ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -36,6 +37,7 @@ void routine_d8fa_d912_impl(CPU6809& cpu) {
     // D910: LEAX ,U
     // TODO: Complex indexed addressing: ,U
 
+    label_D912:
     // D912: JMP $d912
     goto label_D912;
 

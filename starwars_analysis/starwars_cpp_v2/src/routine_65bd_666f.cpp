@@ -6,6 +6,7 @@ void routine_65bd_666f_impl(CPU6809& cpu) {
     // Converted from rom_disasm_65bd_666f.md
     // Address: 0x65BD_666F
 
+    label_65BD:
     // 65BD: JSR $6112
     cpu.call_function(0x6112);
 
@@ -63,6 +64,7 @@ void routine_65bd_666f_impl(CPU6809& cpu) {
     // 65E7: LDD #$6680
     cpu.m_d = 0x6680;
 
+    label_65EA:
     // 65EA: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 

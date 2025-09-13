@@ -6,6 +6,7 @@ void routine_c24e_c2c3_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c24e_c2c3.md
     // Address: 0xC24E_C2C3
 
+    label_C24E:
     // C24E: CMPA #$03
     cpu.compare_a(0x03);
 
@@ -123,9 +124,11 @@ void routine_c24e_c2c3_impl(CPU6809& cpu) {
     // C2AE: JSR $C6F9
     cpu.call_function(0xC6F9);
 
+    label_C2B1:
     // C2B1: TFR B,A
     cpu.m_a = cpu.m_b;
 
+    label_C2B3:
     // C2B3: JSR $C2C3
     cpu.call_function(0xC2C3);
 
@@ -141,6 +144,7 @@ void routine_c24e_c2c3_impl(CPU6809& cpu) {
     // C2C0: LDB #$FF
     cpu.m_b = 0xFF;
 
+    label_C2C3:
     // C2C3: JMP $c2c3
     goto label_C2C3;
 

@@ -6,6 +6,7 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c8a5_ca63.md
     // Address: 0xC8A5_CA63
 
+    label_C8A5:
     // C8A5: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
@@ -33,12 +34,14 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // C8B7: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
 
+    label_C8BA:
     // C8BA: BRA $C8BF
     goto label_C8BF;
 
     // C8BD: LDD A,U
     // TODO: Fix comma operator: LDD A,U
 
+    label_C8BF:
     // C8BF: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -75,12 +78,14 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // C8D9: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
+    label_C8DB:
     // C8DB: BRA $C8DF
     goto label_C8DF;
 
     // C8DD: LDD <$01
     cpu.m_d = cpu.read_memory16(0x01);
 
+    label_C8DF:
     // C8DF: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -105,12 +110,14 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // C8EF: LDD $3002
     cpu.m_d = cpu.read_memory16(0x3002);
 
+    label_C8F2:
     // C8F2: BRA $C8F7
     goto label_C8F7;
 
     // C8F5: LDD A,U
     // TODO: Fix comma operator: LDD A,U
 
+    label_C8F7:
     // C8F7: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -345,6 +352,7 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // C9B6: LDD #$6450
     cpu.m_d = 0x6450;
 
+    label_C9B9:
     // C9B9: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -423,6 +431,7 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // C9F4: LDD #$6450
     cpu.m_d = 0x6450;
 
+    label_C9F7:
     // C9F7: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -537,6 +546,7 @@ void routine_c8a5_ca63_impl(CPU6809& cpu) {
     // CA52: LDD B,X
     // TODO: Fix comma operator: LDD B,X
 
+    label_CA54:
     // CA54: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 

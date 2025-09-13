@@ -6,6 +6,7 @@ void routine_6586_6592_impl(CPU6809& cpu) {
     // Converted from rom_disasm_6586_6592.md
     // Address: 0x6586_6592
 
+    label_6586:
     // 6586: TFR B,A
     cpu.m_a = cpu.m_b;
 

@@ -6,6 +6,7 @@ void routine_cbd8_cc1b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cbd8_cc1b.md
     // Address: 0xCBD8_CC1B
 
+    label_CBD8:
     // CBD8: STU $9CFE
     cpu.write_memory16(0x9CFE, cpu.m_u);
 

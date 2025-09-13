@@ -6,6 +6,7 @@ void routine_60be_60ca_impl(CPU6809& cpu) {
     // Converted from rom_disasm_60be_60ca.md
     // Address: 0x60BE_60CA
 
+    label_60BE:
     // 60BE: INC <$43
     // TODO: Convert INC <$43
 
@@ -24,6 +25,7 @@ void routine_60be_60ca_impl(CPU6809& cpu) {
     // 60C8: STA <$42
     cpu.write_memory(0x42, cpu.m_a);
 
+    label_60CA:
     // 60CA: JMP $60ca
     goto label_60CA;
 

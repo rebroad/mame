@@ -6,6 +6,7 @@ void routine_ae60_ae6e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ae60_ae6e.md
     // Address: 0xAE60_AE6E
 
+    label_AE60:
     // AE60: LDA <$BD
     cpu.m_a = cpu.read_memory(0xBD);
 
@@ -27,6 +28,7 @@ void routine_ae60_ae6e_impl(CPU6809& cpu) {
     // AE6C: BRA $AE72
     goto label_AE72;
 
+    label_AE6E:
     // AE6E: JMP $ae6e
     goto label_AE6E;
 

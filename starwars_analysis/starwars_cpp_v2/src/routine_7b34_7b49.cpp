@@ -6,6 +6,7 @@ void routine_7b34_7b49_impl(CPU6809& cpu) {
     // Converted from rom_disasm_7b34_7b49.md
     // Address: 0x7B34_7B49
 
+    label_7B34:
     // 7B34: SBCA #$DC
     // TODO: Convert SBCA #$DC
 
@@ -33,6 +34,7 @@ void routine_7b34_7b49_impl(CPU6809& cpu) {
     // 7B46: TST $B182
     // TODO: Convert TST $B182
 
+    label_7B49:
     // 7B49: JMP $7b49
     goto label_7B49;
 

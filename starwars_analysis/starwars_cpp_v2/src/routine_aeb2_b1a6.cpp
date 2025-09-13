@@ -6,6 +6,7 @@ void routine_aeb2_b1a6_impl(CPU6809& cpu) {
     // Converted from rom_disasm_aeb2_b1a6.md
     // Address: 0xAEB2_B1A6
 
+    label_AEB2:
     // AEB2: LDA #$FF
     cpu.m_a = 0xFF;
 
@@ -393,6 +394,7 @@ void routine_aeb2_b1a6_impl(CPU6809& cpu) {
     // AFED: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_AFEF:
     // AFEF: LDD <$03
     cpu.m_d = cpu.read_memory16(0x03);
 
@@ -504,6 +506,7 @@ void routine_aeb2_b1a6_impl(CPU6809& cpu) {
     // B042: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_B044:
     // B044: LDD #$7200
     cpu.m_d = 0x7200;
 
@@ -732,6 +735,7 @@ void routine_aeb2_b1a6_impl(CPU6809& cpu) {
     // B0FD: BLT $B158
     if (cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xB158;
 
+    label_B0FF:
     // B0FF: STD <$03
     cpu.write_memory16(0x03, cpu.m_d);
 
@@ -924,6 +928,7 @@ void routine_aeb2_b1a6_impl(CPU6809& cpu) {
     // B1A2: LBLT $B260
     // TODO: Convert LBLT $B260
 
+    label_B1A6:
     // B1A6: JMP $b1a6
     goto label_B1A6;
 

@@ -6,6 +6,7 @@ void routine_64c9_6512_impl(CPU6809& cpu) {
     // Converted from rom_disasm_64c9_6512.md
     // Address: 0x64C9_6512
 
+    label_64C9:
     // 64C9: JSR $622D
     cpu.call_function(0x622D);
 
@@ -90,6 +91,7 @@ void routine_64c9_6512_impl(CPU6809& cpu) {
     // 6510: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_6512:
     // 6512: JMP $6512
     goto label_6512;
 

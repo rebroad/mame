@@ -21,6 +21,7 @@ void routine_df18_df30_impl(CPU6809& cpu) {
     // DF2E: BRA $DF7C
     goto label_DF7C;
 
+    label_DF30:
     // DF30: JMP $df30
     goto label_DF30;
 

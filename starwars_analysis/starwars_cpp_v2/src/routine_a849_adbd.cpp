@@ -6,6 +6,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // Converted from rom_disasm_a849_adbd.md
     // Address: 0xA849_ADBD
 
+    label_A849:
     // A849: LDX #$494B
     cpu.m_x = 0x494B;
 
@@ -36,6 +37,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // A85E: BRA $A861
     goto label_A861;
 
+    label_A861:
     // A861: LDX <$A8
     cpu.m_x = cpu.read_memory16(0xA8);
 
@@ -387,6 +389,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // A984: ADDD $2,U
     // TODO: Fix comma operator: ADDD $2,U
 
+    label_A986:
     // A986: STD $2,U
     // TODO: Handle indexed addressing: STD $2,U
 
@@ -492,6 +495,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // A9E1: ADDD $2,U
     // TODO: Fix comma operator: ADDD $2,U
 
+    label_A9E3:
     // A9E3: STD $2,U
     // TODO: Handle indexed addressing: STD $2,U
 
@@ -678,6 +682,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AA7B: BRA $AA7D
     goto label_AA7D;
 
+    label_AA7D:
     // AA7D: LDA $3,X
     // TODO: Fix comma operator: LDA $3,X
 
@@ -732,6 +737,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AAA5: LDD #$FE80
     cpu.m_d = 0xFE80;
 
+    label_AAA8:
     // AAA8: SUBD $2,U
     // TODO: Fix comma operator: SUBD $2,U
 
@@ -792,6 +798,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AAD4: LDD #$0180
     cpu.m_d = 0x0180;
 
+    label_AAD7:
     // AAD7: SUBD $2,U
     // TODO: Fix comma operator: SUBD $2,U
 
@@ -1086,6 +1093,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // ABDB: SUBD #$0200
     cpu.m_d -= 0x0200;
 
+    label_ABDE:
     // ABDE: BLE $ABE5
     if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xABE5;
 
@@ -1116,6 +1124,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // ABF3: BLE $AC22
     if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAC22;
 
+    label_ABF5:
     // ABF5: LDD <$D8
     cpu.m_d = cpu.read_memory16(0xD8);
 
@@ -1137,6 +1146,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AC03: BLE $AC22
     if (cpu.zero_flag() || cpu.negative_flag() != cpu.overflow_flag()) cpu.m_pc = 0xAC22;
 
+    label_AC05:
     // AC05: CMPX <$CA
     cpu.compare_x(cpu.read_memory16(0xCA));
 
@@ -1173,6 +1183,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AC1F: JMP $AC34
     goto label_AC34;
 
+    label_AC22:
     // AC22: JSR $AC52
     cpu.call_function(0xAC52);
 
@@ -1194,9 +1205,11 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AC2F: BRA $AC32
     goto label_AC32;
 
+    label_AC32:
     // AC32: STA $3,X
     // TODO: Handle indexed addressing: STA $3,X
 
+    label_AC34:
     // AC34: LDX <$A8
     cpu.m_x = cpu.read_memory16(0xA8);
 
@@ -1311,6 +1324,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // AC8E: LDA #$06
     cpu.m_a = 0x06;
 
+    label_AC91:
     // AC91: ORA #$70
     cpu.m_a |= 0x70;
 
@@ -1335,6 +1349,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // ACA4: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_ACA6:
     // ACA6: LDD #$7200
     cpu.m_d = 0x7200;
 
@@ -1680,6 +1695,7 @@ void routine_a849_adbd_impl(CPU6809& cpu) {
     // ADBA: ADDD #$0080
     cpu.m_d += 0x0080;
 
+    label_ADBD:
     // ADBD: JMP $adbd
     goto label_ADBD;
 

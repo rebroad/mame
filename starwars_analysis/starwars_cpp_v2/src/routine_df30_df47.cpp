@@ -18,6 +18,7 @@ void routine_df30_df47_impl(CPU6809& cpu) {
     // DF45: BRA $DF9A
     goto label_DF9A;
 
+    label_DF47:
     // DF47: JMP $df47
     goto label_DF47;
 

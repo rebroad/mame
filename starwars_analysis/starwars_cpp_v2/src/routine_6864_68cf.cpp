@@ -75,6 +75,7 @@ void routine_6864_68cf_impl(CPU6809& cpu) {
     // 68A1: JSR $BDA8
     cpu.call_function(0xBDA8);
 
+    label_68A4:
     // 68A4: BRA $68C6
     goto label_68C6;
 
@@ -114,6 +115,7 @@ void routine_6864_68cf_impl(CPU6809& cpu) {
     // 68C4: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_68C6:
     // 68C6: LDA <$E6
     cpu.m_a = cpu.read_memory(0xE6);
 

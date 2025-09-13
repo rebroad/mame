@@ -6,6 +6,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // Converted from rom_disasm_a1ce_a849.md
     // Address: 0xA1CE_A849
 
+    label_A1CE:
     // A1CE: LDU #$49C2
     cpu.m_u = 0x49C2;
 
@@ -312,9 +313,11 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A2D6: ORA #$10
     cpu.m_a |= 0x10;
 
+    label_A2D8:
     // A2D8: STA ,U
     // TODO: Handle indexed addressing: STA ,U
 
+    label_A2DA:
     // A2DA: LDB $4B13
     cpu.m_b = cpu.read_memory(0x4B13);
 
@@ -366,6 +369,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A304: LDB #$08
     cpu.m_b = 0x08;
 
+    label_A306:
     // A306: STB <$DC
     cpu.write_memory(0xDC, cpu.m_b);
 
@@ -423,6 +427,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A32E: LDD #$6780
     cpu.m_d = 0x6780;
 
+    label_A331:
     // A331: BRA $A33F
     goto label_A33F;
 
@@ -441,6 +446,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A33C: LDD #$6080
     cpu.m_d = 0x6080;
 
+    label_A33F:
     // A33F: STD $5E00
     cpu.write_memory16(0x5E00, cpu.m_d);
 
@@ -645,6 +651,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A3F2: STA <$63
     cpu.write_memory(0x63, cpu.m_a);
 
+    label_A3F4:
     // A3F4: LDA $5000
     cpu.m_a = cpu.read_memory(0x5000);
 
@@ -663,6 +670,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A400: JSR $CD50
     cpu.call_function(0xCD50);
 
+    label_A403:
     // A403: JSR $CD74
     cpu.call_function(0xCD74);
 
@@ -858,6 +866,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A4B7: STD $5004
     cpu.write_memory16(0x5004, cpu.m_d);
 
+    label_A4BA:
     // A4BA: LDD $5000
     cpu.m_d = cpu.read_memory16(0x5000);
 
@@ -1101,6 +1110,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A589: JSR $973A
     cpu.call_function(0x973A);
 
+    label_A58C:
     // A58C: JSR $BDFD
     cpu.call_function(0xBDFD);
 
@@ -1146,6 +1156,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A5B0: BRA $A5B3
     goto label_A5B3;
 
+    label_A5B3:
     // A5B3: LDD #$4000
     cpu.m_d = 0x4000;
 
@@ -1506,6 +1517,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A6F0: LDX B,X
     // TODO: Fix comma operator: LDX B,X
 
+    label_A6F2:
     // A6F2: BRA $A708
     goto label_A708;
 
@@ -1533,6 +1545,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A705: LDX #$494B
     cpu.m_x = 0x494B;
 
+    label_A708:
     // A708: STX <$A8
     cpu.write_memory16(0xA8, cpu.m_x);
 
@@ -1566,6 +1579,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A71F: COM $9,U
     // TODO: Convert COM $9,U
 
+    label_A728:
     // A728: JSR $A6E0
     cpu.call_function(0xA6E0);
 
@@ -1605,6 +1619,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A742: LDA #$07
     cpu.m_a = 0x07;
 
+    label_A744:
     // A744: STA $4,X
     // TODO: Handle indexed addressing: STA $4,X
 
@@ -1743,9 +1758,11 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A7AE: LDA #$08
     cpu.m_a = 0x08;
 
+    label_A7B0:
     // A7B0: STA $4,X
     // TODO: Handle indexed addressing: STA $4,X
 
+    label_A7B2:
     // A7B2: JSR $BE11
     cpu.call_function(0xBE11);
 
@@ -1785,6 +1802,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A7CF: BRA $A7D1
     goto label_A7D1;
 
+    label_A7D1:
     // A7D1: LDA #$70
     cpu.m_a = 0x70;
 
@@ -1851,6 +1869,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A800: JSR $A6F4
     cpu.call_function(0xA6F4);
 
+    label_A803:
     // A803: LDA #$09
     cpu.m_a = 0x09;
 
@@ -1878,6 +1897,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A814: JSR $A6F4
     cpu.call_function(0xA6F4);
 
+    label_A817:
     // A817: LDA #$0A
     cpu.m_a = 0x0A;
 
@@ -1890,6 +1910,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A81D: BRA $A81F
     goto label_A81F;
 
+    label_A81F:
     // A81F: LDD $5078
     cpu.m_d = cpu.read_memory16(0x5078);
 
@@ -1941,6 +1962,7 @@ void routine_a1ce_a849_impl(CPU6809& cpu) {
     // A845: JSR $BE11
     cpu.call_function(0xBE11);
 
+    label_A849:
     // A849: JMP $a849
     goto label_A849;
 

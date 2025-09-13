@@ -6,6 +6,7 @@ void routine_882f_8b6d_impl(CPU6809& cpu) {
     // Converted from rom_disasm_882f_8b6d.md
     // Address: 0x882F_8B6D
 
+    label_882F:
     // 882F: SUBD $5000
     cpu.m_d -= 0x5000;
 
@@ -87,6 +88,7 @@ void routine_882f_8b6d_impl(CPU6809& cpu) {
     // 8874: LDD #$1000
     cpu.m_d = 0x1000;
 
+    label_8877:
     // 8877: ADDD $49BB
     cpu.m_d += 0x49BB;
 
@@ -225,6 +227,7 @@ void routine_882f_8b6d_impl(CPU6809& cpu) {
     // 88EE: JSR $CD50
     cpu.call_function(0xCD50);
 
+    label_88F1:
     // 88F1: JSR $CD74
     cpu.call_function(0xCD74);
 
@@ -264,6 +267,7 @@ void routine_882f_8b6d_impl(CPU6809& cpu) {
     // 8911: LDD #$0000
     cpu.m_d = 0x0000;
 
+    label_8914:
     // 8914: STD $507C
     cpu.write_memory16(0x507C, cpu.m_d);
 
@@ -975,6 +979,7 @@ void routine_882f_8b6d_impl(CPU6809& cpu) {
     // 8B69: JSR $97E8
     cpu.call_function(0x97E8);
 
+    label_8B6D:
     // 8B6D: JMP $8b6d
     goto label_8B6D;
 

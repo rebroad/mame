@@ -6,6 +6,7 @@ void routine_624b_640e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_624b_640e.md
     // Address: 0x624B_640E
 
+    label_624B:
     // 624B: LDA $4591
     cpu.m_a = cpu.read_memory(0x4591);
 
@@ -468,6 +469,7 @@ void routine_624b_640e_impl(CPU6809& cpu) {
     // 63E4: LDB #$05
     cpu.m_b = 0x05;
 
+    label_63E6:
     // 63E6: JSR $E7C7
     cpu.call_function(0xE7C7);
 
@@ -480,6 +482,7 @@ void routine_624b_640e_impl(CPU6809& cpu) {
     // 63ED: JSR $E7C7
     cpu.call_function(0xE7C7);
 
+    label_63F0:
     // 63F0: LDA $4814
     cpu.m_a = cpu.read_memory(0x4814);
 
@@ -519,6 +522,7 @@ void routine_624b_640e_impl(CPU6809& cpu) {
     // 640B: JSR $E7C7
     cpu.call_function(0xE7C7);
 
+    label_640E:
     // 640E: JMP $640e
     goto label_640E;
 

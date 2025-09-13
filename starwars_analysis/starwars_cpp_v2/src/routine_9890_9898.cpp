@@ -6,6 +6,7 @@ void routine_9890_9898_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9890_9898.md
     // Address: 0x9890_9898
 
+    label_9890:
     // 9890: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
 
@@ -15,6 +16,7 @@ void routine_9890_9898_impl(CPU6809& cpu) {
     // 9895: STB <$62
     cpu.write_memory(0x62, cpu.m_b);
 
+    label_9898:
     // 9898: JMP $9898
     goto label_9898;
 

@@ -6,6 +6,7 @@ void routine_6005_6036_impl(CPU6809& cpu) {
     // Converted from rom_disasm_6005_6036.md
     // Address: 0x6005_6036
 
+    label_6005:
     // 6005: LDX #$0000
     cpu.m_x = 0x0000;
 
@@ -69,6 +70,7 @@ void routine_6005_6036_impl(CPU6809& cpu) {
     // 6034: BMI $6032
     if (cpu.negative_flag()) cpu.m_pc = 0x6032;
 
+    label_6036:
     // 6036: JMP $6036
     goto label_6036;
 

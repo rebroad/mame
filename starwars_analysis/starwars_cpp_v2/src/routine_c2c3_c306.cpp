@@ -6,6 +6,7 @@ void routine_c2c3_c306_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c2c3_c306.md
     // Address: 0xC2C3_C306
 
+    label_C2C3:
     // C2C3: LEAS -$3,S
     // TODO: Fix comma operator: LEAS -$3,S
 
@@ -93,6 +94,7 @@ void routine_c2c3_c306_impl(CPU6809& cpu) {
     // C303: LEAS $3,S
     // TODO: Fix comma operator: LEAS $3,S
 
+    label_C306:
     // C306: JMP $c306
     goto label_C306;
 

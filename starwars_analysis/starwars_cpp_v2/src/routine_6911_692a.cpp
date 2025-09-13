@@ -36,6 +36,7 @@ void routine_6911_692a_impl(CPU6809& cpu) {
     // 6928: BRA $6930
     goto label_6930;
 
+    label_692A:
     // 692A: JMP $692a
     goto label_692A;
 

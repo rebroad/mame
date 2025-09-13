@@ -6,6 +6,7 @@ void routine_e790_e7c7_impl(CPU6809& cpu) {
     // Converted from rom_disasm_e790_e7c7.md
     // Address: 0xE790_E7C7
 
+    label_E790:
     // E790: TFR A,B
     cpu.m_b = cpu.m_a;
 
@@ -36,6 +37,7 @@ void routine_e790_e7c7_impl(CPU6809& cpu) {
     // E7A7: LDU B,U
     // TODO: Fix comma operator: LDU B,U
 
+    label_E7A9:
     // E7A9: DEC <$AD
     // TODO: Convert DEC <$AD
 
@@ -69,12 +71,14 @@ void routine_e790_e7c7_impl(CPU6809& cpu) {
     // E7C0: LDU A,U
     // TODO: Fix comma operator: LDU A,U
 
+    label_E7C2:
     // E7C2: DEC <$AD
     // TODO: Convert DEC <$AD
 
     // E7C4: STU ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_u);
 
+    label_E7C7:
     // E7C7: JMP $e7c7
     goto label_E7C7;
 

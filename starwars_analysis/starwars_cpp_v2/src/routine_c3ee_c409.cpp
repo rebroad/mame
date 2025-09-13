@@ -6,6 +6,7 @@ void routine_c3ee_c409_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c3ee_c409.md
     // Address: 0xC3EE_C409
 
+    label_C3EE:
     // C3EE: LDX #$C7B7
     cpu.m_x = 0xC7B7;
 
@@ -33,6 +34,7 @@ void routine_c3ee_c409_impl(CPU6809& cpu) {
     // C405: LDX #$4500
     cpu.m_x = 0x4500;
 
+    label_C409:
     // C409: JMP $c409
     goto label_C409;
 

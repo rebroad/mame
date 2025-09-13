@@ -6,6 +6,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // Converted from rom_disasm_dad3_de52.md
     // Address: 0xDAD3_DE52
 
+    label_DAD3:
     // DAD3: CMPA ,U
     // TODO: Complex indexed addressing: ,U
 
@@ -258,6 +259,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DC17: BRA $DC60
     goto label_DC60;
 
+    label_DC1B:
     // DC1B: BITB #$46
     // TODO: Convert BITB #$46
 
@@ -276,6 +278,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DC3A: BITB #$31
     // TODO: Convert BITB #$31
 
+    label_DC3C:
     // DC3C: BGT $DC5E
     if (!cpu.zero_flag() && cpu.negative_flag() == cpu.overflow_flag()) cpu.m_pc = 0xDC5E;
 
@@ -330,6 +333,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DC93: BRA $DCD8
     goto label_DCD8;
 
+    label_DC9E:
     // DC9E: LDX -$E,Y
     // TODO: Fix comma operator: LDX -$E,Y
 
@@ -384,6 +388,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DCFA: BRA $DD50
     goto label_DD50;
 
+    label_DD00:
     // DD00: BRA $DD51
     goto label_DD51;
 
@@ -414,6 +419,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DD2A: BRA $DD6F
     goto label_DD6F;
 
+    label_DD31:
     // DD31: BRA $DD87
     goto label_DD87;
 
@@ -423,6 +429,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DD3B: BRA $DD82
     goto label_DD82;
 
+    label_DD42:
     // DD42: BRA $DD98
     goto label_DD98;
 
@@ -459,9 +466,11 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DD7D: BRA $DDC5
     goto label_DDC5;
 
+    label_DD87:
     // DD87: BRA $DDCB
     goto label_DDCB;
 
+    label_DD8E:
     // DD8E: BRA $DDE4
     goto label_DDE4;
 
@@ -501,6 +510,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DDC8: LDU #$594F
     cpu.m_u = 0x594F;
 
+    label_DDCC:
     // DDCC: BRA $DE22
     goto label_DE22;
 
@@ -531,6 +541,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DDF6: BRA $DE4B
     goto label_DE4B;
 
+    label_DDFB:
     // DDFB: LDX [A,Y]
     // TODO: Complex indexed addressing: [A,Y]
 
@@ -549,6 +560,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DE15: BRA $DE37
     goto label_DE37;
 
+    label_DE17:
     // DE17: BRA $DE39
     goto label_DE39;
 
@@ -561,12 +573,14 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DE1D: BRA $DE3F
     goto label_DE3F;
 
+    label_DE1F:
     // DE1F: BRA $DE41
     goto label_DE41;
 
     // DE21: BRA $DE43
     goto label_DE43;
 
+    label_DE23:
     // DE23: BRA $DE56
     goto label_DE56;
 
@@ -582,21 +596,27 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DE34: BEQ $DE89
     if (cpu.zero_flag()) cpu.m_pc = 0xDE89;
 
+    label_DE36:
     // DE36: BRA $DE8B
     goto label_DE8B;
 
+    label_DE3B:
     // DE3B: BRA $DE5D
     goto label_DE5D;
 
+    label_DE3D:
     // DE3D: BRA $DE5F
     goto label_DE5F;
 
+    label_DE3F:
     // DE3F: BRA $DE61
     goto label_DE61;
 
+    label_DE41:
     // DE41: BRA $DE63
     goto label_DE63;
 
+    label_DE43:
     // DE43: BRA $DE65
     goto label_DE65;
 
@@ -612,6 +632,7 @@ void routine_dad3_de52_impl(CPU6809& cpu) {
     // DE50: BRA $DE94
     goto label_DE94;
 
+    label_DE52:
     // DE52: JMP $de52
     goto label_DE52;
 

@@ -6,6 +6,7 @@ void routine_868a_8695_impl(CPU6809& cpu) {
     // Converted from rom_disasm_868a_8695.md
     // Address: 0x868A_8695
 
+    label_868A:
     // 868A: LDX -$10,X
     // TODO: Fix comma operator: LDX -$10,X
 

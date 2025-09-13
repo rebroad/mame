@@ -6,6 +6,7 @@ void routine_cbcc_cbd1_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cbcc_cbd1.md
     // Address: 0xCBCC_CBD1
 
+    label_CBCC:
     // CBCC: STU $0CFE
     cpu.write_memory16(0x0CFE, cpu.m_u);
 

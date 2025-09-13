@@ -6,6 +6,7 @@ void routine_c409_c421_impl(CPU6809& cpu) {
     // Converted from rom_disasm_c409_c421.md
     // Address: 0xC409_C421
 
+    label_C409:
     // C409: LDB ,U+
     // TODO: Complex indexed addressing: ,U+
 
@@ -33,6 +34,7 @@ void routine_c409_c421_impl(CPU6809& cpu) {
     // C41E: LDU #$4C00
     cpu.m_u = 0x4C00;
 
+    label_C421:
     // C421: JMP $c421
     goto label_C421;
 

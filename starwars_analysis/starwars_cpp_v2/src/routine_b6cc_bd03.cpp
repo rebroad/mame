@@ -6,6 +6,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // Converted from rom_disasm_b6cc_bd03.md
     // Address: 0xB6CC_BD03
 
+    label_B6CC:
     // B6CC: LDD #$A012
     cpu.m_d = 0xA012;
 
@@ -423,6 +424,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // B818: ASR $9,X
     // TODO: Convert ASR $9,X
 
+    label_B81C:
     // B81C: SUBD ,X
     // TODO: Complex indexed addressing: ,X
 
@@ -519,6 +521,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // B866: STD <$03
     cpu.write_memory16(0x03, cpu.m_d);
 
+    label_B868:
     // B868: JSR $B948
     cpu.call_function(0xB948);
 
@@ -810,6 +813,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // B959: LEAX D,X
     // TODO: Fix comma operator: LEAX D,X
 
+    label_B95C:
     // B95C: LDD #$14BD
     cpu.m_d = 0x14BD;
 
@@ -1227,6 +1231,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BAB6: BRA $BAB8
     goto label_BAB8;
 
+    label_BAB8:
     // BAB8: STA <$DC
     cpu.write_memory(0xDC, cpu.m_a);
 
@@ -1236,12 +1241,14 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BABC: BRA $BAC2
     goto label_BAC2;
 
+    label_BABE:
     // BABE: STA <$DC
     cpu.write_memory(0xDC, cpu.m_a);
 
     // BAC0: LDA #$64
     cpu.m_a = 0x64;
 
+    label_BAC2:
     // BAC2: LDB $D,X
     // TODO: Fix comma operator: LDB $D,X
 
@@ -1257,6 +1264,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BACE: LDB #$80
     cpu.m_b = 0x80;
 
+    label_BAD0:
     // BAD0: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -1350,6 +1358,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BB20: BRA $BB22
     goto label_BB22;
 
+    label_BB22:
     // BB22: STB <$DC
     cpu.write_memory(0xDC, cpu.m_b);
 
@@ -1374,6 +1383,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BB33: LDD B,U
     // TODO: Fix comma operator: LDD B,U
 
+    label_BB35:
     // BB35: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
@@ -1881,6 +1891,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BCE6: BNE $BCCA
     if (!cpu.zero_flag()) cpu.m_pc = 0xBCCA;
 
+    label_BCE9:
     // BCE9: LDB #$0E
     cpu.m_b = 0x0E;
 
@@ -1911,6 +1922,7 @@ void routine_b6cc_bd03_impl(CPU6809& cpu) {
     // BD00: JMP $BCE9
     goto label_BCE9;
 
+    label_BD03:
     // BD03: JMP $bd03
     goto label_BD03;
 

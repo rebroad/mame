@@ -6,6 +6,7 @@ void routine_8ed6_8f33_impl(CPU6809& cpu) {
     // Converted from rom_disasm_8ed6_8f33.md
     // Address: 0x8ED6_8F33
 
+    label_8ED6:
     // 8ED6: JSR $CCC0
     cpu.call_function(0xCCC0);
 
@@ -36,6 +37,7 @@ void routine_8ed6_8f33_impl(CPU6809& cpu) {
     // 8EF1: LDX #$907A
     cpu.m_x = 0x907A;
 
+    label_8EF4:
     // 8EF4: LDX ,X
     // TODO: Complex indexed addressing: ,X
 

@@ -6,6 +6,7 @@ void routine_64a6_64c9_impl(CPU6809& cpu) {
     // Converted from rom_disasm_64a6_64c9.md
     // Address: 0x64A6_64C9
 
+    label_64A6:
     // 64A6: STB $4B11
     cpu.write_memory(0x4B11, cpu.m_b);
 
@@ -45,6 +46,7 @@ void routine_64a6_64c9_impl(CPU6809& cpu) {
     // 64C7: STA <$41
     cpu.write_memory(0x41, cpu.m_a);
 
+    label_64C9:
     // 64C9: JMP $64c9
     goto label_64C9;
 

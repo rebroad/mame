@@ -6,6 +6,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9d32_9f00.md
     // Address: 0x9D32_9F00
 
+    label_9D32:
     // 9D32: SUBB <$00
     cpu.m_b -= 0x00;
 
@@ -273,6 +274,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // 9DF6: BRA $9DF8
     goto label_9DF8;
 
+    label_9DF8:
     // 9DF8: NEG <$03
     // TODO: Convert NEG <$03
 
@@ -354,6 +356,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // 9E33: BRA $9E35
     goto label_9E35;
 
+    label_9E35:
     // 9E35: EORB #$00
     cpu.m_b ^= 0x00;
 
@@ -591,6 +594,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // 9EE2: BRA $9EE4
     goto label_9EE4;
 
+    label_9EE4:
     // 9EE4: SUBA #$00
     cpu.m_a -= 0x00;
 
@@ -612,6 +616,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // 9EF0: BRA $9EF2
     goto label_9EF2;
 
+    label_9EF2:
     // 9EF2: SUBA >$0003
     cpu.m_a -= 0x0003;
 
@@ -630,6 +635,7 @@ void routine_9d32_9f00_impl(CPU6809& cpu) {
     // 9EFE: BRA $9F00
     goto label_9F00;
 
+    label_9F00:
     // 9F00: JMP $9f00
     goto label_9F00;
 

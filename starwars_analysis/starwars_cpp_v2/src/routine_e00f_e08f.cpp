@@ -75,6 +75,7 @@ void routine_e00f_e08f_impl(CPU6809& cpu) {
     // E089: BRA $E0D8
     goto label_E0D8;
 
+    label_E08F:
     // E08F: JMP $e08f
     goto label_E08F;
 

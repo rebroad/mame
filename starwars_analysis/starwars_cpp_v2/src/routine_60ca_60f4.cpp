@@ -6,6 +6,7 @@ void routine_60ca_60f4_impl(CPU6809& cpu) {
     // Converted from rom_disasm_60ca_60f4.md
     // Address: 0x60CA_60F4
 
+    label_60CA:
     // 60CA: LDA $4814
     cpu.m_a = cpu.read_memory(0x4814);
 
@@ -54,6 +55,7 @@ void routine_60ca_60f4_impl(CPU6809& cpu) {
     // 60F1: STA $4B31
     cpu.write_memory(0x4B31, cpu.m_a);
 
+    label_60F4:
     // 60F4: JMP $60f4
     goto label_60F4;
 

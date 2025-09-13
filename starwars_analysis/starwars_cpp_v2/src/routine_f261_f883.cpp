@@ -6,6 +6,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // Converted from rom_disasm_f261_f883.md
     // Address: 0xF261_F883
 
+    label_F261:
     // F261: ORCC #$10
     cpu.m_cc |= 0x10;
 
@@ -459,12 +460,14 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F3D6: LEAX $1,X
     // TODO: Fix comma operator: LEAX $1,X
 
+    label_F3D8:
     // F3D8: LEAY -$1,Y
     // TODO: Fix comma operator: LEAY -$1,Y
 
     // F3DA: BNE $F38D
     if (!cpu.zero_flag()) cpu.m_pc = 0xF38D;
 
+    label_F3DC:
     // F3DC: CMPU #$F340
     // TODO: Convert CMPU #$F340
 
@@ -546,12 +549,14 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F41E: LEAX $1,X
     // TODO: Fix comma operator: LEAX $1,X
 
+    label_F420:
     // F420: LEAY -$1,Y
     // TODO: Fix comma operator: LEAY -$1,Y
 
     // F422: BNE $F3EB
     if (!cpu.zero_flag()) cpu.m_pc = 0xF3EB;
 
+    label_F424:
     // F424: CMPU #$F340
     // TODO: Convert CMPU #$F340
 
@@ -732,6 +737,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F4B5: BCS $F49E
     if (cpu.carry_flag()) cpu.m_pc = 0xF49E;
 
+    label_F4B7:
     // F4B7: TFR S,D
     cpu.m_d = cpu.m_sp;
 
@@ -798,6 +804,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F4EA: BNE $F4E5
     if (!cpu.zero_flag()) cpu.m_pc = 0xF4E5;
 
+    label_F4EC:
     // F4EC: STA $4640
     cpu.write_memory(0x4640, cpu.m_a);
 
@@ -864,9 +871,11 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F522: LDY #$2000
     cpu.m_y = 0x2000;
 
+    label_F526:
     // F526: TFR X,D
     cpu.m_d = cpu.m_x;
 
+    label_F528:
     // F528: ADCB $1,X
     // TODO: Convert ADCB $1,X
 
@@ -1095,9 +1104,11 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F5E9: BNE $F5B1
     if (!cpu.zero_flag()) cpu.m_pc = 0xF5B1;
 
+    label_F5EB:
     // F5EB: BRA $F643
     goto label_F643;
 
+    label_F5ED:
     // F5ED: LDX #$0008
     cpu.m_x = 0x0008;
 
@@ -1116,6 +1127,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F5F9: LDA #$3B
     cpu.m_a = 0x3B;
 
+    label_F5FB:
     // F5FB: STA $4400
     cpu.write_memory(0x4400, cpu.m_a);
 
@@ -1158,6 +1170,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F61C: LDB #$3B
     cpu.m_b = 0x3B;
 
+    label_F61E:
     // F61E: STB $4400
     cpu.write_memory(0x4400, cpu.m_b);
 
@@ -1200,6 +1213,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F641: BRA $F5ED
     goto label_F5ED;
 
+    label_F643:
     // F643: LDD #$2020
     cpu.m_d = 0x2020;
 
@@ -1317,6 +1331,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F69F: LDA #$03
     cpu.m_a = 0x03;
 
+    label_F6A1:
     // F6A1: STA <$C5
     cpu.write_memory(0xC5, cpu.m_a);
 
@@ -1371,6 +1386,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F6C7: LDA #$03
     cpu.m_a = 0x03;
 
+    label_F6C9:
     // F6C9: STA <$C6
     cpu.write_memory(0xC6, cpu.m_a);
 
@@ -1416,6 +1432,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F6EA: LDA #$03
     cpu.m_a = 0x03;
 
+    label_F6EC:
     // F6EC: STA <$C7
     cpu.write_memory(0xC7, cpu.m_a);
 
@@ -1425,6 +1442,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F6F0: CLR <$C1
     cpu.write_memory(0xC1, 0);
 
+    label_F6F2:
     // F6F2: LDY #$0000
     cpu.m_y = 0x0000;
 
@@ -1458,6 +1476,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F70B: JMP [,U]
     // TODO: Invalid branch offset: [,U]
 
+    label_F70D:
     // F70D: LDD #$2020
     cpu.m_d = 0x2020;
 
@@ -1467,6 +1486,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F712: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_F714:
     // F714: STA $4600
     cpu.write_memory(0x4600, cpu.m_a);
 
@@ -1479,6 +1499,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F71C: LBEQ $F65C
     // TODO: Convert LBEQ $F65C
 
+    label_F720:
     // F720: JMP $F720
     goto label_F720;
 
@@ -1578,6 +1599,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F767: LDA #$29
     cpu.m_a = 0x29;
 
+    label_F769:
     // F769: STA $4400
     cpu.write_memory(0x4400, cpu.m_a);
 
@@ -1902,6 +1924,7 @@ void routine_f261_f883_impl(CPU6809& cpu) {
     // F876: LDX $3032
     cpu.m_x = cpu.read_memory16(0x3032);
 
+    label_F879:
     // F879: STX ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_x);
 

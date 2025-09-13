@@ -6,6 +6,7 @@ void routine_cccc_ccd7_impl(CPU6809& cpu) {
     // Converted from rom_disasm_cccc_ccd7.md
     // Address: 0xCCCC_CCD7
 
+    label_CCCC:
     // CCCC: ORCC #$01
     cpu.m_cc |= 0x01;
 

@@ -6,6 +6,7 @@ void routine_6036_6067_impl(CPU6809& cpu) {
     // Converted from rom_disasm_6036_6067.md
     // Address: 0x6036_6067
 
+    label_6036:
     // 6036: LDA <$41
     cpu.m_a = cpu.read_memory(0x41);
 

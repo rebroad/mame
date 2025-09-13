@@ -6,6 +6,7 @@ void routine_6857_6865_impl(CPU6809& cpu) {
     // Converted from rom_disasm_6857_6865.md
     // Address: 0x6857_6865
 
+    label_6857:
     // 6857: INC <$41
     // TODO: Convert INC <$41
 

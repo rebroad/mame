@@ -6,6 +6,7 @@ void routine_9fb8_a1ce_impl(CPU6809& cpu) {
     // Converted from rom_disasm_9fb8_a1ce.md
     // Address: 0x9FB8_A1CE
 
+    label_9FB8:
     // 9FB8: NEG <$03
     // TODO: Convert NEG <$03
 
@@ -45,6 +46,7 @@ void routine_9fb8_a1ce_impl(CPU6809& cpu) {
     // 9FD0: BRA $9FD2
     goto label_9FD2;
 
+    label_9FD2:
     // 9FD2: EORB <$00
     cpu.m_b ^= 0x00;
 
@@ -348,6 +350,7 @@ void routine_9fb8_a1ce_impl(CPU6809& cpu) {
     // A0B0: BRA $A0B2
     goto label_A0B2;
 
+    label_A0B2:
     // A0B2: SUBB #$00
     cpu.m_b -= 0x00;
 
@@ -612,6 +615,7 @@ void routine_9fb8_a1ce_impl(CPU6809& cpu) {
     // A174: BRA $A176
     goto label_A176;
 
+    label_A176:
     // A176: EORA <$00
     cpu.m_a ^= 0x00;
 
@@ -744,6 +748,7 @@ void routine_9fb8_a1ce_impl(CPU6809& cpu) {
     // A1CC: CMPX <$42
     cpu.compare_x(cpu.read_memory16(0x42));
 
+    label_A1CE:
     // A1CE: JMP $a1ce
     goto label_A1CE;
 

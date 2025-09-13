@@ -6,6 +6,7 @@ void routine_ae11_ae3e_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ae11_ae3e.md
     // Address: 0xAE11_AE3E
 
+    label_AE11:
     // AE11: SUBD $5000
     cpu.m_d -= 0x5000;
 
@@ -60,6 +61,7 @@ void routine_ae11_ae3e_impl(CPU6809& cpu) {
     // AE3B: LDD $5018
     cpu.m_d = cpu.read_memory16(0x5018);
 
+    label_AE3E:
     // AE3E: JMP $ae3e
     goto label_AE3E;
 

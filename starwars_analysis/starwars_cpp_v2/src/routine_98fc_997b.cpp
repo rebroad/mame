@@ -6,6 +6,7 @@ void routine_98fc_997b_impl(CPU6809& cpu) {
     // Converted from rom_disasm_98fc_997b.md
     // Address: 0x98FC_997B
 
+    label_98FC:
     // 98FC: SUBA $0,X
     // TODO: Fix comma operator: SUBA $0,X
 
@@ -27,6 +28,7 @@ void routine_98fc_997b_impl(CPU6809& cpu) {
     // 9908: BRA $990A
     goto label_990A;
 
+    label_990A:
     // 990A: EORA >$0001
     cpu.m_a ^= 0x0001;
 

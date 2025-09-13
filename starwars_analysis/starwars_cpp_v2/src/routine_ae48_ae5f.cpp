@@ -6,6 +6,7 @@ void routine_ae48_ae5f_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ae48_ae5f.md
     // Address: 0xAE48_AE5F
 
+    label_AE48:
     // AE48: LDB <$01
     cpu.m_b = cpu.read_memory(0x01);
 

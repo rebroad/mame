@@ -6,6 +6,7 @@ void routine_dee0_df19_impl(CPU6809& cpu) {
     // Converted from rom_disasm_dee0_df19.md
     // Address: 0xDEE0_DF19
 
+    label_DEE0:
     // DEE0: BRA $DF02
     goto label_DF02;
 
@@ -48,6 +49,7 @@ void routine_dee0_df19_impl(CPU6809& cpu) {
     // DF09: BRA $DF5F
     goto label_DF5F;
 
+    label_DF0E:
     // DF0E: BRA $DF30
     goto label_DF30;
 

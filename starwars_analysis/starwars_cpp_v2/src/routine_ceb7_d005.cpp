@@ -6,6 +6,7 @@ void routine_ceb7_d005_impl(CPU6809& cpu) {
     // Converted from rom_disasm_ceb7_d005.md
     // Address: 0xCEB7_D005
 
+    label_CEB7:
     // CEB7: STU $FFFF
     cpu.write_memory16(0xFFFF, cpu.m_u);
 
@@ -111,6 +112,7 @@ void routine_ceb7_d005_impl(CPU6809& cpu) {
     // CF19: EORA #$BB
     cpu.m_a ^= 0xBB;
 
+    label_CF1B:
     // CF1B: ADDA #$00
     cpu.m_a += 0x00;
 

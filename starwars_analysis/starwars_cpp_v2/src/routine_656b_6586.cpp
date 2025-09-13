@@ -33,6 +33,7 @@ void routine_656b_6586_impl(CPU6809& cpu) {
     // 6584: LDB #$2C
     cpu.m_b = 0x2C;
 
+    label_6586:
     // 6586: JMP $6586
     goto label_6586;
 

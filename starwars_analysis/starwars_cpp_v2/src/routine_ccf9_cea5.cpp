@@ -165,6 +165,7 @@ void routine_ccf9_cea5_impl(CPU6809& cpu) {
     // CD94: CLR $4684
     cpu.write_memory(0x4684, 0);
 
+    label_CDBA:
     // CDBA: STA $4700
     cpu.write_memory(0x4700, cpu.m_a);
 

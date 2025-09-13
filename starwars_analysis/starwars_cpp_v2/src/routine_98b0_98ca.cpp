@@ -6,6 +6,7 @@ void routine_98b0_98ca_impl(CPU6809& cpu) {
     // Converted from rom_disasm_98b0_98ca.md
     // Address: 0x98B0_98CA
 
+    label_98B0:
     // 98B0: LDB <$62
     cpu.m_b = cpu.read_memory(0x62);
 

@@ -6,6 +6,7 @@ void routine_640e_6458_impl(CPU6809& cpu) {
     // Converted from rom_disasm_640e_6458.md
     // Address: 0x640E_6458
 
+    label_640E:
     // 640E: BRA $6458
     goto label_6458;
 
@@ -30,6 +31,7 @@ void routine_640e_6458_impl(CPU6809& cpu) {
     // 641E: LDB #$0C
     cpu.m_b = 0x0C;
 
+    label_6420:
     // 6420: JSR $E7C7
     cpu.call_function(0xE7C7);
 

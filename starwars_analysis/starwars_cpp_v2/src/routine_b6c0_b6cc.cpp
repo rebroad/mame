@@ -6,6 +6,7 @@ void routine_b6c0_b6cc_impl(CPU6809& cpu) {
     // Converted from rom_disasm_b6c0_b6cc.md
     // Address: 0xB6C0_B6CC
 
+    label_B6C0:
     // B6C0: JSR $B6CC
     cpu.call_function(0xB6CC);
 
@@ -18,6 +19,7 @@ void routine_b6c0_b6cc_impl(CPU6809& cpu) {
     // B6CA: STD ,Y++
     cpu.write_memory16(cpu.m_y++, cpu.m_d);
 
+    label_B6CC:
     // B6CC: JMP $b6cc
     goto label_B6CC;
 

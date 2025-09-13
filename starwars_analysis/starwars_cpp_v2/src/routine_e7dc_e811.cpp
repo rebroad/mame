@@ -57,6 +57,7 @@ void routine_e7dc_e811_impl(CPU6809& cpu) {
     // E80F: LDD ,X
     // TODO: Complex indexed addressing: ,X
 
+    label_E811:
     // E811: JMP $e811
     goto label_E811;
 
