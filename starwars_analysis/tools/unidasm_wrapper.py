@@ -196,7 +196,7 @@ def find_intelligent_boundaries(rom_file: str, start_addr: str, arch: str = "m68
                         pass
 
         if not end_candidates:
-            return None, set()
+            return None, set(), None
 
         # Prioritize end candidates: overlap_jmp > return > external_jump > branch > infinite_loop
         priority_order = ["overlap_jmp", "return", "external_jump", "branch", "infinite_loop"]
