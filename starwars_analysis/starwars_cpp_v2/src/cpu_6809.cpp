@@ -970,6 +970,225 @@ void CPU6809::test_b() {
     set_carry_flag(false);
 }
 
+void CPU6809::add_a(uint8_t value) {
+    // ADDA - Add value to A register
+    uint16_t result = m_a + value;
+    m_a = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_a == 0);
+    set_negative_flag((m_a & 0x80) != 0);
+    set_carry_flag(result > 0xFF);
+    // V flag for overflow (simplified)
+    if (((m_a ^ value) & (m_a ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::add_b(uint8_t value) {
+    // ADDB - Add value to B register
+    uint16_t result = m_b + value;
+    m_b = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_b == 0);
+    set_negative_flag((m_b & 0x80) != 0);
+    set_carry_flag(result > 0xFF);
+    // V flag for overflow (simplified)
+    if (((m_b ^ value) & (m_b ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::add_a_with_carry(uint8_t value) {
+    // ADCA - Add value to A register with carry
+    uint16_t carry = (m_cc & 0x01) ? 1 : 0; // Get carry flag
+    uint16_t result = m_a + value + carry;
+    m_a = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_a == 0);
+    set_negative_flag((m_a & 0x80) != 0);
+    set_carry_flag(result > 0xFF);
+    // V flag for overflow (simplified)
+    if (((m_a ^ value) & (m_a ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::add_b_with_carry(uint8_t value) {
+    // ADCB - Add value to B register with carry
+    uint16_t carry = (m_cc & 0x01) ? 1 : 0; // Get carry flag
+    uint16_t result = m_b + value + carry;
+    m_b = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_b == 0);
+    set_negative_flag((m_b & 0x80) != 0);
+    set_carry_flag(result > 0xFF);
+    // V flag for overflow (simplified)
+    if (((m_b ^ value) & (m_b ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::sub_a(uint8_t value) {
+    // SUBA - Subtract value from A register
+    uint16_t result = m_a - value;
+    m_a = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_a == 0);
+    set_negative_flag((m_a & 0x80) != 0);
+    set_carry_flag(m_a < value); // Borrow occurred
+    // V flag for overflow (simplified)
+    if (((m_a ^ value) & (m_a ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::sub_b(uint8_t value) {
+    // SUBB - Subtract value from B register
+    uint16_t result = m_b - value;
+    m_b = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_b == 0);
+    set_negative_flag((m_b & 0x80) != 0);
+    set_carry_flag(m_b < value); // Borrow occurred
+    // V flag for overflow (simplified)
+    if (((m_b ^ value) & (m_b ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::sub_a_with_carry(uint8_t value) {
+    // SBCA - Subtract value from A register with carry
+    uint16_t carry = (m_cc & 0x01) ? 1 : 0; // Get carry flag
+    uint16_t result = m_a - value - carry;
+    m_a = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_a == 0);
+    set_negative_flag((m_a & 0x80) != 0);
+    set_carry_flag(m_a < (value + carry)); // Borrow occurred
+    // V flag for overflow (simplified)
+    if (((m_a ^ value) & (m_a ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::sub_b_with_carry(uint8_t value) {
+    // SBCB - Subtract value from B register with carry
+    uint16_t carry = (m_cc & 0x01) ? 1 : 0; // Get carry flag
+    uint16_t result = m_b - value - carry;
+    m_b = static_cast<uint8_t>(result);
+
+    // Set condition codes
+    set_zero_flag(m_b == 0);
+    set_negative_flag((m_b & 0x80) != 0);
+    set_carry_flag(m_b < (value + carry)); // Borrow occurred
+    // V flag for overflow (simplified)
+    if (((m_b ^ value) & (m_b ^ result)) & 0x80) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::increment_memory(uint16_t address) {
+    // INC - Increment memory location
+    uint8_t value = read_memory(address);
+    value++;
+    write_memory(address, value);
+
+    // Set condition codes
+    set_zero_flag(value == 0);
+    set_negative_flag((value & 0x80) != 0);
+    // V flag for overflow (simplified)
+    if (value == 0x80) { // Overflow from 0x7F to 0x80
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::decrement_memory(uint16_t address) {
+    // DEC - Decrement memory location
+    uint8_t value = read_memory(address);
+    value--;
+    write_memory(address, value);
+
+    // Set condition codes
+    set_zero_flag(value == 0);
+    set_negative_flag((value & 0x80) != 0);
+    // V flag for overflow (simplified)
+    if (value == 0x7F) { // Overflow from 0x80 to 0x7F
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::arithmetic_shift_left(uint16_t address) {
+    // ASL - Arithmetic shift left (multiply by 2)
+    uint8_t value = read_memory(address);
+    uint8_t old_value = value;
+
+    // Shift left, bit 7 goes to carry, bit 0 becomes 0
+    uint8_t carry_out = (value & 0x80) ? 1 : 0;
+    value = (value << 1) & 0xFF;
+    write_memory(address, value);
+
+    // Set condition codes
+    set_zero_flag(value == 0);
+    set_negative_flag((value & 0x80) != 0);
+    set_carry_flag(carry_out);
+    // V flag for overflow (bit 6 XOR bit 7 of result)
+    if (((old_value ^ value) & 0x80) != 0) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
+void CPU6809::rotate_left(uint16_t address) {
+    // ROL - Rotate left through carry
+    uint8_t value = read_memory(address);
+    uint8_t old_value = value;
+    uint8_t carry_in = (m_cc & 0x01) ? 1 : 0; // Get current carry flag
+
+    // Shift left, bit 7 goes to carry, bit 0 becomes old carry
+    uint8_t carry_out = (value & 0x80) ? 1 : 0;
+    value = ((value << 1) | carry_in) & 0xFF;
+    write_memory(address, value);
+
+    // Set condition codes
+    set_zero_flag(value == 0);
+    set_negative_flag((value & 0x80) != 0);
+    set_carry_flag(carry_out);
+    // V flag for overflow (bit 6 XOR bit 7 of result)
+    if (((old_value ^ value) & 0x80) != 0) {
+        m_cc |= 0x02; // Set V flag
+    } else {
+        m_cc &= ~0x02; // Clear V flag
+    }
+}
+
 bool CPU6809::execute_at_address(uint16_t address) {
     // TODO: Implement address-based execution
     // For now, just set PC and return true

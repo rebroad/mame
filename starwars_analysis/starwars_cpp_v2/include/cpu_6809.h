@@ -59,6 +59,20 @@ public:
     void test_a();  // TSTA - Test A register
     void test_b();  // TSTB - Test B register
 
+    // Arithmetic operations
+    void add_a(uint8_t value);           // ADDA - Add to A
+    void add_b(uint8_t value);           // ADDB - Add to B
+    void add_a_with_carry(uint8_t value); // ADCA - Add to A with carry
+    void add_b_with_carry(uint8_t value); // ADCB - Add to B with carry
+    void sub_a(uint8_t value);           // SUBA - Subtract from A
+    void sub_b(uint8_t value);           // SUBB - Subtract from B
+    void sub_a_with_carry(uint8_t value); // SBCA - Subtract from A with carry
+    void sub_b_with_carry(uint8_t value); // SBCB - Subtract from B with carry
+    void increment_memory(uint16_t address); // INC - Increment memory
+    void decrement_memory(uint16_t address); // DEC - Decrement memory
+    void arithmetic_shift_left(uint16_t address); // ASL - Arithmetic shift left
+    void rotate_left(uint16_t address); // ROL - Rotate left
+
     // Native routine execution (address-perfect C++ implementations)
     bool execute_at_address(uint16_t address);
 

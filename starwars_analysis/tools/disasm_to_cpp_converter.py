@@ -33,6 +33,25 @@ INSTRUCTION_MAP = {
     'LEAY': 'cpu.m_y += {operand}',
     'LEAS': 'cpu.m_sp += {operand}',
     'LEAU': 'cpu.m_u += {operand}',
+    # Arithmetic operations
+    'ADDA': 'cpu.add_a({operand})',
+    'ADDB': 'cpu.add_b({operand})',
+    'ADCA': 'cpu.add_a_with_carry({operand})',
+    'ADCB': 'cpu.add_b_with_carry({operand})',
+    'SUBA': 'cpu.sub_a({operand})',
+    'SUBB': 'cpu.sub_b({operand})',
+    'SBCA': 'cpu.sub_a_with_carry({operand})',
+    'SBCB': 'cpu.sub_b_with_carry({operand})',
+    'INCA': 'cpu.m_a++',
+    'INCB': 'cpu.m_b++',
+    'DECA': 'cpu.m_a--',
+    'DECB': 'cpu.m_b--',
+    'INC': 'cpu.increment_memory({operand})',
+    'DEC': 'cpu.decrement_memory({operand})',
+    'XDECA': 'cpu.m_a--',
+    'XDECB': 'cpu.m_b--',
+    'ASL': 'cpu.arithmetic_shift_left({operand})',
+    'ROL': 'cpu.rotate_left({operand})',
     'JMP': 'goto label_{operand}',
     'JSR': 'cpu.call_function({operand})',
     'RTS': 'return',
@@ -113,6 +132,15 @@ def convert_operand(operands, mnemonic):
     if operands.startswith('#$'):
         value = operands[2:]  # Remove #$ prefix
         return f"0x{value.upper()}"
+    
+    # Handle memory addressing (no # prefix means memory access)
+    if operands.startswith('$') and not operands.startswith('$x'):
+        value = operands[1:]  # Remove $ prefix
+        # Check if this is a memory operation that needs read_memory
+        if mnemonic in ['ADDA', 'ADDB', 'ADCA', 'ADCB', 'SUBA', 'SUBB', 'SBCA', 'SBCB', 'CMPA', 'CMPB', 'ANDA', 'ANDB', 'ORA', 'ORB', 'EORA', 'EORB']:
+            return f"cpu.read_memory(0x{value.upper()})"
+        else:
+            return f"0x{value.upper()}"
 
     # Handle direct page addressing
     if operands.startswith('<'):

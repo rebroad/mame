@@ -101,6 +101,26 @@ def generate_global_routine(instructions, goto_targets, output_file):
     if external_targets:
         print(f"⚠️  Found {len(external_targets)} external goto targets (will be skipped): {[hex(t) for t in sorted(external_targets)]}")
 
+    # First pass: collect all actually used labels by scanning for goto statements
+    used_labels = set()
+    for instruction in instructions:
+        current_address = instruction['address']
+        current_address_int = int(current_address, 16)
+
+        # Convert instruction to C++ to see if it generates any goto statements
+        cpp_code = convert_instruction(instruction, f'{current_address}: {instruction["mnemonic"]} {instruction["operands"]}', instruction_addresses)
+
+        # Look for goto statements in the generated C++ code
+        if 'goto label_' in cpp_code:
+            # Extract the target address from the goto statement
+            import re
+            goto_matches = re.findall(r'goto label_([0-9A-Fa-f]+)', cpp_code)
+            for match in goto_matches:
+                target_addr = int(match, 16)
+                used_labels.add(target_addr)
+
+    print(f"  Found {len(used_labels)} actually used labels out of {len(valid_goto_targets)} potential targets")
+
     cpp_lines = []
 
     # Header
@@ -116,8 +136,8 @@ def generate_global_routine(instructions, goto_targets, output_file):
         current_address = instruction['address']
         current_address_int = int(current_address, 16)
 
-        # Add label if this address is a valid goto target
-        if current_address_int in valid_goto_targets:
+        # Add label if this address is actually used by goto statements
+        if current_address_int in used_labels:
             cpp_lines.append(f'    label_{current_address_int:04X}:')
 
         # Add comment with original assembly
