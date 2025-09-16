@@ -1237,6 +1237,9 @@ int shaders::defocus_pass(d3d_render_target *rt, int source_index, poly_info *po
 {
 	int next_index = source_index;
 
+	// TODO: Intensity-driven defocus (logical deduction from hardware behavior): consider using
+	// vector buffer alpha/intensity statistics per-frame or per-region to modulate defocus amount here,
+	// simulating HV sag and focus ratio change during overdrive events (e.g., Star Wars explosion).
 	// skip defocus if no influencing settings
 	if (options->defocus[0] == 0.0f && options->defocus[1] == 0.0f)
 	{
@@ -1246,6 +1249,11 @@ int shaders::defocus_pass(d3d_render_target *rt, int source_index, poly_info *po
 	set_curr_effect(focus_effect.get());
 	curr_effect->update_uniforms();
 	curr_effect->set_texture("Diffuse", rt->target_texture[next_index].Get());
+	// Configure overdrive-induced defocus parameters (logical deduction based on hardware behavior)
+	curr_effect->set_float("OverdriveThreshold", 0.75f);
+	curr_effect->set_float("OverdriveScale", 1.0f);
+	curr_effect->set_float("OverdriveGamma", 2.2f);
+	curr_effect->set_float("DefocusMaxMul", 2.0f);
 
 	next_index = rt->next_index(next_index);
 	blit(rt->target_surface[next_index].Get(), false, D3DPT_TRIANGLELIST, 0, 2);

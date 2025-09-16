@@ -122,6 +122,9 @@ void avgdvg_device_base::vg_flush()
 				y1 = cy1;
 			}
 
+			// TODO: Intensity distribution (deduced): rather than 0 at start and full at end for each segment,
+			// consider pushing a uniform intensity or a ramp across the segment to avoid additive hotspots
+			// at joins. This would better approximate analog beam integration.
 			m_vector->add_point(x0, y0, m_vectbuf[i].color, 0);
 			m_vector->add_point(x1, y1, m_vectbuf[i].color, m_vectbuf[i].intensity);
 		}
@@ -914,6 +917,11 @@ int avg_starwars_device::handler_6() // starwars_strobe2
 		m_color = (m_dvy >> 8) & 0xf;
 	}
 
+	// TODO: Star Wars intensity scaling (from disassembly vs. hardware notes): review downstream mapping so
+	// high-intensity effects (e.g., Death Star explosion) can overdrive/defocus. Current pipeline maps
+	// intensity into alpha directly and may under-represent overdrive; consider a calibrated non-linear curve
+	// and export an overdrive metric to the renderer.
+
 	return avg_common_strobe2();
 }
 
@@ -923,6 +931,9 @@ int avg_starwars_device::handler_7() // starwars_strobe3
 
 	if (!OP0() && !OP2())
 	{
+		// TODO: Overdrive/defocus coupling (from Jed Margolin's article): in addition to setting intensity,
+		// derive an "overdrive" factor from intensity and local draw density to inform renderer-side defocus/bloom.
+		// This likely requires extending the point/segment data path or tagging the vector buffer.
 		vg_add_point_buf(
 				m_xpos,
 				m_ypos,

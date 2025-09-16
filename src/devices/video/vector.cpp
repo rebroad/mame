@@ -176,6 +176,11 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 		float intensity = (float)curpoint->intensity / 255.0f;
 		float intensity_weight = normalized_sigmoid(intensity, vector_options::s_beam_intensity_weight);
 
+		// TODO: Vector CRT authenticity (deduced from hardware docs): model HV sag/overdrive-driven defocus.
+		// Tie beam width and/or a post-process defocus amount to instantaneous/accumulated beam current,
+		// rather than only this static per-segment intensity mapping. Consider exporting a per-segment
+		// "overdrive" factor to the renderer so bright events (e.g., Death Star explosion) defocus the beam.
+		// Also consider temporal accumulation for phosphor persistence.
 		// check for static intensity
 		float beam_width = m_min_intensity == m_max_intensity
 			? vector_options::s_beam_width_min
@@ -195,6 +200,9 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		if (curpoint->intensity != 0)
 		{
+			// TODO: Endpoint handling (logical deduction): distribute intensity along the segment or taper
+			// near joins to avoid hotspots from additive overlap. An intensity ramp or proper caps could
+			// reduce artifacts and better match analog beam integration.
 			// Endpoint falloff: trim a tiny portion at the start of the segment
 			// to reduce double-contribution at shared joins. Keep geometry stable
 			// and proportional to beam width to avoid visible gaps.
