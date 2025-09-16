@@ -1350,6 +1350,9 @@ int renderer_ogl::draw(const int update)
 							set_blendmode(PRIMFLAG_GET_BLENDMODE(prim.flags));
 				}
 
+				// TODO: Intensity-driven focus (deduced): OpenGL path has no defocus stage. Consider adding
+				// a simple bloom/blur shader or widen line width dynamically when alpha is high to mimic
+				// overdrive defocus for bright segments.
 				glColor4f(prim.color.r, prim.color.g, prim.color.b, prim.color.a);
 
 				if(pendingPrimitive!=curPrimitive)
