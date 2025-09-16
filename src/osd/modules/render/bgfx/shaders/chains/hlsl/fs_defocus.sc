@@ -13,6 +13,11 @@ uniform vec4 u_tex_size0;
 
 // User-supplied
 uniform vec4 u_defocus;
+// Added parameters to emulate overdrive-induced defocus on vector CRTs (logical deduction from hardware behavior)
+uniform float u_overdrive_threshold; // [0..1]
+uniform float u_overdrive_scale;     // >=0
+uniform float u_overdrive_gamma;     // >0
+uniform float u_overdrive_maxmul;    // >=1
 
 // Samplers
 SAMPLER2D(s_tex, 0);
@@ -23,6 +28,8 @@ SAMPLER2D(s_tex, 0);
 
 void main()
 {
+	// TODO: Intensity-coupled defocus (deduced): feed an overdrive scalar from CPU-side to scale u_defocus
+	// during bright events. Requires adding a uniform updated from vector stats (e.g., average/max alpha).
 	// previously this pass was applied two times with offsets of 0.25, 0.5, 0.75, 1.0
 	// now this pass is applied only once with offsets of 0.25, 0.55, 1.0, 1.6 to achieve the same appearance as before till a maximum defocus of 2.0
 	// 0.075x² + 0.225x + 0.25
@@ -38,7 +45,15 @@ void main()
 	// imaginary texel dimensions independed from source and target dimension
 	vec2 TexelDims = vec2_splat(1.0 / 1024.0);
 
-	vec2 DefocusTexelDims = u_defocus.xy * TexelDims.xy;
+	// Sample local brightness and modulate defocus accordingly
+	vec4 center = texture2D(s_tex, v_texcoord0);
+	float luma = dot(center.rgb, vec3(0.299, 0.587, 0.114));
+	float gamma = max(u_overdrive_gamma, 0.0001);
+	luma = pow_s(saturate(luma), 1.0 / gamma);
+	float od = saturate((luma - u_overdrive_threshold) / max(1e-6, (1.0 - u_overdrive_threshold)));
+	float defocusMul = saturate(1.0 + u_overdrive_scale * od);
+	defocusMul = min(defocusMul, max(u_overdrive_maxmul, 1.0));
+	vec2 DefocusTexelDims = u_defocus.xy * defocusMul * TexelDims.xy;
 
 	vec4 d0 = texture2D(s_tex, v_texcoord0);
 	vec4 d1 = texture2D(s_tex, v_texcoord0 + Coord1Offset * DefocusTexelDims);

@@ -77,6 +77,15 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 //-----------------------------------------------------------------------------
 
 uniform float2 Defocus = float2(0.0f, 0.0f);
+// Added parameters to emulate overdrive-induced defocus on vector CRTs (logical deduction from hardware behavior)
+// OverdriveThreshold: luminance threshold [0..1] above which defocus increases
+// OverdriveScale: how strongly luminance above threshold increases defocus
+// OverdriveGamma: non-linear response shaping for luminance
+// DefocusMaxMul: clamp on the multiplicative defocus factor
+uniform float OverdriveThreshold = 0.75f;
+uniform float OverdriveScale = 1.0f;
+uniform float OverdriveGamma = 2.2f;
+uniform float DefocusMaxMul = 2.0f;
 
 // previously this pass was applied two times with offsets of 0.25, 0.5, 0.75, 1.0
 // now this pass is applied only once with offsets of 0.25, 0.55, 1.0, 1.6 to achieve the same appearance as before till a maximum defocus of 2.0
@@ -98,7 +107,15 @@ float4 ps_main(PS_INPUT Input) : COLOR
 	// imaginary texel dimensions independed from source and target dimension
 	float2 TexelDims = (1.0f / 1024.0f);
 
-	float2 DefocusTexelDims = Defocus * TexelDims;
+	// Sample source to derive local brightness (approx. beam current). Use linearized luminance.
+	float4 center = tex2D(DiffuseSampler, Input.TexCoord);
+	float luma = dot(center.rgb, float3(0.299f, 0.587f, 0.114f));
+	luma = pow(saturate(luma), 1.0f / max(OverdriveGamma, 0.0001f));
+	float od = saturate((luma - OverdriveThreshold) / max(1e-6f, (1.0f - OverdriveThreshold)));
+	float defocusMul = saturate(1.0f + OverdriveScale * od);
+	defocusMul = min(defocusMul, max(DefocusMaxMul, 1.0f));
+
+	float2 DefocusTexelDims = Defocus * defocusMul * TexelDims;
 
 	float4 texel = tex2D(DiffuseSampler, Input.TexCoord);
 	for (int i = 0; i < 8; i++)
