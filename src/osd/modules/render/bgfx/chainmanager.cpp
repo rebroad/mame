@@ -940,7 +940,6 @@ std::vector<ui::menu_item> chain_manager::get_slider_list()
 
 			ui::menu_item item(ui::menu_item_type::SLIDER, core_slider);
 			item.set_text(core_slider->description);
-			m_selection_sliders.emplace_back(item);
 
 			sliders.emplace_back(std::move(item));
 		}
