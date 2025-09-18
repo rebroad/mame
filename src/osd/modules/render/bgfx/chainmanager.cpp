@@ -108,11 +108,13 @@ void chain_manager::get_default_chain_info(std::string &out_chain_name, int32_t 
 {
 	if (m_default_chain_index == -1)
 	{
+		osd_printf_verbose("BGFX: Default chain index is -1, returning CHAIN_NONE\n");
 		out_chain_index = CHAIN_NONE;
 		out_chain_name = "";
 		return;
 	}
 
+	osd_printf_verbose("BGFX: Returning default chain index %d, name 'default'\n", m_default_chain_index);
 	out_chain_index = m_default_chain_index;
 	out_chain_name = "default";
 	return;
@@ -145,12 +147,19 @@ void chain_manager::refresh_available_chains()
 
 	if (m_default_chain_index == -1)
 	{
+		osd_printf_verbose("BGFX: Looking for default chain among %zu available chains\n", m_available_chains.size());
 		for (size_t i = 0; i < m_available_chains.size(); i++)
 		{
+			osd_printf_verbose("BGFX: Available chain %zu: %s\n", i, m_available_chains[i].m_name.c_str());
 			if (m_available_chains[i].m_name == "default")
 			{
 				m_default_chain_index = int32_t(i);
+				osd_printf_verbose("BGFX: Found default chain at index %d\n", m_default_chain_index);
 			}
+		}
+		if (m_default_chain_index == -1)
+		{
+			osd_printf_verbose("BGFX: Default chain not found!\n");
 		}
 	}
 
@@ -352,7 +361,14 @@ void chain_manager::load_chains()
 		{
 			chain_desc& desc = m_available_chains[m_current_chain[chain]];
 			m_chain_names[chain] = desc.m_name;
-			m_screen_chains[chain] = load_chain(util::path_concat(desc.m_path, desc.m_name), uint32_t(chain)).release();
+			osd_printf_verbose("BGFX: Loading chain %s for screen %d\n", desc.m_name.c_str(), chain);
+			bgfx_chain* loaded_chain = load_chain(util::path_concat(desc.m_path, desc.m_name), uint32_t(chain)).release();
+			osd_printf_verbose("BGFX: Loaded chain %s: %s\n", desc.m_name.c_str(), loaded_chain ? "success" : "failed");
+			m_screen_chains[chain] = loaded_chain;
+		}
+		else
+		{
+			osd_printf_verbose("BGFX: Screen %d has CHAIN_NONE, not loading any chain\n", chain);
 		}
 	}
 }
@@ -695,7 +711,12 @@ bool chain_manager::has_applicable_chain(uint32_t screen)
 
 bool chain_manager::needs_sliders()
 {
-	return (m_screen_count > 0) && (m_available_chains.size() > 1);
+	// Return true if we have multiple chains available, even if screen_count is 0
+	// (screen_count will be set later during rendering)
+	bool result = (m_available_chains.size() > 1);
+	osd_printf_verbose("BGFX: needs_sliders() - screen_count=%zu, available_chains=%zu, returning %s\n", 
+		m_screen_count, m_available_chains.size(), result ? "true" : "false");
+	return result;
 }
 
 void chain_manager::restore_slider_settings(int32_t id, std::vector<std::vector<float>>& settings)
@@ -904,15 +925,66 @@ std::vector<ui::menu_item> chain_manager::get_slider_list()
 {
 	std::vector<ui::menu_item> sliders;
 
+	osd_printf_verbose("BGFX: get_slider_list() called\n");
 	if (!needs_sliders())
 	{
+		osd_printf_verbose("BGFX: needs_sliders() returned false, returning empty list\n");
 		return sliders;
 	}
+	osd_printf_verbose("BGFX: needs_sliders() returned true, processing sliders\n");
 
+	// If screen_count is 0, we still want to show sliders from the default chain
+	if (m_screen_count == 0)
+	{
+		osd_printf_verbose("BGFX: screen_count is 0, loading default chain for sliders\n");
+		std::string default_chain_name;
+		int32_t default_chain_index;
+		get_default_chain_info(default_chain_name, default_chain_index);
+		
+		if (default_chain_index != CHAIN_NONE && default_chain_index < m_available_chains.size())
+		{
+			chain_desc& desc = m_available_chains[default_chain_index];
+			osd_printf_verbose("BGFX: Loading default chain '%s' for sliders\n", desc.m_name.c_str());
+			
+			// Load the default chain temporarily to get its sliders
+			bgfx_chain* default_chain = load_chain(util::path_concat(desc.m_path, desc.m_name), 0).release();
+			if (default_chain != nullptr)
+			{
+				osd_printf_verbose("BGFX: Successfully loaded default chain, getting sliders\n");
+				// Add sliders directly from the chain
+				const std::vector<bgfx_slider*> &chain_sliders = default_chain->sliders();
+				osd_printf_verbose("BGFX: Default chain has %zu sliders\n", chain_sliders.size());
+				for (bgfx_slider* slider : chain_sliders)
+				{
+					slider_state *const core_slider = slider->core_slider();
+					ui::menu_item item(ui::menu_item_type::SLIDER, core_slider);
+					item.set_text(core_slider->description);
+					sliders.emplace_back(std::move(item));
+					osd_printf_verbose("BGFX: Added slider from default chain: %s\n", core_slider->description.c_str());
+				}
+				osd_printf_verbose("BGFX: Total sliders added from default chain: %zu\n", sliders.size());
+				// Clean up the temporary chain
+				delete default_chain;
+			}
+			else
+			{
+				osd_printf_verbose("BGFX: Failed to load default chain\n");
+			}
+		}
+		return sliders;
+	}
+	
+	// Normal case: process screens
 	for (size_t index = 0; index < m_screen_chains.size() && index < m_screen_count; index++)
 	{
 		bgfx_chain* chain = m_screen_chains[index];
-		sliders.push_back(m_selection_sliders[index]);
+		osd_printf_verbose("BGFX: Screen %zu chain: %s\n", index, chain ? chain->name().c_str() : "null");
+		
+		// Only add selection slider if we have one for this screen
+		if (index < m_selection_sliders.size())
+		{
+			sliders.push_back(m_selection_sliders[index]);
+		}
 
 		if (chain == nullptr)
 		{
@@ -934,9 +1006,11 @@ std::vector<ui::menu_item> chain_manager::get_slider_list()
 		}
 
 		const std::vector<bgfx_slider*> &chain_sliders = chain->sliders();
+		osd_printf_verbose("BGFX: Chain %s has %zu sliders\n", chain->name().c_str(), chain_sliders.size());
 		for (bgfx_slider* slider : chain_sliders)
 		{
 			slider_state *const core_slider = slider->core_slider();
+			osd_printf_verbose("BGFX: Adding slider: %s\n", core_slider->description.c_str());
 
 			ui::menu_item item(ui::menu_item_type::SLIDER, core_slider);
 			item.set_text(core_slider->description);
