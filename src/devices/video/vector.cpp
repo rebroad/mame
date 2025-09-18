@@ -181,10 +181,20 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 		// rather than only this static per-segment intensity mapping. Consider exporting a per-segment
 		// "overdrive" factor to the renderer so bright events (e.g., Death Star explosion) defocus the beam.
 		// Also consider temporal accumulation for phosphor persistence.
-		// check for static intensity
-		float beam_width = m_min_intensity == m_max_intensity
-			? vector_options::s_beam_width_min
-			: vector_options::s_beam_width_min + intensity_weight * (vector_options::s_beam_width_max - vector_options::s_beam_width_min);
+		// Calculate beam width based on intensity, with proper min/max clamping
+		float beam_width;
+		if (m_min_intensity == m_max_intensity)
+		{
+			// No intensity variation - use minimum width
+			beam_width = vector_options::s_beam_width_min;
+		}
+		else
+		{
+			// Clamp intensity_weight to valid range [0,1] to prevent exceeding maximum
+			float clamped_weight = std::clamp(intensity_weight, 0.0f, 1.0f);
+			// Scale from min to max based on intensity
+			beam_width = vector_options::s_beam_width_min + clamped_weight * (vector_options::s_beam_width_max - vector_options::s_beam_width_min);
+		}
 
 		// normalize width
 		beam_width *= 1.0f / (float)VECTOR_WIDTH_DENOM;
