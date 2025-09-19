@@ -121,13 +121,13 @@ void mame_options::parse_one_ini(emu_options &options, const char *basename, int
 
 	// open the file; if we fail, that's ok
 	emu_file file(options.ini_path(), OPEN_FLAG_READ);
-	osd_printf_verbose("Attempting load of %s.ini from path: %s\n", basename, options.ini_path());
+	osd_printf_verbose("Attempting load of %s.ini\n", basename);
 	std::error_condition const filerr = file.open(std::string(basename) + ".ini");
 	if (filerr)
 		return;
 
 	// parse the file
-	osd_printf_verbose("Parsing %s.ini from: %s\n", basename, file.fullpath());
+	osd_printf_verbose("Parsing %s.ini\n", basename);
 	try
 	{
 		options.parse_ini_file((util::core_file&)file, priority, priority < OPTION_PRIORITY_DRIVER_INI, false);
