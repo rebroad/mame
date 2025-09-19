@@ -438,17 +438,29 @@ void chain_manager::process_screen_quad(uint32_t view, uint32_t screen, screen_p
 	}
 
 	bgfx_chain* chain = screen_chain(screen);
-	chain->process(prim, view, screen, m_textures, window);
-	view += chain->applicable_passes();
+	if (chain != nullptr)
+	{
+		printf("BGFX: Processing screen %d with chain '%s'\n", screen, chain->name().c_str());
+		chain->process(prim, view, screen, m_textures, window);
+		view += chain->applicable_passes();
+	}
+	else
+	{
+		printf("BGFX: No chain available for screen %d\n", screen);
+	}
 }
 
 uint32_t chain_manager::count_screens(render_primitive* prim)
 {
 	uint32_t screen_count = 0;
+	uint32_t total_prims = 0;
+	printf("BGFX: count_screens() called\n");
 	while (prim != nullptr)
 	{
+		total_prims++;
 		if (PRIMFLAG_GET_SCREENTEX(prim->flags))
 		{
+			printf("BGFX: Found screen primitive %d\n", total_prims);
 			if (screen_count < m_screen_prims.size())
 			{
 				m_screen_prims[screen_count] = prim;
@@ -467,19 +479,29 @@ uint32_t chain_manager::count_screens(render_primitive* prim)
 		update_screen_count(screen_count);
 		m_targets.update_screen_count(screen_count, m_user_prescale, m_max_prescale_size);
 	}
+	else if (screen_count == 0 && total_prims > 0)
+	{
+		// For vector games: force screen_count=1 to enable chain processing
+		printf("BGFX: Vector game detected - forcing screen_count=1 for chain processing\n");
+		update_screen_count(1);
+		m_targets.update_screen_count(1, m_user_prescale, m_max_prescale_size);
+	}
 
 	if (screen_count < m_screen_prims.size())
 	{
 		m_screen_prims.resize(screen_count);
 	}
 
+	printf("BGFX: count_screens() returning screen_count=%d (processed %d total primitives)\n", (int)screen_count, (int)total_prims);
 	return screen_count;
 }
 
 void chain_manager::update_screen_count(uint32_t screen_count)
 {
+	printf("BGFX: update_screen_count() called with screen_count=%d (current=%d)\n", (int)screen_count, (int)m_screen_count);
 	if (screen_count != m_screen_count)
 	{
+		printf("BGFX: Screen count changed from %d to %d\n", (int)m_screen_count, (int)screen_count);
 		m_slider_notifier.set_sliders_dirty();
 		m_screen_count = screen_count;
 
