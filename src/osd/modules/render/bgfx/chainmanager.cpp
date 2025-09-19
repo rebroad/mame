@@ -125,7 +125,9 @@ void chain_manager::refresh_available_chains()
 	m_available_chains.clear();
 	m_available_chains.emplace_back("none", "");
 
-	find_available_chains(util::path_concat(m_options.bgfx_path(), "chains"), "");
+	std::string chains_path = util::path_concat(m_options.bgfx_path(), "chains");
+	osd_printf_verbose("BGFX: Looking for chains in: %s\n", chains_path.c_str());
+	find_available_chains(chains_path, "");
 	std::collate<wchar_t> const &coll = std::use_facet<std::collate<wchar_t> >(std::locale());
 	std::sort(
 			m_available_chains.begin(),
