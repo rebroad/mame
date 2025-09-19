@@ -235,13 +235,16 @@ std::unique_ptr<bgfx_chain> chain_manager::load_chain(std::string name, uint32_t
 		name += ".json";
 	}
 	const std::string path = util::path_concat(m_options.bgfx_path(), "chains", name);
+	printf("BGFX Chain Manager: Loading chain file: %s\n", path.c_str());
 
 	bx::FileReader reader;
 	if (!bx::open(&reader, path.c_str()))
 	{
+		printf("BGFX Chain Manager: Failed to open chain file: %s\n", path.c_str());
 		osd_printf_warning("Unable to open chain file %s, falling back to no post processing\n", path);
 		return nullptr;
 	}
+	printf("BGFX Chain Manager: Successfully opened chain file: %s\n", path.c_str());
 
 	const int32_t size(bx::getSize(&reader));
 
