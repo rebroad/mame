@@ -705,6 +705,7 @@ uint32_t chain_manager::update_screen_textures(uint32_t view, render_primitive *
 
 uint32_t chain_manager::process_screen_chains(uint32_t view, osd_window& window)
 {
+	printf("BGFX: process_screen_chains() called with %zu screen prims\n", m_screen_prims.size());
 	// Process each screen as necessary
 	uint32_t used_views = 0;
 	uint32_t screen_index = 0;
