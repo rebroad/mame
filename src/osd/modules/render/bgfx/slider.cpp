@@ -58,6 +58,10 @@ std::unique_ptr<slider_state> bgfx_slider::create_core_slider()
 
 int32_t bgfx_slider::update(std::string *str, int32_t newval)
 {
+	if (newval != SLIDER_NOCHANGE)
+	{
+		osd_printf_verbose("BGFX Slider: %s changed to %d\n", m_description.c_str(), newval);
+	}
 	switch (m_type)
 	{
 		case SLIDER_INT_ENUM:

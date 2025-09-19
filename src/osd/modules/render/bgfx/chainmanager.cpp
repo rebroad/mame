@@ -719,7 +719,7 @@ bool chain_manager::needs_sliders()
 	// Return true if we have multiple chains available, even if screen_count is 0
 	// (screen_count will be set later during rendering)
 	bool result = (m_available_chains.size() > 1);
-	osd_printf_verbose("BGFX: needs_sliders() - screen_count=%zu, available_chains=%zu, returning %s\n", 
+	osd_printf_verbose("BGFX: needs_sliders() - screen_count=%zu, available_chains=%zu, returning %s\n",
 		m_screen_count, m_available_chains.size(), result ? "true" : "false");
 	return result;
 }
@@ -938,19 +938,49 @@ std::vector<ui::menu_item> chain_manager::get_slider_list()
 	}
 	osd_printf_verbose("BGFX: needs_sliders() returned true, processing sliders\n");
 
-	// If screen_count is 0, return empty sliders for now
-	// Sliders will be available once rendering starts and screen_count > 0
+	// If screen_count is 0, we still want to show sliders from the default chain
+	// But we need to be careful about memory management to avoid crashes
 	if (m_screen_count == 0)
 	{
+		std::string default_chain_name;
+		int32_t default_chain_index;
+		get_default_chain_info(default_chain_name, default_chain_index);
+
+		if (default_chain_index != CHAIN_NONE && default_chain_index < m_available_chains.size())
+		{
+			chain_desc& desc = m_available_chains[default_chain_index];
+
+			// Check if we already have a temporary chain loaded for sliders
+			static bgfx_chain* s_temp_slider_chain = nullptr;
+			if (s_temp_slider_chain == nullptr)
+			{
+				// Load the default chain temporarily to get its sliders
+				s_temp_slider_chain = load_chain(util::path_concat(desc.m_path, desc.m_name), 0).release();
+			}
+
+			if (s_temp_slider_chain != nullptr)
+			{
+				// Add sliders directly from the chain
+				const std::vector<bgfx_slider*> &chain_sliders = s_temp_slider_chain->sliders();
+				osd_printf_verbose("BGFX: Found %zu sliders in default chain for screen_count=0 case\n", chain_sliders.size());
+				for (bgfx_slider* slider : chain_sliders)
+				{
+					slider_state *const core_slider = slider->core_slider();
+					ui::menu_item item(ui::menu_item_type::SLIDER, core_slider);
+					item.set_text(core_slider->description);
+					sliders.emplace_back(std::move(item));
+				}
+			}
+		}
 		return sliders;
 	}
-	
+
 	// Normal case: process screens
 	for (size_t index = 0; index < m_screen_chains.size() && index < m_screen_count; index++)
 	{
 		bgfx_chain* chain = m_screen_chains[index];
 		osd_printf_verbose("BGFX: Screen %zu chain: %s\n", index, chain ? chain->name().c_str() : "null");
-		
+
 		// Only add selection slider if we have one for this screen
 		if (index < m_selection_sliders.size())
 		{
