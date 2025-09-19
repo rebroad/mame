@@ -2006,6 +2006,11 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 			slider_alloc(_("Beam Width Maximum"), 100, 100, 1000, 1, std::bind(&mame_ui_manager::slider_beam_width_max, this, std::ref(screen), _1, _2));
 			slider_alloc(_("Beam Dot Size"), 100, 100, 1000, 1,  std::bind(&mame_ui_manager::slider_beam_dot_size, this, std::ref(screen), _1, _2));
 			slider_alloc(_("Beam Intensity Weight"), -1000, 0, 1000, 10, std::bind(&mame_ui_manager::slider_beam_intensity_weight, this, std::ref(screen), _1, _2));
+			// Vector defocus overdrive controls
+			slider_alloc(_("Defocus Threshold"), 0, 75, 100, 1, std::bind(&mame_ui_manager::slider_vector_defocus_threshold, this, std::ref(screen), _1, _2));
+			slider_alloc(_("Defocus Scale"), 0, 100, 500, 5, std::bind(&mame_ui_manager::slider_vector_defocus_scale, this, std::ref(screen), _1, _2));
+			slider_alloc(_("Defocus Gamma"), 10, 22, 50, 1, std::bind(&mame_ui_manager::slider_vector_defocus_gamma, this, std::ref(screen), _1, _2));
+			slider_alloc(_("Defocus Max Mul"), 100, 200, 500, 5, std::bind(&mame_ui_manager::slider_vector_defocus_maxmul, this, std::ref(screen), _1, _2));
 			break;
 		}
 	}
@@ -2491,6 +2496,66 @@ int32_t mame_ui_manager::slider_beam_intensity_weight([[maybe_unused]] screen_de
 	if (str != nullptr)
 		*str = string_format(_("%1$1.2f"), vector_options::s_beam_intensity_weight);
 	return floorf(vector_options::s_beam_intensity_weight * 1000.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_defocus_threshold - vector defocus threshold slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_defocus_threshold([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_defocus_threshold = float(newval) * 0.01f;
+	if (str != nullptr)
+		*str = string_format(_("%1$1.2f"), vector_options::s_defocus_threshold);
+	return floorf(vector_options::s_defocus_threshold * 100.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_defocus_scale - vector defocus scale slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_defocus_scale([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_defocus_scale = float(newval) * 0.01f;
+	if (str != nullptr)
+		*str = string_format(_("%1$1.2f"), vector_options::s_defocus_scale);
+	return floorf(vector_options::s_defocus_scale * 100.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_defocus_gamma - vector defocus gamma slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_defocus_gamma([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_defocus_gamma = float(newval) * 0.1f;
+	if (str != nullptr)
+		*str = string_format(_("%1$1.1f"), vector_options::s_defocus_gamma);
+	return floorf(vector_options::s_defocus_gamma * 10.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_defocus_maxmul - vector defocus max multiplier slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_defocus_maxmul([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_defocus_maxmul = float(newval) * 0.01f;
+	if (str != nullptr)
+		*str = string_format(_("%1$1.2f"), vector_options::s_defocus_maxmul);
+	return floorf(vector_options::s_defocus_maxmul * 100.0f + 0.5f);
 }
 
 
