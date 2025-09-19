@@ -28,6 +28,9 @@ SAMPLER2D(s_tex, 0);
 
 void main()
 {
+	// DEBUG: Add a visible tint to verify this shader is running
+	vec4 debug_tint = vec4(1.0, 0.9, 0.9, 1.0); // Slight red tint
+
 	// TODO: Intensity-coupled defocus (deduced): feed an overdrive scalar from CPU-side to scale u_defocus
 	// during bright events. Requires adding a uniform updated from vector stats (e.g., average/max alpha).
 	// previously this pass was applied two times with offsets of 0.25, 0.5, 0.75, 1.0
@@ -68,5 +71,5 @@ void main()
 	vec4 blurred = (d0 + d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8) / 9.0;
 
 	blurred.a = blurred.a + d0.a;
-	gl_FragColor = blurred * v_color0;
+	gl_FragColor = (blurred * v_color0) * debug_tint;
 }
