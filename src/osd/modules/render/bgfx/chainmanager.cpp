@@ -936,44 +936,10 @@ std::vector<ui::menu_item> chain_manager::get_slider_list()
 	}
 	osd_printf_verbose("BGFX: needs_sliders() returned true, processing sliders\n");
 
-	// If screen_count is 0, we still want to show sliders from the default chain
+	// If screen_count is 0, return empty sliders for now
+	// Sliders will be available once rendering starts and screen_count > 0
 	if (m_screen_count == 0)
 	{
-		osd_printf_verbose("BGFX: screen_count is 0, loading default chain for sliders\n");
-		std::string default_chain_name;
-		int32_t default_chain_index;
-		get_default_chain_info(default_chain_name, default_chain_index);
-		
-		if (default_chain_index != CHAIN_NONE && default_chain_index < m_available_chains.size())
-		{
-			chain_desc& desc = m_available_chains[default_chain_index];
-			osd_printf_verbose("BGFX: Loading default chain '%s' for sliders\n", desc.m_name.c_str());
-			
-			// Load the default chain temporarily to get its sliders
-			bgfx_chain* default_chain = load_chain(util::path_concat(desc.m_path, desc.m_name), 0).release();
-			if (default_chain != nullptr)
-			{
-				osd_printf_verbose("BGFX: Successfully loaded default chain, getting sliders\n");
-				// Add sliders directly from the chain
-				const std::vector<bgfx_slider*> &chain_sliders = default_chain->sliders();
-				osd_printf_verbose("BGFX: Default chain has %zu sliders\n", chain_sliders.size());
-				for (bgfx_slider* slider : chain_sliders)
-				{
-					slider_state *const core_slider = slider->core_slider();
-					ui::menu_item item(ui::menu_item_type::SLIDER, core_slider);
-					item.set_text(core_slider->description);
-					sliders.emplace_back(std::move(item));
-					osd_printf_verbose("BGFX: Added slider from default chain: %s\n", core_slider->description.c_str());
-				}
-				osd_printf_verbose("BGFX: Total sliders added from default chain: %zu\n", sliders.size());
-				// Clean up the temporary chain
-				delete default_chain;
-			}
-			else
-			{
-				osd_printf_verbose("BGFX: Failed to load default chain\n");
-			}
-		}
 		return sliders;
 	}
 	
