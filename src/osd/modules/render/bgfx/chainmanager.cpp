@@ -287,10 +287,20 @@ std::unique_ptr<bgfx_chain> chain_manager::load_chain(std::string name, uint32_t
 
 void chain_manager::parse_chain_selections(std::string_view chain_str)
 {
+	printf("BGFX: Parsing chain selections from INI: '%s'\n", std::string(chain_str).c_str());
 	std::vector<std::string_view> chain_names = split_option_string(chain_str);
 
 	if (chain_names.empty())
+	{
+		printf("BGFX: No chains specified, defaulting to 'default'\n");
 		chain_names.push_back("default");
+	}
+
+	printf("BGFX: Found %zu chain names:\n", chain_names.size());
+	for (size_t i = 0; i < chain_names.size(); i++)
+	{
+		printf("BGFX: Chain %zu: '%s'\n", i, std::string(chain_names[i]).c_str());
+	}
 
 	while (m_current_chain.size() < chain_names.size())
 	{
@@ -360,6 +370,7 @@ std::vector<std::string_view> chain_manager::split_option_string(std::string_vie
 
 void chain_manager::load_chains()
 {
+	printf("BGFX: load_chains() called - processing %zu chains\n", std::min(m_current_chain.size(), m_screen_chains.size()));
 	for (size_t chain = 0; chain < m_current_chain.size() && chain < m_screen_chains.size(); chain++)
 	{
 		if (m_current_chain[chain] != CHAIN_NONE)
@@ -370,10 +381,14 @@ void chain_manager::load_chains()
 			bgfx_chain* loaded_chain = load_chain(util::path_concat(desc.m_path, desc.m_name), uint32_t(chain)).release();
 			osd_printf_verbose("BGFX: Loaded chain %s: %s\n", desc.m_name.c_str(), loaded_chain ? "success" : "failed");
 			m_screen_chains[chain] = loaded_chain;
+
+			// DEBUG: Show which chain is actually being used for rendering
+			printf("RENDERING CHAIN: Screen %d is using chain '%s'\n", (int)chain, desc.m_name.c_str());
 		}
 		else
 		{
 			osd_printf_verbose("BGFX: Screen %d has CHAIN_NONE, not loading any chain\n", chain);
+			printf("RENDERING CHAIN: Screen %d is using NO CHAIN (CHAIN_NONE)\n", (int)chain);
 		}
 	}
 }
