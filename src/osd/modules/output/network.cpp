@@ -59,7 +59,8 @@ public:
 private:
 	void deliver(std::string &msg)
 	{
-		std::strncpy(m_data, msg.c_str(), max_length);
+		std::strncpy(m_data, msg.c_str(), max_length - 1);
+		m_data[max_length - 1] = '\0';  // Ensure null termination
 		do_write(msg.size());
 	}
 
