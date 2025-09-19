@@ -42,15 +42,11 @@ std::unique_ptr<bgfx_chain> chain_reader::read_from_value(
 	if (value.HasMember("sliders"))
 	{
 		const Value& slider_array = value["sliders"];
-		printf("BGFX Chain Reader: Found sliders section with %u entries\n", slider_array.Size());
 		for (uint32_t i = 0; i < slider_array.Size(); i++)
 		{
-			printf("BGFX Chain Reader: Processing slider %u\n", i);
 			std::vector<bgfx_slider*> expanded_sliders = slider_reader::read_from_value(slider_array[i], prefix + "sliders[" + std::to_string(i) + "]: ", chains, screen_index);
-			printf("BGFX Chain Reader: Slider %u returned %zu expanded sliders\n", i, expanded_sliders.size());
 			if (expanded_sliders.size() == 0)
 			{
-				printf("BGFX Chain Reader: Slider %u failed to parse, returning nullptr\n", i);
 				return nullptr;
 			}
 			for (bgfx_slider* slider : expanded_sliders)
@@ -58,11 +54,6 @@ std::unique_ptr<bgfx_chain> chain_reader::read_from_value(
 				sliders.push_back(slider);
 			}
 		}
-		printf("BGFX Chain Reader: Total sliders parsed: %zu\n", sliders.size());
-	}
-	else
-	{
-		printf("BGFX Chain Reader: No sliders section found in chain\n");
 	}
 
 	// Parse whether the screen container is transformed by the chain's shaders
