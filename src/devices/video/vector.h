@@ -18,6 +18,10 @@ public:
 	static float s_beam_width_max;
 	static float s_beam_dot_size;
 	static float s_beam_intensity_weight;
+	static float s_defocus_threshold;
+	static float s_defocus_scale;
+	static float s_defocus_gamma;
+	static float s_defocus_maxmul;
 	// New tuning controls
 	static float s_phosphor_persistence;   // 0.0 (off) .. ~0.999 (slow decay)
 	static float s_intensity_gamma;        // perceptual mapping, default 1.0

@@ -59,6 +59,10 @@ float vector_options::s_beam_width_min = 0.0f;
 float vector_options::s_beam_width_max = 0.0f;
 float vector_options::s_beam_dot_size = 0.0f;
 float vector_options::s_beam_intensity_weight = 0.0f;
+float vector_options::s_defocus_threshold = 0.75f;
+float vector_options::s_defocus_scale = 1.0f;
+float vector_options::s_defocus_gamma = 2.2f;
+float vector_options::s_defocus_maxmul = 2.0f;
 
 void vector_options::init(emu_options& options)
 {
@@ -67,6 +71,10 @@ void vector_options::init(emu_options& options)
 	s_beam_dot_size = options.beam_dot_size();
 	s_beam_intensity_weight = options.beam_intensity_weight();
 	s_flicker = options.flicker();
+	s_defocus_threshold = options.vector_defocus_threshold();
+	s_defocus_scale = options.vector_defocus_scale();
+	s_defocus_gamma = options.vector_defocus_gamma();
+	s_defocus_maxmul = options.vector_defocus_maxmul();
 }
 
 // device type definition
@@ -248,6 +256,45 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
+
+			// Apply overdrive-induced defocus effect for bright segments (logical deduction from hardware behavior)
+			// Simulates HV sag causing beam defocus during high current draw
+			if (vector_options::s_defocus_scale > 0.0f && curpoint->intensity > 0)
+			{
+				// Calculate defocus amount based on intensity
+				float norm_intensity = intensity;
+				if (vector_options::s_defocus_gamma > 0.0001f)
+				{
+					norm_intensity = std::pow(norm_intensity, 1.0f / vector_options::s_defocus_gamma);
+				}
+				
+				float overdrive = std::max(0.0f, (norm_intensity - vector_options::s_defocus_threshold) / 
+					std::max(1e-6f, (1.0f - vector_options::s_defocus_threshold)));
+				float defocus_mul = std::clamp(1.0f + vector_options::s_defocus_scale * overdrive, 1.0f, vector_options::s_defocus_maxmul);
+				
+				if (defocus_mul > 1.05f) // Only apply if there's a meaningful defocus effect
+				{
+					// Draw additional offset copies to simulate defocus blur
+					float defocus_offset = beam_width * (defocus_mul - 1.0f) * 0.5f;
+					float defocus_intensity = curpoint->intensity * 0.3f; // Reduced intensity for blur copies
+					uint32_t defocus_color = ((uint32_t)defocus_intensity << 24) | (curpoint->col & 0xffffff);
+					
+					// 4 offset copies in cross pattern to simulate circular defocus
+					screen.container().add_line(
+						coords.x0 + defocus_offset, coords.y0, coords.x1 + defocus_offset, coords.y1,
+						beam_width, defocus_color, flags);
+					screen.container().add_line(
+						coords.x0 - defocus_offset, coords.y0, coords.x1 - defocus_offset, coords.y1,
+						beam_width, defocus_color, flags);
+					screen.container().add_line(
+						coords.x0, coords.y0 + defocus_offset, coords.x1, coords.y1 + defocus_offset,
+						beam_width, defocus_color, flags);
+					screen.container().add_line(
+						coords.x0, coords.y0 - defocus_offset, coords.x1, coords.y1 - defocus_offset,
+						beam_width, defocus_color, flags);
+				}
+			}
+
 			had_prev_render = true;
 			// update previous direction
 			float tx2 = coords.x1 - coords.x0;
