@@ -196,6 +196,7 @@ int video_bgfx::init(osd_interface &osd, osd_options const &options)
 
 	// Check that BGFX directory exists
 	char const *const bgfx_path = options.bgfx_path();
+	osd_printf_verbose("BGFX: Using BGFX path: %s\n", bgfx_path);
 	osd::directory::ptr directory = osd::directory::open(bgfx_path);
 	if (!directory)
 	{
