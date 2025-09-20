@@ -18,6 +18,7 @@
 
 // MAME headers
 #include "emu.h"
+#include "screen.h"
 #include "emuopts.h"
 #include "main.h"
 #include "rendutil.h"
@@ -139,6 +140,66 @@ void sdl_osd_interface::extract_video_config()
 	{
 		osd_printf_warning("-syncrefresh specified without -waitvsync. Reverting to -nosyncrefresh\n");
 		video_config.syncrefresh = 0;
+	}
+
+	// Warn about potential refresh rate incompatibility when waitvsync is enabled
+	if (video_config.waitvsync)
+	{
+		// Get the primary screen's refresh rate
+		double game_refresh = 60.0; // Default fallback
+		bool has_screen_device = false;
+
+		// Try to get the game's refresh rate using screen device enumerator
+		// This will work in full builds but may not be available in minimal builds
+		const screen_device *primary_screen = screen_device_enumerator(machine().root_device()).first();
+
+		if (primary_screen != nullptr)
+		{
+			game_refresh = ATTOSECONDS_TO_HZ(primary_screen->refresh_attoseconds());
+			has_screen_device = true;
+		}
+
+		// Get the actual display refresh rate
+		double display_refresh = 60.0; // Default fallback
+		SDL_DisplayMode current_mode;
+		if (SDL_GetCurrentDisplayMode(0, &current_mode) == 0)
+		{
+			display_refresh = (double)current_mode.refresh_rate;
+		}
+
+		// Only warn if we have actual game refresh rate data
+		if (has_screen_device)
+		{
+			// Improved refresh rate compatibility check
+			double refresh_ratio = game_refresh / display_refresh;
+
+			// Check for factor compatibility (e.g., 60Hz game on 120Hz display is fine)
+			bool is_factor_compatible = false;
+			if (refresh_ratio > 0.99 && refresh_ratio < 1.01) {
+				is_factor_compatible = true; // Nearly identical
+			} else if (refresh_ratio < 1.0) {
+				// Game rate is lower than display rate - check if display is a multiple
+				double inverse_ratio = display_refresh / game_refresh;
+				if (std::abs(inverse_ratio - std::round(inverse_ratio)) < 0.01) {
+					is_factor_compatible = true; // Display is a clean multiple
+				}
+			} else {
+				// Game rate is higher than display rate - check if game is a multiple
+				if (std::abs(refresh_ratio - std::round(refresh_ratio)) < 0.01) {
+					is_factor_compatible = true; // Game is a clean multiple
+				}
+			}
+
+			// Check for close enough rates (within 2% tolerance for common rates like 59.94 vs 60.0)
+			bool is_close_enough = (refresh_ratio > 0.98 && refresh_ratio < 1.02);
+
+			// Only warn if rates are incompatible
+			if (!is_factor_compatible && !is_close_enough)
+			{
+				osd_printf_warning("Refresh rate mismatch detected: Game runs at %.1f Hz, display at %.1f Hz.\n", game_refresh, display_refresh);
+				osd_printf_warning("This can cause reduced performance when -waitvsync is enabled. Consider disabling -waitvsync for better performance.\n");
+			}
+		}
 	}
 
 	if (video_config.prescale < 1 || video_config.prescale > 20)
