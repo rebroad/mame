@@ -765,9 +765,6 @@ std::unique_ptr<emu_file> rom_load_manager::open_rom_file(
 		std::string_view name,
 		std::error_condition &filerr)
 {
-	// record the set names we search
-	tried.insert(tried.end(), paths.begin(), paths.end());
-
 	// attempt to open the file
 	std::unique_ptr<emu_file> result(new emu_file(machine().options().media_path(), paths, OPEN_FLAG_READ));
 	result->set_restrict_to_mediapath(1);
@@ -775,6 +772,12 @@ std::unique_ptr<emu_file> rom_load_manager::open_rom_file(
 		filerr = result->open(name, crc);
 	else
 		filerr = result->open(name);
+
+	// record the actual attempted paths instead of just search path names
+	if (filerr)
+		tried = result->attempted_paths();
+	else
+		tried.clear();
 
 	// don't return anything if unsuccessful
 	if (filerr)

@@ -150,6 +150,7 @@ public:
 	const char *fullpath() const { return m_fullpath.c_str(); }
 	u32 openflags() const { return m_openflags; }
 	util::hash_collection &hashes(std::string_view types);
+	const std::vector<std::string> &attempted_paths() const { return m_attempted_paths; }
 
 	// setters
 	void remove_on_close() { m_remove_on_close = true; }
@@ -234,6 +235,7 @@ private:
 
 	bool                    m_remove_on_close;      // flag: remove the file when closing
 	int                     m_restrict_to_mediapath; // flag: restrict to paths inside the media-path
+	std::vector<std::string> m_attempted_paths;      // full paths that were attempted
 };
 
 
