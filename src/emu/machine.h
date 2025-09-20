@@ -252,6 +252,7 @@ private:
 	void nvram_save();
 	void popup_clear() const;
 	void popup_message(util::format_argument_pack<char> const &args) const;
+	std::string get_log_directory() const;
 
 	// internal callbacks
 	void logfile_callback(const char *buffer);
