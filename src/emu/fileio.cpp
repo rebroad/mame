@@ -13,6 +13,7 @@
 
 #include "util/path.h"
 #include "util/unzip.h"
+#include "osdfile.h"
 
 #include <tuple>
 
@@ -380,8 +381,13 @@ std::error_condition emu_file::open_next()
 		}
 		m_fullpath.append(m_filename);
 
-		// record the attempted path
-		m_attempted_paths.emplace_back(m_fullpath);
+		// record the attempted path (convert to absolute path)
+		std::string absolute_path;
+		std::error_condition path_err = osd_get_full_path(absolute_path, m_fullpath);
+		if (!path_err)
+			m_attempted_paths.emplace_back(absolute_path);
+		else
+			m_attempted_paths.emplace_back(m_fullpath); // fallback to relative path if conversion fails
 		
 		// attempt to open the file directly
 		LOG("emu_file: attempting to open '%s' directly\n", m_fullpath);
@@ -395,7 +401,15 @@ std::error_condition emu_file::open_next()
 			std::string archive_path = m_fullpath;
 			filerr = attempt_zipped();
 			if (archive_path != m_fullpath)
-				m_attempted_paths.emplace_back(m_fullpath);
+			{
+				// record the modified path (convert to absolute path)
+				std::string absolute_path;
+				std::error_condition path_err = osd_get_full_path(absolute_path, m_fullpath);
+				if (!path_err)
+					m_attempted_paths.emplace_back(absolute_path);
+				else
+					m_attempted_paths.emplace_back(m_fullpath); // fallback to relative path if conversion fails
+			}
 		}
 	}
 	return filerr;
