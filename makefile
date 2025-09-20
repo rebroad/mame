@@ -1053,10 +1053,23 @@ PROJECTDIR := $(BUILDDIR)/projects/$(OSD)/$(FULLTARGET)
 PROJECTDIR_SDL := $(BUILDDIR)/projects/sdl/$(FULLTARGET)
 PROJECTDIR_WIN := $(BUILDDIR)/projects/windows/$(FULLTARGET)
 
-.PHONY: all clean regenie generate FORCE
+.PHONY: all clean fix regenie generate FORCE help
 all: $(GENIE) $(TARGETOS)$(ARCHITECTURE)
 regenie:
 FORCE:
+
+help:
+	@echo "MAME Build System - Available targets:"
+	@echo "  all          - Build MAME (default target)"
+	@echo "  fix          - Intelligently fix build issues (preserves good work)"
+	@echo "  clean        - Full clean (removes entire build directory)"
+	@echo "  regenie      - Regenerate project files"
+	@echo "  generate     - Generate required build files"
+	@echo ""
+	@echo "For build failures due to undefined references:"
+	@echo "  1. Run 'make fix' to automatically fix corrupted build artifacts"
+	@echo "  2. Then run 'make -j4' to rebuild"
+	@echo "  3. Only use 'make clean' as last resort (loses all build work)"
 
 #-------------------------------------------------
 # gmake-mingw64-gcc
@@ -1491,6 +1504,57 @@ clean: genieclean
 	-$(SILENT)rm -f language/*/*.mo
 	-$(SILENT)rm -rf $(BUILDDIR)
 	-$(SILENT)rm -rf 3rdparty/bgfx/.build
+
+.PHONY: fix
+fix:
+	@echo "Intelligent build fix - removing corrupted artifacts while preserving good work..."
+	@REMOVED=0; \
+	echo "Checking for empty object files..."; \
+	for file in $$(find $(BUILDDIR) -name "*.o" -size 0 2>/dev/null); do \
+		echo "  Removing empty file: $$file"; \
+		rm -f "$$file"; \
+		REMOVED=$$((REMOVED + 1)); \
+	done; \
+	echo "Checking for corrupted object files..."; \
+	for file in $$(find $(BUILDDIR) -name "*.o" 2>/dev/null); do \
+		if [ -f "$$file" ] && ! file "$$file" 2>/dev/null | grep -q "ELF.*relocatable"; then \
+			echo "  Removing corrupted object: $$file"; \
+			rm -f "$$file"; \
+			REMOVED=$$((REMOVED + 1)); \
+		fi; \
+	done; \
+	echo "Checking libraries for excessive undefined symbols..."; \
+	for lib in $$(find $(BUILDDIR) -name "*.a" 2>/dev/null); do \
+		if [ -f "$$lib" ]; then \
+			UNDEF_COUNT=$$(nm "$$lib" 2>/dev/null | grep " U " | wc -l); \
+			if [ $$UNDEF_COUNT -gt 75 ]; then \
+				echo "  Removing library with $$UNDEF_COUNT undefined symbols: $$lib"; \
+				rm -f "$$lib"; \
+				REMOVED=$$((REMOVED + 1)); \
+			fi; \
+		fi; \
+	done; \
+	echo "Checking for object files missing critical symbols..."; \
+	for obj in $$(find $(BUILDDIR) -name "emumem*.o" -o -name "xa.o" -o -name "debugcpu.o" -o -name "points.o" 2>/dev/null); do \
+		if [ -f "$$obj" ]; then \
+			case "$$obj" in \
+				*emumem*) SYMBOL="_ZN13address_space19add_change_notifier" ;; \
+				*xa.o) SYMBOL="vtable for xa_dasm" ;; \
+				*debugcpu.o|*points.o) SYMBOL="_ZN13address_space19add_change_notifier" ;; \
+				*) SYMBOL="" ;; \
+			esac; \
+			if [ -n "$$SYMBOL" ] && ! nm "$$obj" 2>/dev/null | grep -q "$$SYMBOL"; then \
+				echo "  Removing object missing required symbols: $$obj"; \
+				rm -f "$$obj"; \
+				REMOVED=$$((REMOVED + 1)); \
+			fi; \
+		fi; \
+	done; \
+	if [ $$REMOVED -eq 0 ]; then \
+		echo "No corrupted files found. Build artifacts appear healthy."; \
+	else \
+		echo "Removed $$REMOVED corrupted files. Run 'make -j4' to rebuild."; \
+	fi
 
 GEN_FOLDERS := $(GENDIR)/$(TARGET)/layout/ $(GENDIR)/$(TARGET)/$(SUBTARGET_FULL)/ $(GENDIR)/mame/drivers/ $(GENDIR)/mame/machine/
 
