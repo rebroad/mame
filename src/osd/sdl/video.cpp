@@ -141,6 +141,33 @@ void sdl_osd_interface::extract_video_config()
 		video_config.syncrefresh = 0;
 	}
 
+	// Warn about potential refresh rate incompatibility when waitvsync is enabled
+	if (video_config.waitvsync)
+	{
+		// Get the primary screen's refresh rate
+		const screen_device *primary_screen = screen_device_enumerator(machine().root_device()).first();
+		if (primary_screen != nullptr)
+		{
+			double game_refresh = ATTOSECONDS_TO_HZ(primary_screen->refresh_attoseconds());
+
+			// Get the actual display refresh rate
+			double display_refresh = 60.0; // Default fallback
+			SDL_DisplayMode current_mode;
+			if (SDL_GetCurrentDisplayMode(0, &current_mode) == 0)
+			{
+				display_refresh = (double)current_mode.refresh_rate;
+			}
+
+			// Check for significant refresh rate mismatch (more than 10% difference)
+			double refresh_ratio = game_refresh / display_refresh;
+			if (refresh_ratio < 0.9 || refresh_ratio > 1.1)
+			{
+				osd_printf_warning("Refresh rate mismatch detected: Game runs at %.1f Hz, display at %.1f Hz.\n", game_refresh, display_refresh);
+				osd_printf_warning("This can cause reduced performance when -waitvsync is enabled. Consider disabling -waitvsync for better performance.\n");
+			}
+		}
+	}
+
 	if (video_config.prescale < 1 || video_config.prescale > 20)
 	{
 		osd_printf_warning("Invalid prescale option, reverting to '1'\n");
