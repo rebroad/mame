@@ -63,6 +63,8 @@ float vector_options::s_defocus_threshold = 0.75f;
 float vector_options::s_defocus_scale = 1.0f;
 float vector_options::s_defocus_gamma = 2.2f;
 float vector_options::s_defocus_maxmul = 2.0f;
+float vector_options::s_glow_intensity = 0.6f;
+bool vector_options::s_antialias = true;
 
 void vector_options::init(emu_options& options)
 {
@@ -75,6 +77,8 @@ void vector_options::init(emu_options& options)
 	s_defocus_scale = options.vector_defocus_scale();
 	s_defocus_gamma = options.vector_defocus_gamma();
 	s_defocus_maxmul = options.vector_defocus_maxmul();
+	s_glow_intensity = options.vector_glow_intensity();
+	s_antialias = options.vector_antialias();
 }
 
 // device type definition
@@ -251,11 +255,36 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				coords.y0 += ny * trim;
 			}
 
+			// Draw main line with full intensity
 			screen.container().add_line(
 				coords.x0, coords.y0, coords.x1, coords.y1,
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
+
+			// Add CRT glow effect by drawing multiple overlapping lines with decreasing intensity
+			// This simulates the phosphor persistence and bloom of a real vector CRT
+			if (curpoint->intensity > 0 && vector_options::s_glow_intensity > 0.0f)
+			{
+				// Calculate glow parameters based on intensity and user setting
+				float glow_intensity = curpoint->intensity * vector_options::s_glow_intensity;
+				float glow_width = beam_width * 1.5f; // Glow extends beyond main line
+
+				// Draw 3 glow layers with decreasing intensity and increasing width
+				for (int glow_layer = 0; glow_layer < 3; glow_layer++)
+				{
+					float layer_intensity = glow_intensity * (1.0f - glow_layer * 0.3f);
+					float layer_width = glow_width + glow_layer * beam_width * 0.5f;
+
+					if (layer_intensity > 0.1f) // Only draw if intensity is meaningful
+					{
+						uint32_t glow_color = ((uint32_t)layer_intensity << 24) | (curpoint->col & 0xffffff);
+						screen.container().add_line(
+							coords.x0, coords.y0, coords.x1, coords.y1,
+							layer_width, glow_color, flags);
+					}
+				}
+			}
 
 			// Apply overdrive-induced defocus effect for bright segments (logical deduction from hardware behavior)
 			// Simulates HV sag causing beam defocus during high current draw
