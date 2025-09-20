@@ -2011,6 +2011,9 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 			slider_alloc(_("Defocus Scale"), 0, 100, 500, 5, std::bind(&mame_ui_manager::slider_vector_defocus_scale, this, std::ref(screen), _1, _2));
 			slider_alloc(_("Defocus Gamma"), 10, 22, 50, 1, std::bind(&mame_ui_manager::slider_vector_defocus_gamma, this, std::ref(screen), _1, _2));
 			slider_alloc(_("Defocus Max Mul"), 100, 200, 500, 5, std::bind(&mame_ui_manager::slider_vector_defocus_maxmul, this, std::ref(screen), _1, _2));
+			// Vector CRT glow and antialiasing controls
+			slider_alloc(_("Glow Intensity"), 0, 60, 100, 1, std::bind(&mame_ui_manager::slider_vector_glow_intensity, this, std::ref(screen), _1, _2));
+			slider_alloc(_("Antialiasing"), 0, 1, 1, 1, std::bind(&mame_ui_manager::slider_vector_antialias, this, std::ref(screen), _1, _2));
 			break;
 		}
 	}
@@ -2556,6 +2559,36 @@ int32_t mame_ui_manager::slider_vector_defocus_maxmul([[maybe_unused]] screen_de
 	if (str != nullptr)
 		*str = string_format(_("%1$1.2f"), vector_options::s_defocus_maxmul);
 	return floorf(vector_options::s_defocus_maxmul * 100.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_glow_intensity - vector glow intensity slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_glow_intensity([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_glow_intensity = float(newval) * 0.01f;
+	if (str != nullptr)
+		*str = string_format(_("%1$1.2f"), vector_options::s_glow_intensity);
+	return floorf(vector_options::s_glow_intensity * 100.0f + 0.5f);
+}
+
+
+//-------------------------------------------------
+//  slider_vector_antialias - vector antialiasing toggle slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_vector_antialias([[maybe_unused]] screen_device &screen, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		vector_options::s_antialias = (newval != 0);
+	if (str != nullptr)
+		*str = vector_options::s_antialias ? _("On") : _("Off");
+	return vector_options::s_antialias ? 1 : 0;
 }
 
 
