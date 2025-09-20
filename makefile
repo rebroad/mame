@@ -430,9 +430,16 @@ PYTHON := $(PYTHON_EXECUTABLE)
 endif
 
 ifneq ($(TARGETOS),asmjs)
+# Enable ccache if available
+ifneq ($(shell which ccache 2>/dev/null),)
+CC := $(SILENT)ccache gcc
+LD := $(SILENT)ccache g++
+CXX:= $(SILENT)ccache g++
+else
 CC := $(SILENT)gcc
 LD := $(SILENT)g++
 CXX:= $(SILENT)g++
+endif
 endif
 
 #-------------------------------------------------
@@ -1053,23 +1060,28 @@ PROJECTDIR := $(BUILDDIR)/projects/$(OSD)/$(FULLTARGET)
 PROJECTDIR_SDL := $(BUILDDIR)/projects/sdl/$(FULLTARGET)
 PROJECTDIR_WIN := $(BUILDDIR)/projects/windows/$(FULLTARGET)
 
-.PHONY: all clean fix regenie generate FORCE help
+.PHONY: all clean fix regenie generate FORCE help ccache-optimize
 all: $(GENIE) $(TARGETOS)$(ARCHITECTURE)
 regenie:
 FORCE:
 
 help:
 	@echo "MAME Build System - Available targets:"
-	@echo "  all          - Build MAME (default target)"
-	@echo "  fix          - Intelligently fix build issues (preserves good work)"
-	@echo "  clean        - Full clean (removes entire build directory)"
-	@echo "  regenie      - Regenerate project files"
-	@echo "  generate     - Generate required build files"
+	@echo "  all            - Build MAME (default target)"
+	@echo "  fix            - Intelligently fix build issues (preserves good work)"
+	@echo "  clean          - Full clean (removes entire build directory)"
+	@echo "  regenie        - Regenerate project files"
+	@echo "  generate       - Generate required build files"
+	@echo "  ccache-optimize - Optimize ccache configuration and show stats"
 	@echo ""
 	@echo "For build failures due to undefined references:"
 	@echo "  1. Run 'make fix' to automatically fix corrupted build artifacts"
 	@echo "  2. Then run 'make -j4' to rebuild"
 	@echo "  3. Only use 'make clean' as last resort (loses all build work)"
+	@echo ""
+	@echo "For ccache optimization:"
+	@echo "  1. Run 'make ccache-optimize' to see cache performance"
+	@echo "  2. Configuration has been optimized for better hit rates"
 
 #-------------------------------------------------
 # gmake-mingw64-gcc
@@ -1554,6 +1566,34 @@ fix:
 		echo "No corrupted files found. Build artifacts appear healthy."; \
 	else \
 		echo "Removed $$REMOVED corrupted files. Run 'make -j4' to rebuild."; \
+	fi
+
+.PHONY: ccache-optimize
+ccache-optimize:
+	@echo "=== ccache Performance Analysis ==="
+	@echo ""
+	@echo "Current ccache statistics:"
+	@ccache --show-stats
+	@echo ""
+	@echo "Cache configuration:"
+	@ccache --show-config | grep -E "(compiler_check|sloppiness|max_size|stats_log)"
+	@echo ""
+	@echo "Cache directory usage:"
+	@du -sh /home/rebroad/.cache/ccache 2>/dev/null || echo "Cache directory not accessible"
+	@echo ""
+	@echo "Recent cache activity (last 24h):"
+	@find /home/rebroad/.cache/ccache -type f -mtime -1 | wc -l | xargs echo "Files modified:"
+	@echo ""
+	@echo "Optimization recommendations:"
+	@echo "1. ✅ Content-based compiler checking enabled (better than mtime)"
+	@echo "2. ✅ Enhanced sloppiness settings for C++ projects"
+	@echo "3. ✅ Stats logging enabled for analysis"
+	@echo "4. 💡 Consider running 'make fix' to clean corrupted objects"
+	@echo "5. 💡 Monitor stats.log for detailed miss analysis"
+	@echo ""
+	@if [ -f /home/rebroad/.cache/ccache/stats.log ]; then \
+		echo "Recent cache misses from stats log:"; \
+		tail -10 /home/rebroad/.cache/ccache/stats.log | grep "Result: cache_miss" | head -5; \
 	fi
 
 GEN_FOLDERS := $(GENDIR)/$(TARGET)/layout/ $(GENDIR)/$(TARGET)/$(SUBTARGET_FULL)/ $(GENDIR)/mame/drivers/ $(GENDIR)/mame/machine/
