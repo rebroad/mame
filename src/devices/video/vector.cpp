@@ -267,31 +267,36 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				{
 					norm_intensity = std::pow(norm_intensity, 1.0f / vector_options::s_defocus_gamma);
 				}
-				
-				float overdrive = std::max(0.0f, (norm_intensity - vector_options::s_defocus_threshold) / 
+
+				float overdrive = std::max(0.0f, (norm_intensity - vector_options::s_defocus_threshold) /
 					std::max(1e-6f, (1.0f - vector_options::s_defocus_threshold)));
 				float defocus_mul = std::clamp(1.0f + vector_options::s_defocus_scale * overdrive, 1.0f, vector_options::s_defocus_maxmul);
-				
+
 				if (defocus_mul > 1.05f) // Only apply if there's a meaningful defocus effect
 				{
 					// Draw additional offset copies to simulate defocus blur
 					float defocus_offset = beam_width * (defocus_mul - 1.0f) * 0.5f;
-					float defocus_intensity = curpoint->intensity * 0.3f; // Reduced intensity for blur copies
-					uint32_t defocus_color = ((uint32_t)defocus_intensity << 24) | (curpoint->col & 0xffffff);
-					
-					// 4 offset copies in cross pattern to simulate circular defocus
-					screen.container().add_line(
-						coords.x0 + defocus_offset, coords.y0, coords.x1 + defocus_offset, coords.y1,
-						beam_width, defocus_color, flags);
-					screen.container().add_line(
-						coords.x0 - defocus_offset, coords.y0, coords.x1 - defocus_offset, coords.y1,
-						beam_width, defocus_color, flags);
-					screen.container().add_line(
-						coords.x0, coords.y0 + defocus_offset, coords.x1, coords.y1 + defocus_offset,
-						beam_width, defocus_color, flags);
-					screen.container().add_line(
-						coords.x0, coords.y0 - defocus_offset, coords.x1, coords.y1 - defocus_offset,
-						beam_width, defocus_color, flags);
+
+					// Safety check: limit defocus offset to prevent excessive primitive generation
+					defocus_offset = std::min(defocus_offset, beam_width * 2.0f);
+
+					// Only add defocus if offset is meaningful and coordinates are valid
+					if (defocus_offset > 0.1f &&
+						std::isfinite(coords.x0) && std::isfinite(coords.y0) &&
+						std::isfinite(coords.x1) && std::isfinite(coords.y1))
+					{
+						float defocus_intensity = curpoint->intensity * 0.3f; // Reduced intensity for blur copies
+						uint32_t defocus_color = ((uint32_t)defocus_intensity << 24) | (curpoint->col & 0xffffff);
+
+						// Only add 2 offset copies instead of 4 to reduce primitive count
+						// Horizontal offset
+						screen.container().add_line(
+							coords.x0 + defocus_offset, coords.y0, coords.x1 + defocus_offset, coords.y1,
+							beam_width, defocus_color, flags);
+						screen.container().add_line(
+							coords.x0 - defocus_offset, coords.y0, coords.x1 - defocus_offset, coords.y1,
+							beam_width, defocus_color, flags);
+					}
 				}
 			}
 
