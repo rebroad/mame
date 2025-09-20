@@ -118,6 +118,8 @@
 #define OPTION_VECTOR_DEFOCUS_SCALE     "vector_defocus_scale"
 #define OPTION_VECTOR_DEFOCUS_GAMMA     "vector_defocus_gamma"
 #define OPTION_VECTOR_DEFOCUS_MAXMUL    "vector_defocus_maxmul"
+#define OPTION_VECTOR_GLOW_INTENSITY    "vector_glow_intensity"
+#define OPTION_VECTOR_ANTIALIAS         "vector_antialias"
 
 // core sound options
 #define OPTION_SAMPLERATE           "samplerate"
@@ -406,6 +408,8 @@ public:
 	float vector_defocus_scale() const { return float_value(OPTION_VECTOR_DEFOCUS_SCALE); }
 	float vector_defocus_gamma() const { return float_value(OPTION_VECTOR_DEFOCUS_GAMMA); }
 	float vector_defocus_maxmul() const { return float_value(OPTION_VECTOR_DEFOCUS_MAXMUL); }
+	float vector_glow_intensity() const { return float_value(OPTION_VECTOR_GLOW_INTENSITY); }
+	bool vector_antialias() const { return bool_value(OPTION_VECTOR_ANTIALIAS); }
 
 	// core sound options
 	int sample_rate() const { return int_value(OPTION_SAMPLERATE); }

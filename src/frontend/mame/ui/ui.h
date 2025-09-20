@@ -373,6 +373,8 @@ private:
 	int32_t slider_vector_defocus_scale(screen_device &screen, std::string *str, int32_t newval);
 	int32_t slider_vector_defocus_gamma(screen_device &screen, std::string *str, int32_t newval);
 	int32_t slider_vector_defocus_maxmul(screen_device &screen, std::string *str, int32_t newval);
+	int32_t slider_vector_glow_intensity(screen_device &screen, std::string *str, int32_t newval);
+	int32_t slider_vector_antialias(screen_device &screen, std::string *str, int32_t newval);
 	std::string slider_get_screen_desc(screen_device &screen);
 #ifdef MAME_DEBUG
 	int32_t slider_crossscale(ioport_field &field, std::string *str, int32_t newval);
