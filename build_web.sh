@@ -11,8 +11,8 @@ START_SERVER=true
 SERVER_PORT=""
 VIDEO_MODE="soft"   # default soft for web
 # ENABLE_WORKERS removed - COOP/COEP headers fix audio stutter without pthreads
-DRIVER_SHORTNAME="starwars1"
-ROM_PATH="$HOME/.mame/roms/starwars1.zip"
+DRIVER_SHORTNAME="starwars"
+ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
 
@@ -30,8 +30,8 @@ print_usage() {
     echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
     echo "  -no-server             Do not start a local web server"
     echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
-    echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
-    echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
+    echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars.zip)"
+    echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
     echo "  -no-ccache             Disable ccache wrapper for this build"
@@ -100,9 +100,39 @@ if $DO_WIPE; then
     fi
 fi
 
-# Ensure ROM exists
-if [[ ! -f "$ROM_PATH" ]]; then
-    echo "Error: ROM not found at $ROM_PATH"
+# Ensure ROM exists - check for zip first, then individual files
+ROM_FOUND=false
+if [[ -f "$ROM_PATH" ]]; then
+    ROM_FOUND=true
+    echo "Using ROM zip: $ROM_PATH"
+else
+    # Check for individual ROM files in starwars directory
+    ROM_DIR="$HOME/.mame/roms/starwars"
+    if [[ -d "$ROM_DIR" ]]; then
+        echo "ROM zip not found, checking for individual files in $ROM_DIR"
+
+        # Check for 214 version first (preferred), then 114
+        # Check for either 214 or 114 version ROM file (prefer 214)
+        for ver in 214 114; do
+            if [[ -f "$ROM_DIR/136021.$ver.1f" ]]; then
+                echo "Found Star Wars $ver version ROM files"
+                ROM_FOUND=true
+                ROM_PATH="$ROM_DIR"  # Use individual files directly - no need to zip
+                break
+            fi
+        done
+        if [[ "$ROM_FOUND" != "true" ]]; then
+            echo "No Star Wars ROM files found in $ROM_DIR"
+            echo "Expected files: 136021.214.1f (preferred) or 136021.114.1f"
+        fi
+    fi
+fi
+
+if [[ "$ROM_FOUND" != "true" ]]; then
+    echo "Error: ROM not found at $ROM_PATH and no individual ROM files found"
+    echo "Please ensure you have either:"
+    echo "  - $HOME/.mame/roms/starwars.zip, or"
+    echo "  - Individual ROM files in $HOME/.mame/roms/starwars/ (prefer 214 over 114)"
     exit 1
 fi
 
@@ -329,7 +359,22 @@ elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
 fi
 
 
-PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --js-output="$OUTDIR/roms.js")
+# Determine the correct ROM path based on ROM file type
+# Determine ROM mount path and always use the same PACK_ARGS template for DRYness
+if [[ "$ROM_PATH" == *.zip ]]; then
+    # For zip files, mount directly in roms/ directory
+    ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
+else
+    # For individual files, mount the entire directory in roms/starwars/
+    ROM_MOUNT_PATH="roms/starwars/"
+fi
+PACK_ARGS=(
+    "$OUTDIR/roms.data"
+    --preload "$ROM_PATH@$ROM_MOUNT_PATH"
+    --export-name=Module
+    --use-preload-cache
+    --js-output="$OUTDIR/roms.js"
+)
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
@@ -380,7 +425,7 @@ cat > "$OUTDIR/index.html" <<EOF
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MAME Star Wars (WASM)</title>
+    <title>Star Wars</title>
     <link rel="icon" href="data:,"/>
     <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
   </head>
@@ -698,5 +743,7 @@ fi
 if $CONSOLE_DEBUG; then
     run_probe || true
 fi
+
+# No cleanup needed - we're using individual files directly
 
 
