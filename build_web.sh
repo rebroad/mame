@@ -658,6 +658,7 @@ NODE
 
 # Optional headless console capture (requires Node + puppeteer)
 run_probe() {
+    local port="$1"
     if ! $CONSOLE_DEBUG; then return 0; fi
     echo "Debug mode: attempting headless console capture..."
     pushd "$OUTDIR" >/dev/null
@@ -677,18 +678,13 @@ run_probe() {
             return 0
         fi
     fi
-    # Use our MAME-specific probe tool
+    # Use the comprehensive MAME probe tool (much better output)
     if [[ -f "probe_mame_web.js" ]]; then
-        node probe_mame_web.js $port || true
+        node probe_mame_web.js "$port" || true
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
-    if [[ -f "$OUTDIR/console_capture.txt" ]]; then
-        echo "Console log captured to $OUTDIR/console_capture.txt"
-        echo "--- Last 20 lines ---"
-        tail -n 20 "$OUTDIR/console_capture.txt" || true
-        echo "---------------------"
-    fi
+
     popd >/dev/null
 }
 
@@ -697,6 +693,7 @@ if $START_SERVER; then
     ensure_server() {
         local port="$1"
         local used_port=""
+        local final_port=""
         # Prefer previously used COOP/COEP port if available and healthy (only when no explicit port requested)
         if [[ -z "$port" && -f /tmp/mame_web_port.txt ]]; then
             local prev
@@ -727,24 +724,25 @@ if $START_SERVER; then
         fi
         if [[ -n "$used_port" ]]; then
             echo "Reusing existing server on http://localhost:$used_port"
-            echo "$used_port" > /tmp/mame_web_port.txt
-            if command -v xdg-open >/dev/null 2>&1; then
-                xdg-open "http://localhost:$used_port/index.html" >/dev/null 2>&1 || true
-            fi
+            final_port="$used_port"
         else
             # No suitable server found; start our COOP/COEP server
             start_server "$port" || true
+            final_port="$port"
         fi
+        # Return the port via a global variable
+        USED_PORT="$final_port"
     }
     ensure_server "$SERVER_PORT"
 else
     echo "To serve locally: (cd $OUTDIR && python3 -m http.server 8000)"
     echo "Then open: http://localhost:8000"
+    USED_PORT="8000"
 fi
 
 # If debug mode, attempt headless console capture
 if $CONSOLE_DEBUG; then
-    run_probe || true
+    run_probe "$USED_PORT" || true
 fi
 
 # No cleanup needed - we're using individual files directly
