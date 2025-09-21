@@ -1,18 +1,15 @@
 // Headless console probe using Puppeteer
 // Usage: node probe_console.js [port|url]
 
-const fs = require('fs');
-
 (async () => {
+  console.log('🔍 Probing MAME WebAssembly build...');
+
   const arg = process.argv[2];
   let targetUrl = '';
   if (arg && /^https?:\/\//i.test(arg)) {
     targetUrl = arg;
   } else {
     let port = arg;
-    if (!port) {
-      try { port = fs.readFileSync('/tmp/mame_web_port.txt', 'utf8').trim(); } catch {}
-    }
     if (!port) port = '8000';
     targetUrl = `http://localhost:${port}/index.html`;
   }
@@ -39,6 +36,7 @@ const fs = require('fs');
 
   const url = targetUrl;
   try {
+    console.log(`📍 Loading ${targetUrl}...`);
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     // Let the app initialize (use standard delay for compatibility)
     await new Promise(r => setTimeout(r, 7500));
@@ -51,5 +49,4 @@ const fs = require('fs');
   console.log(`Captured ${logs.length} console lines to ${outPath}`);
   await browser.close();
 })();
-
 
