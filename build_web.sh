@@ -679,7 +679,12 @@ run_probe() {
             return 0
         fi
     fi
-    node probe_console.js || true
+    # Use our MAME-specific probe tool
+    if [[ -f "probe_mame_web.js" ]]; then
+        node probe_mame_web.js $port || true
+    else
+        echo "probe_mame_web.js not found; skipping console capture."
+    fi
     if [[ -f "$OUTDIR/console_capture.txt" ]]; then
         echo "Console log captured to $OUTDIR/console_capture.txt"
         echo "--- Last 20 lines ---"

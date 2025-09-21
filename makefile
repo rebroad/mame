@@ -1814,8 +1814,3 @@ $(GENDIR)/mame.pot: FORCE
 translation: $(GENDIR)/mame.pot
 	$(SILENT) find language -name "*.po" -print0 | xargs -0 -n 1 -I %% msgmerge -U -N %% $<
 	$(SILENT) find language -name "*.po" -print0 | xargs -0 -n 1 -I %% msgattrib --clear-fuzzy --empty %% -o %%
-
-# Star Wars specific build target for faster iteration during development
-# This compiles just the Star Wars driver and dependencies
-starwars:
-	$(SILENT) $(MAKE) SOURCES="src/mame/atari/starwars.cpp,src/mame/atari/starwars.h,src/mame/atari/starwars_m.cpp" -j4
