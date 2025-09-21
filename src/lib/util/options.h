@@ -205,7 +205,7 @@ public:
 	// reading
 	const char *value(std::string_view option) const noexcept;
 	const char *description(std::string_view option) const noexcept;
-	bool bool_value(std::string_view option) const { return int_value(option) != 0; }
+	bool bool_value(std::string_view option) const;
 	int int_value(std::string_view option) const;
 	float float_value(std::string_view option) const;
 
