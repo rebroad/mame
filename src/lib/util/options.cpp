@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    options.cpp
+	options.cpp
 
-    Core options code code
+	Core options code code
 
 ***************************************************************************/
 
@@ -1141,9 +1141,62 @@ int core_options::int_value(std::string_view option) const
 	str.imbue(std::locale::classic());
 	int ival;
 	if (str >> ival)
+	{
+		// Check if there's any remaining non-whitespace data
+		str >> std::ws;
+		if (!str.eof())
+		{
+			osd_printf_warning("Warning: Invalid integer value for option '%s': '%s' (contains extra characters), using %d\n",
+				std::string(option).c_str(), data, ival);
+		}
 		return ival;
+	}
 	else
+	{
+		osd_printf_warning("Warning: Invalid integer value for option '%s': '%s', using default value 0\n",
+			std::string(option).c_str(), data);
 		return 0;
+	}
+}
+
+
+//-------------------------------------------------
+//  value - return the option value as a boolean
+//-------------------------------------------------
+
+bool core_options::bool_value(std::string_view option) const
+{
+	char const *const data = value(option);
+	if (!data)
+		return false;
+
+	// Handle common boolean representations
+	std::string lower_data = strmakelower(data);
+	if (lower_data == "true" || lower_data == "1" || lower_data == "yes" || lower_data == "on")
+		return true;
+	else if (lower_data == "false" || lower_data == "0" || lower_data == "no" || lower_data == "off")
+		return false;
+
+	// Fall back to integer parsing with warning
+	std::istringstream str(data);
+	str.imbue(std::locale::classic());
+	int ival;
+	if (str >> ival)
+	{
+		str >> std::ws;
+		if (!str.eof())
+		{
+			osd_printf_warning("Warning: Invalid boolean value for option '%s': '%s' (contains extra characters), using %s\n",
+				std::string(option).c_str(), data, ival ? "true" : "false");
+		}
+		return ival != 0;
+	}
+	else
+	{
+		osd_printf_warning("Warning: Invalid boolean value for option '%s': '%s', using default value false\n",
+			std::string(option).c_str(), data);
+		return false;
+	}
 }
 
 
@@ -1160,9 +1213,22 @@ float core_options::float_value(std::string_view option) const
 	str.imbue(std::locale::classic());
 	float fval;
 	if (str >> fval)
+	{
+		// Check if there's any remaining non-whitespace data
+		str >> std::ws;
+		if (!str.eof())
+		{
+			osd_printf_warning("Warning: Invalid float value for option '%s': '%s' (contains extra characters), using %f\n",
+				std::string(option).c_str(), data, fval);
+		}
 		return fval;
+	}
 	else
+	{
+		osd_printf_warning("Warning: Invalid float value for option '%s': '%s', using default value 0.0\n",
+			std::string(option).c_str(), data);
 		return 0.0f;
+	}
 }
 
 

@@ -68,16 +68,86 @@ bool vector_options::s_antialias = true;
 
 void vector_options::init(emu_options& options)
 {
+	// Load and validate beam width parameters
+	// TODO: Added robust validation to prevent crashes from invalid config values
 	s_beam_width_min = options.beam_width_min();
+	if (s_beam_width_min < 0.1f || s_beam_width_min > 10.0f)
+	{
+		osd_printf_warning("Warning: beam_width_min value %.2f is out of range (0.1-10.0), clamping to 1.0\n", s_beam_width_min);
+		s_beam_width_min = 1.0f;
+	}
+
 	s_beam_width_max = options.beam_width_max();
+	if (s_beam_width_max < 0.1f || s_beam_width_max > 20.0f)
+	{
+		osd_printf_warning("Warning: beam_width_max value %.2f is out of range (0.1-20.0), clamping to 2.0\n", s_beam_width_max);
+		s_beam_width_max = 2.0f;
+	}
+
+	if (s_beam_width_max < s_beam_width_min)
+	{
+		osd_printf_warning("Warning: beam_width_max (%.2f) is less than beam_width_min (%.2f), swapping values\n",
+			s_beam_width_max, s_beam_width_min);
+		std::swap(s_beam_width_min, s_beam_width_max);
+	}
+
+	// Load and validate other parameters
 	s_beam_dot_size = options.beam_dot_size();
+	if (s_beam_dot_size < 0.1f || s_beam_dot_size > 10.0f)
+	{
+		osd_printf_warning("Warning: beam_dot_size value %.2f is out of range (0.1-10.0), clamping to 1.0\n", s_beam_dot_size);
+		s_beam_dot_size = 1.0f;
+	}
+
 	s_beam_intensity_weight = options.beam_intensity_weight();
+	if (s_beam_intensity_weight < 0.0f || s_beam_intensity_weight > 2.0f)
+	{
+		osd_printf_warning("Warning: beam_intensity_weight value %.2f is out of range (0.0-2.0), clamping to 0.0\n", s_beam_intensity_weight);
+		s_beam_intensity_weight = 0.0f;
+	}
+
 	s_flicker = options.flicker();
+	if (s_flicker < 0.0f || s_flicker > 1.0f)
+	{
+		osd_printf_warning("Warning: flicker value %.2f is out of range (0.0-1.0), clamping to 0.0\n", s_flicker);
+		s_flicker = 0.0f;
+	}
+
 	s_defocus_threshold = options.vector_defocus_threshold();
+	if (s_defocus_threshold < 0.0f || s_defocus_threshold > 2.0f)
+	{
+		osd_printf_warning("Warning: vector_defocus_threshold value %.2f is out of range (0.0-2.0), clamping to 0.75\n", s_defocus_threshold);
+		s_defocus_threshold = 0.75f;
+	}
+
 	s_defocus_scale = options.vector_defocus_scale();
+	if (s_defocus_scale < 0.1f || s_defocus_scale > 5.0f)
+	{
+		osd_printf_warning("Warning: vector_defocus_scale value %.2f is out of range (0.1-5.0), clamping to 1.0\n", s_defocus_scale);
+		s_defocus_scale = 1.0f;
+	}
+
 	s_defocus_gamma = options.vector_defocus_gamma();
+	if (s_defocus_gamma < 0.1f || s_defocus_gamma > 5.0f)
+	{
+		osd_printf_warning("Warning: vector_defocus_gamma value %.2f is out of range (0.1-5.0), clamping to 2.2\n", s_defocus_gamma);
+		s_defocus_gamma = 2.2f;
+	}
+
 	s_defocus_maxmul = options.vector_defocus_maxmul();
+	if (s_defocus_maxmul < 1.0f || s_defocus_maxmul > 10.0f)
+	{
+		osd_printf_warning("Warning: vector_defocus_maxmul value %.2f is out of range (1.0-10.0), clamping to 2.0\n", s_defocus_maxmul);
+		s_defocus_maxmul = 2.0f;
+	}
+
 	s_glow_intensity = options.vector_glow_intensity();
+	if (s_glow_intensity < 0.0f || s_glow_intensity > 2.0f)
+	{
+		osd_printf_warning("Warning: vector_glow_intensity value %.2f is out of range (0.0-2.0), clamping to 0.6\n", s_glow_intensity);
+		s_glow_intensity = 0.6f;
+	}
+
 	s_antialias = options.vector_antialias();
 }
 
