@@ -1123,7 +1123,6 @@ configuration { "asmjs" }
 		"-s STACK_SIZE=5MB",
 		"-s MAX_WEBGL_VERSION=2",
 		"-s USE_ES6_IMPORT_META=0",
-		"-s MODULARIZE=1",
 		"--pre-js " .. _MAKE.esc(MAME_DIR) .. "src/osd/modules/sound/js_sound_modern.js",
 		"--post-js " .. _MAKE.esc(MAME_DIR) .. "scripts/resources/emscripten/emscripten_post.js",
 		"--embed-file " .. _MAKE.esc(MAME_DIR) .. "bgfx/chains@bgfx/chains",
