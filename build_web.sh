@@ -15,6 +15,7 @@ DRIVER_SHORTNAME="starwars"
 ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
+JOBS=""               # make -j (default to nproc later)
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -39,6 +40,7 @@ print_usage() {
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
     echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
+    echo "  -j <N>, --jobs <N>     Use N jobs for 'make -j' (default: CPU count)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
     echo "  -no-compress           Disable compression (default: enabled)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
@@ -64,6 +66,9 @@ while [[ $# -gt 0 ]]; do
         -profiler) PROFILER_DEBUG=true; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; shift;;
+        -j) JOBS="${2:-}"; shift 2;;
+        -j[0-9]*) JOBS="${1#-j}"; shift;;
+        --jobs) JOBS="${2:-}"; shift 2;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
         -no-compress) DO_COMPRESS=false; shift;;
         -wipe) DO_WIPE=true; shift;;
@@ -235,6 +240,22 @@ ensure_emscripten() {
 
 ensure_emscripten
 
+# Graceful interrupt handling for noisy builds
+# Trap Ctrl-C (SIGINT) and SIGTERM to stop child process group quietly
+BUILD_PID=""
+cleanup_build() {
+	# Only act if a build is in progress
+	if [[ -n "$BUILD_PID" ]] && kill -0 "$BUILD_PID" >/dev/null 2>&1; then
+		echo "\nInterrupt received – stopping build gracefully..."
+		# Send SIGTERM to the whole process group started via setsid
+		kill -TERM -"$BUILD_PID" >/dev/null 2>&1 || true
+		# Wait for it to exit to avoid shell spew
+		wait "$BUILD_PID" >/dev/null 2>&1 || true
+	fi
+	exit 130
+}
+trap cleanup_build INT TERM
+
 # Auto-regen logic: hash Lua build scripts to detect changes
 SCRIPTS_HASH_FILE="$REPO_ROOT/.genie_scripts.sha256"
 compute_scripts_hash() {
@@ -308,18 +329,34 @@ if $DO_BUILD; then
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
+	# Default compile job count if not provided
+	if [[ -z "$JOBS" ]]; then JOBS="$(nproc)"; fi
     # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
-    emmake make \
-        SUBTARGET=starwarswasm \
-        SOURCES=src/mame/atari/starwars.cpp \
-        WEBASSEMBLY=1 \
-        TOOLS=0 \
-        REGENIE=$($DO_REGEN && echo 1 || echo 0) \
-        NOWERROR=1 \
-        SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
-        NO_OPENGL=1 \
-        LDOPTS="$BUILD_LDFLAGS" \
-        -j"$(nproc)"
+	# Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
+	setsid bash -c "emmake make \
+		SUBTARGET=starwarswasm \
+		SOURCES=src/mame/atari/starwars.cpp \
+		WEBASSEMBLY=1 \
+		TOOLS=0 \
+		REGENIE=$($DO_REGEN && echo 1 || echo 0) \
+		NOWERROR=1 \
+		SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
+		NO_OPENGL=1 \
+		LDOPTS=\"$BUILD_LDFLAGS\" \
+		-j\"$JOBS\"" &
+	BUILD_PID=$!
+	# Wait for build to finish (trap will handle Ctrl-C)
+	wait "$BUILD_PID"
+	status=$?
+	BUILD_PID=""
+	if [[ $status -eq 130 || $status -eq 143 ]]; then
+		echo "Build interrupted."
+		exit 130
+	fi
+	if [[ $status -ne 0 ]]; then
+		echo "Build failed (exit $status)." >&2
+		exit $status
+	fi
     popd >/dev/null
     # Persist scripts hash after successful build
     if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
@@ -539,6 +576,32 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
+      
+      // Handle user interaction to start audio context
+      var audioStarted = false;
+      function startAudio() {
+        if (audioStarted) return;
+        audioStarted = true;
+        try {
+          if (typeof jsmame_web_audio !== 'undefined' && jsmame_web_audio.get_context) {
+            var ctx = jsmame_web_audio.get_context();
+            if (ctx && ctx.state === 'suspended') {
+              ctx.resume().then(function() {
+                console.log('[Audio] Context resumed after user interaction');
+              }).catch(function(e) {
+                console.warn('[Audio] Failed to resume context:', e);
+              });
+            }
+          }
+        } catch(e) {
+          console.warn('[Audio] Error starting audio:', e);
+        }
+      }
+      
+      // Listen for user interactions
+      ['click', 'touchstart', 'keydown'].forEach(function(event) {
+        document.addEventListener(event, startAudio, { once: true });
+      });
       console.log('[Args]', Module.arguments.join(' '));
       if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
@@ -680,7 +743,7 @@ run_probe() {
     fi
     # Use the comprehensive MAME probe tool (much better output)
     if [[ -f "probe_mame_web.js" ]]; then
-        node probe_mame_web.js "$port" || true
+        node probe_mame_web.js "$USED_PORT" || true
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
@@ -694,41 +757,20 @@ if $START_SERVER; then
         local port="$1"
         local used_port=""
         local final_port=""
-        # Prefer previously used COOP/COEP port if available and healthy (only when no explicit port requested)
-        if [[ -z "$port" && -f /tmp/mame_web_port.txt ]]; then
-            local prev
-            prev="$(cat /tmp/mame_web_port.txt 2>/dev/null | tr -d '\n')"
-            if [[ -n "$prev" ]]; then
-                if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$prev/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
-                   curl -sI "http://localhost:$prev/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
-                    used_port="$prev"
-                fi
-            fi
-        fi
         # If a specific port was requested, always start a fresh server there
         if [[ -n "$port" ]]; then
             start_server "$port" || true
             return
         fi
-        # Otherwise scan common ports and reuse if healthy
+        # Otherwise check if port 8000 is available and start server there
         if [[ -z "$used_port" ]]; then
-            # Prefer a server that already has COOP/COEP
-            for p in 8000 8001 8002 8003 8004 8005; do
-                if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$p/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
-                   curl -sI "http://localhost:$p/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
-                    used_port="$p"; break
-                fi
-            done
+            # Just start a new server on the first available port (8000)
+            start_server "$port" || true
+            final_port="$port"
         fi
         if [[ -n "$used_port" ]]; then
             echo "Reusing existing server on http://localhost:$used_port"
             final_port="$used_port"
-        else
-            # No suitable server found; start our COOP/COEP server
-            start_server "$port" || true
-            final_port="$port"
         fi
         # Return the port via a global variable
         USED_PORT="$final_port"
