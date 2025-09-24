@@ -11,8 +11,8 @@ START_SERVER=true
 SERVER_PORT=""
 VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
-DRIVER_SHORTNAME="starwars1"
-ROM_PATH="$HOME/.mame/roms/starwars1.zip"
+DRIVER_SHORTNAME="starwars"
+ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
 
@@ -671,16 +671,20 @@ run_probe() {
     fi
     # Try running probe; if puppeteer missing, advise install
     if ! node -e "require('puppeteer')" >/dev/null 2>&1; then
-        echo "Puppeteer not installed. Run: (cd $OUTDIR && npm install puppeteer)"
-        popd >/dev/null
-        return 0
+        echo "Puppeteer not installed. Installing locally in $OUTDIR ..."
+        if command -v npm >/dev/null 2>&1; then
+            ( npm init -y >/dev/null 2>&1 || true; npm install puppeteer --no-fund --no-audit >/dev/null 2>&1 ) || true
+        else
+            echo "npm not found; skipping console capture."
+            popd >/dev/null
+            return 0
+        fi
     fi
-    node probe_console.js || true
-    if [[ -f "$OUTDIR/console_capture.txt" ]]; then
-        echo "Console log captured to $OUTDIR/console_capture.txt"
-        echo "--- Last 20 lines ---"
-        tail -n 20 "$OUTDIR/console_capture.txt" || true
-        echo "---------------------"
+    # Use the comprehensive MAME probe tool (much better output)
+    if [[ -f "probe_mame_web.js" ]]; then
+        node probe_mame_web.js "$USED_PORT" || true
+    else
+        echo "probe_mame_web.js not found; skipping console capture."
     fi
     popd >/dev/null
 }

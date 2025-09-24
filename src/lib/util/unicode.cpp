@@ -503,13 +503,29 @@ std::string utf8_from_wstring(std::wstring_view string)
 	std::string out;
 	out.reserve(string.size());
 	if constexpr (sizeof(wchar_t) == 2) {
-		// convert UTF-16 code units to code points then to UTF-8
+		// Manually decode UTF-16 surrogate pairs from wchar_t code units
 		size_t i = 0;
 		while (i < string.size()) {
-			char32_t cp = 0;
-			int rc = uchar_from_utf16(&cp, &string[i], string.size() - i);
-			if (rc <= 0) { ++i; continue; }
-			i += rc;
+			char32_t cp;
+			uint16_t w1 = static_cast<uint16_t>(string[i]);
+			if (w1 >= 0xD800 && w1 <= 0xDBFF) {
+				if (i + 1 < string.size()) {
+					uint16_t w2 = static_cast<uint16_t>(string[i + 1]);
+					if (w2 >= 0xDC00 && w2 <= 0xDFFF) {
+						cp = 0x10000u + (((static_cast<uint32_t>(w1) - 0xD800u) << 10) | (static_cast<uint32_t>(w2) - 0xDC00u));
+						i += 2;
+					} else {
+						cp = w1;
+						++i;
+					}
+				} else {
+					cp = w1;
+					++i;
+				}
+			} else {
+				cp = w1;
+				++i;
+			}
 			char buf[4];
 			int written = utf8_from_uchar(buf, sizeof(buf), cp);
 			out.append(buf, buf + written);
