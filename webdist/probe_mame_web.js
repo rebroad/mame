@@ -5,6 +5,7 @@ const puppeteer = require('puppeteer');
 
   const browser = await puppeteer.launch({
     headless: false, // Set to true for headless mode
+    userDataDir: '/tmp/mame-puppeteer-profile', // Persistent user data for window position
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -15,9 +16,14 @@ const puppeteer = require('puppeteer');
       '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
       '--disable-features=VizDisplayCompositor',
-      '--restore-last-session', // Restore last session (position memory)
       '--disable-background-tab-throttling', // Prevent blank tab throttling
-      '--disable-backgrounding-occluded-windows' // Keep windows active
+      '--disable-backgrounding-occluded-windows', // Keep windows active
+      '--window-position=100,100', // Initial position (will be overridden by saved position)
+      '--window-size=1200,800', // Initial size
+      '--disable-features=TranslateUI', // Disable some features that might interfere
+      '--disable-extensions', // Disable extensions for cleaner profile
+      '--disable-plugins', // Disable plugins
+      '--disable-default-apps' // Disable default apps
     ]
   });
 
