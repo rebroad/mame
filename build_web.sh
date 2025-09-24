@@ -545,9 +545,16 @@ cat > "$OUTDIR/index.html" <<EOF
         var c=document.getElementById('canvas');
         function applySize(){
           var w = window.innerWidth, h = window.innerHeight;
-          c.width=w; c.height=h;
-          if (Module && typeof Module.setCanvasSize === 'function') {
-            try { Module.setCanvasSize(w, h, true); } catch(e) {}
+          try {
+            c.width = w; c.height = h;
+            if (Module && typeof Module.setCanvasSize === 'function') {
+              try { Module.setCanvasSize(w, h, true); } catch(_) {}
+            }
+          } catch (e) {
+            // If OffscreenCanvas is in use, resizing main-thread canvas throws; stop listening.
+            if (e && /transferControlToOffscreen/.test(String(e))) {
+              try { window.removeEventListener('resize', applySize); } catch(_) {}
+            }
           }
         }
         window.addEventListener('resize', applySize);
@@ -574,7 +581,9 @@ cat > "$OUTDIR/index.html" <<EOF
       })();
       console.log('[Args]', Module.arguments.join(' '));
       if (chosenVideo === "bgfx") {
-        Module.arguments.push("-bgfx_screen_chains", "vector");
+        // Only push a chain if not already provided via per-game INI overrides
+        var hasChain = Module.arguments.indexOf("-bgfx_screen_chains") !== -1;
+        if (!hasChain) Module.arguments.push("-bgfx_screen_chains", "vector");
       }
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
@@ -694,52 +703,42 @@ if $START_SERVER; then
     ensure_server() {
         local port="$1"
         local used_port=""
-        # Prefer previously used COOP/COEP port if available and healthy
-        if [[ -z "$port" && -f /tmp/mame_web_port.txt ]]; then
-            local prev
-            prev="$(cat /tmp/mame_web_port.txt 2>/dev/null | tr -d '\n')"
-            if [[ -n "$prev" ]]; then
-                if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$prev/" | grep -q "<title>Star Wars</title>" && \
-                   curl -sI "http://localhost:$prev/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
-                    used_port="$prev"
-                fi
-            fi
-        fi
-        # If a specific port was requested, try that first
-        if [[ -z "$used_port" && -n "$port" ]]; then
+        local final_port=""
+        # If a specific port was requested, prefer reusing it if healthy; otherwise start fresh there
+        if [[ -n "$port" ]]; then
             if command -v curl >/dev/null 2>&1 && \
-               curl -s "http://localhost:$port/" | grep -q "<title>Star Wars</title>" && \
-               curl -sI "http://localhost:$port/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
+               curl -s --max-time 5 "http://localhost:$port/" | grep -q "<title>Star Wars</title>"; then
                 used_port="$port"
+            else
+                start_server "$port" || true
+                USED_PORT="$port"
+                return
             fi
-        fi
-        # Otherwise scan common ports
-        if [[ -z "$used_port" ]]; then
-            # Prefer a server that already has COOP/COEP
+        else
+            # Probe common ports for an existing healthy server (fast path)
             for p in 8000 8001 8002 8003 8004 8005; do
                 if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$p/" | grep -q "<title>Star Wars</title>" && \
-                   curl -sI "http://localhost:$p/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
+                   curl -s --max-time 5 "http://localhost:$p/" | grep -q "<title>Star Wars</title>"; then
                     used_port="$p"; break
                 fi
             done
-        fi
-        if [[ -n "$used_port" ]]; then
-            echo "Reusing existing server on http://localhost:$used_port"
-            echo "$used_port" > /tmp/mame_web_port.txt
-            if command -v xdg-open >/dev/null 2>&1; then
-                xdg-open "http://localhost:$used_port/index.html" >/dev/null 2>&1 || true
+            # If still none, start a new server (start_server chooses first free, typically 8000)
+            if [[ -z "$used_port" ]]; then
+                start_server "" || true
+                USED_PORT="$LAST_SERVER_PORT"
+                return
             fi
-        else
-            # No suitable server found; start our COOP/COEP server
-            start_server "$port" || true
         fi
+        echo "Reusing existing server on http://localhost:$used_port"
+        final_port="$used_port"
+        # Return the port via a global variable
+        USED_PORT="$final_port"
     }
     ensure_server "$SERVER_PORT"
 else
     echo "To serve locally: (cd $OUTDIR && python3 -m http.server 8000)"
     echo "Then open: http://localhost:8000"
+    USED_PORT="8000"
 fi
 
 # If debug mode, attempt headless console capture

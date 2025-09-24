@@ -52,20 +52,47 @@ const puppeteer = require('puppeteer');
 
     // Wait for MAME to initialize
     console.log('⏳ Waiting for MAME initialization...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    try {
+      await page.waitForFunction(
+        () => typeof Module !== 'undefined' && (Module.calledRun || Module.onRuntimeInitialized),
+        { timeout: 60000 }
+      );
+    } catch (e) {
+      console.log('[WARN] Module initialization wait timed out, continuing anyway');
+    }
 
     // Check if canvas is visible and has content
     const canvasInfo = await page.evaluate(() => {
       const canvas = document.getElementById('canvas');
       if (!canvas) return { error: 'Canvas not found' };
-      
-      return {
+
+      const info = {
         width: canvas.width,
         height: canvas.height,
         style: canvas.style.cssText,
         visible: canvas.offsetWidth > 0 && canvas.offsetHeight > 0,
-        hasContent: canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(pixel => pixel !== 0)
+        hasContent: false
       };
+
+      try {
+        const ctx2d = canvas.getContext && canvas.getContext('2d');
+        if (ctx2d && canvas.width && canvas.height) {
+          const img = ctx2d.getImageData(0, 0, canvas.width, canvas.height).data;
+          info.hasContent = Array.prototype.some.call(img, p => p !== 0);
+          return info;
+        }
+      } catch (_) {}
+
+      try {
+        const gl = (canvas.getContext && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        if (gl && canvas.width && canvas.height) {
+          const buf = new Uint8Array(canvas.width * canvas.height * 4);
+          gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+          info.hasContent = Array.prototype.some.call(buf, p => p !== 0);
+        }
+      } catch (_) {}
+
+      return info;
     });
 
     console.log('📊 Canvas info:', canvasInfo);
