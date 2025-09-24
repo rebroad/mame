@@ -27,13 +27,19 @@ const puppeteer = require('puppeteer');
     ]
   });
 
-  // Close any existing tabs to avoid blank tab
+  // Get the first available page or create a new one
   const pages = await browser.pages();
-  for (const p of pages) {
-    await p.close();
-  }
+  let page;
 
-  const page = await browser.newPage();
+  if (pages.length > 0) {
+    page = pages[0];
+    // Close any additional tabs
+    for (let i = 1; i < pages.length; i++) {
+      await pages[i].close();
+    }
+  } else {
+    page = await browser.newPage();
+  }
 
   try {
     const port = process.argv[2];
