@@ -283,6 +283,7 @@ device_scheduler::device_scheduler(running_machine &machine) :
 	m_machine(machine),
 	m_executing_device(nullptr),
 	m_execute_list(nullptr),
+	m_trigger_timer(nullptr),
 	m_basetime(attotime::zero),
 	m_timer_list(nullptr),
 	m_inactive_timers(nullptr),
@@ -531,7 +532,9 @@ void device_scheduler::trigger(int trigid, const attotime &after)
 	if (after != attotime::zero)
 	{
 		// if we have a non-zero time, schedule a timer
-		timer_set(after, timer_expired_delegate(FUNC(device_scheduler::timed_trigger), this), trigid);
+		if (!m_trigger_timer)
+			m_trigger_timer = timer_alloc(timer_expired_delegate(FUNC(device_scheduler::timed_trigger), this));
+		m_trigger_timer->adjust(after, trigid);
 	}
 	else
 	{
