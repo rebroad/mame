@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    machine.cpp
+	machine.cpp
 
-    Controls execution of the core MAME system.
+	Controls execution of the core MAME system.
 
 ***************************************************************************/
 
@@ -277,6 +277,13 @@ int running_machine::run(bool quiet)
 		// move to the init phase
 		m_current_phase = machine_phase::INIT;
 
+		// DEBUG: Add a line to error.log when machine starts INIT phase
+		if (m_logfile != nullptr)
+		{
+			m_logfile->puts("DEBUG: Machine started INIT phase\n");
+			m_logfile->flush();
+		}
+
 		// if we have a logfile, set up the callback
 		if (options().log() && !quiet)
 		{
@@ -284,6 +291,10 @@ int running_machine::run(bool quiet)
 			std::error_condition const filerr = m_logfile->open("error.log");
 			if (filerr)
 				throw emu_fatalerror("running_machine::run: unable to open error.log file");
+
+			// DEBUG: Add a test line to error.log as soon as it's created
+			m_logfile->puts("DEBUG: error.log created successfully\n");
+			m_logfile->flush();
 
 			using namespace std::placeholders;
 			add_logerror_callback(std::bind(&running_machine::logfile_callback, this, _1));
@@ -340,6 +351,12 @@ int running_machine::run(bool quiet)
 		// run the CPUs until a reset or exit
 		while ((!m_hard_reset_pending && !m_exit_pending) || m_saveload_schedule != saveload_schedule::NONE)
 		{
+			// DEBUG: Add a line to error.log when main execution loop starts
+			if (m_logfile != nullptr)
+			{
+				m_logfile->puts("DEBUG: Main execution loop started\n");
+				m_logfile->flush();
+			}
 			auto profile = g_profiler.start(PROFILER_EXTRA);
 
 			// execute CPUs if not paused
@@ -969,11 +986,25 @@ void running_machine::soft_reset(s32 param)
 	// temporarily in the reset phase
 	m_current_phase = machine_phase::RESET;
 
+	// DEBUG: Add a line to error.log when machine starts RESET phase
+	if (m_logfile != nullptr)
+	{
+		m_logfile->puts("DEBUG: Machine started RESET phase\n");
+		m_logfile->flush();
+	}
+
 	// call all registered reset callbacks
 	call_notifiers(MACHINE_NOTIFY_RESET);
 
 	// now we're running
 	m_current_phase = machine_phase::RUNNING;
+
+	// DEBUG: Add a line to error.log when machine reaches RUNNING phase
+	if (m_logfile != nullptr)
+	{
+		m_logfile->puts("DEBUG: Machine reached RUNNING phase\n");
+		m_logfile->flush();
+	}
 }
 
 
@@ -1100,12 +1131,12 @@ void running_machine::postload_all_devices()
 
 
 /***************************************************************************
-    NVRAM MANAGEMENT
+	NVRAM MANAGEMENT
 ***************************************************************************/
 
 /*-------------------------------------------------
-    nvram_filename - returns filename of system's
-    NVRAM depending of selected BIOS
+	nvram_filename - returns filename of system's
+	NVRAM depending of selected BIOS
 -------------------------------------------------*/
 
 std::string running_machine::nvram_filename(device_t &device) const
@@ -1142,7 +1173,7 @@ std::string running_machine::nvram_filename(device_t &device) const
 }
 
 /*-------------------------------------------------
-    nvram_load - load a system's NVRAM
+	nvram_load - load a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_load()
@@ -1163,7 +1194,7 @@ void running_machine::nvram_load()
 
 
 /*-------------------------------------------------
-    nvram_save - save a system's NVRAM
+	nvram_save - save a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_save()
