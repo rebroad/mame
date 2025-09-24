@@ -571,29 +571,6 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
-      
-      // Handle user interaction to start audio context
-      var audioStarted = false;
-      function startAudio() {
-        if (audioStarted) return;
-        audioStarted = true;
-        try {
-          if (typeof jsmame_web_audio !== 'undefined' && jsmame_web_audio.init_audio_after_user_gesture) {
-            jsmame_web_audio.init_audio_after_user_gesture().then(function() {
-              console.log('[Audio] Context initialized after user interaction');
-            }).catch(function(e) {
-              console.warn('[Audio] Failed to initialize context:', e);
-            });
-          }
-        } catch(e) {
-          console.warn('[Audio] Error starting audio:', e);
-        }
-      }
-      
-      // Listen for user interactions
-      ['click', 'touchstart', 'keydown'].forEach(function(event) {
-        document.addEventListener(event, startAudio, { once: true });
-      });
       console.log('[Args]', Module.arguments.join(' '));
       if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
@@ -742,7 +719,6 @@ run_probe() {
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
-
     popd >/dev/null
 }
 

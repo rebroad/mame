@@ -531,7 +531,10 @@ void device_scheduler::trigger(int trigid, const attotime &after)
 	if (after != attotime::zero)
 	{
 		// if we have a non-zero time, schedule a timer
-		timer_set(after, timer_expired_delegate(FUNC(device_scheduler::timed_trigger), this), trigid);
+		static emu_timer *s_trigger_timer = nullptr;
+		if (!s_trigger_timer)
+			s_trigger_timer = timer_alloc(timer_expired_delegate(FUNC(device_scheduler::timed_trigger), this));
+		s_trigger_timer->adjust(after, trigid);
 	}
 	else
 	{
