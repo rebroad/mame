@@ -490,7 +490,7 @@ cat > "$OUTDIR/index.html" <<EOF
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
-          "-nothrottle", "-speed", "1", "-verbose",
+          "-throttle", "-speed", "1", "-verbose",
           "-samplerate", "48000",
           "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
