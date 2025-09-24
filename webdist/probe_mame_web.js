@@ -9,8 +9,10 @@ const puppeteer = require('puppeteer');
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--enable-unsafe-swiftshader',
+      '--enable-gpu-rasterization', // Enable GPU rasterization for better performance
+      '--enable-zero-copy', // Enable zero-copy rasterizer
+      '--disable-gpu-vsync', // Disable VSync for better performance
+      '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
       '--disable-features=VizDisplayCompositor'
     ]
