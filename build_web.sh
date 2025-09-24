@@ -18,7 +18,7 @@ DO_WIPE=false
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
-USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local clone
+USE_LOCAL_EMSDK=false  # Prefer global emsdk at ~/src/emsdk; fallback to local clone
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 
 print_usage() {
@@ -31,7 +31,7 @@ print_usage() {
     echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
     echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
-    echo "  -use-global-emsdk      Use ~/src/emsdk instead of local project clone"
+    echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -verbose               Run MAME with -verbose for browser console logs"
     echo "  -debug                 Enable verbose and auto-capture browser console"
@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
-        -use-global-emsdk) USE_LOCAL_EMSDK=false; shift;;
+        -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
         -verbose) VERBOSE_ARG=true; shift;;
         -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
@@ -96,9 +96,39 @@ if $DO_WIPE; then
     fi
 fi
 
-# Ensure ROM exists
-if [[ ! -f "$ROM_PATH" ]]; then
-    echo "Error: ROM not found at $ROM_PATH"
+# Ensure ROM exists - check for zip first, then individual files
+ROM_FOUND=false
+if [[ -f "$ROM_PATH" ]]; then
+    ROM_FOUND=true
+    echo "Using ROM zip: $ROM_PATH"
+else
+    # Check for individual ROM files in starwars directory
+    ROM_DIR="$HOME/.mame/roms/starwars"
+    if [[ -d "$ROM_DIR" ]]; then
+        echo "ROM zip not found, checking for individual files in $ROM_DIR"
+
+        # Check for 214 version first (preferred), then 114
+        # Check for either 214 or 114 version ROM file (prefer 214)
+        for ver in 214 114; do
+            if [[ -f "$ROM_DIR/136021.$ver.1f" ]]; then
+                echo "Found Star Wars $ver version ROM files"
+                ROM_FOUND=true
+                ROM_PATH="$ROM_DIR"  # Use individual files directly - no need to zip
+                break
+            fi
+        done
+        if [[ "$ROM_FOUND" != "true" ]]; then
+            echo "No Star Wars ROM files found in $ROM_DIR"
+            echo "Expected files: 136021.214.1f (preferred) or 136021.114.1f"
+        fi
+    fi
+fi
+
+if [[ "$ROM_FOUND" != "true" ]]; then
+    echo "Error: ROM not found at $ROM_PATH and no individual ROM files found"
+    echo "Please ensure you have either:"
+    echo "  - $HOME/.mame/roms/starwars.zip, or"
+    echo "  - Individual ROM files in $HOME/.mame/roms/starwars/ (prefer 214 over 114)"
     exit 1
 fi
 
@@ -336,7 +366,23 @@ end)
 LUA
 fi
 
-PACK_ARGS=("$OUTDIR/roms.data" --preload "$ROM_PATH@roms/$(basename "$ROM_PATH")" --export-name=Module --use-preload-cache --no-heap-copy --js-output="$OUTDIR/roms.js")
+# Determine the correct ROM path based on ROM file type
+# Determine ROM mount path and always use the same PACK_ARGS template for DRYness
+if [[ "$ROM_PATH" == *.zip ]]; then
+    # For zip files, mount directly in roms/ directory
+    ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
+else
+    # For individual files, mount the entire directory in roms/starwars/
+    ROM_MOUNT_PATH="roms/starwars/"
+fi
+PACK_ARGS=(
+    "$OUTDIR/roms.data"
+    --preload "$ROM_PATH@$ROM_MOUNT_PATH"
+    --export-name=Module
+    --use-preload-cache
+    --no-heap-copy
+    --js-output="$OUTDIR/roms.js"
+)
 if [[ -n "$PARENT_ROM" ]]; then
   echo "Including parent ROM: $PARENT_ROM"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
@@ -354,8 +400,6 @@ if $AUTOSTART; then
   PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
 fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
-
-# (autoboot.lua created and preloaded earlier if AUTOSTART is true)
 
 # Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain)
 INI_ARGS_JS=""
@@ -393,7 +437,7 @@ cat > "$OUTDIR/index.html" <<EOF
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MAME Star Wars (WASM)</title>
+    <title>Star Wars</title>
     <link rel="icon" href="data:,"/>
     <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
   </head>
@@ -652,7 +696,7 @@ if $START_SERVER; then
             prev="$(cat /tmp/mame_web_port.txt 2>/dev/null | tr -d '\n')"
             if [[ -n "$prev" ]]; then
                 if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$prev/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+                   curl -s "http://localhost:$prev/" | grep -q "<title>Star Wars</title>" && \
                    curl -sI "http://localhost:$prev/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
                     used_port="$prev"
                 fi
@@ -661,7 +705,7 @@ if $START_SERVER; then
         # If a specific port was requested, try that first
         if [[ -z "$used_port" && -n "$port" ]]; then
             if command -v curl >/dev/null 2>&1 && \
-               curl -s "http://localhost:$port/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+               curl -s "http://localhost:$port/" | grep -q "<title>Star Wars</title>" && \
                curl -sI "http://localhost:$port/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
                 used_port="$port"
             fi
@@ -671,7 +715,7 @@ if $START_SERVER; then
             # Prefer a server that already has COOP/COEP
             for p in 8000 8001 8002 8003 8004 8005; do
                 if command -v curl >/dev/null 2>&1 && \
-                   curl -s "http://localhost:$p/" | grep -q "<title>MAME Star Wars (WASM)</title>" && \
+                   curl -s "http://localhost:$p/" | grep -q "<title>Star Wars</title>" && \
                    curl -sI "http://localhost:$p/index.html" | grep -qi "Cross-Origin-Embedder-Policy"; then
                     used_port="$p"; break
                 fi
