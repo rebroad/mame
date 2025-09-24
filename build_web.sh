@@ -581,32 +581,6 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
-      
-      // Handle user interaction to start audio context
-      var audioStarted = false;
-      function startAudio() {
-        if (audioStarted) return;
-        audioStarted = true;
-        try {
-          if (typeof jsmame_web_audio !== 'undefined' && jsmame_web_audio.get_context) {
-            var ctx = jsmame_web_audio.get_context();
-            if (ctx && ctx.state === 'suspended') {
-              ctx.resume().then(function() {
-                console.log('[Audio] Context resumed after user interaction');
-              }).catch(function(e) {
-                console.warn('[Audio] Failed to resume context:', e);
-              });
-            }
-          }
-        } catch(e) {
-          console.warn('[Audio] Error starting audio:', e);
-        }
-      }
-      
-      // Listen for user interactions
-      ['click', 'touchstart', 'keydown'].forEach(function(event) {
-        document.addEventListener(event, startAudio, { once: true });
-      });
       console.log('[Args]', Module.arguments.join(' '));
       if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
@@ -752,7 +726,6 @@ run_probe() {
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
-
     popd >/dev/null
 }
 
@@ -767,13 +740,11 @@ if $START_SERVER; then
             start_server "$port" || true
             return
         fi
-        # Otherwise check if port 8000 is available and start server there
+        # Otherwise start a new server on the first available port
         if [[ -z "$used_port" ]]; then
-            # Just start a new server on the first available port (8000)
             start_server "$port" || true
             final_port="$port"
-        fi
-        if [[ -n "$used_port" ]]; then
+        else
             echo "Reusing existing server on http://localhost:$used_port"
             final_port="$used_port"
         fi
