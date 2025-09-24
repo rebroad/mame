@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer');
   const page = await browser.newPage();
 
   try {
-    const port = process.argv[2] || '8001';
+    const port = process.argv[2];
     console.log(`📍 Loading http://localhost:${port}...`);
 
     // Capture console messages
