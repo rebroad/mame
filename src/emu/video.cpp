@@ -975,6 +975,13 @@ void video_manager::recompute_speed(const attotime &emutime)
 		static int speed_log_counter = 0;
 		if (++speed_log_counter % 60 == 0) { // Log every 60 frames (roughly once per second)
 			osd_printf_info("WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+
+			// Also log to error.log for debugging
+			FILE* debug_file = fopen("error.log", "a");
+			if (debug_file) {
+				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+				fclose(debug_file);
+			}
 		}
 
 		// remember the last times

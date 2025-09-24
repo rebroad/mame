@@ -151,16 +151,7 @@ void sdl_osd_interface::extract_video_config()
 
 		// Try to get the game's refresh rate using screen device enumerator
 		// This will work in full builds but may not be available in minimal builds
-		device_enumerator deviter(machine().root_device());
-		const screen_device *primary_screen = nullptr;
-		for (device_t &device : deviter)
-		{
-			if (device.type() == SCREEN)
-			{
-				primary_screen = dynamic_cast<screen_device *>(&device);
-				break; // Get the first screen
-			}
-		}
+		const screen_device *primary_screen = screen_device_enumerator(machine().root_device()).first();
 
 		if (primary_screen != nullptr)
 		{
