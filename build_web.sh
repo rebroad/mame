@@ -495,7 +495,13 @@ cat > "$OUTDIR/index.html" <<EOF
           "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
         print: function(text){ console.log(text); },
-        printErr: function(text){ console.error(text); },
+        printErr: function(text){ 
+          console.error('[MAME ERROR]', text);
+          // Try to capture any startup errors
+          if (text.includes('error') || text.includes('Error') || text.includes('failed') || text.includes('Failed')) {
+            console.error('[MAME CRITICAL ERROR]', text);
+          }
+        },
         locateFile: function(path){ return path; },
         preRun: [],
         monitorRunDependencies: function(left){
@@ -512,16 +518,26 @@ cat > "$OUTDIR/index.html" <<EOF
           }
         },
         onAbort: function(reason){
-          console.error('[onAbort]', reason);
+          console.error('[MAME ABORTED]', reason);
+          console.error('[MAME ABORT] Module state:', {
+            calledRun: Module.calledRun,
+            runtimeInitialized: Module.runtimeInitialized,
+            ready: Module.ready
+          });
           try {
             if (typeof FS !== 'undefined') {
               var path = 'mame.log';
               var info = FS.analyzePath(path);
               if (info.exists) {
                 var data = FS.readFile(path, { encoding: 'utf8' });
-                console.error('[mame.log]\n' + data);
+                console.error('[mame.log on abort]\n' + data);
               } else {
-                console.error('[mame.log] not found');
+                console.error('[mame.log] not found on abort');
+                // List files to see what's there
+                try {
+                  var files = FS.readdir('/');
+                  console.error('[Files on abort]:', files.join(','));
+                } catch(e) {}
               }
             }
           } catch (e) { console.error('[onAbort] failed to read mame.log', e); }
@@ -580,11 +596,6 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
       console.log('[Args]', Module.arguments.join(' '));
-      if (chosenVideo === "bgfx") {
-        // Only push a chain if not already provided via per-game INI overrides
-        var hasChain = Module.arguments.indexOf("-bgfx_screen_chains") !== -1;
-        if (!hasChain) Module.arguments.push("-bgfx_screen_chains", "vector");
-      }
       if ("${VERBOSE_ARG}" === "true") {
         Module.arguments.push("-verbose");
       }
@@ -597,6 +608,82 @@ cat > "$OUTDIR/index.html" <<EOF
         Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
       }
 ${INI_ARGS_JS}
+      // Add BGFX chain after INI overrides are processed
+      if (chosenVideo === "bgfx") {
+        // Only push a chain if not already provided via per-game INI overrides
+        var hasChain = Module.arguments.indexOf("-bgfx_screen_chains") !== -1;
+        if (!hasChain) Module.arguments.push("-bgfx_screen_chains", "vector");
+      }
+      // Clean up any existing error.log before starting MAME
+      (function(){
+        try {
+          if (typeof FS !== 'undefined') {
+            var errorFile = 'error.log';
+            var errorInf = FS.analyzePath(errorFile);
+            if (errorInf && errorInf.exists) {
+              FS.unlink(errorFile);
+              console.log('[DEBUG] Deleted existing error.log');
+            }
+          }
+        } catch(e) {
+          console.log('[DEBUG] Could not delete error.log:', e);
+        }
+      })();
+      
+      // Single delayed probe after 7 seconds
+      setTimeout(function(){
+        console.log('[DEBUG] Delayed probe (7s)...');
+        try {
+          if (typeof FS !== 'undefined') {
+            var p = 'mame.log';
+            var inf = FS.analyzePath(p);
+            if (inf && inf.exists) {
+              var d = FS.readFile(p, { encoding: 'utf8' });
+              console.error('[mame.log][delayed]\n' + d);
+            } else {
+              console.log('[DEBUG] mame.log not found (7s)');
+              
+              // Check for error.log
+              var errorFile = 'error.log';
+              var errorInf = FS.analyzePath(errorFile);
+              if (errorInf && errorInf.exists) {
+                var errorData = FS.readFile(errorFile, { encoding: 'utf8' });
+                console.error('[error.log][delayed] (size: ' + errorData.length + ' bytes)');
+                console.error('[error.log][delayed] contents:\n' + errorData);
+              } else {
+                console.log('[DEBUG] error.log not found (7s)');
+              }
+              
+              // List all files in root to see what's there
+              try {
+                var files = FS.readdir('/');
+                console.log('[DEBUG] All root files:', files.join(','));
+                
+                // Show detailed file info for each file
+                files.forEach(function(file) {
+                  if (file !== '.' && file !== '..') {
+                    try {
+                      var info = FS.analyzePath('/' + file);
+                      if (info && info.exists) {
+                        var stat = FS.stat('/' + file);
+                        console.log('[DEBUG] File:', file, 'size:', stat.size, 'mode:', stat.mode);
+                      }
+                    } catch(e) {
+                      console.log('[DEBUG] Could not stat file:', file, e);
+                    }
+                  }
+                });
+              } catch(e) {
+                console.log('[DEBUG] Cannot list root files:', e);
+              }
+            }
+          } else {
+            console.log('[DEBUG] FS not available (7s)');
+          }
+        } catch(e) { 
+          console.log('[DEBUG] Delayed probe error:', e);
+        }
+      }, 7000);
     </script>
     <script src="roms.js"></script>
     <script src="starwarswasm.js"></script>
@@ -743,5 +830,3 @@ fi
 
 # If debug mode, attempt headless console capture
 run_probe || true
-
-

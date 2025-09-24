@@ -43,7 +43,7 @@ const puppeteer = require('puppeteer');
       console.log(`[NETWORK ERROR] ${request.url()} - ${request.failure().errorText}`);
     });
 
-    await page.goto(`http://localhost:${port}`, {
+    await page.goto(`http://localhost:${port}?video=soft`, {
       waitUntil: 'networkidle0',
       timeout: 30000
     });
