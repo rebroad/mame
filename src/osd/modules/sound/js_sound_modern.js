@@ -98,46 +98,6 @@ class MameAudioProcessor extends AudioWorkletProcessor {
 registerProcessor('mame-audio-processor', MameAudioProcessor);
 `;
 
-async function lazy_init() {
-    if (context) {
-        return;
-    }
-    
-    if (typeof AudioContext !== "undefined") {
-        context = new AudioContext();
-    } else if (typeof webkitAudioContext !== "undefined") {
-        context = new webkitAudioContext();
-    } else {
-        return;
-    }
-    
-    // Check for AudioWorklet support
-    if (context.audioWorklet) {
-        try {
-            // Create a blob URL for the AudioWorklet processor
-            const blob = new Blob([audioWorkletCode], { type: 'application/javascript' });
-            const workletUrl = URL.createObjectURL(blob);
-            
-            await context.audioWorklet.addModule(workletUrl);
-            audioWorkletSupported = true;
-            URL.revokeObjectURL(workletUrl);
-        } catch (error) {
-            console.warn('AudioWorklet not supported, falling back to ScriptProcessorNode:', error);
-            audioWorkletSupported = false;
-        }
-    } else {
-        audioWorkletSupported = false;
-    }
-    
-    // Generate a volume control node
-    gain_node = context.createGain();
-    gain_node.gain.value = 1.0;
-    gain_node.connect(context.destination);
-    
-    // Initialize the streaming event
-    await init_event();
-}
-
 async function init_event() {
     if (audioWorkletSupported) {
         try {
@@ -185,7 +145,7 @@ function initializeWatchDog() {
 }
 
 function stream_sink_update(pBuffer, samples_this_frame) {
-    lazy_init();
+    // Don't initialize audio here - wait for user interaction
     if (!context) return;
     
     if (audioWorkletSupported && audioWorkletReady && workletNode) {
@@ -261,10 +221,52 @@ function sample_count() {
     return count;
 }
 
+// Function to initialize audio after user interaction
+async function init_audio_after_user_gesture() {
+    if (context) {
+        return; // Already initialized
+    }
+    
+    if (typeof AudioContext !== "undefined") {
+        context = new AudioContext();
+    } else if (typeof webkitAudioContext !== "undefined") {
+        context = new webkitAudioContext();
+    } else {
+        return;
+    }
+    
+    // Check for AudioWorklet support
+    if (context.audioWorklet) {
+        try {
+            // Create a blob URL for the AudioWorklet processor
+            const blob = new Blob([audioWorkletCode], { type: 'application/javascript' });
+            const workletUrl = URL.createObjectURL(blob);
+            
+            await context.audioWorklet.addModule(workletUrl);
+            audioWorkletSupported = true;
+            URL.revokeObjectURL(workletUrl);
+        } catch (error) {
+            console.warn('AudioWorklet not supported, falling back to ScriptProcessorNode:', error);
+            audioWorkletSupported = false;
+        }
+    } else {
+        audioWorkletSupported = false;
+    }
+    
+    // Generate a volume control node
+    gain_node = context.createGain();
+    gain_node.gain.value = 1.0;
+    gain_node.connect(context.destination);
+    
+    // Initialize the streaming event
+    await init_event();
+}
+
 return {
     stream_sink_update: stream_sink_update,
     get_context: get_context,
-    sample_count: sample_count
+    sample_count: sample_count,
+    init_audio_after_user_gesture: init_audio_after_user_gesture
 };
 
 })();
