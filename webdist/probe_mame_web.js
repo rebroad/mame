@@ -14,9 +14,18 @@ const puppeteer = require('puppeteer');
       '--disable-gpu-vsync', // Disable VSync for better performance
       '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
-      '--disable-features=VizDisplayCompositor'
+      '--disable-features=VizDisplayCompositor',
+      '--restore-last-session', // Restore last session (position memory)
+      '--disable-background-tab-throttling', // Prevent blank tab throttling
+      '--disable-backgrounding-occluded-windows' // Keep windows active
     ]
   });
+
+  // Close any existing tabs to avoid blank tab
+  const pages = await browser.pages();
+  for (const p of pages) {
+    await p.close();
+  }
 
   const page = await browser.newPage();
 
@@ -29,6 +38,13 @@ const puppeteer = require('puppeteer');
     page.on('console', msg => {
       const type = msg.type();
       const text = msg.text();
+
+      // Filter out annoying deprecation warnings
+      if (text.includes('ScriptProcessorNode is deprecated') ||
+          text.includes('AudioContext was not allowed to start')) {
+        return; // Skip these warnings
+      }
+
       consoleMessages.push(`[${type.toUpperCase()}] ${text}`);
       console.log(`[${type.toUpperCase()}] ${text}`);
     });
@@ -102,7 +118,7 @@ const puppeteer = require('puppeteer');
     // Check if MAME Module is loaded
     const moduleInfo = await page.evaluate(() => {
       if (typeof Module === 'undefined') return { error: 'Module not defined' };
-      
+
       return {
         loaded: typeof Module !== 'undefined',
         arguments: Module.arguments || [],
