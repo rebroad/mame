@@ -23,7 +23,10 @@ const puppeteer = require('puppeteer');
       '--disable-features=TranslateUI', // Disable some features that might interfere
       '--disable-extensions', // Disable extensions for cleaner profile
       '--disable-plugins', // Disable plugins
-      '--disable-default-apps' // Disable default apps
+      '--disable-default-apps', // Disable default apps
+      '--restore-last-session', // Restore last session
+      '--disable-session-crashed-bubble', // Disable crash recovery bubble
+      '--disable-infobars' // Disable info bars
     ]
   });
 

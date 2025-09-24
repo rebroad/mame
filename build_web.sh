@@ -456,32 +456,15 @@ cat > "$OUTDIR/index.html" <<EOF
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        max-width: 100vw;
-        max-height: 100vh;
-        object-fit: contain;
         background: #000;
-      }
-
-      /* Maintain 4:3 aspect ratio for Star Wars */
-      @media (min-aspect-ratio: 4/3) {
-        #canvas {
-          width: 100vh;
-          height: 75vh;
-        }
-      }
-
-      @media (max-aspect-ratio: 4/3) {
-        #canvas {
-          width: 133.33vw;
-          height: 100vw;
-        }
+        border: 1px solid #333;
       }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
     <script>
-      // Ensure canvas has explicit pixel size and maintains aspect ratio
+      // Ensure canvas fills window while maintaining aspect ratio
       (function(){
         var c = document.getElementById('canvas');
         var targetAspectRatio = 4/3; // Star Wars aspect ratio
@@ -503,8 +486,15 @@ cat > "$OUTDIR/index.html" <<EOF
             canvasHeight = canvasWidth / targetAspectRatio;
           }
 
+          // Set canvas pixel dimensions
           c.width = canvasWidth;
           c.height = canvasHeight;
+
+          // Set CSS size to fill the window
+          c.style.width = windowWidth + 'px';
+          c.style.height = windowHeight + 'px';
+
+          console.log('Canvas resized to:', canvasWidth + 'x' + canvasHeight, 'CSS size:', windowWidth + 'x' + windowHeight);
         }
 
         window.addEventListener('resize', resize);
