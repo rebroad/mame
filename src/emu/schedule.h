@@ -152,6 +152,7 @@ private:
 	running_machine &           m_machine;                  // reference to our machine
 	device_execute_interface *  m_executing_device;         // pointer to currently executing device
 	device_execute_interface *  m_execute_list;             // list of devices to be executed
+	emu_timer *                 m_trigger_timer;            // timer used for delayed global triggers
 	attotime                    m_basetime;                 // global basetime; everything moves forward from here
 
 	// list of active timers
