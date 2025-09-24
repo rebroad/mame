@@ -191,6 +191,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_UPDATEINPAUSE,                              "0",         core_options::option_type::BOOLEAN,    "keep calling video updates while in pause" },
 	{ OPTION_DEBUGSCRIPT,                                nullptr,     core_options::option_type::PATH,       "script for debugger" },
 	{ OPTION_DEBUGLOG,                                   "0",         core_options::option_type::BOOLEAN,    "write debug console output to debug.log" },
+	{ OPTION_WASM_DEBUG,                                 "0",         core_options::option_type::BOOLEAN,    "enable additional WebAssembly performance diagnostics" },
 
 	// comm options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE COMM OPTIONS" },
