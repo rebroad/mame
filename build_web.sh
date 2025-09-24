@@ -644,6 +644,8 @@ fi
 
 start_server() {
     local port="$1"
+    # Track chosen port for callers
+    LAST_SERVER_PORT=""
     if [[ -z "$port" ]]; then
         for p in 8000 8001 8002 8003 8004 8005; do
             if ! (command -v nc >/dev/null 2>&1 && nc -z localhost "$p" 2>/dev/null); then
@@ -656,6 +658,7 @@ start_server() {
         return 1
     fi
     echo "Starting local server on http://localhost:$port ..."
+    LAST_SERVER_PORT="$port"
     pushd "$OUTDIR" >/dev/null
     # Prefer Node server with COOP/COEP if available
     if command -v node >/dev/null 2>&1; then
@@ -754,19 +757,33 @@ if $START_SERVER; then
         local port="$1"
         local used_port=""
         local final_port=""
-        # If a specific port was requested, always start a fresh server there
+        # If a specific port was requested, prefer reusing it if healthy; otherwise start fresh there
         if [[ -n "$port" ]]; then
-            start_server "$port" || true
-            return
-        fi
-        # Otherwise start a new server on the first available port
-        if [[ -z "$used_port" ]]; then
-            start_server "$port" || true
-            final_port="$port"
+            if command -v curl >/dev/null 2>&1 && \
+               curl -s --max-time 5 "http://localhost:$port/" | grep -q "<title>Star Wars</title>"; then
+                used_port="$port"
+            else
+                start_server "$port" || true
+                USED_PORT="$port"
+                return
+            fi
         else
-            echo "Reusing existing server on http://localhost:$used_port"
-            final_port="$used_port"
+            # Probe common ports for an existing healthy server (fast path)
+            for p in 8000 8001 8002 8003 8004 8005; do
+                if command -v curl >/dev/null 2>&1 && \
+                   curl -s --max-time 5 "http://localhost:$p/" | grep -q "<title>Star Wars</title>"; then
+                    used_port="$p"; break
+                fi
+            done
+            # If still none, start a new server (start_server chooses first free, typically 8000)
+            if [[ -z "$used_port" ]]; then
+                start_server "" || true
+                USED_PORT="$LAST_SERVER_PORT"
+                return
+            fi
         fi
+        echo "Reusing existing server on http://localhost:$used_port"
+        final_port="$used_port"
         # Return the port via a global variable
         USED_PORT="$final_port"
     }
