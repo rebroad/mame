@@ -280,8 +280,7 @@ int running_machine::run(bool quiet)
 		// if we have a logfile, set up the callback
 		if (options().log() && !quiet)
 		{
-			std::string log_dir = get_log_directory();
-			m_logfile = std::make_unique<emu_file>(log_dir, OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
+			m_logfile = std::make_unique<emu_file>(OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
 			std::error_condition const filerr = m_logfile->open("error.log");
 			if (filerr)
 				throw emu_fatalerror("running_machine::run: unable to open error.log file");
@@ -292,8 +291,7 @@ int running_machine::run(bool quiet)
 
 		if (options().debug() && options().debuglog())
 		{
-			std::string log_dir = get_log_directory();
-			m_debuglogfile = std::make_unique<emu_file>(log_dir, OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
+			m_debuglogfile = std::make_unique<emu_file>(OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
 			std::error_condition const filerr = m_debuglogfile->open("debug.log");
 			if (filerr)
 				throw emu_fatalerror("running_machine::run: unable to open debug.log file");
@@ -1208,29 +1206,6 @@ void running_machine::popup_message(util::format_argument_pack<char> const &args
 {
 	std::string const temp(string_format(args));
 	ui().popup_time(temp.length() / 40 + 2, "%s", temp);
-}
-
-
-//-------------------------------------------------
-//  get_log_directory - get the directory for log files
-//-------------------------------------------------
-
-std::string running_machine::get_log_directory() const
-{
-	// Get the plugin data path (homepath configuration)
-	std::string log_dir = options().plugin_data_path();
-	if (!log_dir.empty() && log_dir != ".")
-	{
-		// Use plugin data path if it's not the current directory
-		log_dir += PATH_SEPARATOR;
-		log_dir += "logs";
-	}
-	else
-	{
-		// Fallback to current directory if plugin data path is not set
-		log_dir = ".";
-	}
-	return log_dir;
 }
 
 
