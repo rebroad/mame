@@ -460,8 +460,31 @@ std::wstring wstring_from_utf8(std::string_view utf8string)
 	// for some reason, using codecvt yields bad results on MinGW (but not MSVC)
 	return osd::text::to_wstring(utf8string);
 #else
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.from_bytes(utf8string.data(), utf8string.data() + utf8string.length());
+	// Avoid deprecated std::wstring_convert/std::codecvt; convert via UTF-32 code points
+	std::wstring out;
+	out.reserve(utf8string.size());
+	const char *ptr = utf8string.data();
+	const char *end = ptr + utf8string.size();
+	while (ptr < end) {
+		char32_t cp = 0;
+		int consumed = uchar_from_utf8(&cp, ptr, static_cast<size_t>(end - ptr));
+		if (consumed <= 0) {
+			// invalid byte, skip one to avoid infinite loop
+			++ptr;
+			continue;
+		}
+		ptr += consumed;
+		if constexpr (sizeof(wchar_t) == 2) {
+			// encode UTF-16 surrogate pair(s) into wstring
+			char16_t tmp[2];
+			int rc = utf16_from_uchar(tmp, 2, cp);
+			if (rc >= 1) out.push_back(static_cast<wchar_t>(tmp[0]));
+			if (rc >= 2) out.push_back(static_cast<wchar_t>(tmp[1]));
+		} else {
+			out.push_back(static_cast<wchar_t>(cp));
+		}
+	}
+	return out;
 #endif
 }
 
@@ -476,8 +499,30 @@ std::string utf8_from_wstring(std::wstring_view string)
 	// for some reason, using codecvt yields bad results on MinGW (but not MSVC)
 	return osd::text::from_wstring(string);
 #else
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.to_bytes(string.data(), string.data() + string.length());
+	// Avoid deprecated std::wstring_convert/std::codecvt; convert via UTF-32 code points
+	std::string out;
+	out.reserve(string.size());
+	if constexpr (sizeof(wchar_t) == 2) {
+		// convert UTF-16 code units to code points then to UTF-8
+		size_t i = 0;
+		while (i < string.size()) {
+			char32_t cp = 0;
+			int rc = uchar_from_utf16(&cp, &string[i], string.size() - i);
+			if (rc <= 0) { ++i; continue; }
+			i += rc;
+			char buf[4];
+			int written = utf8_from_uchar(buf, sizeof(buf), cp);
+			out.append(buf, buf + written);
+		}
+	} else {
+		for (wchar_t wc : string) {
+			char32_t cp = static_cast<char32_t>(wc);
+			char buf[4];
+			int written = utf8_from_uchar(buf, sizeof(buf), cp);
+			out.append(buf, buf + written);
+		}
+	}
+	return out;
 #endif
 }
 
