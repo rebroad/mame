@@ -439,15 +439,74 @@ cat > "$OUTDIR/index.html" <<EOF
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Star Wars</title>
     <link rel="icon" href="data:,"/>
-    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #ccc;
+        font-family: sans-serif;
+        overflow: hidden;
+      }
+
+      #canvas {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 100vw;
+        max-height: 100vh;
+        object-fit: contain;
+        background: #000;
+      }
+
+      /* Maintain 4:3 aspect ratio for Star Wars */
+      @media (min-aspect-ratio: 4/3) {
+        #canvas {
+          width: 100vh;
+          height: 75vh;
+        }
+      }
+
+      @media (max-aspect-ratio: 4/3) {
+        #canvas {
+          width: 133.33vw;
+          height: 100vw;
+        }
+      }
+    </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
     <script>
-      // Ensure canvas has explicit pixel size and is visible
+      // Ensure canvas has explicit pixel size and maintains aspect ratio
       (function(){
         var c = document.getElementById('canvas');
-        function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+        var targetAspectRatio = 4/3; // Star Wars aspect ratio
+
+        function resize(){
+          var windowWidth = window.innerWidth;
+          var windowHeight = window.innerHeight;
+          var windowAspectRatio = windowWidth / windowHeight;
+
+          var canvasWidth, canvasHeight;
+
+          if (windowAspectRatio > targetAspectRatio) {
+            // Window is wider than target ratio - fit to height
+            canvasHeight = windowHeight;
+            canvasWidth = canvasHeight * targetAspectRatio;
+          } else {
+            // Window is taller than target ratio - fit to width
+            canvasWidth = windowWidth;
+            canvasHeight = canvasWidth / targetAspectRatio;
+          }
+
+          c.width = canvasWidth;
+          c.height = canvasHeight;
+        }
+
         window.addEventListener('resize', resize);
         resize();
       })();
@@ -495,7 +554,7 @@ cat > "$OUTDIR/index.html" <<EOF
           "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
         print: function(text){ console.log(text); },
-        printErr: function(text){ 
+        printErr: function(text){
           console.error('[MAME ERROR]', text);
           // Try to capture any startup errors
           if (text.includes('error') || text.includes('Error') || text.includes('failed') || text.includes('Failed')) {
@@ -629,7 +688,7 @@ ${INI_ARGS_JS}
           console.log('[DEBUG] Could not delete error.log:', e);
         }
       })();
-      
+
       // Single delayed probe after 7 seconds
       setTimeout(function(){
         console.log('[DEBUG] Delayed probe (7s)...');
@@ -642,7 +701,7 @@ ${INI_ARGS_JS}
               console.error('[mame.log][delayed]\n' + d);
             } else {
               console.log('[DEBUG] mame.log not found (7s)');
-              
+
               // Check for error.log
               var errorFile = 'error.log';
               var errorInf = FS.analyzePath(errorFile);
@@ -653,12 +712,12 @@ ${INI_ARGS_JS}
               } else {
                 console.log('[DEBUG] error.log not found (7s)');
               }
-              
+
               // List all files in root to see what's there
               try {
                 var files = FS.readdir('/');
                 console.log('[DEBUG] All root files:', files.join(','));
-                
+
                 // Show detailed file info for each file
                 files.forEach(function(file) {
                   if (file !== '.' && file !== '..') {
@@ -680,7 +739,7 @@ ${INI_ARGS_JS}
           } else {
             console.log('[DEBUG] FS not available (7s)');
           }
-        } catch(e) { 
+        } catch(e) {
           console.log('[DEBUG] Delayed probe error:', e);
         }
       }, 7000);
