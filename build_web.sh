@@ -452,10 +452,8 @@ cat > "$OUTDIR/index.html" <<EOF
 
       #canvas {
         display: block;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        width: 100vw;
+        height: 100vh;
         background: #000;
         border: 1px solid #333;
       }
@@ -464,37 +462,23 @@ cat > "$OUTDIR/index.html" <<EOF
   <body>
     <canvas id="canvas"></canvas>
     <script>
-      // Ensure canvas fills window while maintaining aspect ratio
+      // Make canvas fill the entire window
       (function(){
         var c = document.getElementById('canvas');
-        var targetAspectRatio = 4/3; // Star Wars aspect ratio
 
         function resize(){
           var windowWidth = window.innerWidth;
           var windowHeight = window.innerHeight;
-          var windowAspectRatio = windowWidth / windowHeight;
 
-          var canvasWidth, canvasHeight;
+          // Set canvas to fill the entire window
+          c.width = windowWidth;
+          c.height = windowHeight;
 
-          if (windowAspectRatio > targetAspectRatio) {
-            // Window is wider than target ratio - fit to height
-            canvasHeight = windowHeight;
-            canvasWidth = canvasHeight * targetAspectRatio;
-          } else {
-            // Window is taller than target ratio - fit to width
-            canvasWidth = windowWidth;
-            canvasHeight = canvasWidth / targetAspectRatio;
-          }
-
-          // Set canvas pixel dimensions
-          c.width = canvasWidth;
-          c.height = canvasHeight;
-
-          // Set CSS size to fill the window
+          // Ensure CSS also fills the window
           c.style.width = windowWidth + 'px';
           c.style.height = windowHeight + 'px';
 
-          console.log('Canvas resized to:', canvasWidth + 'x' + canvasHeight, 'CSS size:', windowWidth + 'x' + windowHeight);
+          console.log('Canvas resized to fill window:', windowWidth + 'x' + windowHeight);
         }
 
         window.addEventListener('resize', resize);

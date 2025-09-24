@@ -16,17 +16,8 @@ const puppeteer = require('puppeteer');
       '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
       '--disable-features=VizDisplayCompositor',
-      '--disable-background-tab-throttling', // Prevent blank tab throttling
-      '--disable-backgrounding-occluded-windows', // Keep windows active
-      '--window-position=100,100', // Initial position (will be overridden by saved position)
-      '--window-size=1200,800', // Initial size
-      '--disable-features=TranslateUI', // Disable some features that might interfere
-      '--disable-extensions', // Disable extensions for cleaner profile
-      '--disable-plugins', // Disable plugins
-      '--disable-default-apps', // Disable default apps
-      '--restore-last-session', // Restore last session
-      '--disable-session-crashed-bubble', // Disable crash recovery bubble
-      '--disable-infobars' // Disable info bars
+      '--window-position=100,100', // Initial position
+      '--window-size=1200,800' // Initial size
     ]
   });
 
