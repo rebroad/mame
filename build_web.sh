@@ -481,8 +481,30 @@ cat > "$OUTDIR/index.html" <<EOF
           console.log('Canvas resized to fill window:', windowWidth + 'x' + windowHeight);
         }
 
+        // Override MAME's canvas sizing after it initializes
+        function overrideMameCanvas() {
+          if (typeof Module !== 'undefined' && Module.canvas) {
+            console.log('Overriding MAME canvas size...');
+            resize();
+
+            // Set up a periodic override to ensure MAME doesn't change it back
+            setInterval(function() {
+              if (c.width !== window.innerWidth || c.height !== window.innerHeight) {
+                console.log('MAME changed canvas size, overriding...');
+                resize();
+              }
+            }, 100);
+          } else {
+            // Retry in 100ms if MAME not ready
+            setTimeout(overrideMameCanvas, 100);
+          }
+        }
+
         window.addEventListener('resize', resize);
         resize();
+
+        // Start overriding MAME's canvas size
+        overrideMameCanvas();
       })();
       function dumpLog(prefix){
         try {
@@ -523,9 +545,10 @@ cat > "$OUTDIR/index.html" <<EOF
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
-          "-throttle", "-speed", "1", "-verbose",
+          "-speed", "1", "-verbose",
           "-samplerate", "48000",
-          "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
+          "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}",
+          "-resolution", "auto"
         ],
         print: function(text){ console.log(text); },
         printErr: function(text){
