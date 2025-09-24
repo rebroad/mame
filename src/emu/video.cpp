@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    video.cpp
+	video.cpp
 
-    Core MAME video routines.
+	Core MAME video routines.
 
 ***************************************************************************/
 
@@ -508,7 +508,15 @@ void video_manager::exit()
 		osd_ticks_t tps = osd_ticks_per_second();
 		double final_real_time = (double)m_overall_real_seconds + (double)m_overall_real_ticks / (double)tps;
 		double final_emu_time = m_overall_emutime.as_double();
-		osd_printf_info("Average speed: %.2f%% (%d seconds)\n", 100 * final_emu_time / final_real_time, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
+		double average_speed = 100 * final_emu_time / final_real_time;
+		osd_printf_info("Average speed: %.2f%% (%d seconds)\n", average_speed, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
+
+		// DEBUG: Also log to error.log for WASM builds
+		FILE* debug_file = fopen("error.log", "a");
+		if (debug_file) {
+			fprintf(debug_file, "FINAL SPEED REPORT: %.2f%% average speed over %d seconds\n", average_speed, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
+			fclose(debug_file);
+		}
 	}
 }
 
@@ -678,22 +686,22 @@ void video_manager::update_throttle(attotime emutime)
 
    There are many complications to this model:
 
-       * some games run too slow, so each frame we get further and
-           further behind real time; our only choice here is to not
-           throttle
+	   * some games run too slow, so each frame we get further and
+		   further behind real time; our only choice here is to not
+		   throttle
 
-       * some games have very uneven frame rates; one frame will take
-           a long time to emulate, and the next frame may be very fast
+	   * some games have very uneven frame rates; one frame will take
+		   a long time to emulate, and the next frame may be very fast
 
-       * we run on top of multitasking OSes; sometimes execution time
-           is taken away from us, and this means we may not get enough
-           time to emulate one frame
+	   * we run on top of multitasking OSes; sometimes execution time
+		   is taken away from us, and this means we may not get enough
+		   time to emulate one frame
 
-       * we may be paused, and emulated time may not be marching
-           forward
+	   * we may be paused, and emulated time may not be marching
+		   forward
 
-       * emulated time could jump due to resetting the machine or
-           restoring from a saved state
+	   * emulated time could jump due to resetting the machine or
+		   restoring from a saved state
 
 */
 
@@ -962,6 +970,19 @@ void video_manager::recompute_speed(const attotime &emutime)
 		osd_ticks_t delta_realtime = realtime - m_speed_last_realtime;
 		osd_ticks_t tps = osd_ticks_per_second();
 		m_speed_percent = delta_emutime.as_double() * (double)tps / (double)delta_realtime;
+
+		// DEBUG: Log speed information for WASM builds
+		static int speed_log_counter = 0;
+		if (++speed_log_counter % 60 == 0) { // Log every 60 frames (roughly once per second)
+			osd_printf_info("WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+			
+			// Also log to error.log for debugging
+			FILE* debug_file = fopen("error.log", "a");
+			if (debug_file) {
+				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+				fclose(debug_file);
+			}
+		}
 
 		// remember the last times
 		m_speed_last_realtime = realtime;

@@ -124,9 +124,7 @@ const puppeteer = require('puppeteer');
       return errors;
     });
 
-    if (errorElements.length > 0) {
-      console.log('⚠️ Error elements found:', errorElements);
-    }
+    // Error elements are saved to debug JSON, no need to log to console
 
     // Save console output to file
     const fs = require('fs');
