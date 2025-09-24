@@ -10,7 +10,6 @@ DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
 VIDEO_MODE="soft"   # default soft for web
-# ENABLE_WORKERS removed - COOP/COEP headers fix audio stutter without pthreads
 DRIVER_SHORTNAME="starwars"
 ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
@@ -19,7 +18,7 @@ JOBS=""               # make -j (default to nproc later)
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
-USE_LOCAL_EMSDK=false   # Prefer global emsdk at ~/src/emsdk; fallback to local clone
+USE_LOCAL_EMSDK=false  # Prefer global emsdk at ~/src/emsdk; fallback to local clone
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
 LINK_THREADS=""
 DO_REGEN=true
@@ -294,12 +293,9 @@ if [[ ! -f "$PACKAGER" ]]; then
     exit 1
 fi
 
-# Build mode tracking removed - no longer needed without pthreads
-
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
-    # Simplified build structure - no longer need separate pthread/non-pthread trees
     pushd "$REPO_ROOT" >/dev/null
     # Bootstrap native 'genie' without Emscripten flags polluting host link
     if [[ -d "$REPO_ROOT/3rdparty/genie" ]]; then
@@ -370,7 +366,7 @@ if ! $DO_BUILD; then
     fi
 fi
 
-# Verify artifacts (worker js is optional)
+# Verify artifacts
 for f in "$SRC_ROOT/starwarswasm.html" "$SRC_ROOT/starwarswasm.js" "$SRC_ROOT/starwarswasm.wasm"; do
     if [[ ! -f "$f" ]]; then
         echo "Error: Expected artifact missing: $f" >&2
@@ -382,7 +378,6 @@ done
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
     mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
-    # Worker files no longer needed - COOP/COEP headers fix audio without pthreads
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
@@ -798,7 +793,5 @@ fi
 if $CONSOLE_DEBUG; then
     run_probe "$USED_PORT" || true
 fi
-
-# No cleanup needed - we're using individual files directly
 
 
