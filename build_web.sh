@@ -314,18 +314,34 @@ if [[ -f "$BUILD_CONFIG_STAMP" ]]; then PREV_BUILD_CONFIG="$(cat "$BUILD_CONFIG_
 
 # Function to clean problematic caches when build configuration changes
 clean_build_caches() {
-    echo "Cleaning build caches due to configuration change..."
+    local config_changed=false
+    local mode_changed=false
 
-    # Remove PCH files that can cause optimization conflicts
+    # Determine what changed
+    if [[ -n "$PREV_BUILD_CONFIG" ]] && [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
+        config_changed=true
+        echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG'"
+    fi
+
+    if [[ -n "$PREV_MODE" ]] && [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+        mode_changed=true
+        echo "Build mode changed from '$PREV_MODE' to '$CUR_MODE'"
+    fi
+
+    # Clean PCH files that can cause optimization conflicts (always safe to clean)
+    echo "Cleaning precompiled headers..."
     find "$REPO_ROOT/build" -name "*.pch" -delete 2>/dev/null || true
     find "$REPO_ROOT/build" -name "*.gch" -delete 2>/dev/null || true
 
-    # Remove object files that might have incompatible optimization settings
-    find "$REPO_ROOT/build" -name "*.o" -delete 2>/dev/null || true
+    # Only clean object files if configuration actually changed
+    if $config_changed; then
+        echo "Cleaning object files due to configuration change..."
+        find "$REPO_ROOT/build" -name "*.o" -delete 2>/dev/null || true
+    fi
 
-    # Clean Emscripten cache if optimization settings changed
-    if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
-        echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG' - cleaning Emscripten cache..."
+    # Only clean Emscripten cache if mode changed (pthread vs single-threaded)
+    if $mode_changed; then
+        echo "Cleaning Emscripten cache due to mode change..."
         rm -rf "$REPO_ROOT/build/asmjs" 2>/dev/null || true
         rm -rf "$REPO_ROOT/build/asmjs-pthread" 2>/dev/null || true
         rm -rf "$REPO_ROOT/build/asmjs-single" 2>/dev/null || true
@@ -334,13 +350,26 @@ clean_build_caches() {
     echo "Cache cleanup complete."
 }
 
-# Check if we need to clean caches
-if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]] || [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+# Check if we need to clean caches (only if there was a previous build and config actually changed)
+if [[ -n "$PREV_BUILD_CONFIG" ]] && [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
+    echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG' - cleaning caches..."
     clean_build_caches
+elif [[ -n "$PREV_MODE" ]] && [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+    echo "Build mode changed from '$PREV_MODE' to '$CUR_MODE' - cleaning caches..."
+    clean_build_caches
+else
+    echo "Using existing build configuration: $CUR_BUILD_CONFIG (mode: $CUR_MODE)"
 fi
 
 # Optional build
 if $DO_BUILD; then
+    # Proactively clean problematic Emscripten build files to prevent linker errors
+    # This prevents the "unknown file type" error by ensuring fresh generation
+    if [[ -d "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" ]]; then
+        echo "Proactively cleaning Emscripten build files to prevent linker errors..."
+        rm -rf "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" 2>/dev/null || true
+        echo "Emscripten build files cleaned - will regenerate with correct settings"
+    fi
     echo "Building MAME (Star Wars subset) for WebAssembly..."
     # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
     BUILD_BASE="$REPO_ROOT/build"
@@ -408,6 +437,9 @@ if $DO_BUILD; then
             regenie_flag="0"  # Don't regenerate on retry
         fi
 
+        # Capture build output for error analysis
+        local build_log="/tmp/mame_build_$$.log"
+
         # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
         # Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
         setsid bash -c "emmake make \
@@ -421,12 +453,18 @@ if $DO_BUILD; then
             NO_OPENGL=1 \
             config=$BUILD_CONFIG \
             LDOPTS=\"$BUILD_LDFLAGS\" \
-            -j\"$JOBS\"" &
+            -j\"$JOBS\" 2>&1 | tee \"$build_log\"" &
         BUILD_PID=$!
         # Wait for build to finish (trap will handle Ctrl-C)
         wait "$BUILD_PID"
         local build_status=$?
         BUILD_PID=""
+
+        # Store build log for error analysis
+        if [[ -f "$build_log" ]]; then
+            export LAST_BUILD_LOG="$build_log"
+        fi
+
         return $build_status
     }
 
