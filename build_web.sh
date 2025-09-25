@@ -9,12 +9,13 @@ set -euo pipefail
 DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
-VIDEO_MODE="soft"   # default soft for web
+VIDEO_MODE="soft"
+ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars"
 ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
-JOBS=""               # make -j (default to nproc later)
+JOBS="$(nproc)"
 BUILD_CONFIG="release32"  # default to release for web deployment
 
 # Emscripten toolchain controls
@@ -36,14 +37,15 @@ print_usage() {
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
     echo "  -no-ccache             Disable ccache wrapper for this build"
-    echo "  -console-debug         Enable browser console capture/logging (runtime only)"
+    echo "  -console-debug         Run MAME with -verbose for browser console logs"
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
-    echo "  -debug-build           Use debug32 configuration (larger, with debug symbols)"
     echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -j <N>, --jobs <N>     Use N jobs for 'make -j' (default: CPU count)"
     echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
     echo "  -no-compress           Disable compression (default: enabled)"
+    echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
+    echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -51,6 +53,8 @@ print_usage() {
 CONSOLE_DEBUG=false
 BUILD_DEBUG=false
 PROFILER_DEBUG=false
+AUTOSTART=false
+VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
@@ -62,9 +66,8 @@ while [[ $# -gt 0 ]]; do
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
-        -console-debug) CONSOLE_DEBUG=true; shift;;
-        -build-debug) BUILD_DEBUG=true; shift;;
-        -debug-build) BUILD_CONFIG="debug32"; shift;;
+        -console-debug) CONSOLE_DEBUG=true; VERBOSE_FLAG="-verbose"; shift;;
+        -build-debug) BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
         -profiler) PROFILER_DEBUG=true; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
@@ -73,6 +76,8 @@ while [[ $# -gt 0 ]]; do
         --jobs) JOBS="${2:-}"; shift 2;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
         -no-compress) DO_COMPRESS=false; shift;;
+        -autostart) AUTOSTART=true; shift;;
+        -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -296,9 +301,35 @@ if [[ ! -f "$PACKAGER" ]]; then
     exit 1
 fi
 
+# Track current vs previous build mode to avoid mixing pthread and non-pthread objects
+CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
+PREV_MODE=""
+if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
+
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
+    # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
+    BUILD_BASE="$REPO_ROOT/build"
+    ASMJS_LINK="$BUILD_BASE/asmjs"
+    MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
+    ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
+    GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
+    GMAKE_LINK="$GEN_BASE/gmake-asmjs"
+    GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
+    mkdir -p "$ASMJS_MODE_DIR"
+    mkdir -p "$GEN_BASE"
+    # Point asmjs link to mode dir
+    if [[ -L "$ASMJS_LINK" || -e "$ASMJS_LINK" ]]; then
+        if [[ -L "$ASMJS_LINK" ]]; then rm -f "$ASMJS_LINK"; else mv "$ASMJS_LINK" "${ASMJS_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
+    fi
+    ln -sfn "$(basename "$ASMJS_MODE_DIR")" "$ASMJS_LINK"
+    # Point gmake-asmjs link to mode dir
+    if [[ -L "$GMAKE_LINK" || -e "$GMAKE_LINK" ]]; then
+        if [[ -L "$GMAKE_LINK" ]]; then rm -f "$GMAKE_LINK"; else mv "$GMAKE_LINK" "${GMAKE_LINK}-backup-$(date +%s)" 2>/dev/null || true; fi
+    fi
+    mkdir -p "$GMAKE_MODE_DIR"
+    ln -sfn "$(basename "$GMAKE_MODE_DIR")" "$GMAKE_LINK"
     pushd "$REPO_ROOT" >/dev/null
     # Bootstrap native 'genie' without Emscripten flags polluting host link
     if [[ -d "$REPO_ROOT/3rdparty/genie" ]]; then
@@ -317,6 +348,12 @@ if $DO_BUILD; then
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz"
         BUILD_LDFLAGS+=" -Oz"
     fi
+    if $ENABLE_WORKERS; then
+        # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
+        BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
+    fi
     # Enable profiler debug output (useful progress without compile noise)
     if $PROFILER_DEBUG; then
         export EMCC_DEBUG=1
@@ -329,7 +366,6 @@ if $DO_BUILD; then
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
 	# Default compile job count if not provided
-	if [[ -z "$JOBS" ]]; then JOBS="$(nproc)"; fi
     # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
 	# Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
 	setsid bash -c "emmake make \
@@ -360,6 +396,7 @@ if $DO_BUILD; then
     popd >/dev/null
     # Persist scripts hash after successful build
     if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
+    echo "$CUR_MODE" > "$MODE_STAMP"
 fi
 
 # Locate artifacts (repo root after build; webdist for -no-build runs)
@@ -388,6 +425,24 @@ done
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
     mv -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/"
+    # Also stage worker bootstrap if present (pthreads/workers builds)
+    if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
+        echo "Injecting shims."
+        cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
+        # Inject shims at top of worker to define `window` and `globalThis`
+        if ! grep -q "self.window = self" "$OUTDIR/starwarswasm.worker.js" 2>/dev/null; then
+            tmpfile="$(mktemp)"
+            {
+                echo '/* injected by build_web.sh: worker global shims */'
+                echo 'self.window = self;'
+                echo 'self.globalThis = self.globalThis || self;'
+            } > "$tmpfile"
+            cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
+            mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
+        fi
+    else
+        echo "No worker file to inject."
+    fi
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
@@ -400,6 +455,18 @@ elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
   PARENT_ROM="$HOME/.mame/roms/starwars.zip"
 fi
 
+# Optional autoboot script must be preloaded into the Emscripten FS
+if $AUTOSTART; then
+cat > "$OUTDIR/autoboot.lua" <<'LUA'
+emu.register_frame(function()
+  if emu.framecount() == 60 then
+    emu.keypost('5')
+  elseif emu.framecount() == 120 then
+    emu.keypost('1')
+  end
+end)
+LUA
+fi
 
 # Determine the correct ROM path based on ROM file type
 # Determine ROM mount path and always use the same PACK_ARGS template for DRYness
@@ -415,6 +482,7 @@ PACK_ARGS=(
     --preload "$ROM_PATH@$ROM_MOUNT_PATH"
     --export-name=Module
     --use-preload-cache
+    --no-heap-copy
     --js-output="$OUTDIR/roms.js"
 )
 if [[ -n "$PARENT_ROM" ]]; then
@@ -428,6 +496,10 @@ if [[ -f "$CFG_FILE" ]]; then
   echo "Including per-game cfg: $CFG_FILE"
   PACK_ARGS=("${PACK_ARGS[@]}" --preload "$CFG_FILE@cfg/${DRIVER_SHORTNAME}.cfg")
   USE_CFG=true
+fi
+# Preload autoboot if present
+if $AUTOSTART; then
+  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
 fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
 
@@ -495,20 +567,32 @@ cat > "$OUTDIR/index.html" <<EOF
       }
       window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
       window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
-      // Allow URL overrides: ?latency=5
+      function detectPreferredVideo() {
+        try {
+          var c = document.createElement('canvas');
+          var gl2 = c.getContext('webgl2');
+          if (gl2) return 'bgfx';
+          var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+          if (gl) return 'bgfx';
+        } catch (e) {}
+        return 'soft';
+      }
+      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
       var urlParams = new URLSearchParams(location.search);
+      var urlVideo = (urlParams.get('video')||'').toLowerCase();
+      var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}");
       var latencyOverride = urlParams.get('latency');
       var Module = {
         canvas: (function(){ return document.getElementById('canvas'); })(),
         arguments: [
           "${DRIVER_SHORTNAME}",
           "-rompath", "roms",
-          "-video", "soft",
+          "-video", chosenVideo,
           "-window", "-nomaximize", "-numscreens", "1",
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
-          "-throttle", "-speed", "1",
+          "-speed", "1", "${VERBOSE_FLAG}",
           "-samplerate", "48000",
           "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
@@ -571,7 +655,16 @@ cat > "$OUTDIR/index.html" <<EOF
         window.addEventListener('resize', applySize);
         applySize();
       })();
-      // Worker-related canvas handling removed - no longer needed
+      // In workers mode with OffscreenCanvas, suppress main-thread getContext throws
+      if ("${ENABLE_WORKERS}" === "true") {
+        try {
+          var __c = document.getElementById('canvas');
+          var __origGetContext = __c.getContext.bind(__c);
+          __c.getContext = function(type, attrs){
+            try { return __origGetContext(type, attrs); } catch (e) { return null; }
+          };
+        } catch(e) {}
+      }
       // Log whether AudioWorklet/Workers are active at runtime
       (function(){
         try {
@@ -597,7 +690,80 @@ cat > "$OUTDIR/index.html" <<EOF
         Module.arguments.push("-cfg_directory", "cfg");
       }
       // Keep throttle enabled for smoother audio even in debug.
+      if ("${AUTOSTART}" === "true") {
+        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
+      }
 ${INI_ARGS_JS}
+      // Clean up any existing error.log before starting MAME
+      (function(){
+        try {
+          if (typeof FS !== 'undefined') {
+            var errorFile = 'error.log';
+            var errorInf = FS.analyzePath(errorFile);
+            if (errorInf && errorInf.exists) {
+              FS.unlink(errorFile);
+              console.log('[DEBUG] Deleted existing error.log');
+            }
+          }
+        } catch(e) {
+          console.log('[DEBUG] Could not delete error.log:', e);
+        }
+      })();
+
+      // Single delayed probe after 7 seconds
+      setTimeout(function(){
+        console.log('[DEBUG] Delayed probe (7s)...');
+        try {
+          if (typeof FS !== 'undefined') {
+            var p = 'mame.log';
+            var inf = FS.analyzePath(p);
+            if (inf && inf.exists) {
+              var d = FS.readFile(p, { encoding: 'utf8' });
+              console.error('[mame.log][delayed]\n' + d);
+            } else {
+              console.log('[DEBUG] mame.log not found (7s)');
+
+              // Check for error.log
+              var errorFile = 'error.log';
+              var errorInf = FS.analyzePath(errorFile);
+              if (errorInf && errorInf.exists) {
+                var errorData = FS.readFile(errorFile, { encoding: 'utf8' });
+                console.error('[error.log][delayed] (size: ' + errorData.length + ' bytes)');
+                console.error('[error.log][delayed] contents:\n' + errorData);
+              } else {
+                console.log('[DEBUG] error.log not found (7s)');
+              }
+
+              // List all files in root to see what's there
+              try {
+                var files = FS.readdir('/');
+                console.log('[DEBUG] All root files:', files.join(','));
+
+                // Show detailed file info for each file
+                files.forEach(function(file) {
+                  if (file !== '.' && file !== '..') {
+                    try {
+                      var info = FS.analyzePath('/' + file);
+                      if (info && info.exists) {
+                        var stat = FS.stat('/' + file);
+                        console.log('[DEBUG] File:', file, 'size:', stat.size, 'mode:', stat.mode);
+                      }
+                    } catch(e) {
+                      console.log('[DEBUG] Could not stat file:', file, e);
+                    }
+                  }
+                });
+              } catch(e) {
+                console.log('[DEBUG] Cannot list root files:', e);
+              }
+            }
+          } else {
+            console.log('[DEBUG] FS not available (7s)');
+          }
+        } catch(e) {
+          console.log('[DEBUG] Delayed probe error:', e);
+        }
+      }, 7000);
     </script>
     <script src="roms.js"></script>
     <script src="${ARTIFACT_BASE}.js"></script>
@@ -779,5 +945,4 @@ fi
 if $CONSOLE_DEBUG; then
     run_probe "$USED_PORT" || true
 fi
-
 
