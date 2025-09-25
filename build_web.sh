@@ -9,57 +9,73 @@ set -euo pipefail
 DO_BUILD=true
 START_SERVER=true
 SERVER_PORT=""
-VIDEO_MODE="auto"   # "auto", "bgfx" or "soft"
+VIDEO_MODE="soft"
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars"
 ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
+JOBS="$(nproc)"
+BUILD_CONFIG="release32"  # default to release for web deployment
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
 USE_LOCAL_EMSDK=false  # Prefer global emsdk at ~/src/emsdk; fallback to local clone
 USE_CCACHE=true        # Enable ccache by default for faster incremental builds
+LINK_THREADS=""
+DO_REGEN=true
+DO_COMPRESS=true       # Compress by default for deployment
+PROFILER_DEBUG=true    # Enable profiler by default
 
 print_usage() {
     echo "Usage: $0 [options]"
     echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
     echo "  -no-server             Do not start a local web server"
     echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
-    echo "  -soft                  Force -video soft (override auto)"
-    echo "  -bgfx                  Force -video bgfx (override auto)"
-    echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars1.zip)"
-    echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars1)"
+    echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars.zip)"
+    echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars)"
     echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
     echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
     echo "  -no-ccache             Disable ccache wrapper for this build"
-    echo "  -verbose               Run MAME with -verbose for browser console logs"
-    echo "  -debug                 Enable verbose and auto-capture browser console"
+    echo "  -console-debug         Run MAME with -verbose for browser console logs"
+    echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
+    echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
+    echo "  -j <N>, --jobs <N>     Use N jobs for 'make -j' (default: CPU count)"
+    echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
+    echo "  -no-compress           Disable compression (default: enabled)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
 # Parse args
-VERBOSE_ARG=false
-DEBUG_MODE=false
+CONSOLE_DEBUG=false
+BUILD_DEBUG=false
+PROFILER_DEBUG=false
 AUTOSTART=false
+VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -no-build) DO_BUILD=false; shift;;
         -no-server) START_SERVER=false; shift;;
         -port) SERVER_PORT="${2:-}"; shift 2;;
-        -soft) VIDEO_MODE="soft"; shift;;
-        -bgfx) VIDEO_MODE="bgfx"; shift;;
         -rom) ROM_PATH="${2:-}"; shift 2;;
         -driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
         -latency) AUDIO_LATENCY="${2:-}"; shift 2;;
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
-        -verbose) VERBOSE_ARG=true; shift;;
-        -debug) DEBUG_MODE=true; VERBOSE_ARG=true; shift;;
+        -console-debug) CONSOLE_DEBUG=true; VERBOSE_FLAG="-verbose"; shift;;
+        -build-debug) BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
+        -profiler) PROFILER_DEBUG=true; shift;;
+        -no-profiler) PROFILER_DEBUG=false; shift;;
+        -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
+        -j) JOBS="${2:-}"; shift 2;;
+        -j[0-9]*) JOBS="${1#-j}"; shift;;
+        --jobs) JOBS="${2:-}"; shift 2;;
+        -link-threads) LINK_THREADS="${2:-}"; shift 2;;
+        -no-compress) DO_COMPRESS=false; shift;;
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
@@ -231,6 +247,46 @@ ensure_emscripten() {
 
 ensure_emscripten
 
+# Graceful interrupt handling for noisy builds
+# Trap Ctrl-C (SIGINT) and SIGTERM to stop child process group quietly
+BUILD_PID=""
+cleanup_build() {
+	# Only act if a build is in progress
+	if [[ -n "$BUILD_PID" ]] && kill -0 "$BUILD_PID" >/dev/null 2>&1; then
+		echo "\nInterrupt received – stopping build gracefully..."
+		# Send SIGTERM to the whole process group started via setsid
+		kill -TERM -"$BUILD_PID" >/dev/null 2>&1 || true
+		# Wait for it to exit to avoid shell spew
+		wait "$BUILD_PID" >/dev/null 2>&1 || true
+	fi
+	exit 130
+}
+trap cleanup_build INT TERM
+
+# Auto-regen logic: hash Lua build scripts to detect changes
+SCRIPTS_HASH_FILE="$REPO_ROOT/.genie_scripts.sha256"
+compute_scripts_hash() {
+    (
+      cd "$REPO_ROOT" >/dev/null || exit 0
+      # Include all Lua under scripts/, and filter/layout lists if present
+      {
+        find scripts -type f -name "*.lua" -print0 2>/dev/null
+        find scripts -type f -not -name "*.lua" -print0 2>/dev/null
+        find src -maxdepth 3 -type f \( -name "*.flt" -o -name "*.lst" \) -print0 2>/dev/null
+      } | sort -z | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}'
+    )
+}
+CURRENT_SCRIPTS_HASH="$(compute_scripts_hash || true)"
+PREV_SCRIPTS_HASH=""
+if [[ -f "$SCRIPTS_HASH_FILE" ]]; then PREV_SCRIPTS_HASH="$(cat "$SCRIPTS_HASH_FILE" 2>/dev/null || true)"; fi
+if [[ -z "$PREV_SCRIPTS_HASH" || "$CURRENT_SCRIPTS_HASH" != "$PREV_SCRIPTS_HASH" ]]; then
+    DO_REGEN=true
+    echo "[regen] Build scripts changed → will regenerate projects (REGENIE=1)"
+else
+    DO_REGEN=false
+    echo "[regen] No build script changes detected → skipping regeneration (REGENIE=0)"
+fi
+
 # Resolve file_packager path robustly from active emcc
 EMSCRIPTEN_DIR="$(dirname "$(which emcc)")"
 PACKAGER=""
@@ -281,28 +337,65 @@ if $DO_BUILD; then
         ( cd "$REPO_ROOT/3rdparty/genie" && LDFLAGS= CFLAGS= CXXFLAGS= make -j"$(nproc)" ) || true
     fi
     # Linker flags for Emscripten – ensure FS, allow memory growth, higher initial memory.
-    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912 -s NO_DISABLE_EXCEPTION_CATCHING=1'
+    BUILD_LDFLAGS='-s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=536870912'
+    # Add size-optimization defaults for release builds
+    if $BUILD_DEBUG; then
+        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
+        export EMCC_DEBUG=1
+        BUILD_LDFLAGS+=" -v"
+    else
+        export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz"
+        export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -Oz"
+        BUILD_LDFLAGS+=" -Oz"
+    fi
     if $ENABLE_WORKERS; then
         # Full workers path: run main in a pthread and allow OffscreenCanvas; AudioWorklet needs workers
         BUILD_LDFLAGS+=' -s WASM_WORKERS=1 -s AUDIO_WORKLET=1 -s PROXY_TO_PTHREAD=1 -s OFFSCREENCANVAS_SUPPORT=1 -pthread'
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -pthread"
         export EMCC_CXXFLAGS="${EMCC_CXXFLAGS:-} -pthread"
     fi
-    if $DEBUG_MODE; then
-        BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1"
+    # Enable profiler debug output (useful progress without compile noise)
+    if $PROFILER_DEBUG; then
+        export EMCC_DEBUG=1
+        BUILD_LDFLAGS+=" -v"
     fi
+    # Default threads to CPU count if not specified
+    if [[ -z "$LINK_THREADS" ]]; then LINK_THREADS="$(nproc)"; fi
+    if [[ -n "$LINK_THREADS" ]]; then BUILD_LDFLAGS+=" -Wl,--threads=${LINK_THREADS}"; fi
+    # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
+    BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
+	# Default compile job count if not provided
     # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
-    emmake make \
-        SUBTARGET=starwarswasm \
-        SOURCES=src/mame/atari/starwars.cpp \
-        WEBASSEMBLY=1 \
-        TOOLS=0 \
-        REGENIE=1 \
-        NOWERROR=1 \
-        LDOPTS="$BUILD_LDFLAGS" \
-        -j"$(nproc)"
+	# Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
+	setsid bash -c "emmake make \
+		SUBTARGET=starwarswasm \
+		SOURCES=src/mame/atari/starwars.cpp \
+		WEBASSEMBLY=1 \
+		TOOLS=0 \
+		REGENIE=$($DO_REGEN && echo 1 || echo 0) \
+		NOWERROR=1 \
+		SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
+		NO_OPENGL=1 \
+		config=$BUILD_CONFIG \
+		LDOPTS=\"$BUILD_LDFLAGS\" \
+		-j\"$JOBS\"" &
+	BUILD_PID=$!
+	# Wait for build to finish (trap will handle Ctrl-C)
+	wait "$BUILD_PID"
+	status=$?
+	BUILD_PID=""
+	if [[ $status -eq 130 || $status -eq 143 ]]; then
+		echo "Build interrupted."
+		exit 130
+	fi
+	if [[ $status -ne 0 ]]; then
+		echo "Build failed (exit $status)." >&2
+		exit $status
+	fi
     popd >/dev/null
+    # Persist scripts hash after successful build
+    if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
     echo "$CUR_MODE" > "$MODE_STAMP"
 fi
 
@@ -314,8 +407,14 @@ if ! $DO_BUILD; then
     fi
 fi
 
-# Verify artifacts (worker js is optional)
-for f in "$SRC_ROOT/starwarswasm.html" "$SRC_ROOT/starwarswasm.js" "$SRC_ROOT/starwarswasm.wasm"; do
+# Verify artifacts (handle both debug and release builds)
+if [[ "$BUILD_CONFIG" == "debug32" ]]; then
+    ARTIFACT_BASE="starwarswasmd"
+else
+    ARTIFACT_BASE="starwarswasm"
+fi
+
+for f in "$SRC_ROOT/${ARTIFACT_BASE}.html" "$SRC_ROOT/${ARTIFACT_BASE}.js" "$SRC_ROOT/${ARTIFACT_BASE}.wasm"; do
     if [[ ! -f "$f" ]]; then
         echo "Error: Expected artifact missing: $f" >&2
         exit 1
@@ -325,21 +424,24 @@ done
 # Stage web distribution (ensure artifacts exist in webdist)
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
-    mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
+    mv -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/"
     # Also stage worker bootstrap if present (pthreads/workers builds)
     if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
+        echo "Injecting shims."
         cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
         # Inject shims at top of worker to define `window` and `globalThis`
         if ! grep -q "self.window = self" "$OUTDIR/starwarswasm.worker.js" 2>/dev/null; then
-          tmpfile="$(mktemp)"
-          {
-            echo '/* injected by build_web.sh: worker global shims */'
-            echo 'self.window = self;'
-            echo 'self.globalThis = self.globalThis || self;'
-          } > "$tmpfile"
-          cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
-          mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
+            tmpfile="$(mktemp)"
+            {
+                echo '/* injected by build_web.sh: worker global shims */'
+                echo 'self.window = self;'
+                echo 'self.globalThis = self.globalThis || self;'
+            } > "$tmpfile"
+            cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
+            mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
         fi
+    else
+        echo "No worker file to inject."
     fi
 fi
 
@@ -439,72 +541,17 @@ cat > "$OUTDIR/index.html" <<EOF
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Star Wars</title>
     <link rel="icon" href="data:,"/>
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background: #000;
-        color: #ccc;
-        font-family: sans-serif;
-        overflow: hidden;
-      }
-
-      #canvas {
-        display: block;
-        width: 100vw;
-        height: 100vh;
-        background: #000;
-        border: 1px solid #333;
-      }
-    </style>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
     <script>
-      // Make canvas fill the entire window
+      // Ensure canvas has explicit pixel size and is visible
       (function(){
         var c = document.getElementById('canvas');
-
-        function resize(){
-          var windowWidth = window.innerWidth;
-          var windowHeight = window.innerHeight;
-
-          // Set canvas to fill the entire window
-          c.width = windowWidth;
-          c.height = windowHeight;
-
-          // Ensure CSS also fills the window
-          c.style.width = windowWidth + 'px';
-          c.style.height = windowHeight + 'px';
-
-          console.log('Canvas resized to fill window:', windowWidth + 'x' + windowHeight);
-        }
-
-        // Override MAME's canvas sizing after it initializes
-        function overrideMameCanvas() {
-          if (typeof Module !== 'undefined' && Module.canvas) {
-            console.log('Overriding MAME canvas size...');
-            resize();
-
-            // Set up a periodic override to ensure MAME doesn't change it back
-            setInterval(function() {
-              if (c.width !== window.innerWidth || c.height !== window.innerHeight) {
-                console.log('MAME changed canvas size, overriding...');
-                resize();
-              }
-            }, 100);
-          } else {
-            // Retry in 100ms if MAME not ready
-            setTimeout(overrideMameCanvas, 100);
-          }
-        }
-
+        function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
-
-        // Start overriding MAME's canvas size
-        overrideMameCanvas();
       })();
       function dumpLog(prefix){
         try {
@@ -545,19 +592,12 @@ cat > "$OUTDIR/index.html" <<EOF
           "-skip_gameinfo",
           "-log",
           "-joystick", "-mouse",
-          "-speed", "1", "-verbose",
+          "-speed", "1", "${VERBOSE_FLAG}",
           "-samplerate", "48000",
-          "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}",
-          "-resolution", "auto"
+          "-audio_latency", latencyOverride ? String(latencyOverride) : "${AUDIO_LATENCY}"
         ],
         print: function(text){ console.log(text); },
-        printErr: function(text){
-          console.error('[MAME ERROR]', text);
-          // Try to capture any startup errors
-          if (text.includes('error') || text.includes('Error') || text.includes('failed') || text.includes('Failed')) {
-            console.error('[MAME CRITICAL ERROR]', text);
-          }
-        },
+        printErr: function(text){ console.error(text); },
         locateFile: function(path){ return path; },
         preRun: [],
         monitorRunDependencies: function(left){
@@ -574,26 +614,16 @@ cat > "$OUTDIR/index.html" <<EOF
           }
         },
         onAbort: function(reason){
-          console.error('[MAME ABORTED]', reason);
-          console.error('[MAME ABORT] Module state:', {
-            calledRun: Module.calledRun,
-            runtimeInitialized: Module.runtimeInitialized,
-            ready: Module.ready
-          });
+          console.error('[onAbort]', reason);
           try {
             if (typeof FS !== 'undefined') {
               var path = 'mame.log';
               var info = FS.analyzePath(path);
               if (info.exists) {
                 var data = FS.readFile(path, { encoding: 'utf8' });
-                console.error('[mame.log on abort]\n' + data);
+                console.error('[mame.log]\n' + data);
               } else {
-                console.error('[mame.log] not found on abort');
-                // List files to see what's there
-                try {
-                  var files = FS.readdir('/');
-                  console.error('[Files on abort]:', files.join(','));
-                } catch(e) {}
+                console.error('[mame.log] not found');
               }
             }
           } catch (e) { console.error('[onAbort] failed to read mame.log', e); }
@@ -617,16 +647,9 @@ cat > "$OUTDIR/index.html" <<EOF
         var c=document.getElementById('canvas');
         function applySize(){
           var w = window.innerWidth, h = window.innerHeight;
-          try {
-            c.width = w; c.height = h;
-            if (Module && typeof Module.setCanvasSize === 'function') {
-              try { Module.setCanvasSize(w, h, true); } catch(_) {}
-            }
-          } catch (e) {
-            // If OffscreenCanvas is in use, resizing main-thread canvas throws; stop listening.
-            if (e && /transferControlToOffscreen/.test(String(e))) {
-              try { window.removeEventListener('resize', applySize); } catch(_) {}
-            }
+          c.width=w; c.height=h;
+          if (Module && typeof Module.setCanvasSize === 'function') {
+            try { Module.setCanvasSize(w, h, true); } catch(e) {}
           }
         }
         window.addEventListener('resize', applySize);
@@ -652,9 +675,16 @@ cat > "$OUTDIR/index.html" <<EOF
         console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
       })();
       console.log('[Args]', Module.arguments.join(' '));
-      if ("${VERBOSE_ARG}" === "true") {
+      if ("${CONSOLE_DEBUG}" === "true") {
         Module.arguments.push("-verbose");
       }
+      // Probe the Content-Encoding the browser actually received for the WASM
+      try {
+        fetch('starwarswasm.wasm', { method: 'HEAD', cache: 'no-store' }).then(function(r){
+          console.log('[WASM] Content-Encoding:', r.headers.get('content-encoding') || '(none)');
+          console.log('[WASM] Content-Type:', r.headers.get('content-type'));
+        }).catch(function(e){ console.error('[WASM] HEAD probe failed', e); });
+      } catch (e) { console.error('[WASM] HEAD probe threw', e); }
       // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
       if (${USE_CFG} === true) {
         Module.arguments.push("-cfg_directory", "cfg");
@@ -664,12 +694,6 @@ cat > "$OUTDIR/index.html" <<EOF
         Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
       }
 ${INI_ARGS_JS}
-      // Add BGFX chain after INI overrides are processed
-      if (chosenVideo === "bgfx") {
-        // Only push a chain if not already provided via per-game INI overrides
-        var hasChain = Module.arguments.indexOf("-bgfx_screen_chains") !== -1;
-        if (!hasChain) Module.arguments.push("-bgfx_screen_chains", "vector");
-      }
       // Clean up any existing error.log before starting MAME
       (function(){
         try {
@@ -742,16 +766,34 @@ ${INI_ARGS_JS}
       }, 7000);
     </script>
     <script src="roms.js"></script>
-    <script src="starwarswasm.js"></script>
+    <script src="${ARTIFACT_BASE}.js"></script>
   </body>
   </html>
 EOF
 
 echo "Web artifacts staged in: $OUTDIR"
 ls -la "$OUTDIR"
+echo "Artifacts ready. Next: ${START_SERVER:+start server}${START_SERVER:-no server} | console-debug=${CONSOLE_DEBUG}"
+
+# Optional compression for deployment (served via HTTP Content-Encoding)
+if $DO_COMPRESS; then
+    echo "Compressing wasm for deployment..."
+    if command -v brotli >/dev/null 2>&1; then
+        brotli -f -q 11 "$OUTDIR/starwarswasm.wasm" -o "$OUTDIR/starwarswasm.wasm.br" || true
+    else
+        echo "brotli not found; skipping .wasm.br. Install: sudo apt install brotli"
+    fi
+    if command -v gzip >/dev/null 2>&1; then
+        gzip -f -9 -c "$OUTDIR/starwarswasm.wasm" > "$OUTDIR/starwarswasm.wasm.gz" || true
+    else
+        echo "gzip not found; skipping .wasm.gz"
+    fi
+fi
 
 start_server() {
     local port="$1"
+    # Track chosen port for callers
+    LAST_SERVER_PORT=""
     if [[ -z "$port" ]]; then
         for p in 8000 8001 8002 8003 8004 8005; do
             if ! (command -v nc >/dev/null 2>&1 && nc -z localhost "$p" 2>/dev/null); then
@@ -764,6 +806,7 @@ start_server() {
         return 1
     fi
     echo "Starting local server on http://localhost:$port ..."
+    LAST_SERVER_PORT="$port"
     pushd "$OUTDIR" >/dev/null
     # Prefer Node server with COOP/COEP if available
     if command -v node >/dev/null 2>&1; then
@@ -780,6 +823,21 @@ const server = http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
   if (p === '/') p = '/index.html';
   const filePath = path.join(root, p);
+  // Handle precompressed wasm
+  if (filePath.endsWith('.wasm')) {
+    const ae = String(req.headers['accept-encoding'] || '').toLowerCase();
+    if (ae.includes('br') && fs.existsSync(filePath + '.br')) {
+      res.setHeader('Content-Type', 'application/wasm');
+      res.setHeader('Content-Encoding', 'br');
+      fs.createReadStream(filePath + '.br').pipe(res);
+      return;
+    } else if (ae.includes('gzip') && fs.existsSync(filePath + '.gz')) {
+      res.setHeader('Content-Type', 'application/wasm');
+      res.setHeader('Content-Encoding', 'gzip');
+      fs.createReadStream(filePath + '.gz').pipe(res);
+      return;
+    }
+  }
   fs.readFile(filePath, (err, data) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
@@ -804,8 +862,6 @@ NODE
     local pid=$!
     popd >/dev/null
     echo "Server PID: $pid"
-    # Expose the chosen port for probe utilities
-    echo "$port" > /tmp/mame_web_port.txt
     if command -v xdg-open >/dev/null 2>&1; then
         xdg-open "http://localhost:$port" >/dev/null 2>&1 || true
     fi
@@ -813,7 +869,8 @@ NODE
 
 # Optional headless console capture (requires Node + puppeteer)
 run_probe() {
-    if ! $DEBUG_MODE; then return 0; fi
+    local port="$1"
+    if ! $CONSOLE_DEBUG; then return 0; fi
     echo "Debug mode: attempting headless console capture..."
     pushd "$OUTDIR" >/dev/null
     if ! command -v node >/dev/null 2>&1; then
@@ -885,4 +942,7 @@ else
 fi
 
 # If debug mode, attempt headless console capture
-run_probe || true
+if $CONSOLE_DEBUG; then
+    run_probe "$USED_PORT" || true
+fi
+
