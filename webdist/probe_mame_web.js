@@ -9,14 +9,28 @@ const puppeteer = require('puppeteer');
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--enable-unsafe-swiftshader',
+      '--enable-gpu-rasterization', // Enable GPU rasterization for better performance
+      '--enable-zero-copy', // Enable zero-copy rasterizer
+      '--disable-gpu-vsync', // Disable VSync for better performance
+      '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
       '--disable-features=VizDisplayCompositor'
     ]
   });
 
-  const page = await browser.newPage();
+  // Get the first available page or create a new one
+  const pages = await browser.pages();
+  let page;
+
+  if (pages.length > 0) {
+    page = pages[0];
+    // Close any additional tabs
+    for (let i = 1; i < pages.length; i++) {
+      await pages[i].close();
+    }
+  } else {
+    page = await browser.newPage();
+  }
 
   try {
     const port = process.argv[2];
@@ -27,6 +41,13 @@ const puppeteer = require('puppeteer');
     page.on('console', msg => {
       const type = msg.type();
       const text = msg.text();
+
+      // Filter out annoying deprecation warnings
+      if (text.includes('ScriptProcessorNode is deprecated') ||
+          text.includes('AudioContext was not allowed to start')) {
+        return; // Skip these warnings
+      }
+
       consoleMessages.push(`[${type.toUpperCase()}] ${text}`);
       console.log(`[${type.toUpperCase()}] ${text}`);
     });
@@ -58,14 +79,34 @@ const puppeteer = require('puppeteer');
     const canvasInfo = await page.evaluate(() => {
       const canvas = document.getElementById('canvas');
       if (!canvas) return { error: 'Canvas not found' };
-      
-      return {
+
+      const info = {
         width: canvas.width,
         height: canvas.height,
         style: canvas.style.cssText,
         visible: canvas.offsetWidth > 0 && canvas.offsetHeight > 0,
-        hasContent: canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(pixel => pixel !== 0)
+        hasContent: false
       };
+
+      try {
+        const ctx2d = canvas.getContext && canvas.getContext('2d');
+        if (ctx2d && canvas.width && canvas.height) {
+          const img = ctx2d.getImageData(0, 0, canvas.width, canvas.height).data;
+          info.hasContent = Array.prototype.some.call(img, p => p !== 0);
+          return info;
+        }
+      } catch (_) {}
+
+      try {
+        const gl = (canvas.getContext && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        if (gl && canvas.width && canvas.height) {
+          const buf = new Uint8Array(canvas.width * canvas.height * 4);
+          gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+          info.hasContent = Array.prototype.some.call(buf, p => p !== 0);
+        }
+      } catch (_) {}
+
+      return info;
     });
 
     console.log('📊 Canvas info:', canvasInfo);
@@ -73,7 +114,7 @@ const puppeteer = require('puppeteer');
     // Check if MAME Module is loaded
     const moduleInfo = await page.evaluate(() => {
       if (typeof Module === 'undefined') return { error: 'Module not defined' };
-      
+
       return {
         loaded: typeof Module !== 'undefined',
         arguments: Module.arguments || [],
@@ -96,10 +137,6 @@ const puppeteer = require('puppeteer');
       });
       return errors;
     });
-
-    if (errorElements.length > 0) {
-      console.log('⚠️ Error elements found:', errorElements);
-    }
 
     // Save console output to file
     const fs = require('fs');
