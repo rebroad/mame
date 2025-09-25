@@ -440,6 +440,7 @@ if $DO_BUILD; then
 
         # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
         # Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
+        # Force Emscripten-specific build configuration
         setsid bash -c "emmake make \
             SUBTARGET=starwarswasm \
             SOURCES=src/mame/atari/starwars.cpp \
@@ -605,7 +606,6 @@ PACK_ARGS=(
     --preload "$ROM_PATH@$ROM_MOUNT_PATH"
     --export-name=Module
     --use-preload-cache
-    --no-heap-copy
     --js-output="$OUTDIR/roms.js"
 )
 if [[ -n "$PARENT_ROM" ]]; then
