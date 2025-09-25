@@ -251,15 +251,15 @@ ensure_emscripten
 # Trap Ctrl-C (SIGINT) and SIGTERM to stop child process group quietly
 BUILD_PID=""
 cleanup_build() {
-	# Only act if a build is in progress
-	if [[ -n "$BUILD_PID" ]] && kill -0 "$BUILD_PID" >/dev/null 2>&1; then
-		echo "\nInterrupt received – stopping build gracefully..."
-		# Send SIGTERM to the whole process group started via setsid
-		kill -TERM -"$BUILD_PID" >/dev/null 2>&1 || true
-		# Wait for it to exit to avoid shell spew
-		wait "$BUILD_PID" >/dev/null 2>&1 || true
-	fi
-	exit 130
+    # Only act if a build is in progress
+    if [[ -n "$BUILD_PID" ]] && kill -0 "$BUILD_PID" >/dev/null 2>&1; then
+        echo "\nInterrupt received – stopping build gracefully..."
+        # Send SIGTERM to the whole process group started via setsid
+        kill -TERM -"$BUILD_PID" >/dev/null 2>&1 || true
+        # Wait for it to exit to avoid shell spew
+        wait "$BUILD_PID" >/dev/null 2>&1 || true
+    fi
+    exit 130
 }
 trap cleanup_build INT TERM
 
@@ -305,6 +305,39 @@ fi
 CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
 PREV_MODE=""
 if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
+
+# Track build configuration to detect optimization changes that require cache cleanup
+CUR_BUILD_CONFIG="$BUILD_CONFIG"
+PREV_BUILD_CONFIG=""
+BUILD_CONFIG_STAMP="$REPO_ROOT/.build_config.sha256"
+if [[ -f "$BUILD_CONFIG_STAMP" ]]; then PREV_BUILD_CONFIG="$(cat "$BUILD_CONFIG_STAMP" 2>/dev/null || true)"; fi
+
+# Function to clean problematic caches when build configuration changes
+clean_build_caches() {
+    echo "Cleaning build caches due to configuration change..."
+
+    # Remove PCH files that can cause optimization conflicts
+    find "$REPO_ROOT/build" -name "*.pch" -delete 2>/dev/null || true
+    find "$REPO_ROOT/build" -name "*.gch" -delete 2>/dev/null || true
+
+    # Remove object files that might have incompatible optimization settings
+    find "$REPO_ROOT/build" -name "*.o" -delete 2>/dev/null || true
+
+    # Clean Emscripten cache if optimization settings changed
+    if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
+        echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG' - cleaning Emscripten cache..."
+        rm -rf "$REPO_ROOT/build/asmjs" 2>/dev/null || true
+        rm -rf "$REPO_ROOT/build/asmjs-pthread" 2>/dev/null || true
+        rm -rf "$REPO_ROOT/build/asmjs-single" 2>/dev/null || true
+    fi
+
+    echo "Cache cleanup complete."
+}
+
+# Check if we need to clean caches
+if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]] || [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+    clean_build_caches
+fi
 
 # Optional build
 if $DO_BUILD; then
@@ -365,38 +398,92 @@ if $DO_BUILD; then
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
-	# Default compile job count if not provided
-    # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
-	# Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
-	setsid bash -c "emmake make \
-		SUBTARGET=starwarswasm \
-		SOURCES=src/mame/atari/starwars.cpp \
-		WEBASSEMBLY=1 \
-		TOOLS=0 \
-		REGENIE=$($DO_REGEN && echo 1 || echo 0) \
-		NOWERROR=1 \
-		SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
-		NO_OPENGL=1 \
-		config=$BUILD_CONFIG \
-		LDOPTS=\"$BUILD_LDFLAGS\" \
-		-j\"$JOBS\"" &
-	BUILD_PID=$!
-	# Wait for build to finish (trap will handle Ctrl-C)
-	wait "$BUILD_PID"
-	status=$?
-	BUILD_PID=""
-	if [[ $status -eq 130 || $status -eq 143 ]]; then
-		echo "Build interrupted."
-		exit 130
-	fi
-	if [[ $status -ne 0 ]]; then
-		echo "Build failed (exit $status)." >&2
-		exit $status
-	fi
+    # Default compile job count if not provided
+    # Function to run the build with proper error handling
+    run_build() {
+        local retry_after_cleanup="${1:-false}"
+        local regenie_flag="$($DO_REGEN && echo 1 || echo 0)"
+
+        if $retry_after_cleanup; then
+            regenie_flag="0"  # Don't regenerate on retry
+        fi
+
+        # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
+        # Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
+        setsid bash -c "emmake make \
+            SUBTARGET=starwarswasm \
+            SOURCES=src/mame/atari/starwars.cpp \
+            WEBASSEMBLY=1 \
+            TOOLS=0 \
+            REGENIE=$regenie_flag \
+            NOWERROR=1 \
+            SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
+            NO_OPENGL=1 \
+            config=$BUILD_CONFIG \
+            LDOPTS=\"$BUILD_LDFLAGS\" \
+            -j\"$JOBS\"" &
+        BUILD_PID=$!
+        # Wait for build to finish (trap will handle Ctrl-C)
+        wait "$BUILD_PID"
+        local build_status=$?
+        BUILD_PID=""
+        return $build_status
+    }
+
+    # Run the initial build
+    run_build
+    status=$?
+
+    if [[ $status -eq 130 || $status -eq 143 ]]; then
+        echo "Build interrupted."
+        exit 130
+    fi
+
+    if [[ $status -ne 0 ]]; then
+        echo "Build failed (exit $status)." >&2
+
+        # Check for common PCH-related errors and attempt automatic recovery
+        # Look for the specific error in build logs or common error patterns
+        PCH_ERROR_DETECTED=false
+
+        # Check if we've seen this error before (common pattern)
+        if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]] && [[ -n "$PREV_BUILD_CONFIG" ]]; then
+            PCH_ERROR_DETECTED=true
+            echo "Build configuration changed - likely PCH cache conflict"
+        fi
+
+        # Also check for the specific error message in recent build output
+        if ! $PCH_ERROR_DETECTED; then
+            # Look for the error in any recent build logs or temporary files
+            if find "$REPO_ROOT/build" -name "*.log" -exec grep -l "__OPTIMIZE_SIZE__ predefined macro was disabled" {} \; 2>/dev/null | head -1 | grep -q .; then
+                PCH_ERROR_DETECTED=true
+            fi
+        fi
+
+        if $PCH_ERROR_DETECTED; then
+            echo "Detected PCH optimization mismatch - attempting automatic recovery..."
+            clean_build_caches
+            echo "Retrying build after cache cleanup..."
+
+            # Retry the build once after cleaning caches
+            run_build true
+            status=$?
+
+            if [[ $status -ne 0 ]]; then
+                echo "Build still failed after cache cleanup (exit $status)." >&2
+                exit $status
+            else
+                echo "Build succeeded after automatic cache cleanup! 🎉"
+            fi
+        else
+            exit $status
+        fi
+    fi
     popd >/dev/null
     # Persist scripts hash after successful build
     if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
     echo "$CUR_MODE" > "$MODE_STAMP"
+    echo "$CUR_BUILD_CONFIG" > "$BUILD_CONFIG_STAMP"
 fi
 
 # Locate artifacts (repo root after build; webdist for -no-build runs)
