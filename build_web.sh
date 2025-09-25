@@ -363,13 +363,6 @@ fi
 
 # Optional build
 if $DO_BUILD; then
-    # Proactively clean problematic Emscripten build files to prevent linker errors
-    # This prevents the "unknown file type" error by ensuring fresh generation
-    if [[ -d "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" ]]; then
-        echo "Proactively cleaning Emscripten build files to prevent linker errors..."
-        rm -rf "$REPO_ROOT/build/projects/sdl/mamestarwarswasm/gmake-asmjs" 2>/dev/null || true
-        echo "Emscripten build files cleaned - will regenerate with correct settings"
-    fi
     echo "Building MAME (Star Wars subset) for WebAssembly..."
     # Maintain separate object trees for worker vs non-worker builds to avoid thrashing
     BUILD_BASE="$REPO_ROOT/build"
