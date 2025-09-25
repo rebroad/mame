@@ -15,6 +15,7 @@ ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
 JOBS=""               # make -j (default to nproc later)
+BUILD_CONFIG="release32"  # default to release for web deployment
 
 # Emscripten toolchain controls
 EMSDK_VERSION="3.1.35"
@@ -37,6 +38,7 @@ print_usage() {
     echo "  -no-ccache             Disable ccache wrapper for this build"
     echo "  -console-debug         Enable browser console capture/logging (runtime only)"
     echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
+    echo "  -debug-build           Use debug32 configuration (larger, with debug symbols)"
     echo "  -no-profiler           Disable profiler debug output"
     echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
     echo "  -j <N>, --jobs <N>     Use N jobs for 'make -j' (default: CPU count)"
@@ -62,9 +64,10 @@ while [[ $# -gt 0 ]]; do
         -no-ccache) USE_CCACHE=false; shift;;
         -console-debug) CONSOLE_DEBUG=true; shift;;
         -build-debug) BUILD_DEBUG=true; shift;;
+        -debug-build) BUILD_CONFIG="debug32"; shift;;
         -profiler) PROFILER_DEBUG=true; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
-        -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; shift;;
+        -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
         -j) JOBS="${2:-}"; shift 2;;
         -j[0-9]*) JOBS="${1#-j}"; shift;;
         --jobs) JOBS="${2:-}"; shift 2;;
@@ -338,6 +341,7 @@ if $DO_BUILD; then
 		NOWERROR=1 \
 		SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
 		NO_OPENGL=1 \
+		config=$BUILD_CONFIG \
 		LDOPTS=\"$BUILD_LDFLAGS\" \
 		-j\"$JOBS\"" &
 	BUILD_PID=$!
@@ -366,8 +370,14 @@ if ! $DO_BUILD; then
     fi
 fi
 
-# Verify artifacts
-for f in "$SRC_ROOT/starwarswasm.html" "$SRC_ROOT/starwarswasm.js" "$SRC_ROOT/starwarswasm.wasm"; do
+# Verify artifacts (handle both debug and release builds)
+if [[ "$BUILD_CONFIG" == "debug32" ]]; then
+    ARTIFACT_BASE="starwarswasmd"
+else
+    ARTIFACT_BASE="starwarswasm"
+fi
+
+for f in "$SRC_ROOT/${ARTIFACT_BASE}.html" "$SRC_ROOT/${ARTIFACT_BASE}.js" "$SRC_ROOT/${ARTIFACT_BASE}.wasm"; do
     if [[ ! -f "$f" ]]; then
         echo "Error: Expected artifact missing: $f" >&2
         exit 1
@@ -377,7 +387,7 @@ done
 # Stage web distribution (ensure artifacts exist in webdist)
 mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
-    mv -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/starwarswasm."{html,js,wasm} "$OUTDIR/"
+    mv -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/"
 fi
 
 echo "Packaging ROM into roms.data (mounted at roms/)..."
@@ -590,7 +600,7 @@ cat > "$OUTDIR/index.html" <<EOF
 ${INI_ARGS_JS}
     </script>
     <script src="roms.js"></script>
-    <script src="starwarswasm.js"></script>
+    <script src="${ARTIFACT_BASE}.js"></script>
   </body>
   </html>
 EOF
