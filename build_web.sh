@@ -309,7 +309,7 @@ if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || tr
 # Track build configuration to detect optimization changes that require cache cleanup
 CUR_BUILD_CONFIG="$BUILD_CONFIG"
 PREV_BUILD_CONFIG=""
-BUILD_CONFIG_STAMP="$REPO_ROOT/.build_config.sha256"
+BUILD_CONFIG_STAMP="$REPO_ROOT/.build_config.txt"
 if [[ -f "$BUILD_CONFIG_STAMP" ]]; then PREV_BUILD_CONFIG="$(cat "$BUILD_CONFIG_STAMP" 2>/dev/null || true)"; fi
 
 # Function to clean problematic caches when build configuration changes
@@ -998,9 +998,11 @@ run_probe() {
     fi
     # Try running probe; if puppeteer missing, advise install
     if ! node -e "require('puppeteer')" >/dev/null 2>&1; then
-        echo "Puppeteer not installed. Installing locally in $OUTDIR ..."
+        echo "Puppeteer not installed. Installing locally in project root ..."
         if command -v npm >/dev/null 2>&1; then
+            pushd "$REPO_ROOT" >/dev/null
             ( npm init -y >/dev/null 2>&1 || true; npm install puppeteer --no-fund --no-audit >/dev/null 2>&1 ) || true
+            popd >/dev/null
         else
             echo "npm not found; skipping console capture."
             popd >/dev/null
@@ -1008,8 +1010,8 @@ run_probe() {
         fi
     fi
     # Use the comprehensive MAME probe tool (much better output)
-    if [[ -f "probe_mame_web.js" ]]; then
-        node probe_mame_web.js "$USED_PORT" || true
+    if [[ -f "$REPO_ROOT/probe_mame_web.js" ]]; then
+        node "$REPO_ROOT/probe_mame_web.js" "$USED_PORT" || true
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
