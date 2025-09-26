@@ -2,9 +2,13 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const root = __dirname;
-const port = process.env.PORT || 8000;
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const root = args[0] || process.cwd();
+const port = parseInt(args[1]) || parseInt(process.env.PORT) || 8000;
+
+console.log(`Serving ${root} on http://localhost:${port}`);
 const types = { '.html':'text/html', '.js':'application/javascript', '.wasm':'application/wasm', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.gif':'image/gif', '.svg':'image/svg+xml', '.css':'text/css', '.ico':'image/x-icon', '.data':'application/octet-stream' };
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
@@ -46,4 +50,4 @@ const server = http.createServer((req, res) => {
     res.end(data);
   });
 });
-server.listen(port, () => console.log(`Serving ${root} on http://localhost:${port}`));
+server.listen(port);
