@@ -16,7 +16,6 @@ const puppeteer = require('puppeteer');
       '--disable-frame-rate-limit', // Disable frame rate limiting
       '--disable-web-security', // Allow cross-origin requests
       '--disable-features=VizDisplayCompositor',
-      '--window-position=100,100', // Initial position
       '--window-size=1200,800' // Initial size
     ]
   });

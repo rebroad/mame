@@ -306,6 +306,61 @@ CUR_MODE="pthread=$($ENABLE_WORKERS && echo 1 || echo 0)"
 PREV_MODE=""
 if [[ -f "$MODE_STAMP" ]]; then PREV_MODE="$(cat "$MODE_STAMP" 2>/dev/null || true)"; fi
 
+# Track build configuration to detect optimization changes that require cache cleanup
+CUR_BUILD_CONFIG="$BUILD_CONFIG"
+PREV_BUILD_CONFIG=""
+BUILD_CONFIG_STAMP="$REPO_ROOT/.build_config.sha256"
+if [[ -f "$BUILD_CONFIG_STAMP" ]]; then PREV_BUILD_CONFIG="$(cat "$BUILD_CONFIG_STAMP" 2>/dev/null || true)"; fi
+
+# Function to clean problematic caches when build configuration changes
+clean_build_caches() {
+    local config_changed=false
+    local mode_changed=false
+
+    # Determine what changed
+    if [[ -n "$PREV_BUILD_CONFIG" ]] && [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
+        config_changed=true
+        echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG'"
+    fi
+
+    if [[ -n "$PREV_MODE" ]] && [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+        mode_changed=true
+        echo "Build mode changed from '$PREV_MODE' to '$CUR_MODE'"
+    fi
+
+    # Clean PCH files that can cause optimization conflicts (always safe to clean)
+    echo "Cleaning precompiled headers..."
+    find "$REPO_ROOT/build" -name "*.pch" -delete 2>/dev/null || true
+    find "$REPO_ROOT/build" -name "*.gch" -delete 2>/dev/null || true
+
+    # Only clean object files if configuration actually changed
+    if $config_changed; then
+        echo "Cleaning object files due to configuration change..."
+        find "$REPO_ROOT/build" -name "*.o" -delete 2>/dev/null || true
+    fi
+
+    # Only clean Emscripten cache if mode changed (pthread vs single-threaded)
+    if $mode_changed; then
+        echo "Cleaning Emscripten cache due to mode change..."
+        rm -rf "$REPO_ROOT/build/asmjs" 2>/dev/null || true
+        rm -rf "$REPO_ROOT/build/asmjs-pthread" 2>/dev/null || true
+        rm -rf "$REPO_ROOT/build/asmjs-single" 2>/dev/null || true
+    fi
+
+    echo "Cache cleanup complete."
+}
+
+# Check if we need to clean caches (only if there was a previous build and config actually changed)
+if [[ -n "$PREV_BUILD_CONFIG" ]] && [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]]; then
+    echo "Build configuration changed from '$PREV_BUILD_CONFIG' to '$CUR_BUILD_CONFIG' - cleaning caches..."
+    clean_build_caches
+elif [[ -n "$PREV_MODE" ]] && [[ "$PREV_MODE" != "$CUR_MODE" ]]; then
+    echo "Build mode changed from '$PREV_MODE' to '$CUR_MODE' - cleaning caches..."
+    clean_build_caches
+else
+    echo "Using existing build configuration: $CUR_BUILD_CONFIG (mode: $CUR_MODE)"
+fi
+
 # Optional build
 if $DO_BUILD; then
     echo "Building MAME (Star Wars subset) for WebAssembly..."
@@ -365,38 +420,102 @@ if $DO_BUILD; then
     # Reduce linker noise from Emscripten about undefined symbols (e.g., legacy GL calls)
     BUILD_LDFLAGS+=" -s WARN_ON_UNDEFINED_SYMBOLS=0"
     echo "Using LDFLAGS: ${BUILD_LDFLAGS}"
-	# Default compile job count if not provided
-    # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
-	# Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
-	setsid bash -c "emmake make \
-		SUBTARGET=starwarswasm \
-		SOURCES=src/mame/atari/starwars.cpp \
-		WEBASSEMBLY=1 \
-		TOOLS=0 \
-		REGENIE=$($DO_REGEN && echo 1 || echo 0) \
-		NOWERROR=1 \
-		SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
-		NO_OPENGL=1 \
-		config=$BUILD_CONFIG \
-		LDOPTS=\"$BUILD_LDFLAGS\" \
-		-j\"$JOBS\"" &
-	BUILD_PID=$!
-	# Wait for build to finish (trap will handle Ctrl-C)
-	wait "$BUILD_PID"
-	status=$?
-	BUILD_PID=""
-	if [[ $status -eq 130 || $status -eq 143 ]]; then
-		echo "Build interrupted."
-		exit 130
-	fi
-	if [[ $status -ne 0 ]]; then
-		echo "Build failed (exit $status)." >&2
-		exit $status
-	fi
+    # Default compile job count if not provided
+    # Function to run the build with proper error handling
+    run_build() {
+        local retry_after_cleanup="${1:-false}"
+        local regenie_flag="$($DO_REGEN && echo 1 || echo 0)"
+
+        if $retry_after_cleanup; then
+            regenie_flag="0"  # Don't regenerate on retry
+        fi
+
+        # Capture build output for error analysis
+        local build_log="/tmp/mame_build_$$.log"
+
+        # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
+        # Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
+        # Force Emscripten-specific build configuration
+        setsid bash -c "emmake make \
+            SUBTARGET=starwarswasm \
+            SOURCES=src/mame/atari/starwars.cpp \
+            WEBASSEMBLY=1 \
+            TOOLS=0 \
+            REGENIE=$regenie_flag \
+            NOWERROR=1 \
+            SYMBOLS=0 SYMLEVEL=0 STRIP_SYMBOLS=1 \
+            NO_OPENGL=1 \
+            config=$BUILD_CONFIG \
+            LDOPTS=\"$BUILD_LDFLAGS\" \
+            -j\"$JOBS\" 2>&1 | tee \"$build_log\"" &
+        BUILD_PID=$!
+        # Wait for build to finish (trap will handle Ctrl-C)
+        wait "$BUILD_PID"
+        local build_status=$?
+        BUILD_PID=""
+
+        # Store build log for error analysis
+        if [[ -f "$build_log" ]]; then
+            export LAST_BUILD_LOG="$build_log"
+        fi
+
+        return $build_status
+    }
+
+    # Run the initial build
+    run_build
+    status=$?
+
+    if [[ $status -eq 130 || $status -eq 143 ]]; then
+        echo "Build interrupted."
+        exit 130
+    fi
+
+    if [[ $status -ne 0 ]]; then
+        echo "Build failed (exit $status)." >&2
+
+        # Check for common PCH-related errors and attempt automatic recovery
+        # Look for the specific error in build logs or common error patterns
+        PCH_ERROR_DETECTED=false
+
+        # Check if we've seen this error before (common pattern)
+        if [[ "$PREV_BUILD_CONFIG" != "$CUR_BUILD_CONFIG" ]] && [[ -n "$PREV_BUILD_CONFIG" ]]; then
+            PCH_ERROR_DETECTED=true
+            echo "Build configuration changed - likely PCH cache conflict"
+        fi
+
+        # Also check for the specific error message in recent build output
+        if ! $PCH_ERROR_DETECTED; then
+            # Look for the error in any recent build logs or temporary files
+            if find "$REPO_ROOT/build" -name "*.log" -exec grep -l "__OPTIMIZE_SIZE__ predefined macro was disabled" {} \; 2>/dev/null | head -1 | grep -q .; then
+                PCH_ERROR_DETECTED=true
+            fi
+        fi
+
+        if $PCH_ERROR_DETECTED; then
+            echo "Detected PCH optimization mismatch - attempting automatic recovery..."
+            clean_build_caches
+            echo "Retrying build after cache cleanup..."
+
+            # Retry the build once after cleaning caches
+            run_build true
+            status=$?
+
+            if [[ $status -ne 0 ]]; then
+                echo "Build still failed after cache cleanup (exit $status)." >&2
+                exit $status
+            else
+                echo "Build succeeded after automatic cache cleanup! 🎉"
+            fi
+        else
+            exit $status
+        fi
+    fi
     popd >/dev/null
     # Persist scripts hash after successful build
     if [[ -n "$CURRENT_SCRIPTS_HASH" ]]; then echo "$CURRENT_SCRIPTS_HASH" > "$SCRIPTS_HASH_FILE"; fi
     echo "$CUR_MODE" > "$MODE_STAMP"
+    echo "$CUR_BUILD_CONFIG" > "$BUILD_CONFIG_STAMP"
 fi
 
 # Locate artifacts (repo root after build; webdist for -no-build runs)
@@ -482,7 +601,6 @@ PACK_ARGS=(
     --preload "$ROM_PATH@$ROM_MOUNT_PATH"
     --export-name=Module
     --use-preload-cache
-    --no-heap-copy
     --js-output="$OUTDIR/roms.js"
 )
 if [[ -n "$PARENT_ROM" ]]; then
@@ -899,15 +1017,27 @@ run_probe() {
 }
 
 if $START_SERVER; then
-    # Reuse existing server if already running and serving our page
+    # Check if a server is running from the same project directory
+    is_server_from_same_project() {
+        local port="$1"
+        # Check if there's a serve.mjs process running on this port from our directory
+        local server_pwd=$(ps auwwxe 2>/dev/null | grep -v grep | grep "serve\.mjs" | grep "PORT=$port" | tr ' ' '\n' | grep "^PWD=" | cut -d= -f2 | head -1)
+        if [[ -n "$server_pwd" ]] && [[ "$server_pwd" == "$OUTDIR" ]]; then
+            return 0  # Same project directory
+        else
+            return 1  # Different project directory or no server
+        fi
+    }
+
+    # Reuse existing server if already running and serving our page from the same project
     ensure_server() {
         local port="$1"
         local used_port=""
         local final_port=""
-        # If a specific port was requested, prefer reusing it if healthy; otherwise start fresh there
+        # If a specific port was requested, prefer reusing it if healthy and from same project
         if [[ -n "$port" ]]; then
             if command -v curl >/dev/null 2>&1 && \
-               curl -s --max-time 5 "http://localhost:$port/" | grep -q "<title>Star Wars</title>"; then
+               is_server_from_same_project "$port"; then
                 used_port="$port"
             else
                 start_server "$port" || true
@@ -915,10 +1045,10 @@ if $START_SERVER; then
                 return
             fi
         else
-            # Probe common ports for an existing healthy server (fast path)
+            # Probe common ports for an existing healthy server from same project (fast path)
             for p in 8000 8001 8002 8003 8004 8005; do
                 if command -v curl >/dev/null 2>&1 && \
-                   curl -s --max-time 5 "http://localhost:$p/" | grep -q "<title>Star Wars</title>"; then
+                   is_server_from_same_project "$p"; then
                     used_port="$p"; break
                 fi
             done
@@ -929,7 +1059,7 @@ if $START_SERVER; then
                 return
             fi
         fi
-        echo "Reusing existing server on http://localhost:$used_port"
+        echo "Reusing existing server on http://localhost:$used_port (from same project)"
         final_port="$used_port"
         # Return the port via a global variable
         USED_PORT="$final_port"
