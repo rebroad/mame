@@ -19,23 +19,11 @@
     let mameFrame = 0;
     let mameFps = 0;
 
-    // Monitor MAME console output for performance data
-    const originalConsoleLog = console.log;
-    console.log = function(...args) {
-        const message = args.join(' ');
-
-        // Parse MAME's WASM Speed output (now includes frame rate)
-        const speedMatch = message.match(/WASM Speed: ([\d.]+)% \(frame (\d+)\) @ ([\d.]+)fps/);
-        if (speedMatch) {
-            mameSpeed = parseFloat(speedMatch[1]);
-            mameFrame = parseInt(speedMatch[2]);
-            mameFps = parseFloat(speedMatch[3]);
-            console.log('🎮 MAME Performance:', mameSpeed + '%', 'Frame:', mameFrame, 'FPS:', mameFps);
-        }
-
-        // Call original console.log
-        originalConsoleLog.apply(console, args);
-    };
+    // Warning throttling
+    let lastWarningTime = 0;
+    let warningCount = 0;
+    const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
+    const MAX_WARNINGS = 3; // Maximum warnings before stopping
 
     // Monitor frame rate using requestAnimationFrame for accurate measurement
     const monitorFrames = () => {
@@ -56,9 +44,29 @@
                 const avgFps = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
                 detectedFrameRate = avgFps;
 
-                if (avgFps < 54) { // 10% below 60fps
+                if (avgFps < 44) { // Below 44fps threshold
                     isThrottled = true;
-                    console.warn('⚠️ Low frame rate detected:', avgFps.toFixed(1), 'fps');
+
+                    // Show warning popup immediately when FPS drops below 44
+                    if (!document.querySelector('.mame-performance-warning')) {
+                        if (isChrome) {
+                            showChromeWarning();
+                        } else {
+                            showGenericWarning();
+                        }
+                    }
+
+                    // Throttle console warnings to avoid spam
+                    const now = performance.now();
+                    if (now - lastWarningTime > WARNING_THROTTLE_MS && warningCount < MAX_WARNINGS) {
+                        console.warn('⚠️ Low frame rate detected:', avgFps.toFixed(1), 'fps');
+                        lastWarningTime = now;
+                        warningCount++;
+
+                        if (warningCount >= MAX_WARNINGS) {
+                            console.log('🔇 Performance warnings muted (too many low frame rate detections)');
+                        }
+                    }
                 }
             }
         }
@@ -77,36 +85,18 @@
         // Start requestAnimationFrame monitoring
         monitorFrames();
 
-        // Stop monitoring after 8 seconds and analyze
+        // Stop monitoring after 8 seconds
         setTimeout(() => {
-            analyzePerformance();
         }, 8000);
     }, 3000);
 
-    function analyzePerformance() {
-        console.log('📊 Performance analysis complete');
-        console.log('Browser:', isChrome ? 'Chrome/Chromium' : 'Other');
-        console.log('Browser Frame Rate:', detectedFrameRate.toFixed(1), 'fps');
-        console.log('MAME Speed:', mameSpeed + '%');
-        console.log('Throttled:', isThrottled);
-
-        if (isChrome && (isThrottled || mameSpeed < 90)) {
-            showChromeWarning();
-        } else if (isThrottled || mameSpeed < 90) {
-            showGenericWarning();
-        } else {
-            console.log('✅ Performance looks good!');
-        }
-    }
 
     function createPerformanceInfo() {
         return `
             <div style="margin-bottom: 10px;">
                 <strong>Performance Issues Detected:</strong>
                 <ul style="margin: 5px 0; padding-left: 20px;">
-                    ${detectedFrameRate < 54 ? `<li>Browser frame rate: ${detectedFrameRate.toFixed(1)}fps (expected ~60fps)</li>` : ''}
-                    ${mameSpeed > 0 && mameSpeed < 90 ? `<li>MAME speed: ${mameSpeed}% (expected ~100%)</li>` : ''}
-                    ${mameFps > 0 ? `<li>MAME frame rate: ${mameFps.toFixed(1)}fps</li>` : ''}
+                    ${detectedFrameRate < 54 ? `<li>Browser frame rate: ${detectedFrameRate.toFixed(1)}fps (expected ~55fps)</li>` : ''}
                 </ul>
             </div>
         `;
@@ -173,9 +163,6 @@
             additionalInfo: `
                 <div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 10px;">
                     --disable-frame-rate-limit --autoplay-policy=no-user-gesture-required
-                </div>
-                <div style="font-size: 12px;">
-                    Or use the launch script: <code>./launch_mame_web.sh</code>
                 </div>
             `,
             autoDismissTime: 25000
