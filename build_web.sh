@@ -1017,15 +1017,27 @@ run_probe() {
 }
 
 if $START_SERVER; then
-    # Reuse existing server if already running and serving our page
+    # Check if a server is running from the same project directory
+    is_server_from_same_project() {
+        local port="$1"
+        # Check if there's a serve.mjs process running on this port from our directory
+        local server_pwd=$(ps auwwxe 2>/dev/null | grep -v grep | grep "serve\.mjs" | grep "PORT=$port" | tr ' ' '\n' | grep "^PWD=" | cut -d= -f2 | head -1)
+        if [[ -n "$server_pwd" ]] && [[ "$server_pwd" == "$OUTDIR" ]]; then
+            return 0  # Same project directory
+        else
+            return 1  # Different project directory or no server
+        fi
+    }
+
+    # Reuse existing server if already running and serving our page from the same project
     ensure_server() {
         local port="$1"
         local used_port=""
         local final_port=""
-        # If a specific port was requested, prefer reusing it if healthy; otherwise start fresh there
+        # If a specific port was requested, prefer reusing it if healthy and from same project
         if [[ -n "$port" ]]; then
             if command -v curl >/dev/null 2>&1 && \
-               curl -s --max-time 5 "http://localhost:$port/" | grep -q "<title>Star Wars</title>"; then
+               is_server_from_same_project "$port"; then
                 used_port="$port"
             else
                 start_server "$port" || true
@@ -1033,10 +1045,10 @@ if $START_SERVER; then
                 return
             fi
         else
-            # Probe common ports for an existing healthy server (fast path)
+            # Probe common ports for an existing healthy server from same project (fast path)
             for p in 8000 8001 8002 8003 8004 8005; do
                 if command -v curl >/dev/null 2>&1 && \
-                   curl -s --max-time 5 "http://localhost:$p/" | grep -q "<title>Star Wars</title>"; then
+                   is_server_from_same_project "$p"; then
                     used_port="$p"; break
                 fi
             done
@@ -1047,7 +1059,7 @@ if $START_SERVER; then
                 return
             fi
         fi
-        echo "Reusing existing server on http://localhost:$used_port"
+        echo "Reusing existing server on http://localhost:$used_port (from same project)"
         final_port="$used_port"
         # Return the port via a global variable
         USED_PORT="$final_port"
