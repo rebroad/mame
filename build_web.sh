@@ -883,6 +883,7 @@ ${INI_ARGS_JS}
         }
       }, 7000);
     </script>
+    <script src="mame_performance_warning.js"></script>
     <script src="roms.js"></script>
     <script src="${ARTIFACT_BASE}.js"></script>
   </body>
