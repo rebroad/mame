@@ -974,12 +974,19 @@ void video_manager::recompute_speed(const attotime &emutime)
 		// DEBUG: Log speed information for WASM builds
 		static int speed_log_counter = 0;
 		if (++speed_log_counter % 60 == 0) { // Log every 60 frames (roughly once per second)
-			osd_printf_info("WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+			// Calculate actual frame rate from refresh rate
+			screen_device_enumerator iter(machine().root_device());
+			screen_device *first_screen = iter.first();
+			double actual_fps = 0.0;
+			if (first_screen) {
+				actual_fps = ATTOSECONDS_TO_HZ(first_screen->refresh_attoseconds());
+			}
+			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps\n", 100 * m_speed_percent, speed_log_counter, actual_fps);
 
 			// Also log to error.log for debugging
 			FILE* debug_file = fopen("error.log", "a");
 			if (debug_file) {
-				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d)\n", 100 * m_speed_percent, speed_log_counter);
+				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps\n", 100 * m_speed_percent, speed_log_counter, actual_fps);
 				fclose(debug_file);
 			}
 		}
