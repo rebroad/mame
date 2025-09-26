@@ -952,9 +952,7 @@ start_server() {
     pushd "$OUTDIR" >/dev/null
     # Prefer Node server with COOP/COEP if available
     if command -v node >/dev/null 2>&1; then
-      # Copy standalone server script to webdist
-      cp "$REPO_ROOT/serve.mjs" "$OUTDIR/serve.mjs"
-      PORT="$port" node serve.mjs >/dev/null 2>&1 &
+      node "$REPO_ROOT/serve.mjs" "$OUTDIR" "$port" >/dev/null 2>&1 &
     else
       python3 -m http.server "$port" >/dev/null 2>&1 &
     fi
