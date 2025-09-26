@@ -895,16 +895,40 @@ echo "Artifacts ready. Next: ${START_SERVER:+start server}${START_SERVER:-no ser
 
 # Optional compression for deployment (served via HTTP Content-Encoding)
 if $DO_COMPRESS; then
-    echo "Compressing wasm for deployment..."
-    if command -v brotli >/dev/null 2>&1; then
-        brotli -f -q 11 "$OUTDIR/starwarswasm.wasm" -o "$OUTDIR/starwarswasm.wasm.br" || true
+    # Check if compression is needed by comparing file modification times
+    COMPRESS_BROTLI=false
+    COMPRESS_GZIP=false
+
+    if [[ -f "$OUTDIR/starwarswasm.wasm.br" ]]; then
+        if [[ "$OUTDIR/starwarswasm.wasm" -nt "$OUTDIR/starwarswasm.wasm.br" ]]; then
+            COMPRESS_BROTLI=true
+        fi
     else
-        echo "brotli not found; skipping .wasm.br. Install: sudo apt install brotli"
+        COMPRESS_BROTLI=true
     fi
-    if command -v gzip >/dev/null 2>&1; then
-        gzip -f -9 -c "$OUTDIR/starwarswasm.wasm" > "$OUTDIR/starwarswasm.wasm.gz" || true
+
+    if [[ -f "$OUTDIR/starwarswasm.wasm.gz" ]]; then
+        if [[ "$OUTDIR/starwarswasm.wasm" -nt "$OUTDIR/starwarswasm.wasm.gz" ]]; then
+            COMPRESS_GZIP=true
+        fi
     else
-        echo "gzip not found; skipping .wasm.gz"
+        COMPRESS_GZIP=true
+    fi
+
+    if $COMPRESS_BROTLI || $COMPRESS_GZIP; then
+        echo "Compressing wasm for deployment..."
+        if $COMPRESS_BROTLI && command -v brotli >/dev/null 2>&1; then
+            brotli -f -q 11 "$OUTDIR/starwarswasm.wasm" -o "$OUTDIR/starwarswasm.wasm.br" || true
+        elif $COMPRESS_BROTLI; then
+            echo "brotli not found; skipping .wasm.br. Install: sudo apt install brotli"
+        fi
+        if $COMPRESS_GZIP && command -v gzip >/dev/null 2>&1; then
+            gzip -f -9 -c "$OUTDIR/starwarswasm.wasm" > "$OUTDIR/starwarswasm.wasm.gz" || true
+        elif $COMPRESS_GZIP; then
+            echo "gzip not found; skipping .wasm.gz"
+        fi
+    else
+        echo "WASM compression up to date - skipping"
     fi
 fi
 
@@ -928,51 +952,8 @@ start_server() {
     pushd "$OUTDIR" >/dev/null
     # Prefer Node server with COOP/COEP if available
     if command -v node >/dev/null 2>&1; then
-      cat > serve.mjs << 'NODE'
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const root = __dirname;
-const port = process.env.PORT || 8000;
-const types = { '.html':'text/html', '.js':'application/javascript', '.wasm':'application/wasm', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.gif':'image/gif', '.svg':'image/svg+xml', '.css':'text/css', '.ico':'image/x-icon', '.data':'application/octet-stream' };
-const server = http.createServer((req, res) => {
-  let p = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
-  if (p === '/') p = '/index.html';
-  const filePath = path.join(root, p);
-  // Handle precompressed wasm
-  if (filePath.endsWith('.wasm')) {
-    const ae = String(req.headers['accept-encoding'] || '').toLowerCase();
-    if (ae.includes('br') && fs.existsSync(filePath + '.br')) {
-      res.setHeader('Content-Type', 'application/wasm');
-      res.setHeader('Content-Encoding', 'br');
-      fs.createReadStream(filePath + '.br').pipe(res);
-      return;
-    } else if (ae.includes('gzip') && fs.existsSync(filePath + '.gz')) {
-      res.setHeader('Content-Type', 'application/wasm');
-      res.setHeader('Content-Encoding', 'gzip');
-      fs.createReadStream(filePath + '.gz').pipe(res);
-      return;
-    }
-  }
-  fs.readFile(filePath, (err, data) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-    // Required for AudioWorklet and Workers on some browsers
-    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-    res.setHeader('Origin-Trial', '');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    if (err) { res.writeHead(404); res.end('Not found'); return; }
-    const ext = path.extname(filePath).toLowerCase();
-    res.setHeader('Content-Type', types[ext] || 'application/octet-stream');
-    res.writeHead(200);
-    res.end(data);
-  });
-});
-server.listen(port, () => console.log(`Serving ${root} on http://localhost:${port}`));
-NODE
+      # Copy standalone server script to webdist
+      cp "$REPO_ROOT/serve.mjs" "$OUTDIR/serve.mjs"
       PORT="$port" node serve.mjs >/dev/null 2>&1 &
     else
       python3 -m http.server "$port" >/dev/null 2>&1 &
@@ -980,9 +961,6 @@ NODE
     local pid=$!
     popd >/dev/null
     echo "Server PID: $pid"
-    if command -v xdg-open >/dev/null 2>&1; then
-        xdg-open "http://localhost:$port" >/dev/null 2>&1 || true
-    fi
 }
 
 # Optional headless console capture (requires Node + puppeteer)
@@ -1065,6 +1043,15 @@ if $START_SERVER; then
         final_port="$used_port"
         # Return the port via a global variable
         USED_PORT="$final_port"
+
+        # Launch browser with optimized arguments for MAME WebAssembly
+        if command -v chromium >/dev/null 2>&1; then
+            chromium --disable-features=AudioWorkletThreadRealtimePriority,AudioWorkletRealtimeThread --autoplay-policy=no-user-gesture-required "http://localhost:$used_port" >/dev/null 2>&1 &
+        elif command -v chromium-browser >/dev/null 2>&1; then
+            chromium-browser --disable-features=AudioWorkletThreadRealtimePriority,AudioWorkletRealtimeThread --autoplay-policy=no-user-gesture-required "http://localhost:$used_port" >/dev/null 2>&1 &
+        elif command -v xdg-open >/dev/null 2>&1; then
+            xdg-open "http://localhost:$used_port" >/dev/null 2>&1 || true
+        fi
     }
     ensure_server "$SERVER_PORT"
 else
@@ -1077,4 +1064,3 @@ fi
 if $CONSOLE_DEBUG; then
     run_probe "$USED_PORT" || true
 fi
-
