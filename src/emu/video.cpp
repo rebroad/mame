@@ -212,6 +212,16 @@ void video_manager::set_frameskip(int frameskip)
 
 void video_manager::frame_update(bool from_debugger)
 {
+	// DEBUG: Measure actual visual frame rate
+	static int visual_frame_count = 0;
+	static osd_ticks_t last_visual_fps_time = 0;
+	static osd_ticks_t start_visual_time = 0;
+
+	if (start_visual_time == 0) {
+		start_visual_time = osd_ticks();
+		last_visual_fps_time = osd_ticks();
+	}
+
 	// only render sound and video if we're in the running phase
 	machine_phase const phase = machine().phase();
 	bool skipped_it = m_skipping_this_frame;
@@ -274,6 +284,35 @@ void video_manager::frame_update(bool from_debugger)
 		bool const within_instruction_hook = debugger_enabled && machine().debugger().within_instruction_hook();
 		if (screen && ((machine().paused() && machine().options().update_in_pause()) || from_debugger || within_instruction_hook))
 			screen->reset_partial_updates();
+	}
+
+	// DEBUG: Count actual visual frames and measure real FPS
+	visual_frame_count++;
+	if (visual_frame_count % 60 == 0) { // Log every 60 visual frames
+		osd_ticks_t current_visual_time = osd_ticks();
+		osd_ticks_t visual_time_delta = current_visual_time - last_visual_fps_time;
+		double visual_actual_fps = 0.0;
+		if (visual_time_delta > 0) {
+			double visual_time_seconds = (double)visual_time_delta / (double)osd_ticks_per_second();
+			visual_actual_fps = 60.0 / visual_time_seconds; // 60 frames in X seconds
+		}
+
+		double total_visual_time = (double)(current_visual_time - start_visual_time) / (double)osd_ticks_per_second();
+		double visual_interval = (double)visual_time_delta / (double)osd_ticks_per_second();
+
+		osd_printf_info("VISUAL FPS: %.1ffps actual [frames=%d time=%.2fs total=%.2fs interval=%.2fs]\n",
+			visual_actual_fps, visual_frame_count, (double)current_visual_time / (double)osd_ticks_per_second(), total_visual_time, visual_interval);
+
+		// Also log to error.log
+		FILE* debug_file = fopen("error.log", "a");
+		if (debug_file) {
+			fprintf(debug_file, "VISUAL FPS: %.1ffps actual [frames=%d time=%.2fs total=%.2fs interval=%.2fs]\n",
+				visual_actual_fps, visual_frame_count, (double)current_visual_time / (double)osd_ticks_per_second(), total_visual_time, visual_interval);
+			fclose(debug_file);
+		}
+
+		// Reset for next measurement
+		last_visual_fps_time = current_visual_time;
 	}
 }
 
@@ -501,23 +540,6 @@ void video_manager::exit()
 	// free the snapshot target
 	machine().render().target_free(m_snap_target);
 	m_snap_bitmap.reset();
-
-	// print a final result if we have at least 2 seconds' worth of data
-	if (!emulator_info::standalone() && m_overall_emutime.seconds() >= 1)
-	{
-		osd_ticks_t tps = osd_ticks_per_second();
-		double final_real_time = (double)m_overall_real_seconds + (double)m_overall_real_ticks / (double)tps;
-		double final_emu_time = m_overall_emutime.as_double();
-		double average_speed = 100 * final_emu_time / final_real_time;
-		osd_printf_info("Average speed: %.2f%% (%d seconds)\n", average_speed, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
-
-		// DEBUG: Also log to error.log for WASM builds
-		FILE* debug_file = fopen("error.log", "a");
-		if (debug_file) {
-			fprintf(debug_file, "FINAL SPEED REPORT: %.2f%% average speed over %d seconds\n", average_speed, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
-			fclose(debug_file);
-		}
-	}
 }
 
 
@@ -970,58 +992,6 @@ void video_manager::recompute_speed(const attotime &emutime)
 		osd_ticks_t delta_realtime = realtime - m_speed_last_realtime;
 		osd_ticks_t tps = osd_ticks_per_second();
 		m_speed_percent = delta_emutime.as_double() * (double)tps / (double)delta_realtime;
-
-		// DEBUG: Log speed information for WASM builds
-		static int speed_log_counter = 0;
-		static osd_ticks_t last_fps_time = 0;
-		static int frame_count = 0;
-		static osd_ticks_t start_time = 0;
-
-		if (start_time == 0) {
-			start_time = osd_ticks();
-			last_fps_time = osd_ticks();
-		}
-		frame_count++;
-
-		if (++speed_log_counter % 60 == 0) { // Log every 60 frames (roughly once per second)
-			// Calculate target frame rate from refresh rate
-			screen_device_enumerator iter(machine().root_device());
-			screen_device *first_screen = iter.first();
-			double target_fps = 0.0;
-			if (first_screen) {
-				target_fps = ATTOSECONDS_TO_HZ(first_screen->refresh_attoseconds());
-			}
-
-			// Calculate actual FPS from frame timing
-			osd_ticks_t current_time = osd_ticks();
-			osd_ticks_t time_delta = current_time - last_fps_time;
-			double actual_fps = 0.0;
-			if (time_delta > 0) {
-				double time_seconds = (double)time_delta / (double)osd_ticks_per_second();
-				actual_fps = (double)frame_count / time_seconds;
-			}
-
-			// Get current timestamp for debugging
-			osd_ticks_t current_ticks = osd_ticks();
-			double current_time_sec = (double)current_ticks / (double)osd_ticks_per_second();
-			double total_time_sec = (double)(current_ticks - start_time) / (double)osd_ticks_per_second();
-			double time_between_reports = (double)(current_ticks - last_fps_time) / (double)osd_ticks_per_second();
-
-			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual [time=%.2fs total=%.2fs interval=%.2fs]\n",
-				100 * m_speed_percent, speed_log_counter, target_fps, actual_fps, current_time_sec, total_time_sec, time_between_reports);
-
-			// Also log to error.log for debugging
-			FILE* debug_file = fopen("error.log", "a");
-			if (debug_file) {
-				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual [time=%.2fs total=%.2fs interval=%.2fs]\n",
-					100 * m_speed_percent, speed_log_counter, target_fps, actual_fps, current_time_sec, total_time_sec, time_between_reports);
-				fclose(debug_file);
-			}
-
-			// Reset counters for next measurement period
-			last_fps_time = current_time;
-			frame_count = 0;
-		}
 
 		// remember the last times
 		m_speed_last_realtime = realtime;
