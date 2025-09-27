@@ -48,6 +48,7 @@ print_usage() {
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -frameskip <N>         Set frameskip level (0-10, for 30fps use 3-4)"
     echo "  -autoframeskip         Enable automatic frameskip adjustment"
+    echo "  -refreshspeed          Auto-adjust speed to match browser refresh rate"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -58,6 +59,7 @@ PROFILER_DEBUG=true
 AUTOSTART=false
 FRAMESKIP=""
 AUTOFRAMESKIP=false
+REFRESHSPEED=false
 VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -86,6 +88,7 @@ while [[ $# -gt 0 ]]; do
         -wipe) DO_WIPE=true; shift;;
         -frameskip) FRAMESKIP="${2:-}"; shift 2;;
         -autoframeskip) AUTOFRAMESKIP=true; shift;;
+        -refreshspeed) REFRESHSPEED=true; shift;;
         -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -666,6 +669,9 @@ if [[ -n "$FRAMESKIP" ]]; then
 fi
 if $AUTOFRAMESKIP; then
     INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
+fi
+if $REFRESHSPEED; then
+    INI_ARGS_JS+=$'\n      Module.arguments.push("-refreshspeed");'
 fi
 
 # Generate index.html
