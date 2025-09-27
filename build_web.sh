@@ -48,7 +48,6 @@ print_usage() {
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -frameskip <N>         Set frameskip level (0-10, for 30fps use 3-4)"
     echo "  -autoframeskip         Enable automatic frameskip adjustment"
-    echo "  -30fps                 Force 30fps mode (frameskip=3, autoframeskip=off)"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -87,7 +86,6 @@ while [[ $# -gt 0 ]]; do
         -wipe) DO_WIPE=true; shift;;
         -frameskip) FRAMESKIP="${2:-}"; shift 2;;
         -autoframeskip) AUTOFRAMESKIP=true; shift;;
-        -30fps) FRAMESKIP="3"; AUTOFRAMESKIP=false; shift;;
         -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -1074,14 +1072,14 @@ if $START_SERVER; then
         found_chrome=""
         for chrome_cmd in chromium chromium-browser; do
             if command -v "$chrome_cmd" >/dev/null 2>&1; then
-                "$chrome_cmd" \
+                nohup "$chrome_cmd" \
                   --user-data-dir="$TEMP_PROFILE_DIR" \
                   --no-first-run \
-                  #--disable-frame-rate-limit \
-                  --new-window \
-                  "http://localhost:$used_port" >/dev/null 2>&1 &
+                  "http://localhost:$used_port" \
+                  >/dev/null 2>&1 &
                 CHROME_PID=$!
                 echo "Chrome PID: $CHROME_PID"
+                echo "Opening: http://localhost:$used_port"
                 found_chrome=1
                 break
             fi
