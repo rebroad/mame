@@ -973,22 +973,46 @@ void video_manager::recompute_speed(const attotime &emutime)
 
 		// DEBUG: Log speed information for WASM builds
 		static int speed_log_counter = 0;
+		static osd_ticks_t last_fps_time = 0;
+		static int frame_count = 0;
+
+		if (last_fps_time == 0) {
+			last_fps_time = osd_ticks();
+		}
+		frame_count++;
+
 		if (++speed_log_counter % 60 == 0) { // Log every 60 frames (roughly once per second)
-			// Calculate actual frame rate from refresh rate
+			// Calculate target frame rate from refresh rate
 			screen_device_enumerator iter(machine().root_device());
 			screen_device *first_screen = iter.first();
-			double actual_fps = 0.0;
+			double target_fps = 0.0;
 			if (first_screen) {
-				actual_fps = ATTOSECONDS_TO_HZ(first_screen->refresh_attoseconds());
+				target_fps = ATTOSECONDS_TO_HZ(first_screen->refresh_attoseconds());
 			}
-			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps\n", 100 * m_speed_percent, speed_log_counter, actual_fps);
+
+			// Calculate actual FPS from frame timing
+			osd_ticks_t current_time = osd_ticks();
+			osd_ticks_t time_delta = current_time - last_fps_time;
+			double actual_fps = 0.0;
+			if (time_delta > 0) {
+				double time_seconds = (double)time_delta / (double)osd_ticks_per_second();
+				actual_fps = (double)frame_count / time_seconds;
+			}
+
+			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual\n",
+				100 * m_speed_percent, speed_log_counter, target_fps, actual_fps);
 
 			// Also log to error.log for debugging
 			FILE* debug_file = fopen("error.log", "a");
 			if (debug_file) {
-				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps\n", 100 * m_speed_percent, speed_log_counter, actual_fps);
+				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual\n",
+					100 * m_speed_percent, speed_log_counter, target_fps, actual_fps);
 				fclose(debug_file);
 			}
+
+			// Reset counters for next measurement period
+			last_fps_time = current_time;
+			frame_count = 0;
 		}
 
 		// remember the last times
