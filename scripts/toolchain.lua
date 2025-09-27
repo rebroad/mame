@@ -639,7 +639,7 @@ function strip()
 
 	configuration { "asmjs" }
 		-- Avoid re-finalizing for Star Wars WebAssembly subtarget; the link already produces .html
-		if not (_OPTIONS["targetos"] == "asmjs" and _OPTIONS["subtarget"] == "starwarswasm") then
+		if not (_OPTIONS["targetos"] == "asmjs") then
 			postbuildcommands {
 				"$(SILENT) echo Running asmjs finalize.",
 				"$(SILENT) $(EMSCRIPTEN)/emcc -O2 -s TOTAL_MEMORY=268435456 \"$(TARGET)\" -o \"$(TARGET)\".html"

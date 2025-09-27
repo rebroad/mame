@@ -6,8 +6,8 @@ const puppeteer = require('puppeteer');
   const browser = await puppeteer.launch({
     headless: false, // Set to true for headless mode
     args: [
-      '--no-sandbox', // Required for Ubuntu 23.10+ with AppArmor restrictions
-      '--disable-frame-rate-limit', // Disable frame rate limiting
+      '--no-sandbox' // Required for Ubuntu 23.10+ with AppArmor restrictions
+      //'--disable-frame-rate-limit', // Disable frame rate limiting
     ]
   });
 
