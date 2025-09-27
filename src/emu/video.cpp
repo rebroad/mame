@@ -217,6 +217,19 @@ void video_manager::frame_update(bool from_debugger)
 	static osd_ticks_t last_visual_fps_time = 0;
 	static osd_ticks_t start_visual_time = 0;
 
+	// DEBUG: Track frameskip statistics for last 60 frames
+	static int paused_count = 0;
+	static int update_in_pause_count = 0;
+	static int anything_changed_count = 0;
+	static int skipped_count = 0;
+	static int update_screens_count = 0;
+	static int effective_throttle_count = 0;
+	static int low_latency_count = 0;
+	static int from_debugger_count = 0;
+	static int phase_gt_init_count = 0;
+	static int phase_running_count = 0;
+	static int frame_stat_counter = 0;
+
 	if (start_visual_time == 0) {
 		start_visual_time = osd_ticks();
 		last_visual_fps_time = osd_ticks();
@@ -234,6 +247,32 @@ void video_manager::frame_update(bool from_debugger)
 
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
+
+	// Count frame statistics (after all anything_changed modifications)
+	if (machine().paused()) paused_count++;
+	if (machine().options().update_in_pause()) update_in_pause_count++;
+	if (anything_changed) anything_changed_count++;
+	if (skipped_it) skipped_count++;
+	if (update_screens) update_screens_count++;
+	if (effective_throttle()) effective_throttle_count++;
+	if (m_low_latency) low_latency_count++;
+	if (from_debugger) from_debugger_count++;
+	if (phase > machine_phase::INIT) phase_gt_init_count++;
+	if (phase == machine_phase::RUNNING) phase_running_count++;
+	frame_stat_counter++;
+
+	// Report statistics every 60 frames and reset counters
+	if (frame_stat_counter >= 60) {
+		osd_printf_info("FRAMESKIP STATS (last %d frames): paused=%d, update_in_pause=%d, anything_changed_count=%d, skipped=%d, update_screens=%d, effective_throttle=%d, low_latency=%d, from_debugger=%d, phase_gt_init=%d, phase_running=%d\n",
+			frame_stat_counter, paused_count, update_in_pause_count, anything_changed_final_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
+
+		// Reset counters
+		paused_count = update_in_pause_count = anything_changed_count = 0;
+		skipped_count = update_screens_count = 0;
+		effective_throttle_count = low_latency_count = from_debugger_count = 0;
+		phase_gt_init_count = phase_running_count = 0;
+		frame_stat_counter = 0;
+	}
 
 	// if none of the screens changed and we haven't skipped too many frames in a row,
 	// mark this frame as skipped to prevent throttling; this helps for games that
