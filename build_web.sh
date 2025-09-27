@@ -66,13 +66,13 @@ while [[ $# -gt 0 ]]; do
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
-        -debug-console)
+        -debug-console) set -- "-console-debug" "${@:2}";;
         -console-debug) CONSOLE_DEBUG=true; VERBOSE_FLAG="-verbose"; shift;;
-        -debug-build)
+        -debug-build) set -- "-build-debug" "${@:2}";;
         -build-debug) BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
-        -j)
+        -j) set -- "--jobs" "${@:2}";;
         --jobs) JOBS="${2:-}"; shift 2;;
         -j[0-9]*) JOBS="${1#-j}"; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
@@ -80,6 +80,7 @@ while [[ $# -gt 0 ]]; do
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
+        -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
