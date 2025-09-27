@@ -22,11 +22,19 @@
     // Warning throttling
     let lastWarningTime = 0;
     let warningCount = 0;
+    let warningDismissed = false; // Track if user dismissed the warning
+    let isMonitoring = false; // Track if monitoring is active
+    let warningDisplayCount = 0; // Track how warnings displayed
     const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
     const MAX_WARNINGS = 3; // Maximum warnings before stopping
 
     // Monitor frame rate using requestAnimationFrame for accurate measurement
     const monitorFrames = () => {
+        // Stop monitoring if flag is set
+        if (!isMonitoring) {
+            return;
+        }
+
         const now = performance.now();
         const deltaTime = now - lastTime;
 
@@ -48,7 +56,17 @@
                     isThrottled = true;
 
                     // Show warning popup immediately when FPS drops below 44
-                    if (!document.querySelector('.mame-performance-warning')) {
+                    if (!warningDismissed && !window.warningDismissed) {
+                        // Remove any existing warning first
+                        const existingWarning = document.querySelector('.mame-performance-warning');
+                        if (existingWarning) {
+                            existingWarning.remove();
+                            warningDisplayCount--;
+                        }
+
+                        // Increment warning display count
+                        warningDisplayCount++;
+
                         if (isChrome) {
                             showChromeWarning();
                         } else {
@@ -74,8 +92,10 @@
         lastTime = now;
         frameCount++;
 
-        // Use requestAnimationFrame for accurate frame rate measurement
-        requestAnimationFrame(monitorFrames);
+        // Continue monitoring if flag is still true
+        if (isMonitoring) {
+            requestAnimationFrame(monitorFrames);
+        }
     };
 
     // Start monitoring after MAME initializes
@@ -83,10 +103,13 @@
         console.log('📊 Starting performance monitoring...');
 
         // Start requestAnimationFrame monitoring
+        isMonitoring = true;
         monitorFrames();
 
         // Stop monitoring after 8 seconds
         setTimeout(() => {
+            console.log('📊 Stopping performance monitoring...');
+            isMonitoring = false;
         }, 8000);
     }, 3000);
 
@@ -104,7 +127,7 @@
 
     function createDismissButton() {
         return `
-            <button onclick="this.parentElement.remove()" style="
+            <button onclick="this.parentElement.remove(); window.warningDismissed = true;" style="
                 background: rgba(255,255,255,0.2);
                 border: 1px solid rgba(255,255,255,0.3);
                 color: white;
@@ -117,6 +140,7 @@
 
     function showWarning(config) {
         const warning = document.createElement('div');
+        warning.className = 'mame-performance-warning';
         warning.style.cssText = `
             position: fixed;
             top: 20px;
@@ -157,7 +181,7 @@
     function showChromeWarning() {
         showWarning({
             backgroundColor: '#ff6b6b',
-            title: '⚠️ Chrome Performance Issue',
+            title: `⚠️ Chrome Performance Issue (Warning #${warningDisplayCount})`,
             description: 'MAME is running slower than expected due to Chrome\'s frame rate limiting.',
             solution: 'Launch Chrome with:',
             additionalInfo: `
@@ -172,7 +196,7 @@
     function showGenericWarning() {
         showWarning({
             backgroundColor: '#ffa726',
-            title: '⚠️ Performance Issue',
+            title: `⚠️ Performance Issue (Warning #${warningDisplayCount})`,
             description: 'MAME may not be running at optimal performance.',
             additionalInfo: 'Try using Firefox for better performance, or launch Chrome with performance flags.',
             autoDismissTime: 20000
