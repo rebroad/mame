@@ -95,6 +95,31 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Global ccache setup (used throughout the script)
+setup_ccache() {
+    if $USE_CCACHE; then
+        if command -v ccache >/dev/null 2>&1; then
+            # Prime ccache defaults if not set; place cache at the main repo root (shared by worktrees)
+            local GIT_COMMON
+            GIT_COMMON="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
+            local MAIN_ROOT
+            MAIN_ROOT="$(cd "$(dirname "$GIT_COMMON")" && pwd)"
+            # If a ${MAIN_ROOT}.make directory exists, set MAIN_ROOT to it (because why not, let's make things even more confusing for future archaeologists 🦖)
+            if [[ -d "${MAIN_ROOT}.make" ]]; then
+                MAIN_ROOT="${MAIN_ROOT}.make"
+                echo "Detected ${MAIN_ROOT} as the true root of all build magic. #Makeception 🛠️"
+            fi
+            : "${CCACHE_DIR:=$MAIN_ROOT/.ccache}"
+            export CCACHE_DIR
+            ccache --set-config=compiler_check=content >/dev/null 2>&1 || true
+            ccache --set-config=max_size=5G >/dev/null 2>&1 || true
+            echo "Using ccache at $CCACHE_DIR"
+        else
+            echo "ccache not found; proceeding without ccache. Install with: sudo apt install ccache"
+        fi
+    fi
+}
+
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="$REPO_ROOT/webdist"
 MODE_STAMP="$REPO_ROOT/.wasm_build_mode"
@@ -236,32 +261,26 @@ ensure_emscripten() {
         exit 1
     fi
 
-    # Configure ccache wrapper if enabled and available
-    if $USE_CCACHE; then
-        if command -v ccache >/dev/null 2>&1; then
-            export EM_COMPILER_WRAPPER="ccache"
-            # Prime ccache defaults if not set; place cache at the main repo root (shared by worktrees)
-            local GIT_COMMON
-            GIT_COMMON="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
-            local MAIN_ROOT
-            MAIN_ROOT="$(cd "$(dirname "$GIT_COMMON")" && pwd)"
-            # If a ${MAIN_ROOT}.make directory exists, set MAIN_ROOT to it (because why not, let's make things even more confusing for future archaeologists 🦖)
-            if [[ -d "${MAIN_ROOT}.make" ]]; then
-                MAIN_ROOT="${MAIN_ROOT}.make"
-                echo "Detected ${MAIN_ROOT} as the true root of all build magic. #Makeception 🛠️"
-            fi
-            : "${CCACHE_DIR:=$MAIN_ROOT/.ccache}"
-            export CCACHE_DIR
-            ccache --set-config=compiler_check=content >/dev/null 2>&1 || true
-            ccache --set-config=max_size=5G >/dev/null 2>&1 || true
-            echo "Using ccache at $CCACHE_DIR"
-        else
-            echo "ccache not found; proceeding without ccache. Install with: sudo apt install ccache"
-        fi
+    # Configure ccache wrapper for Emscripten if enabled and available
+    if $USE_CCACHE && command -v ccache >/dev/null 2>&1; then
+        export EM_COMPILER_WRAPPER="ccache"
     fi
 }
 
 ensure_emscripten
+
+# Force Emscripten environment setup (in case ensure_emscripten didn't work properly) - TODO needed?
+if [[ -f "/home/rebroad/src/emsdk/emsdk_env.sh" ]]; then
+    echo "Force-setting Emscripten environment..."
+    source "/home/rebroad/src/emsdk/emsdk_env.sh"
+    export PATH="/home/rebroad/src/emsdk:/home/rebroad/src/emsdk/upstream/emscripten:$PATH"
+    export EMSDK="/home/rebroad/src/emsdk"
+    export EMSDK_NODE="/home/rebroad/src/emsdk/node/22.16.0_64bit/bin/node"
+    echo "Emscripten environment forced: emcc=$(which emcc), em++=$(which em++)"
+fi
+
+# Setup ccache after emscripten is configured
+setup_ccache
 
 # Graceful interrupt handling for noisy builds
 # Trap Ctrl-C (SIGINT) and SIGTERM to stop child process group quietly
@@ -454,7 +473,12 @@ if $DO_BUILD; then
         # Pass web LDFLAGS via LDOPTS so native host tools (e.g., genie) don't inherit them
         # Run make in its own session so we can SIGTERM the group on Ctrl-C (avoids Python tracebacks)
         # Force Emscripten-specific build configuration
-        setsid bash -c "emmake make \
+        # Export ccache environment if enabled
+        local ccache_env=""
+        if $USE_CCACHE && command -v ccache >/dev/null 2>&1; then
+            ccache_env="CCACHE_DIR=\"$CCACHE_DIR\" PATH=\"$(dirname $(which ccache)):\$PATH\" "
+        fi
+        setsid bash -c "${ccache_env}emmake make \
             SUBTARGET=starwarswasm \
             SOURCES=src/mame/atari/starwars.cpp \
             WEBASSEMBLY=1 \
