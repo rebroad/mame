@@ -1061,9 +1061,9 @@ if $START_SERVER; then
 
         # Launch browser with optimized arguments for MAME WebAssembly
         if command -v chromium >/dev/null 2>&1; then
-            chromium --disable-features=AudioWorkletThreadRealtimePriority,AudioWorkletRealtimeThread --autoplay-policy=no-user-gesture-required "http://localhost:$used_port" >/dev/null 2>&1 &
+            chromium  "http://localhost:$used_port" >/dev/null 2>&1 &
         elif command -v chromium-browser >/dev/null 2>&1; then
-            chromium-browser --disable-features=AudioWorkletThreadRealtimePriority,AudioWorkletRealtimeThread --autoplay-policy=no-user-gesture-required "http://localhost:$used_port" >/dev/null 2>&1 &
+            chromium-browser "http://localhost:$used_port" >/dev/null 2>&1 &
         elif command -v xdg-open >/dev/null 2>&1; then
             xdg-open "http://localhost:$used_port" >/dev/null 2>&1 || true
         fi
