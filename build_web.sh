@@ -52,7 +52,7 @@ print_usage() {
 # Parse args
 CONSOLE_DEBUG=false
 BUILD_DEBUG=false
-PROFILER_DEBUG=false
+PROFILER_DEBUG=true
 AUTOSTART=false
 VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
@@ -66,14 +66,15 @@ while [[ $# -gt 0 ]]; do
         -emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
         -use-local-emsdk) USE_LOCAL_EMSDK=true; shift;;
         -no-ccache) USE_CCACHE=false; shift;;
+        -debug-console)
         -console-debug) CONSOLE_DEBUG=true; VERBOSE_FLAG="-verbose"; shift;;
+        -debug-build)
         -build-debug) BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
-        -profiler) PROFILER_DEBUG=true; shift;;
         -no-profiler) PROFILER_DEBUG=false; shift;;
         -debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
-        -j) JOBS="${2:-}"; shift 2;;
-        -j[0-9]*) JOBS="${1#-j}"; shift;;
+        -j)
         --jobs) JOBS="${2:-}"; shift 2;;
+        -j[0-9]*) JOBS="${1#-j}"; shift;;
         -link-threads) LINK_THREADS="${2:-}"; shift 2;;
         -no-compress) DO_COMPRESS=false; shift;;
         -autostart) AUTOSTART=true; shift;;
