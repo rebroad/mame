@@ -264,7 +264,7 @@ void video_manager::frame_update(bool from_debugger)
 	// Report statistics every 60 frames and reset counters
 	if (frame_stat_counter >= 60) {
 		osd_printf_info("FRAMESKIP STATS (last %d frames): paused=%d, update_in_pause=%d, anything_changed_count=%d, skipped=%d, update_screens=%d, effective_throttle=%d, low_latency=%d, from_debugger=%d, phase_gt_init=%d, phase_running=%d\n",
-			frame_stat_counter, paused_count, update_in_pause_count, anything_changed_final_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
+			frame_stat_counter, paused_count, update_in_pause_count, anything_changed_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
 
 		// Reset counters
 		paused_count = update_in_pause_count = anything_changed_count = 0;

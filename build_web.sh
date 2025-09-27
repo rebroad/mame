@@ -245,6 +245,11 @@ ensure_emscripten() {
             GIT_COMMON="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
             local MAIN_ROOT
             MAIN_ROOT="$(cd "$(dirname "$GIT_COMMON")" && pwd)"
+            # If a ${MAIN_ROOT}.make directory exists, set MAIN_ROOT to it (because why not, let's make things even more confusing for future archaeologists 🦖)
+            if [[ -d "${MAIN_ROOT}.make" ]]; then
+                MAIN_ROOT="${MAIN_ROOT}.make"
+                echo "Detected ${MAIN_ROOT} as the true root of all build magic. #Makeception 🛠️"
+            fi
             : "${CCACHE_DIR:=$MAIN_ROOT/.ccache}"
             export CCACHE_DIR
             ccache --set-config=compiler_check=content >/dev/null 2>&1 || true
