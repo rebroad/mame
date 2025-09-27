@@ -975,8 +975,10 @@ void video_manager::recompute_speed(const attotime &emutime)
 		static int speed_log_counter = 0;
 		static osd_ticks_t last_fps_time = 0;
 		static int frame_count = 0;
+		static osd_ticks_t start_time = 0;
 
-		if (last_fps_time == 0) {
+		if (start_time == 0) {
+			start_time = osd_ticks();
 			last_fps_time = osd_ticks();
 		}
 		frame_count++;
@@ -999,14 +1001,20 @@ void video_manager::recompute_speed(const attotime &emutime)
 				actual_fps = (double)frame_count / time_seconds;
 			}
 
-			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual\n",
-				100 * m_speed_percent, speed_log_counter, target_fps, actual_fps);
+			// Get current timestamp for debugging
+			osd_ticks_t current_ticks = osd_ticks();
+			double current_time_sec = (double)current_ticks / (double)osd_ticks_per_second();
+			double total_time_sec = (double)(current_ticks - start_time) / (double)osd_ticks_per_second();
+			double time_between_reports = (double)(current_ticks - last_fps_time) / (double)osd_ticks_per_second();
+
+			osd_printf_info("WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual [time=%.2fs total=%.2fs interval=%.2fs]\n",
+				100 * m_speed_percent, speed_log_counter, target_fps, actual_fps, current_time_sec, total_time_sec, time_between_reports);
 
 			// Also log to error.log for debugging
 			FILE* debug_file = fopen("error.log", "a");
 			if (debug_file) {
-				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual\n",
-					100 * m_speed_percent, speed_log_counter, target_fps, actual_fps);
+				fprintf(debug_file, "WASM Speed: %.2f%% (frame %d) @ %.1ffps target/%.1ffps actual [time=%.2fs total=%.2fs interval=%.2fs]\n",
+					100 * m_speed_percent, speed_log_counter, target_fps, actual_fps, current_time_sec, total_time_sec, time_between_reports);
 				fclose(debug_file);
 			}
 

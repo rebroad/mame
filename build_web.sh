@@ -46,6 +46,8 @@ print_usage() {
     echo "  -no-compress           Disable compression (default: enabled)"
     echo "  -autostart             Auto-insert coin and start game via autoboot.lua"
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
+    echo "  -frameskip <N>         Set frameskip level (0-10, for 30fps use 3-4)"
+    echo "  -autoframeskip         Enable automatic frameskip adjustment"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
 
@@ -54,6 +56,8 @@ CONSOLE_DEBUG=false
 BUILD_DEBUG=false
 PROFILER_DEBUG=true
 AUTOSTART=false
+FRAMESKIP=""
+AUTOFRAMESKIP=false
 VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -80,6 +84,8 @@ while [[ $# -gt 0 ]]; do
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
+        -frameskip) FRAMESKIP="${2:-}"; shift 2;;
+        -autoframeskip) AUTOFRAMESKIP=true; shift;;
         -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -650,6 +656,14 @@ if [[ -f "$INI_FILE" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
     fi
     # waitvsync/syncrefresh intentionally not applied in web build
+fi
+
+# Add frameskip options from command line
+if [[ -n "$FRAMESKIP" ]]; then
+    INI_ARGS_JS+=$'\n      Module.arguments.push("-frameskip", '"\"$FRAMESKIP\""');'
+fi
+if $AUTOFRAMESKIP; then
+    INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
 fi
 
 # Generate index.html
