@@ -297,17 +297,14 @@ void video_manager::frame_update(bool from_debugger)
 			visual_actual_fps = 60.0 / visual_time_seconds; // 60 frames in X seconds
 		}
 
-		double total_visual_time = (double)(current_visual_time - start_visual_time) / (double)osd_ticks_per_second();
-		double visual_interval = (double)visual_time_delta / (double)osd_ticks_per_second();
-
-		osd_printf_info("VISUAL FPS: %.1ffps actual [frames=%d time=%.2fs total=%.2fs interval=%.2fs]\n",
-			visual_actual_fps, visual_frame_count, (double)current_visual_time / (double)osd_ticks_per_second(), total_visual_time, visual_interval);
+		osd_printf_info("VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
+			visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
 
 		// Also log to error.log
 		FILE* debug_file = fopen("error.log", "a");
 		if (debug_file) {
-			fprintf(debug_file, "VISUAL FPS: %.1ffps actual [frames=%d time=%.2fs total=%.2fs interval=%.2fs]\n",
-				visual_actual_fps, visual_frame_count, (double)current_visual_time / (double)osd_ticks_per_second(), total_visual_time, visual_interval);
+			fprintf(debug_file, "VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
+				visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
 			fclose(debug_file);
 		}
 
