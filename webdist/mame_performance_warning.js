@@ -119,7 +119,7 @@
             <div style="margin-bottom: 10px;">
                 <strong>Performance Issues Detected:</strong>
                 <ul style="margin: 5px 0; padding-left: 20px;">
-                    ${detectedFrameRate < 54 ? `<li>Browser frame rate: ${detectedFrameRate.toFixed(1)}fps (expected ~55fps)</li>` : ''}
+                    ${detectedFrameRate < 40 ? `<li>Browser frame rate: ${detectedFrameRate.toFixed(1)}fps (expected ~41fps)</li>` : ''}
                 </ul>
             </div>
         `;
