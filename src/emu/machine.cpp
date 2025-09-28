@@ -1379,9 +1379,19 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 	}
-	// otherwise, just pump video updates through
-	else
+
+	// FRAMESKIP WEBASSEMBLY FIX: Only submit frames to browser when frameskip allows it
+	// This reduces the frame submission rate to match MAME's frameskip settings
+	// preventing Chrome from throttling the overall frame rate
+	// Use the existing frameskip logic from video_manager instead of duplicating it
+	bool should_submit_frame = !machine->m_video->skip_this_frame();
+
+	// Only call frame_update() when we should submit a frame to the browser
+	// This applies to both paused and running states
+	if (should_submit_frame)
+	{
 		machine->m_video->frame_update();
+	}
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
