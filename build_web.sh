@@ -1052,14 +1052,8 @@ if $CONSOLE_DEBUG; then
                   --no-first-run \
                   "http://localhost:$USED_PORT" \
                   >/dev/null 2>&1
-                CHROME_PID=$!
 
-                # Clean up profile when Chrome exits (if we launched it)
-                if [[ -n "$CHROME_PID" ]]; then
-                    wait $CHROME_PID 2>/dev/null || true
-                    rm -rf "$TEMP_PROFILE_DIR"
-                    echo "🧹 Cleaned up temporary profile"
-                fi
+                rm -rf "$TEMP_PROFILE_DIR"
             } &
             found_chrome=1
             break
