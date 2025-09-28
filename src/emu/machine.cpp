@@ -1453,7 +1453,9 @@ void running_machine::emscripten_set_running_machine(running_machine *machine)
 	EM_ASM (
 		JSMESS.running = true;
 	);
-	emscripten_set_main_loop(&(emscripten_main_loop), 0, 1);
+	// Limit main loop to 30fps to avoid Chrome throttling
+	// This should prevent the 50% speed issue by running at a rate Chrome won't throttle
+	emscripten_set_main_loop(&(emscripten_main_loop), 30, 1);
 }
 
 running_machine * running_machine::emscripten_get_running_machine()
