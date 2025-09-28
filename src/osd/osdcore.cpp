@@ -9,6 +9,10 @@
 #include <android/log.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #include <cstdio>
@@ -143,6 +147,9 @@ osd_ticks_t osd_ticks() noexcept
 	LARGE_INTEGER val;
 	QueryPerformanceCounter(&val);
 	return val.QuadPart;
+#elif defined(__EMSCRIPTEN__)
+	// Use emscripten_get_now() for WebAssembly to avoid browser throttling affecting timing
+	return (osd_ticks_t)(emscripten_get_now() * 1000000.0); // Convert to microseconds
 #else
 	return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #endif
@@ -159,6 +166,9 @@ osd_ticks_t osd_ticks_per_second() noexcept
 	LARGE_INTEGER val;
 	QueryPerformanceFrequency(&val);
 	return val.QuadPart;
+#elif defined(__EMSCRIPTEN__)
+	// emscripten_get_now() returns milliseconds, so we need 1,000,000 microseconds per second
+	return 1000000;
 #else
 	return std::chrono::high_resolution_clock::period::den / std::chrono::high_resolution_clock::period::num;
 #endif
