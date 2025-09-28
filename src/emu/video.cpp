@@ -263,8 +263,8 @@ void video_manager::frame_update(bool from_debugger)
 
 	// Report statistics every 60 frames and reset counters
 	if (frame_stat_counter >= 60) {
-		osd_printf_info("FRAMESKIP STATS (last %d frames): paused=%d, update_in_pause=%d, anything_changed_count=%d, skipped=%d, update_screens=%d, effective_throttle=%d, low_latency=%d, from_debugger=%d, phase_gt_init=%d, phase_running=%d\n",
-			frame_stat_counter, paused_count, update_in_pause_count, anything_changed_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
+		// osd_printf_info("FRAMESKIP STATS (last %d frames): paused=%d, update_in_pause=%d, anything_changed_count=%d, skipped=%d, update_screens=%d, effective_throttle=%d, low_latency=%d, from_debugger=%d, phase_gt_init=%d, phase_running=%d\n",
+		//	frame_stat_counter, paused_count, update_in_pause_count, anything_changed_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
 
 		// Reset counters
 		paused_count = update_in_pause_count = anything_changed_count = 0;
@@ -336,16 +336,16 @@ void video_manager::frame_update(bool from_debugger)
 			visual_actual_fps = 60.0 / visual_time_seconds; // 60 frames in X seconds
 		}
 
-		osd_printf_info("VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
-			visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
+		// osd_printf_info("VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
+		//	visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
 
 		// Also log to error.log
-		FILE* debug_file = fopen("error.log", "a");
-		if (debug_file) {
-			fprintf(debug_file, "VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
-				visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
-			fclose(debug_file);
-		}
+		// FILE* debug_file = fopen("error.log", "a");
+		// if (debug_file) {
+		//	fprintf(debug_file, "VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
+		//		visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
+		//	fclose(debug_file);
+		// }
 
 		// Reset for next measurement
 		last_visual_fps_time = current_visual_time;
