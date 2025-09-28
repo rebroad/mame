@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    machine.cpp
+	machine.cpp
 
-    Controls execution of the core MAME system.
+	Controls execution of the core MAME system.
 
 ***************************************************************************/
 
@@ -1122,12 +1122,12 @@ void running_machine::postload_all_devices()
 
 
 /***************************************************************************
-    NVRAM MANAGEMENT
+	NVRAM MANAGEMENT
 ***************************************************************************/
 
 /*-------------------------------------------------
-    nvram_filename - returns filename of system's
-    NVRAM depending of selected BIOS
+	nvram_filename - returns filename of system's
+	NVRAM depending of selected BIOS
 -------------------------------------------------*/
 
 std::string running_machine::nvram_filename(device_t &device) const
@@ -1164,7 +1164,7 @@ std::string running_machine::nvram_filename(device_t &device) const
 }
 
 /*-------------------------------------------------
-    nvram_load - load a system's NVRAM
+	nvram_load - load a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_load()
@@ -1185,7 +1185,7 @@ void running_machine::nvram_load()
 
 
 /*-------------------------------------------------
-    nvram_save - save a system's NVRAM
+	nvram_save - save a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_save()
@@ -1370,29 +1370,41 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 	}
-    // other, just pump video updates and sound mapping updates through
-    else
-    {
-	    // THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
-	    static double last_frame_time = 0;
+	// other, just pump video updates and sound mapping updates through
+	else
+	{
+		// THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
+		static double last_frame_time = 0;
+		static bool in_compensation_mode = false;
 
-	    double current_frame_time = emscripten_get_now();
-	    if (last_frame_time > 0) {
-	    	double frame_delta = current_frame_time - last_frame_time;
-	    	double expected_delta = 1000.0 / 60.0; // 16.67ms for 60fps
+		double current_frame_time = emscripten_get_now();
+		if (last_frame_time > 0) {
+			double frame_delta = current_frame_time - last_frame_time;
+			double expected_delta = 1000.0 / 60.0; // 16.67ms for 60fps
 
-		    // If we're running slower than 60fps, run emulation twice per visual frame
-		    if (frame_delta > expected_delta * 1.5) { // 50% slower = 30fps
-			    osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Running 2x emulation (frame delta: %.1fms)\n",
-					fmod(current_frame_time, 100000.0), frame_delta);
-		    	// Run emulation twice - advance game state 2x faster
-		    	machine->m_video->frame_update();
-		    }
-	    }
-	    machine->m_video->frame_update();
-        //machine->sound().mapping_update();
-	    last_frame_time = current_frame_time;
-    }
+			// If we're running slower than 60fps, run emulation twice per visual frame
+			if (frame_delta > expected_delta * 1.5) { // 50% slower = 30fps
+				// Log when entering compensation mode
+				if (!in_compensation_mode) {
+					osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Entering 2x emulation mode (frame delta: %.1fms)\n",
+						fmod(current_frame_time, 100000.0), frame_delta);
+					in_compensation_mode = true;
+				}
+				// Run emulation twice - advance game state 2x faster
+				machine->m_video->frame_update();
+			} else {
+				// Log when leaving compensation mode
+				if (in_compensation_mode) {
+					osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Leaving 2x emulation mode (frame delta: %.1fms)\n",
+						fmod(current_frame_time, 100000.0), frame_delta);
+					in_compensation_mode = false;
+				}
+			}
+		}
+		machine->m_video->frame_update();
+		//machine->sound().mapping_update();
+		last_frame_time = current_frame_time;
+	}
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
