@@ -102,7 +102,7 @@ const puppeteer = require('puppeteer');
       return info;
     });
 
-    console.log('📊 Canvas info:', canvasInfo);
+    // console.log('📊 Canvas info:', canvasInfo); // Only output to debug file
 
     // Check if MAME Module is loaded
     const moduleInfo = await page.evaluate(() => {
@@ -117,7 +117,7 @@ const puppeteer = require('puppeteer');
       };
     });
 
-    console.log('📊 Module info:', moduleInfo);
+    // console.log('📊 Module info:', moduleInfo); // Only output to debug file
 
     // Check for any error messages in the page
     const errorElements = await page.evaluate(() => {
@@ -146,10 +146,6 @@ const puppeteer = require('puppeteer');
     fs.writeFileSync('console_capture.txt', consoleMessages.join('\n'));
     console.log('\n📁 Debug info saved to: mame_web_debug.json');
     console.log('📁 Console output saved to: console_capture.txt');
-
-    // Keep browser open for manual inspection
-    console.log('\n🔍 Browser will stay open for manual inspection...');
-    console.log('Press Ctrl+C to close');
 
     // Wait indefinitely (user can close manually)
     await new Promise(() => {});
