@@ -1046,14 +1046,21 @@ if $CONSOLE_DEBUG; then
     found_chrome=""
     for chrome_cmd in chromium chromium-browser; do
         if command -v "$chrome_cmd" >/dev/null 2>&1; then
-            nohup "$chrome_cmd" \
-              --user-data-dir="$TEMP_PROFILE_DIR" \
-              --no-first-run \
-              "http://localhost:$USED_PORT" \
-              >/dev/null 2>&1 &
-            CHROME_PID=$!
-            echo "Chrome PID: $CHROME_PID"
-            echo "Opening: http://localhost:$USED_PORT"
+            {
+                nohup "$chrome_cmd" \
+                  --user-data-dir="$TEMP_PROFILE_DIR" \
+                  --no-first-run \
+                  "http://localhost:$USED_PORT" \
+                  >/dev/null 2>&1
+                CHROME_PID=$!
+
+                # Clean up profile when Chrome exits (if we launched it)
+                if [[ -n "$CHROME_PID" ]]; then
+                    wait $CHROME_PID 2>/dev/null || true
+                    rm -rf "$TEMP_PROFILE_DIR"
+                    echo "🧹 Cleaned up temporary profile"
+                fi
+            } &
             found_chrome=1
             break
         fi
@@ -1067,13 +1074,4 @@ if $CONSOLE_DEBUG; then
 
     sleep 3
     run_probe "$USED_PORT" || true
-
-    # Clean up profile when Chrome exits (if we launched it)
-    if [[ -n "$CHROME_PID" ]]; then
-        {
-            wait $CHROME_PID 2>/dev/null || true
-            rm -rf "$TEMP_PROFILE_DIR"
-            echo "🧹 Cleaned up temporary profile"
-        } &
-    fi
 fi
