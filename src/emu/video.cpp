@@ -1029,8 +1029,8 @@ void video_manager::recompute_speed(const attotime &emutime)
 		osd_ticks_t tps = osd_ticks_per_second();
 
 		// DEBUG: Add speed calculation debug
-		osd_printf_info("SPEED DEBUG: delta_emutime=%.6f delta_realtime=%llu tps=%llu -> speed=%.6f\n",
-			delta_emutime.as_double(), delta_realtime, tps, delta_emutime.as_double() * (double)tps / (double)delta_realtime);
+		//osd_printf_info("SPEED DEBUG: delta_emutime=%.6f delta_realtime=%llu tps=%llu -> speed=%.6f\n",
+		//	delta_emutime.as_double(), delta_realtime, tps, delta_emutime.as_double() * (double)tps / (double)delta_realtime);
 
 		m_speed_percent = delta_emutime.as_double() * (double)tps / (double)delta_realtime;
 
