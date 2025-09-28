@@ -1762,8 +1762,7 @@ FLAC_API FLAC__bool FLAC__stream_encoder_set_apodization(FLAC__StreamEncoder *en
 			}
 		}
 		else if(n>15   && 0 == strncmp("partial_tukey(", specification, 14)) {
-			double tukey_parts_d = strtod(specification+14, 0);
-			FLAC__int32 tukey_parts = (FLAC__int32)tukey_parts_d;
+			FLAC__int32 tukey_parts; { double _d = strtod(specification+14, 0); tukey_parts = (FLAC__int32)_d; }
 			const char *si_1 = strchr(specification, '/');
 			FLAC__real overlap = si_1?flac_min((FLAC__real)strtod(si_1+1, 0),0.99f):0.1f;
 			FLAC__real overlap_units = 1.0f/(1.0f - overlap) - 1.0f;
@@ -1784,8 +1783,7 @@ FLAC_API FLAC__bool FLAC__stream_encoder_set_apodization(FLAC__StreamEncoder *en
 			}
 		}
 		else if(n>16   && 0 == strncmp("punchout_tukey(", specification, 15)) {
-			double tukey_parts_d = strtod(specification+15, 0);
-			FLAC__int32 tukey_parts = (FLAC__int32)tukey_parts_d;
+			FLAC__int32 tukey_parts; { double _d = strtod(specification+15, 0); tukey_parts = (FLAC__int32)_d; }
 			const char *si_1 = strchr(specification, '/');
 			FLAC__real overlap = si_1?flac_min((FLAC__real)strtod(si_1+1, 0),0.99f):0.2f;
 			FLAC__real overlap_units = 1.0f/(1.0f - overlap) - 1.0f;
@@ -1806,8 +1804,7 @@ FLAC_API FLAC__bool FLAC__stream_encoder_set_apodization(FLAC__StreamEncoder *en
 			}
 		}
 		else if(n>17  && 0 == strncmp("subdivide_tukey(", specification, 16)){
-			double parts_d = strtod(specification+16, 0);
-			FLAC__int32 parts = (FLAC__int32)parts_d;
+			FLAC__int32 parts; { double _d = strtod(specification+16, 0); parts = (FLAC__int32)_d; }
 			if(parts > 1){
 				const char *si_1 = strchr(specification, '/');
 				FLAC__real p = si_1?(FLAC__real)strtod(si_1+1, 0):5e-1;
