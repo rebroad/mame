@@ -139,8 +139,8 @@
     // Function to log browser frame rate once per second
     function logBrowserFrameRate() {
         if (browserFrameRate > 0) {
-            const timestamp = new Date().toLocaleTimeString();
-            console.log(`🖥️ Browser FPS Report [${timestamp}]: ${browserFrameRate.toFixed(1)}fps (Chrome requestAnimationFrame)`);
+            const timestamp_ms = performance.now() % 100000;
+            console.log(`[${timestamp_ms.toFixed(0)}ms] 🖥️ Browser FPS Report: ${browserFrameRate.toFixed(1)}fps (Chrome requestAnimationFrame)`);
         }
     }
 
