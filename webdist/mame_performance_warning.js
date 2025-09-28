@@ -15,6 +15,7 @@
     let frameTimes = [];
     let isThrottled = false;
     let detectedFrameRate = 0;
+    let detectedGameSpeed = 0;
     let mameSpeed = 0;
     let mameFrame = 0;
     let mameFps = 0;
@@ -28,34 +29,79 @@
     const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
     const MAX_WARNINGS = 3; // Maximum warnings before stopping
 
-    // Monitor frame rate using requestAnimationFrame for accurate measurement
-    const monitorFrames = () => {
-        // Stop monitoring if flag is set
-        if (!isMonitoring) {
-            return;
-        }
-
+    // Monitor both MAME frame submissions and browser requestAnimationFrame rate
+    const originalConsoleLog = console.log;
+    let mameFrameSubmissionCount = 0;
+    let mameFrameSubmissionStartTime = 0;
+    let lastMameFrameSubmissionTime = 0;
+    
+    // Browser frame rate monitoring
+    let browserFrameCount = 0;
+    let browserFrameStartTime = 0;
+    let browserFrameTimes = [];
+    let browserFrameRate = 0;
+    
+    const monitorBrowserFrames = () => {
+        if (!isMonitoring) return;
+        
         const now = performance.now();
-        const deltaTime = now - lastTime;
-
-        if (lastTime > 0) {
+        if (browserFrameStartTime > 0) {
+            const deltaTime = now - browserFrameStartTime;
             const fps = 1000 / deltaTime;
-            frameTimes.push(fps);
-
+            browserFrameTimes.push(fps);
+            
             // Keep only last 30 frame times
-            if (frameTimes.length > 30) {
-                frameTimes.shift();
+            if (browserFrameTimes.length > 30) {
+                browserFrameTimes.shift();
             }
-
-            // Check if frame rate is significantly below 60fps
-            if (frameTimes.length >= 15) {
-                const avgFps = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
-                detectedFrameRate = avgFps;
-
-                if (avgFps < 44) { // Below 44fps threshold
+            
+            // Calculate average browser frame rate
+            if (browserFrameTimes.length >= 15) {
+                browserFrameRate = browserFrameTimes.reduce((a, b) => a + b, 0) / browserFrameTimes.length;
+            }
+        }
+        
+        browserFrameStartTime = now;
+        browserFrameCount++;
+        
+        if (isMonitoring) {
+            requestAnimationFrame(monitorBrowserFrames);
+        }
+    };
+    
+    console.log = function(...args) {
+        // Call original console.log
+        originalConsoleLog.apply(console, args);
+        
+        // Check for MAME frame submission logs
+        const message = args.join(' ');
+        if (message.includes('WEBASM FRAME SUBMISSION:')) {
+            const match = message.match(/(\d+)\/(\d+) frames submitted.*?(\d+\.\d+) fps actual submission rate.*?GAME SPEED: (\d+\.\d+)%/);
+            if (match) {
+                const submitted = parseInt(match[1]);
+                const total = parseInt(match[2]);
+                const actualFps = parseFloat(match[3]);
+                const gameSpeed = parseFloat(match[4]);
+                
+                mameFrameSubmissionCount++;
+                const now = performance.now();
+                
+                if (mameFrameSubmissionStartTime === 0) {
+                    mameFrameSubmissionStartTime = now;
+                }
+                
+                lastMameFrameSubmissionTime = now;
+                
+                // Use MAME's actual frame submission rate for performance monitoring
+                detectedFrameRate = actualFps;
+                detectedGameSpeed = gameSpeed;
+                
+                // Check if MAME's frame submission rate is too low (indicating throttling)
+                // With frameskip=10, we expect ~8.5fps, so anything below 6fps suggests throttling
+                if (actualFps < 6.0) {
                     isThrottled = true;
 
-                    // Show warning popup immediately when FPS drops below 44
+                    // Show warning popup immediately when MAME frame rate drops below 6fps
                     if (!warningDismissed && !window.warningDismissed) {
                         // Remove any existing warning first
                         const existingWarning = document.querySelector('.mame-performance-warning');
@@ -77,7 +123,7 @@
                     // Throttle console warnings to avoid spam
                     const now = performance.now();
                     if (now - lastWarningTime > WARNING_THROTTLE_MS && warningCount < MAX_WARNINGS) {
-                        console.warn('⚠️ Low frame rate detected:', avgFps.toFixed(1), 'fps');
+                        console.warn('⚠️ Low MAME frame submission rate detected:', actualFps.toFixed(1), 'fps (expected ~8.5fps with frameskip=10)');
                         lastWarningTime = now;
                         warningCount++;
 
@@ -88,23 +134,15 @@
                 }
             }
         }
-
-        lastTime = now;
-        frameCount++;
-
-        // Continue monitoring if flag is still true
-        if (isMonitoring) {
-            requestAnimationFrame(monitorFrames);
-        }
     };
 
     // Start monitoring after MAME initializes
     setTimeout(() => {
         console.log('📊 Starting performance monitoring...');
-
-        // Start requestAnimationFrame monitoring
         isMonitoring = true;
-        monitorFrames();
+        
+        // Start browser frame rate monitoring
+        monitorBrowserFrames();
 
         // Stop monitoring after 8 seconds
         setTimeout(() => {
@@ -119,7 +157,10 @@
             <div style="margin-bottom: 10px;">
                 <strong>Performance Issues Detected:</strong>
                 <ul style="margin: 5px 0; padding-left: 20px;">
-                    ${detectedFrameRate < 40 ? `<li>Browser frame rate: ${detectedFrameRate.toFixed(1)}fps (expected ~41fps)</li>` : ''}
+                    <li>MAME frame submission rate: ${detectedFrameRate.toFixed(1)}fps (expected ~8.5fps with frameskip=10)</li>
+                    <li>Game speed: ${detectedGameSpeed.toFixed(1)}% (expected ~100%)</li>
+                    <li>Browser rendering rate: ${browserFrameRate.toFixed(1)}fps (Chrome's requestAnimationFrame)</li>
+                    <li>MAME is correctly submitting frames at reduced rate, but Chrome is still throttling game speed</li>
                 </ul>
             </div>
         `;
@@ -181,12 +222,15 @@
     function showChromeWarning() {
         showWarning({
             backgroundColor: '#ff6b6b',
-            title: `⚠️ Chrome Performance Issue (Warning #${warningDisplayCount})`,
-            description: 'MAME is running slower than expected due to Chrome\'s frame rate limiting.',
+            title: `⚠️ Chrome Frame Rate Limiting (Warning #${warningDisplayCount})`,
+            description: 'MAME is correctly submitting frames at reduced rate (frameskip working), but Chrome is still throttling the overall performance.',
             solution: 'Launch Chrome with:',
             additionalInfo: `
                 <div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 10px;">
                     --disable-frame-rate-limit --autoplay-policy=no-user-gesture-required
+                </div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.8);">
+                    MAME frameskip is working (submitting at ${detectedFrameRate.toFixed(1)}fps), but game speed is ${detectedGameSpeed.toFixed(1)}% (should be ~100%).
                 </div>
             `,
             autoDismissTime: 25000
