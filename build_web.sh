@@ -1049,11 +1049,11 @@ if $CONSOLE_DEBUG; then
             nohup "$chrome_cmd" \
               --user-data-dir="$TEMP_PROFILE_DIR" \
               --no-first-run \
-              "http://localhost:$used_port" \
+              "http://localhost:$USED_PORT" \
               >/dev/null 2>&1 &
             CHROME_PID=$!
             echo "Chrome PID: $CHROME_PID"
-            echo "Opening: http://localhost:$used_port"
+            echo "Opening: http://localhost:$USED_PORT"
             found_chrome=1
             break
         fi
@@ -1061,7 +1061,7 @@ if $CONSOLE_DEBUG; then
 
     if [[ -z "$found_chrome" ]]; then
         if command -v xdg-open >/dev/null 2>&1; then
-            xdg-open "http://localhost:$used_port" >/dev/null 2>&1 || true
+            xdg-open "http://localhost:$USED_PORT" >/dev/null 2>&1 || true
         fi
     fi
 
