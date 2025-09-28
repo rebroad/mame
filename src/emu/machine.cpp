@@ -10,6 +10,10 @@
 
 #include "emu.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "config.h"
 #include "crsshair.h"
 #include "debug/debugcpu.h"
@@ -1412,10 +1416,16 @@ void running_machine::emscripten_main_loop()
 		// Get current game speed from video manager
 		double game_speed_percent = machine->m_video->speed_percent();
 
-		osd_printf_info("WEBASM: %d/%d frames (%.1f%%) @ %.1ffps [target: %.1ffps] | Speed: %.1f%%\n",
+		// DEBUG: Add timing debug to understand speed calculation
+		double emscripten_time = emscripten_get_now();
+		osd_ticks_t osd_time = osd_ticks();
+		osd_ticks_t osd_tps = osd_ticks_per_second();
+
+		osd_printf_info("WEBASM: %d/%d frames (%.1f%%) @ %.1ffps [target: %.1ffps] | Speed: %.1f%% | DEBUG: ems=%.1f osd=%llu tps=%llu\n",
 			webasm_submitted_count, webasm_frame_counter,
 			(webasm_submitted_count * 100.0) / webasm_frame_counter,
-			submission_rate, target_submission_rate, game_speed_percent * 100.0);
+			submission_rate, target_submission_rate, game_speed_percent * 100.0,
+			emscripten_time, osd_time, osd_tps);
 
 		// Reset counters
 		webasm_frame_counter = 0;
