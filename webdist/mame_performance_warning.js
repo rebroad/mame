@@ -36,10 +36,10 @@
     let lastMameFrameSubmissionTime = 0;
 
     // Browser frame rate monitoring
-    let browserFrameCount = 0;
     let browserFrameStartTime = 0;
     let browserFrameTimes = [];
     let browserFrameRate = 0;
+    let browserFrameLogCounter = 0;
 
     const monitorBrowserFrames = () => {
         if (!isMonitoring) return;
@@ -62,7 +62,16 @@
         }
 
         browserFrameStartTime = now;
-        browserFrameCount++;
+        browserFrameLogCounter++;
+
+        // Log browser FPS every 120 frames (same as WEBASM reporting)
+        if (browserFrameLogCounter >= 120) {
+            if (browserFrameRate > 0) {
+                const timestamp_ms = performance.now() % 100000;
+                console.log(`[${timestamp_ms.toFixed(0)}ms] 🖥️ Browser FPS Report: ${browserFrameRate.toFixed(1)}fps (Chrome requestAnimationFrame)`);
+            }
+            browserFrameLogCounter = 0;
+        }
 
         if (isMonitoring) {
             requestAnimationFrame(monitorBrowserFrames);
@@ -136,13 +145,6 @@
         }
     };
 
-    // Function to log browser frame rate once per second
-    function logBrowserFrameRate() {
-        if (browserFrameRate > 0) {
-            const timestamp_ms = performance.now() % 100000;
-            console.log(`[${timestamp_ms.toFixed(0)}ms] 🖥️ Browser FPS Report: ${browserFrameRate.toFixed(1)}fps (Chrome requestAnimationFrame)`);
-        }
-    }
 
     // Start monitoring after MAME initializes
     setTimeout(() => {
@@ -151,9 +153,6 @@
 
         // Start browser frame rate monitoring
         monitorBrowserFrames();
-
-        // Start browser FPS logging (every 1 second)
-        const browserFpsInterval = setInterval(logBrowserFrameRate, 1000);
     }, 3000);
 
 
