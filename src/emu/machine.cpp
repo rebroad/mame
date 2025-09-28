@@ -1390,6 +1390,21 @@ void running_machine::emscripten_main_loop()
 	// Use the existing frameskip logic from video_manager (from previous frame)
 	bool should_submit_frame = !machine->m_video->skip_this_frame();
 
+	// CHROME THROTTLING COMPENSATION: If we detect ~50% speed due to Chrome throttling,
+	// compensate by adjusting the speed multiplier
+	static bool chrome_compensation_enabled = false;
+
+	// Enable compensation if we detect consistent ~50% speed
+	if (!chrome_compensation_enabled && webasm_frame_counter >= 120) {
+		double game_speed_percent = machine->m_video->speed_percent();
+		if (game_speed_percent > 0.45 && game_speed_percent < 0.55) {
+			chrome_compensation_enabled = true;
+			osd_printf_info("CHROME COMPENSATION: Detected ~50%% speed, enabling 2x speed compensation\n");
+			// Set MAME's speed to 200% to compensate for Chrome's 50% throttling
+			machine->options().set_value("speed", 2.0, OPTION_PRIORITY_CMDLINE);
+		}
+	}
+
 	// DEBUG: Track frame submission statistics for WebAssembly
 	static int webasm_frame_counter = 0;
 	static int webasm_submitted_count = 0;
@@ -1453,9 +1468,8 @@ void running_machine::emscripten_set_running_machine(running_machine *machine)
 	EM_ASM (
 		JSMESS.running = true;
 	);
-	// Limit main loop to 30fps to avoid Chrome throttling
-	// This should prevent the 50% speed issue by running at a rate Chrome won't throttle
-	emscripten_set_main_loop(&(emscripten_main_loop), 30, 1);
+	// Try unlimited FPS but compensate for Chrome throttling by running game logic faster
+	emscripten_set_main_loop(&(emscripten_main_loop), 0, 1);
 }
 
 running_machine * running_machine::emscripten_get_running_machine()
