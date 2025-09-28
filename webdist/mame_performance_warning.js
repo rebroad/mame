@@ -34,45 +34,45 @@
     let mameFrameSubmissionCount = 0;
     let mameFrameSubmissionStartTime = 0;
     let lastMameFrameSubmissionTime = 0;
-    
+
     // Browser frame rate monitoring
     let browserFrameCount = 0;
     let browserFrameStartTime = 0;
     let browserFrameTimes = [];
     let browserFrameRate = 0;
-    
+
     const monitorBrowserFrames = () => {
         if (!isMonitoring) return;
-        
+
         const now = performance.now();
         if (browserFrameStartTime > 0) {
             const deltaTime = now - browserFrameStartTime;
             const fps = 1000 / deltaTime;
             browserFrameTimes.push(fps);
-            
+
             // Keep only last 30 frame times
             if (browserFrameTimes.length > 30) {
                 browserFrameTimes.shift();
             }
-            
+
             // Calculate average browser frame rate
             if (browserFrameTimes.length >= 15) {
                 browserFrameRate = browserFrameTimes.reduce((a, b) => a + b, 0) / browserFrameTimes.length;
             }
         }
-        
+
         browserFrameStartTime = now;
         browserFrameCount++;
-        
+
         if (isMonitoring) {
             requestAnimationFrame(monitorBrowserFrames);
         }
     };
-    
+
     console.log = function(...args) {
         // Call original console.log
         originalConsoleLog.apply(console, args);
-        
+
         // Check for MAME frame submission logs
         const message = args.join(' ');
         if (message.includes('WEBASM:')) {
@@ -82,20 +82,20 @@
                 const total = parseInt(match[2]);
                 const actualFps = parseFloat(match[3]);
                 const gameSpeed = parseFloat(match[4]);
-                
+
                 mameFrameSubmissionCount++;
                 const now = performance.now();
-                
+
                 if (mameFrameSubmissionStartTime === 0) {
                     mameFrameSubmissionStartTime = now;
                 }
-                
+
                 lastMameFrameSubmissionTime = now;
-                
+
                 // Use MAME's actual frame submission rate for performance monitoring
                 detectedFrameRate = actualFps;
                 detectedGameSpeed = gameSpeed;
-                
+
                 // Check if MAME's frame submission rate is too low (indicating throttling)
                 // With frameskip=10, we expect ~8.5fps, so anything below 6fps suggests throttling
                 if (actualFps < 6.0) {
@@ -136,19 +136,31 @@
         }
     };
 
+    // Function to log browser frame rate once per second
+    function logBrowserFrameRate() {
+        if (browserFrameRate > 0) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`🖥️ Browser FPS Report [${timestamp}]: ${browserFrameRate.toFixed(1)}fps (Chrome requestAnimationFrame)`);
+        }
+    }
+
     // Start monitoring after MAME initializes
     setTimeout(() => {
         console.log('📊 Starting performance monitoring...');
         isMonitoring = true;
-        
+
         // Start browser frame rate monitoring
         monitorBrowserFrames();
+
+        // Start browser FPS logging (every 1 second)
+        const browserFpsInterval = setInterval(logBrowserFrameRate, 1000);
 
         // Stop monitoring after 8 seconds
         setTimeout(() => {
             console.log('📊 Stopping performance monitoring...');
             isMonitoring = false;
-        }, 8000);
+            clearInterval(browserFpsInterval);
+        }, 20000);
     }, 3000);
 
 
