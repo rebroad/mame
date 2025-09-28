@@ -1391,7 +1391,6 @@ void running_machine::emscripten_main_loop()
 	// DYNAMIC THROTTLING DETECTION: Monitor frame timing to detect Chrome throttling
 	static int frame_skip_counter = 0;
 	static double last_frame_time = 0;
-	static int consecutive_slow_frames = 0;
 	static int skip_ratio = 2; // Start with skipping every other frame (minimum = 2)
 
 	// Performance history for smart ratio calculation
@@ -1401,7 +1400,7 @@ void running_machine::emscripten_main_loop()
 	static double speed_sum = 0.0; // Running sum for efficient average calculation
 
 	double current_time = emscripten_get_now();
-	if (last_frame_time > 0) {
+	if (current_time - last_frame_time > 1000.0 / 60.0) {
 		double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 		// Update running average efficiently
@@ -1420,7 +1419,7 @@ void running_machine::emscripten_main_loop()
 			// Target speed is 95% (allow some margin)
 			const double target_speed = 95.0;
 
-			int new_skip_ratio = (int)((target_speed / avg_speed + skip_ratio) / 2 + 0.5)
+			int new_skip_ratio = (int)((target_speed / avg_speed + skip_ratio) / 2 + 0.5);
 			if (new_skip_ratio > 1 && new_skip_ratio != skip_ratio) {
 				double timestamp_ms = fmod(current_time, 1000.0);
 				osd_printf_info("[%.0fms] SMART THROTTLING: Adjusting skip ratio from %d to %d (avg speed: %.1f%%)\n", timestamp_ms, skip_ratio, new_skip_ratio, avg_speed);
