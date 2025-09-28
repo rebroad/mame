@@ -1466,7 +1466,6 @@ void running_machine::emscripten_main_loop()
 		webasm_submitted_count++;
 	}
 
-
 	// Report WebAssembly frame submission statistics every 120 frames (2 seconds at 60Hz)
 	if (webasm_frame_counter >= 120) {
 		double current_time = emscripten_get_now();

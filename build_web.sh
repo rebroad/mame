@@ -48,6 +48,7 @@ print_usage() {
     echo "  -workers               Build with WASM workers + AudioWorklet (-pthread)"
     echo "  -frameskip <N>         Set frameskip level (0-10, for 30fps use 3-4)"
     echo "  -autoframeskip         Enable automatic frameskip adjustment"
+    echo "  -nothrot               Disable Chrome frame rate limiting (adds --disable-frame-rate-limit)"
     echo "  -refreshspeed          Auto-adjust speed to match browser refresh rate"
     echo "  -wipe                  WARNING: run 'git clean -fdx' (asks confirmation)"
 }
@@ -60,6 +61,7 @@ AUTOSTART=false
 FRAMESKIP=""
 AUTOFRAMESKIP=false
 REFRESHSPEED=false
+NOTHROT=false
 VERBOSE_FLAG=
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -89,6 +91,7 @@ while [[ $# -gt 0 ]]; do
         -frameskip) FRAMESKIP="${2:-}"; shift 2;;
         -autoframeskip) AUTOFRAMESKIP=true; shift;;
         -refreshspeed) REFRESHSPEED=true; shift;;
+        -nothrot) NOTHROT=true; shift;;
         -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
@@ -971,7 +974,11 @@ run_probe() {
     fi
     # Use the comprehensive MAME probe tool (much better output)
     if [[ -f "$REPO_ROOT/probe_mame_web.js" ]]; then
-        node "$REPO_ROOT/probe_mame_web.js" "$USED_PORT" || true
+        probe_args=("$USED_PORT")
+        if $NOTHROT; then
+            probe_args+=("-nothrot")
+        fi
+        node "$REPO_ROOT/probe_mame_web.js" "${probe_args[@]}" || true
     else
         echo "probe_mame_web.js not found; skipping console capture."
     fi
@@ -1047,11 +1054,7 @@ if $CONSOLE_DEBUG; then
     for chrome_cmd in chromium chromium-browser; do
         if command -v "$chrome_cmd" >/dev/null 2>&1; then
             {
-                nohup "$chrome_cmd" \
-                  --user-data-dir="$TEMP_PROFILE_DIR" \
-                  --no-first-run \
-                  "http://localhost:$USED_PORT" \
-                  >/dev/null 2>&1
+                nohup "$chrome_cmd" --user-data-dir="$TEMP_PROFILE_DIR" --no-first-run ${NOTHROT:+--disable-frame-rate-limit} "http://localhost:$USED_PORT" >/dev/null 2>&1
 
                 rm -rf "$TEMP_PROFILE_DIR"
             } &

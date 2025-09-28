@@ -3,12 +3,21 @@ const puppeteer = require('puppeteer');
 (async () => {
   console.log('🔍 Probing MAME WebAssembly build...');
 
+  // Check for -nothrot argument
+  const nothrot = process.argv.includes('-nothrot');
+
+  const browserArgs = [
+    '--no-sandbox' // Required for Ubuntu 23.10+ with AppArmor restrictions
+  ];
+
+  if (nothrot) {
+    browserArgs.push('--disable-frame-rate-limit');
+    console.log('🚫 Chrome frame rate limiting disabled (--disable-frame-rate-limit)');
+  }
+
   const browser = await puppeteer.launch({
     headless: false, // Set to true for headless mode
-    args: [
-      '--no-sandbox' // Required for Ubuntu 23.10+ with AppArmor restrictions
-      //'--disable-frame-rate-limit', // Disable frame rate limiting
-    ]
+    args: browserArgs
   });
 
   // Get the first available page or create a new one
