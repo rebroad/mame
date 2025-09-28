@@ -1371,10 +1371,10 @@ void running_machine::emscripten_main_loop()
 		}
 	}
 	// other, just pump video updates and sound mapping updates through
-	else
-	{
-		// THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
-		static double last_frame_time = 0;
+	else {
+#if defined(__EMSCRIPTEN__)
+        // THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
+        static double last_frame_time = 0;
 		static bool in_compensation_mode = false;
 
 		double current_frame_time = emscripten_get_now();
@@ -1401,9 +1401,10 @@ void running_machine::emscripten_main_loop()
 				}
 			}
 		}
-		machine->m_video->frame_update();
 		//machine->sound().mapping_update();
 		last_frame_time = current_frame_time;
+#endif
+		machine->m_video->frame_update();
 	}
 
 	// cancel the emscripten loop if the system has been told to exit
