@@ -1387,9 +1387,63 @@ void running_machine::emscripten_main_loop()
 	// CHROME GPU THROTTLING FIX: Reduce frame_update() call frequency to prevent
 	// GPU frame submission overload. Chrome throttles when pending_submit_frames_ >= 1,
 	// so we need to call frame_update() less frequently to allow GPU acknowledgments.
-	// SIMPLE TEST: Skip every other frame (even numbers) to test the concept
+
+	// DYNAMIC THROTTLING DETECTION: Monitor frame timing to detect Chrome throttling
 	static int frame_skip_counter = 0;
-	bool should_call_frame_update = (frame_skip_counter % 2) == 0; // Call frame_update on even numbers (0, 2, 4...)
+	static double last_frame_time = 0;
+	static int consecutive_slow_frames = 0;
+	static int skip_ratio = 2; // Start with skipping every other frame (minimum = 2)
+	static int submit_ratio = 2; // Start with submitting every frame (minimum = 2)
+
+	double current_time = emscripten_get_now();
+	if (last_frame_time > 0) {
+		double game_speed_percent = machine->m_video->speed_percent() * 100.0;
+		if (game_speed_percent < 90.0) {
+			consecutive_slow_frames++;
+			// If we've had 5+ slow frames in a row, need to submit fewer frames
+			if (consecutive_slow_frames >= 5) {
+				if (submit_ratio > 2) {
+					// We're using submit_ratio, so increase it (submit fewer frames)
+					submit_ratio--;
+					osd_printf_info("CHROME THROTTLING DETECTED: Decreasing submit ratio to %d (submit fewer frames)\n", submit_ratio);
+				} else {
+					// We're using skip_ratio, so increase it (submit fewer frames)
+					if (skip_ratio < 4) {
+						skip_ratio++;
+						osd_printf_info("CHROME THROTTLING DETECTED: Increasing skip ratio to %d (submit fewer frames)\n", skip_ratio);
+					}
+				}
+				consecutive_slow_frames = 0;
+			}
+		} else {
+			// If frames are fast, only reduce skip ratio if game speed is actually good (90%+)
+			consecutive_slow_frames = 0;
+			// Reduce skipping every 30 fast frames
+			static int fast_frame_count = 0;
+			fast_frame_count++;
+			if (fast_frame_count >= 30) {
+                if (skip_ratio > 2) {
+                    skip_ratio--;
+                    osd_printf_info("CHROME THROTTLING RELIEVED: Decreasing skip ratio to %d (submit more frames)\n", skip_ratio);
+                } else {
+                    submit_ratio++;
+                    osd_printf_info("CHROME THROTTLING RELIEVED: Increasing submit ratio to %d (submit more frames)\n", submit_ratio);
+                }
+                fast_frame_count = 0;
+            }
+		}
+	}
+	last_frame_time = current_time;
+
+	// DUAL RATIO LOGIC: Use skip_ratio or submit_ratio based on which is active
+	bool should_call_frame_update;
+	if (submit_ratio > 2) {
+		// Use submit_ratio: call every Nth frame (higher ratio = more calls)
+		should_call_frame_update = (frame_skip_counter % submit_ratio) != 0;
+	} else {
+		// Use skip_ratio: call every Nth frame (higher ratio = fewer calls)
+		should_call_frame_update = (frame_skip_counter % skip_ratio) == 0;
+	}
 	frame_skip_counter++;
 
 	// DEBUG: Track frame submission statistics for WebAssembly
