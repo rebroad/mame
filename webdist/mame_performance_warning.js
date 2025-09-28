@@ -154,13 +154,6 @@
 
         // Start browser FPS logging (every 1 second)
         const browserFpsInterval = setInterval(logBrowserFrameRate, 1000);
-
-        // Stop monitoring after 8 seconds
-        setTimeout(() => {
-            console.log('📊 Stopping performance monitoring...');
-            isMonitoring = false;
-            clearInterval(browserFpsInterval);
-        }, 20000);
     }, 3000);
 
 
