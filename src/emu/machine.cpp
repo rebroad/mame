@@ -1412,7 +1412,7 @@ void running_machine::emscripten_main_loop()
 		// Get current game speed from video manager
 		double game_speed_percent = machine->m_video->speed_percent();
 
-		osd_printf_info("WEBASM FRAME SUBMISSION: %d/%d frames submitted (%.1f%%) = %.1f fps actual submission rate [target: %.1f fps] | GAME SPEED: %.1f%%\n",
+		osd_printf_info("WEBASM: %d/%d frames (%.1f%%) @ %.1ffps [target: %.1ffps] | Speed: %.1f%%\n",
 			webasm_submitted_count, webasm_frame_counter,
 			(webasm_submitted_count * 100.0) / webasm_frame_counter,
 			submission_rate, target_submission_rate, game_speed_percent * 100.0);
