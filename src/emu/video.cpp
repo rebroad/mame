@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-	video.cpp
+    video.cpp
 
-	Core MAME video routines.
+    Core MAME video routines.
 
 ***************************************************************************/
 
@@ -744,22 +744,22 @@ void video_manager::update_throttle(attotime emutime)
 
    There are many complications to this model:
 
-	   * some games run too slow, so each frame we get further and
-		   further behind real time; our only choice here is to not
-		   throttle
+       * some games run too slow, so each frame we get further and
+           further behind real time; our only choice here is to not
+           throttle
 
-	   * some games have very uneven frame rates; one frame will take
-		   a long time to emulate, and the next frame may be very fast
+       * some games have very uneven frame rates; one frame will take
+           a long time to emulate, and the next frame may be very fast
 
-	   * we run on top of multitasking OSes; sometimes execution time
-		   is taken away from us, and this means we may not get enough
-		   time to emulate one frame
+       * we run on top of multitasking OSes; sometimes execution time
+           is taken away from us, and this means we may not get enough
+           time to emulate one frame
 
-	   * we may be paused, and emulated time may not be marching
-		   forward
+       * we may be paused, and emulated time may not be marching
+           forward
 
-	   * emulated time could jump due to resetting the machine or
-		   restoring from a saved state
+       * emulated time could jump due to resetting the machine or
+           restoring from a saved state
 
 */
 

@@ -638,7 +638,7 @@ function strip()
 		}
 
 	configuration { "asmjs" }
-		-- Avoid re-finalizing for Star Wars WebAssembly subtarget; the link already produces .html
+		-- Avoid re-finalizing for WebAssembly subtarget; the link already produces .html
 		if not (_OPTIONS["targetos"] == "asmjs") then
 			postbuildcommands {
 				"$(SILENT) echo Running asmjs finalize.",
