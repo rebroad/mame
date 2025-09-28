@@ -1393,62 +1393,49 @@ void running_machine::emscripten_main_loop()
 	static double last_frame_time = 0;
 	static int consecutive_slow_frames = 0;
 	static int skip_ratio = 2; // Start with skipping every other frame (minimum = 2)
-	static int submit_ratio = 2; // Start with submitting every frame (minimum = 2)
+
+	// Performance history for smart ratio calculation
+	static double speed_history[20] = {0};
+	static int speed_history_index = 0;
+	static int speed_samples_collected = 0;
+	static double speed_sum = 0.0; // Running sum for efficient average calculation
 
 	double current_time = emscripten_get_now();
 	if (last_frame_time > 0) {
 		double game_speed_percent = machine->m_video->speed_percent() * 100.0;
-		if (game_speed_percent < 90.0) {
-			consecutive_slow_frames++;
-			// If we've had 5+ slow frames in a row, need to submit fewer frames
-			if (consecutive_slow_frames >= 5) {
-				if (submit_ratio > 2) {
-					// We're using submit_ratio, so increase it (submit fewer frames)
-					submit_ratio--;
-					double timestamp_ms = fmod(current_time, 1000.0);
-					osd_printf_info("[%.0fms] CHROME THROTTLING DETECTED: Decreasing submit ratio to %d (submit fewer frames)\n", timestamp_ms, submit_ratio);
-				} else {
-					// We're using skip_ratio, so increase it (submit fewer frames)
-					if (skip_ratio < 4) {
-						skip_ratio++;
-						double timestamp_ms = fmod(current_time, 1000.0);
-						osd_printf_info("[%.0fms] CHROME THROTTLING DETECTED: Increasing skip ratio to %d (submit fewer frames)\n", timestamp_ms, skip_ratio);
-					}
-				}
-				consecutive_slow_frames = 0;
-			}
+
+		// Update running average efficiently
+		speed_sum += game_speed_percent; // Add newest
+		speed_history[speed_history_index] = game_speed_percent; // Add newest
+		speed_history_index = (speed_history_index + 1) % 20;
+		if (speed_samples_collected < 20) {
+			speed_samples_collected++;
 		} else {
-			// If frames are fast, only reduce skip ratio if game speed is actually good (90%+)
-			consecutive_slow_frames = 0;
-			// Reduce skipping every 30 fast frames
-			static int fast_frame_count = 0;
-			fast_frame_count++;
-			if (fast_frame_count >= 30) {
-                if (skip_ratio > 2) {
-                    skip_ratio--;
-                    double timestamp_ms = fmod(current_time, 1000.0);
-                    osd_printf_info("[%.0fms] CHROME THROTTLING RELIEVED: Decreasing skip ratio to %d (submit more frames)\n", timestamp_ms, skip_ratio);
-                } else {
-                    submit_ratio++;
-                    double timestamp_ms = fmod(current_time, 1000.0);
-                    osd_printf_info("[%.0fms] CHROME THROTTLING RELIEVED: Increasing submit ratio to %d (submit more frames)\n", timestamp_ms, submit_ratio);
-                }
-                fast_frame_count = 0;
-            }
+			// Buffer is full, replace oldest value
+			speed_sum -= speed_history[speed_history_index-1]; // Remove oldest
+
+			// Calculate average speed efficiently
+			double avg_speed = speed_sum / 20.0;
+
+			// Target speed is 95% (allow some margin)
+			const double target_speed = 95.0;
+
+			int new_skip_ratio = (int)((target_speed / avg_speed + skip_ratio) / 2 + 0.5)
+			if (new_skip_ratio > 1 && new_skip_ratio != skip_ratio) {
+				double timestamp_ms = fmod(current_time, 1000.0);
+				osd_printf_info("[%.0fms] SMART THROTTLING: Adjusting skip ratio from %d to %d (avg speed: %.1f%%)\n", timestamp_ms, skip_ratio, new_skip_ratio, avg_speed);
+				skip_ratio = new_skip_ratio;
+			}
 		}
 	}
 	last_frame_time = current_time;
 
 	// DUAL RATIO LOGIC: Use skip_ratio or submit_ratio based on which is active
-	bool should_call_frame_update;
-	if (submit_ratio > 2) {
-		// Use submit_ratio: call every Nth frame (higher ratio = more calls)
-		should_call_frame_update = (frame_skip_counter % submit_ratio) != 0;
-	} else {
-		// Use skip_ratio: call every Nth frame (higher ratio = fewer calls)
-		should_call_frame_update = (frame_skip_counter % skip_ratio) == 0;
-	}
 	frame_skip_counter++;
+	bool should_call_frame_update = (frame_skip_counter % skip_ratio) == 0;
+	if (frame_skip_counter >= skip_ratio) {
+		frame_skip_counter = 0;
+	}
 
 	// DEBUG: Track frame submission statistics for WebAssembly
 	static int webasm_frame_counter = 0;
