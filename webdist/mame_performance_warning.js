@@ -75,8 +75,8 @@
         
         // Check for MAME frame submission logs
         const message = args.join(' ');
-        if (message.includes('WEBASM FRAME SUBMISSION:')) {
-            const match = message.match(/(\d+)\/(\d+) frames submitted.*?(\d+\.\d+) fps actual submission rate.*?GAME SPEED: (\d+\.\d+)%/);
+        if (message.includes('WEBASM:')) {
+            const match = message.match(/(\d+)\/(\d+) frames.*?(\d+\.\d+)ffps.*?Speed: (\d+\.\d+)%/);
             if (match) {
                 const submitted = parseInt(match[1]);
                 const total = parseInt(match[2]);
