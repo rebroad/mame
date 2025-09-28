@@ -1384,15 +1384,13 @@ void running_machine::emscripten_main_loop()
 		}
 	}
 
-	// FRAMESKIP WEBASSEMBLY FIX: Only submit frames to browser when frameskip allows it
-	// This reduces the frame submission rate to match MAME's frameskip settings
-	// preventing Chrome from throttling the overall frame rate
-	// Use the existing frameskip logic from video_manager (from previous frame)
-	bool should_submit_frame = !machine->m_video->skip_this_frame();
-
-	// CHROME THROTTLING COMPENSATION: If we detect ~50% speed due to Chrome throttling,
-	// compensate by adjusting the speed multiplier
-	static bool chrome_compensation_enabled = false;
+	// CHROME GPU THROTTLING FIX: Reduce frame_update() call frequency to prevent
+	// GPU frame submission overload. Chrome throttles when pending_submit_frames_ >= 1,
+	// so we need to call frame_update() less frequently to allow GPU acknowledgments.
+	// SIMPLE TEST: Skip every other frame (even numbers) to test the concept
+	static int frame_skip_counter = 0;
+	bool should_call_frame_update = (frame_skip_counter % 2) == 0; // Call frame_update on even numbers (0, 2, 4...)
+	frame_skip_counter++;
 
 	// DEBUG: Track frame submission statistics for WebAssembly
 	static int webasm_frame_counter = 0;
@@ -1406,20 +1404,10 @@ void running_machine::emscripten_main_loop()
 	}
 
 	webasm_frame_counter++;
-	if (should_submit_frame) {
+	if (should_call_frame_update) {
 		webasm_submitted_count++;
 	}
 
-	// Enable compensation if we detect consistent ~50% speed
-	if (!chrome_compensation_enabled && webasm_frame_counter >= 120) {
-		double game_speed_percent = machine->m_video->speed_percent();
-		if (game_speed_percent > 0.45 && game_speed_percent < 0.55) {
-			chrome_compensation_enabled = true;
-			osd_printf_info("CHROME COMPENSATION: Detected ~50%% speed, enabling 2x speed compensation\n");
-			// Set MAME's speed to 200% to compensate for Chrome's 50% throttling
-			machine->options().set_value("speed", 2.0f, OPTION_PRIORITY_CMDLINE);
-		}
-	}
 
 	// Report WebAssembly frame submission statistics every 120 frames (2 seconds at 60Hz)
 	if (webasm_frame_counter >= 120) {
@@ -1450,7 +1438,7 @@ void running_machine::emscripten_main_loop()
 
 	// Only call frame_update() when we should submit a frame to the browser
 	// This applies to both paused and running states
-	if (should_submit_frame)
+	if (should_call_frame_update)
 	{
 		machine->m_video->frame_update();
 	}
