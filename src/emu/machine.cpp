@@ -1383,7 +1383,7 @@ void running_machine::emscripten_main_loop()
 	// FRAMESKIP WEBASSEMBLY FIX: Only submit frames to browser when frameskip allows it
 	// This reduces the frame submission rate to match MAME's frameskip settings
 	// preventing Chrome from throttling the overall frame rate
-	// Use the existing frameskip logic from video_manager instead of duplicating it
+	// Use the existing frameskip logic from video_manager (from previous frame)
 	bool should_submit_frame = !machine->m_video->skip_this_frame();
 
 	// DEBUG: Track frame submission statistics for WebAssembly
@@ -1415,7 +1415,7 @@ void running_machine::emscripten_main_loop()
 		osd_printf_info("WEBASM FRAME SUBMISSION: %d/%d frames submitted (%.1f%%) = %.1f fps actual submission rate [target: %.1f fps] | GAME SPEED: %.1f%%\n",
 			webasm_submitted_count, webasm_frame_counter,
 			(webasm_submitted_count * 100.0) / webasm_frame_counter,
-			submission_rate, target_submission_rate, game_speed_percent);
+			submission_rate, target_submission_rate, game_speed_percent * 100.0);
 
 		// Reset counters
 		webasm_frame_counter = 0;
