@@ -1421,13 +1421,13 @@ void running_machine::emscripten_main_loop()
 
 			int new_skip_ratio = (int)((target_speed / avg_speed + skip_ratio) / 2 + 0.5);
 			if (new_skip_ratio > 1 && new_skip_ratio != skip_ratio) {
-				double timestamp_ms = fmod(current_time, 1000.0);
-				osd_printf_info("[%.0fms] SMART THROTTLING: Adjusting skip ratio from %d to %d (avg speed: %.1f%%)\n", timestamp_ms, skip_ratio, new_skip_ratio, avg_speed);
+				osd_printf_info("[%.0fms] SMART THROTTLING: Adjusting skip ratio from %d to %d (avg speed: %.1f%%)\n",
+                    fmod(current_time, 100000.0), skip_ratio, new_skip_ratio, avg_speed);
 				skip_ratio = new_skip_ratio;
 			}
 		}
+        last_frame_time = current_time;
 	}
-	last_frame_time = current_time;
 
 	// DUAL RATIO LOGIC: Use skip_ratio or submit_ratio based on which is active
 	frame_skip_counter++;
@@ -1443,7 +1443,7 @@ void running_machine::emscripten_main_loop()
 	static bool webasm_first_frame = true;
 
 	if (webasm_first_frame) {
-		webasm_start_time = emscripten_get_now();
+		webasm_start_time = current_time;
 		webasm_first_frame = false;
 	}
 
@@ -1454,7 +1454,6 @@ void running_machine::emscripten_main_loop()
 
 	// Report WebAssembly frame submission statistics every 120 frames (2 seconds at 60Hz)
 	if (webasm_frame_counter >= 120) {
-		double current_time = emscripten_get_now();
 		double elapsed_seconds = (current_time - webasm_start_time) / 1000.0;
 		double submission_rate = webasm_submitted_count / elapsed_seconds;
 		double target_submission_rate = 60.0 * (webasm_submitted_count / (double)webasm_frame_counter);
@@ -1463,15 +1462,11 @@ void running_machine::emscripten_main_loop()
 		double game_speed_percent = machine->m_video->speed_percent();
 
 		// DEBUG: Add timing debug to understand speed calculation
-		double emscripten_time = emscripten_get_now();
-		osd_ticks_t osd_time = osd_ticks();
-		osd_ticks_t osd_tps = osd_ticks_per_second();
 
-		osd_printf_info("WEBASM: %d/%d frames (%.1f%%) @ %.1ffps [target: %.1ffps] | Speed: %.1f%% | DEBUG: ems=%.1f osd=%llu tps=%llu\n",
-			webasm_submitted_count, webasm_frame_counter,
+		osd_printf_info("[%.0fms] WEBASM: %d/%d frames (%.1f%%) @ %.1ffps [target: %.1ffps] | Speed: %.1f%%\n",
+			fmod(current_time, 100000.0), webasm_submitted_count, webasm_frame_counter,
 			(webasm_submitted_count * 100.0) / webasm_frame_counter,
-			submission_rate, target_submission_rate, game_speed_percent * 100.0,
-			emscripten_time, osd_time, osd_tps);
+			submission_rate, target_submission_rate, game_speed_percent * 100.0);
 
 		// Reset counters
 		webasm_frame_counter = 0;
