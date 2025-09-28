@@ -1405,12 +1405,14 @@ void running_machine::emscripten_main_loop()
 				if (submit_ratio > 2) {
 					// We're using submit_ratio, so increase it (submit fewer frames)
 					submit_ratio--;
-					osd_printf_info("CHROME THROTTLING DETECTED: Decreasing submit ratio to %d (submit fewer frames)\n", submit_ratio);
+					double timestamp_ms = fmod(current_time, 1000.0);
+					osd_printf_info("[%.0fms] CHROME THROTTLING DETECTED: Decreasing submit ratio to %d (submit fewer frames)\n", timestamp_ms, submit_ratio);
 				} else {
 					// We're using skip_ratio, so increase it (submit fewer frames)
 					if (skip_ratio < 4) {
 						skip_ratio++;
-						osd_printf_info("CHROME THROTTLING DETECTED: Increasing skip ratio to %d (submit fewer frames)\n", skip_ratio);
+						double timestamp_ms = fmod(current_time, 1000.0);
+						osd_printf_info("[%.0fms] CHROME THROTTLING DETECTED: Increasing skip ratio to %d (submit fewer frames)\n", timestamp_ms, skip_ratio);
 					}
 				}
 				consecutive_slow_frames = 0;
@@ -1424,10 +1426,12 @@ void running_machine::emscripten_main_loop()
 			if (fast_frame_count >= 30) {
                 if (skip_ratio > 2) {
                     skip_ratio--;
-                    osd_printf_info("CHROME THROTTLING RELIEVED: Decreasing skip ratio to %d (submit more frames)\n", skip_ratio);
+                    double timestamp_ms = fmod(current_time, 1000.0);
+                    osd_printf_info("[%.0fms] CHROME THROTTLING RELIEVED: Decreasing skip ratio to %d (submit more frames)\n", timestamp_ms, skip_ratio);
                 } else {
                     submit_ratio++;
-                    osd_printf_info("CHROME THROTTLING RELIEVED: Increasing submit ratio to %d (submit more frames)\n", submit_ratio);
+                    double timestamp_ms = fmod(current_time, 1000.0);
+                    osd_printf_info("[%.0fms] CHROME THROTTLING RELIEVED: Increasing submit ratio to %d (submit more frames)\n", timestamp_ms, submit_ratio);
                 }
                 fast_frame_count = 0;
             }
