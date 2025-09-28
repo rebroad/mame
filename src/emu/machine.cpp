@@ -1386,6 +1386,40 @@ void running_machine::emscripten_main_loop()
 	// Use the existing frameskip logic from video_manager instead of duplicating it
 	bool should_submit_frame = !machine->m_video->skip_this_frame();
 
+	// DEBUG: Track frame submission statistics for WebAssembly
+	static int webasm_frame_counter = 0;
+	static int webasm_submitted_count = 0;
+	static double webasm_start_time = 0;
+	static bool webasm_first_frame = true;
+
+	if (webasm_first_frame) {
+		webasm_start_time = emscripten_get_now();
+		webasm_first_frame = false;
+	}
+
+	webasm_frame_counter++;
+	if (should_submit_frame) {
+		webasm_submitted_count++;
+	}
+
+	// Report WebAssembly frame submission statistics every 120 frames (2 seconds at 60Hz)
+	if (webasm_frame_counter >= 120) {
+		double current_time = emscripten_get_now();
+		double elapsed_seconds = (current_time - webasm_start_time) / 1000.0;
+		double submission_rate = webasm_submitted_count / elapsed_seconds;
+		double target_submission_rate = 60.0 * (webasm_submitted_count / (double)webasm_frame_counter);
+
+		osd_printf_info("WEBASM FRAME SUBMISSION: %d/%d frames submitted (%.1f%%) = %.1f fps actual submission rate [target: %.1f fps]\n",
+			webasm_submitted_count, webasm_frame_counter,
+			(webasm_submitted_count * 100.0) / webasm_frame_counter,
+			submission_rate, target_submission_rate);
+
+		// Reset counters
+		webasm_frame_counter = 0;
+		webasm_submitted_count = 0;
+		webasm_start_time = current_time;
+	}
+
 	// Only call frame_update() when we should submit a frame to the browser
 	// This applies to both paused and running states
 	if (should_submit_frame)
