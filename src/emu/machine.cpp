@@ -1381,7 +1381,72 @@ void running_machine::emscripten_main_loop()
 	}
 	// other, just pump video updates and sound mapping updates through
 	else
-    	machine->m_video->frame_update();
+		machine->m_video->frame_update();
+
+	// THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
+	static double last_frame_time = 0;
+	static bool in_compensation_mode = false;
+
+	// FPS CALCULATION: Similar to mame_performance_warning.js
+	static double fps_times[30] = {0};
+	static int fps_times_index = 0;
+	static int fps_samples_collected = 0;
+	static double fps_sum = 0.0;
+	static double calculated_fps = 0.0;
+	static int fps_log_counter = 0;
+
+	double current_frame_time = emscripten_get_now();
+	if (last_frame_time > 0) {
+		double frame_delta = current_frame_time - last_frame_time;
+		double expected_delta = 1000.0 / 60.0; // 16.67ms for 60fps
+
+		// Calculate FPS for this frame
+		double current_fps = 1000.0 / frame_delta;
+
+		// Update FPS rolling average (similar to JavaScript version)
+		fps_sum += current_fps; // Add newest
+		fps_times[fps_times_index] = current_fps; // Store newest
+		fps_times_index = (fps_times_index + 1) % 30;
+		if (fps_samples_collected < 30) {
+			fps_samples_collected++;
+		} else {
+			// Buffer is full, replace oldest value
+			fps_sum -= fps_times[fps_times_index]; // Remove oldest
+		}
+
+		// Calculate average FPS when we have enough samples
+		if (fps_samples_collected >= 15) {
+			calculated_fps = fps_sum / fps_samples_collected;
+		}
+
+		// If we're running slower than 60fps, run emulation twice per visual frame
+		if (frame_delta > expected_delta * 1.5) { // 50% slower = 30fps
+			// Log when entering compensation mode
+			if (!in_compensation_mode) {
+				osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Entering 2x emulation mode (frame delta: %.1fms, FPS: %.1f)\n",
+					fmod(current_frame_time, 100000.0), frame_delta, calculated_fps);
+				in_compensation_mode = true;
+			}
+			// Run emulation twice - advance game state 2x faster
+			machine->m_video->frame_update();
+		} else {
+			// Log when leaving compensation mode
+			if (in_compensation_mode) {
+				osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Leaving 2x emulation mode (frame delta: %.1fms, FPS: %.1f)\n",
+					fmod(current_frame_time, 100000.0), frame_delta, calculated_fps);
+				in_compensation_mode = false;
+			}
+		}
+
+		// Log FPS every 120 frames (similar to WEBASM reporting)
+		fps_log_counter++;
+		if (fps_log_counter >= 120) {
+			osd_printf_info("[%.0fms] MAME FPS: %.1f (avg over %d samples)\n",
+				fmod(current_frame_time, 100000.0), calculated_fps, fps_samples_collected);
+			fps_log_counter = 0;
+		}
+	}
+	last_frame_time = current_frame_time;
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
