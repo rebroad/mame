@@ -1525,7 +1525,7 @@ void running_machine::emscripten_main_loop()
 
 			// Use the real-time FPS and FUPS values calculated every frame
 			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ffups | Speed: %.1f%% | Error 1x: %.1f | Error 2x: %.1f | 1x count: %d | 2x count: %d\n",
-				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent, error_1x_sum / count_1x, error_2x_sum / count_2x, count_1x, count_2x);
+				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent, error_1x_sum / 120, error_2x_sum / 120, count_1x, count_2x);
 
 			// Reset counters for next period
 			fps_log_counter = 0; error_1x_sum = 0; error_2x_sum = 0; count_1x = 0; count_2x = 0;
