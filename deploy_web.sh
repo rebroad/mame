@@ -72,8 +72,8 @@ for f in "${REQUIRED_FILES[@]}"; do
 done
 success "✅ Web artifacts present in webdist/"
 
-TMPDIR="gh-pages-tmp"
-WORKTREE_DIR="gh-pages-deploy"
+TMPDIR="/tmp/gh-pages-tmp-$$"
+WORKTREE_DIR="/tmp/gh-pages-deploy-$$"
 
 info "🧹 Preparing temporary directory..."
 rm -rf "$TMPDIR" "$WORKTREE_DIR"
@@ -91,11 +91,39 @@ Playable web build of MAME running Atari Star Wars, compiled with Emscripten.
 Open `index.html` to start. Requires a modern browser with WebAssembly and WebGL.
 EOF
 
-# Prepare worktree for gh-pages - always create fresh
-info "📋 Creating fresh gh-pages branch..."
+# Capture original branch and remote URL BEFORE any git operations
+ORIGINAL_BRANCH="$(git branch --show-current)"
+ORIGIN_URL="$(git config --get remote.origin.url)"
+info "📡 Captured origin URL: $ORIGIN_URL"
+
+# Prepare worktree for gh-pages - always create fresh orphan branch
+info "📋 Creating fresh orphan gh-pages branch..."
 git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
 git branch -D gh-pages 2>/dev/null || true  # Delete local branch if exists
-git worktree add -B gh-pages "$WORKTREE_DIR"
+
+# Create orphan branch in worktree directory
+mkdir -p "$WORKTREE_DIR"
+pushd "$WORKTREE_DIR" >/dev/null
+git init
+git checkout --orphan gh-pages
+git rm -rf . 2>/dev/null || true  # Remove any existing files
+info "🔗 Adding origin remote..."
+if [[ -z "$ORIGIN_URL" ]]; then
+    error "❌ Could not find origin remote URL"
+    popd >/dev/null
+    rm -rf "$WORKTREE_DIR" "$TMPDIR"
+    exit 1
+fi
+git remote add origin "$ORIGIN_URL"
+info "✅ Remote added successfully"
+popd >/dev/null
+
+# Return to the original branch in the main repo
+info "🔄 Returning to original branch: $ORIGINAL_BRANCH"
+if [[ -n "$ORIGINAL_BRANCH" ]]; then
+    git checkout "$ORIGINAL_BRANCH" 2>/dev/null || true
+fi
+info "✅ Back on original branch"
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
@@ -109,7 +137,7 @@ DID_PAGES=true
 
 if $DID_PAGES; then
   info "🚀 Pushing to GitHub Pages..."
-  if git push origin gh-pages; then
+  if git push --force origin gh-pages; then
       success "✅ Deployed to GitHub Pages."
       REPO_URL="$(git config --get remote.origin.url)"
       if [[ "$REPO_URL" == *github.com* ]]; then
@@ -127,14 +155,14 @@ if $DID_PAGES; then
   else
       error "❌ Push failed."
       popd >/dev/null
-      git worktree remove "$WORKTREE_DIR"
+      rm -rf "$WORKTREE_DIR"
       rm -rf "$TMPDIR"
       exit 1
   fi
 fi
 
 popd >/dev/null
-git worktree remove "$WORKTREE_DIR" || true
+rm -rf "$WORKTREE_DIR"
 rm -rf "$TMPDIR"
 
 success "🎉 Deployment complete."
