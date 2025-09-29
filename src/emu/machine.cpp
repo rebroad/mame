@@ -1494,6 +1494,7 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 
+        static int count_1x = 0, count_2x = 0;
         if (should_run_2x) { count_2x++; }
         else { count_1x++; }
 
@@ -1504,8 +1505,8 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and TPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ftps | Speed: %.1f%%\n",
-				fmod(current_time, 100000.0), fps_2, fps_4, fps_8, fps_16, tps_2, tps_4, tps_8, tps_16, game_speed_percent);
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x count: %d | 2x count: %d\n",
+				fmod(current_time, 100000.0), fps_2, fps_4, fps_8, fps_16, tps_2, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x);
 
 			// Reset counters for next period
 			fps_log_counter = 0; count_1x = 0; count_2x = 0;
