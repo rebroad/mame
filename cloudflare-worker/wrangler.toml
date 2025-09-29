@@ -1,0 +1,13 @@
+name = "mame-proxy"
+main = "worker.mjs"
+compatibility_date = "2024-01-01"
+
+[vars]
+ORIGIN = "https://rebroad.github.io/mame/"
+
+[observability.logs]
+enabled = true
+
+routes = [
+  { pattern = "mame.reb.ai/*", zone_name = "reb.ai" }
+]

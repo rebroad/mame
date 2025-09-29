@@ -1,0 +1,145 @@
+[LOG] [Audio] Worklet support: true
+[LOG] [Env] crossOriginIsolated: true
+[LOG] [Workers] SharedArrayBuffer available: true
+[LOG] [Args] starwars -rompath roms -video soft -window -nomaximize -numscreens 1 -skip_gameinfo -log -joystick -mouse -speed 1 -verbose -samplerate 48000 -audio_latency 5
+[LOG] 🔍 MAME Performance Monitor starting...
+[LOG] [WASM] Content-Encoding: br
+[LOG] [WASM] Content-Type: application/wasm
+[LOG] [FS after preload] roms dir ok: false
+[LOG] [FS after preload] roms list: 
+[LOG] [FS after preload] roms dir ok: true
+[LOG] [FS after preload] roms list: .,..,starwars
+[LOG] Attempting load of mame.ini
+[LOG] Attempting load of mame.ini
+[LOG] Attempting load of horizont.ini
+[LOG] Attempting load of vector.ini
+[LOG] Attempting load of source/starwars.ini
+[LOG] Attempting load of starwars.ini
+[LOG] Attempting load of mame.ini
+[LOG] Attempting load of mame.ini
+[LOG] Attempting load of horizont.ini
+[LOG] Attempting load of vector.ini
+[LOG] Attempting load of source/starwars.ini
+[LOG] Attempting load of starwars.ini
+[LOG] Available videodrivers: emscripten 
+[LOG] Current Videodriver: emscripten
+[LOG] 	Display #0
+[LOG] 		Desktop Mode:         3840x2160-24@0
+[LOG] 		Current Display Mode: 3840x2160-24@0
+[LOG] 		Renderdrivers:
+[LOG] 			 opengles2 (0x0)
+[LOG] 			  software (0x0)
+[LOG] Available audio drivers: 
+[LOG] 	emscripten          
+[LOG] 	disk                
+[LOG] 	dummy               
+[LOG] Build version:      0.281 (mame0281-167-g3e24b9d2d86)
+[LOG] Build architecure:  
+[LOG] Build defines 1:    SDLMAME_UNIX=1 
+[LOG] Build defines 1:    LSB_FIRST=1 MAME_NOASM=1 
+[LOG] SDL/OpenGL defines: SDL_COMPILEDVERSION=4402 USE_OPENGL=0 
+[LOG] Compiler defines A: __GNUC__=4 __GNUC_MINOR__=2 __GNUC_PATCHLEVEL__=1 __VERSION__="Clang 17.0.0 (https://github.com/llvm/llvm-project 6865cff8ea8b07d9f2385fd92cecb422404f0f35)" 
+[LOG] Compiler defines B: __unix__=1 
+[LOG] Compiler defines C: 
+[LOG] Enter init_monitors
+[LOG] Adding monitor screen0 (3840 x 2160)
+[LOG] Leave init_monitors
+[LOG] Using SDL multi-window soft driver (SDL 2.0+)
+[LOG] Enter sdlwindow_init
+[LOG] 
+[LOG] Hints:
+[LOG] 	SDL_FRAMEBUFFER_ACCELERATION             (NULL)
+[LOG] 	SDL_RENDER_DRIVER                        (NULL)
+[LOG] 	SDL_RENDER_OPENGL_SHADERS                (NULL)
+[LOG] 	SDL_RENDER_SCALE_QUALITY                 (NULL)
+[LOG] 	SDL_RENDER_VSYNC                         (NULL)
+[LOG] 	SDL_VIDEO_X11_XVIDMODE                   (NULL)
+[LOG] 	SDL_VIDEO_X11_XINERAMA                   (NULL)
+[LOG] 	SDL_VIDEO_X11_XRANDR                     (NULL)
+[LOG] 	SDL_GRAB_KEYBOARD                        (NULL)
+[LOG] 	SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS         0
+[LOG] 	SDL_IOS_IDLE_TIMER_DISABLED              (NULL)
+[LOG] 	SDL_IOS_ORIENTATIONS                     (NULL)
+[LOG] 	SDL_XINPUT_ENABLED                       (NULL)
+[LOG] 	SDL_GAMECONTROLLERCONFIG                 (NULL)
+[LOG] 	SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS     (NULL)
+[LOG] 	SDL_ALLOW_TOPMOST                        (NULL)
+[LOG] 	SDL_TIMER_RESOLUTION                     (NULL)
+[LOG] 	SDL_RENDER_DIRECT3D_THREADSAFE           (NULL)
+[LOG] 	SDL_VIDEO_ALLOW_SCREENSAVER              (NULL)
+[LOG] 	SDL_ACCELEROMETER_AS_JOYSTICK            (NULL)
+[LOG] 	SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK   (NULL)
+[LOG] 	SDL_VIDEO_WIN_D3DCOMPILER                (NULL)
+[LOG] 	SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT      (NULL)
+[LOG] 	SDL_VIDEO_MAC_FULLSCREEN_SPACES          (NULL)
+[LOG] 	SDL_MOUSE_RELATIVE_MODE_WARP             (NULL)
+[LOG] 	SDL_RENDER_DIRECT3D11_DEBUG              (NULL)
+[LOG] 	SDL_VIDEO_HIGHDPI_DISABLED               (NULL)
+[LOG] 	SDL_WINRT_PRIVACY_POLICY_URL             (NULL)
+[LOG] 	SDL_WINRT_PRIVACY_POLICY_LABEL           (NULL)
+[LOG] 	SDL_WINRT_HANDLE_BACK_BUTTON             (NULL)
+[LOG] Leave sdlwindow_init
+[LOG] Enter sdl_info::create
+[LOG] window: using renderer opengles2
+[LOG] renderer: flag SDL_RENDERER_ACCELERATED
+[LOG] Leave renderer_sdl2::create
+[LOG] Keyboard: Start initialization
+[LOG] Input: Adding keyboard #1: System keyboard (device id: System keyboard)
+[LOG] Keyboard: Registered System keyboard
+[LOG] Keyboard: End initialization
+[LOG] Mouse: Start initialization
+[LOG] Input: Adding mouse #1: System mouse (device id: System mouse)
+[LOG] Mouse: Registered System mouse
+[LOG] Mouse: End initialization
+[LOG] Lightgun: Start initialization
+[LOG] Input: Adding lightgun #1: System pointer gun 1 (device id: System pointer gun 1)
+[LOG] Lightgun: Registered System pointer gun 1
+[LOG] Lightgun: End initialization
+[LOG] Could not initialize SDL Haptic subsystem: SDL not built with haptic (force feedback) support.
+[LOG] Game Controller: Start initialization
+[LOG] Game Controller: End initialization
+[LOG] Searching font Liberation Sans in -. path/s
+[LOG] font Liberation Sans|Regular is not TrueType or BDF, using MAME default
+[LOG] Optional memory bank ':slapstic_bank' not found
+[LOG] Optional device ':slapstic' not found
+[LOG] Optional memory region ':riot' not found
+[LOG] Optional memory region ':x2212' not found
+[LOG] Optional memory region ':screen' not found
+[LOG] Starting Star Wars (set 1) ':'
+[LOG]   (missing dependencies; rescheduling)
+[LOG] Starting Motorola MC6809E ':maincpu'
+[LOG] Starting Watchdog Timer ':watchdog'
+[LOG] Starting Motorola MC6809E ':audiocpu'
+[LOG] Starting ADC0809 A/D Converter ':adc'
+[LOG] Starting MOS 6532 RIOT ':riot'
+[LOG] Starting Xicor X2212 256x4 NOVRAM ':x2212'
+[LOG] Starting 74LS259 Addressable Latch ':outlatch'
+[LOG] Starting VECTOR ':vector'
+[LOG]   (missing dependencies; rescheduling)
+[LOG] Starting Video Screen ':screen'
+[LOG] Starting Atari AVG (Star Wars) ':avg'
+[LOG]   (missing dependencies; rescheduling)
+[LOG] Starting Speaker ':mono'
+[LOG] Starting Atari C012294 POKEY ':pokey1'
+[LOG] Starting Atari C012294 POKEY ':pokey2'
+[LOG] Starting Atari C012294 POKEY ':pokey3'
+[LOG] Starting Atari C012294 POKEY ':pokey4'
+[LOG] Starting TMS5220 ':tms'
+[LOG] Starting Generic 8-bit latch ':soundlatch'
+[LOG] Starting Generic 8-bit latch ':mainlatch'
+[LOG] Starting Star Wars (set 1) ':'
+[LOG]   (missing dependencies; rescheduling)
+[LOG] Starting VECTOR ':vector'
+[LOG] Starting Atari AVG (Star Wars) ':avg'
+[LOG] Starting Star Wars (set 1) ':'
+[LOG] Configuration file default.cfg not found
+[LOG] Attempting to parse: starwars.cfg
+[LOG] 📊 Starting performance monitoring...
+[WARN] ⚠️ Low frame rate detected: 31.5 fps
+[LOG] [5146ms] MAME STATS: 30.4/29.1/29.5fps | 74.2/71.0/62.3tps | Speed: 100.1% | 1x count: 2 | 2x count: 118
+[LOG] [9215ms] MAME STATS: 27.7/29.0/29.4fps | 72.4/64.7/62.2tps | Speed: 99.6% | 1x count: 0 | 2x count: 120
+[WARN] ⚠️ Low frame rate detected: 31.3 fps
+[LOG] [13277ms] MAME STATS: 30.2/30.0/28.8fps | 92.5/70.5/64.3tps | Speed: 100.0% | 1x count: 0 | 2x count: 120
+[WARN] ⚠️ Low frame rate detected: 31.8 fps
+[LOG] 🔇 Performance warnings muted (too many low frame rate detections)
+[LOG] [17337ms] MAME STATS: 30.2/28.9/29.3fps | 109.7/70.6/61.9tps | Speed: 99.9% | 1x count: 0 | 2x count: 120

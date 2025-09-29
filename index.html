@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Star Wars</title>
+    <link rel="icon" href="data:,"/>
+    <style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      // Ensure canvas has explicit pixel size and is visible
+      (function(){
+        var c = document.getElementById('canvas');
+        function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+      })();
+      function dumpLog(prefix){
+        try {
+          if (typeof FS !== 'undefined') {
+            var p = 'mame.log';
+            var inf = FS.analyzePath(p);
+            if (inf.exists) {
+              var d = FS.readFile(p, { encoding: 'utf8' });
+              console.error(prefix + '\n' + d);
+            }
+          }
+        } catch (e) { console.error(prefix + ' failed', e); }
+      }
+      window.addEventListener('error', function(e){ console.error('[window.onerror]', e.message, e.filename, e.lineno, e.colno); dumpLog('[mame.log]'); });
+      window.addEventListener('unhandledrejection', function(e){ console.error('[unhandledrejection]', e.reason); dumpLog('[mame.log]'); });
+      function detectPreferredVideo() {
+        try {
+          var c = document.createElement('canvas');
+          var gl2 = c.getContext('webgl2');
+          if (gl2) return 'bgfx';
+          var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+          if (gl) return 'bgfx';
+        } catch (e) {}
+        return 'soft';
+      }
+      // Allow URL overrides: ?video=soft|bgfx, ?latency=5
+      var urlParams = new URLSearchParams(location.search);
+      var urlVideo = (urlParams.get('video')||'').toLowerCase();
+      var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("soft" === "auto" ? detectPreferredVideo() : "soft");
+      var latencyOverride = urlParams.get('latency');
+      var Module = {
+        canvas: (function(){ return document.getElementById('canvas'); })(),
+        arguments: [
+          "starwars",
+          "-rompath", "roms",
+          "-video", chosenVideo,
+          "-window", "-nomaximize", "-numscreens", "1",
+          "-skip_gameinfo",
+          "-log",
+          "-joystick", "-mouse",
+          "-speed", "1", "-verbose",
+          "-samplerate", "48000",
+          "-audio_latency", latencyOverride ? String(latencyOverride) : "5"
+        ],
+        print: function(text){ console.log(text); },
+        printErr: function(text){ console.error(text); },
+        locateFile: function(path){ return path; },
+        preRun: [],
+        monitorRunDependencies: function(left){
+          if (left === 0) {
+            try {
+              if (typeof FS !== 'undefined') {
+                var info = FS.analyzePath('roms');
+                var l = [];
+                try { l = FS.readdir('roms'); } catch(e) {}
+                console.log('[FS after preload] roms dir ok:', !!info.exists);
+                console.log('[FS after preload] roms list:', (l||[]).join(','));
+              }
+            } catch (e) { console.error('[FS after preload] error', e); }
+          }
+        },
+        onAbort: function(reason){
+          console.error('[onAbort]', reason);
+          try {
+            if (typeof FS !== 'undefined') {
+              var path = 'mame.log';
+              var info = FS.analyzePath(path);
+              if (info.exists) {
+                var data = FS.readFile(path, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + data);
+              } else {
+                console.error('[mame.log] not found');
+              }
+            }
+          } catch (e) { console.error('[onAbort] failed to read mame.log', e); }
+        },
+        onExit: function(code){
+          console.error('[onExit]', code);
+          try {
+            if (typeof FS !== 'undefined') {
+              var p = 'mame.log';
+              var inf = FS.analyzePath(p);
+              if (inf.exists) {
+                var d = FS.readFile(p, { encoding: 'utf8' });
+                console.error('[mame.log]\n' + d);
+              }
+            }
+          } catch (e) { console.error('[onExit] read mame.log failed', e); }
+        }
+      };
+      // Ensure canvas pixel size is set before runtime and notify Emscripten glue
+      (function(){
+        var c=document.getElementById('canvas');
+        function applySize(){
+          var w = window.innerWidth, h = window.innerHeight;
+          c.width=w; c.height=h;
+          if (Module && typeof Module.setCanvasSize === 'function') {
+            try { Module.setCanvasSize(w, h, true); } catch(e) {}
+          }
+        }
+        window.addEventListener('resize', applySize);
+        applySize();
+      })();
+      // In workers mode with OffscreenCanvas, suppress main-thread getContext throws
+      if ("false" === "true") {
+        try {
+          var __c = document.getElementById('canvas');
+          var __origGetContext = __c.getContext.bind(__c);
+          __c.getContext = function(type, attrs){
+            try { return __origGetContext(type, attrs); } catch (e) { return null; }
+          };
+        } catch(e) {}
+      }
+      // Log whether AudioWorklet/Workers are active at runtime
+      (function(){
+        try {
+          var ac = (window.AudioContext||window.webkitAudioContext)? new (window.AudioContext||window.webkitAudioContext)() : null;
+          console.log('[Audio] Worklet support:', !!(ac && ac.audioWorklet));
+        } catch(e){}
+        console.log('[Env] crossOriginIsolated:', typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : 'n/a');
+        console.log('[Workers] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
+      })();
+      console.log('[Args]', Module.arguments.join(' '));
+      if ("true" === "true") {
+        Module.arguments.push("-verbose");
+      }
+      // Probe the Content-Encoding the browser actually received for the WASM
+      try {
+        fetch('starwarswasm.wasm', { method: 'HEAD', cache: 'no-store' }).then(function(r){
+          console.log('[WASM] Content-Encoding:', r.headers.get('content-encoding') || '(none)');
+          console.log('[WASM] Content-Type:', r.headers.get('content-type'));
+        }).catch(function(e){ console.error('[WASM] HEAD probe failed', e); });
+      } catch (e) { console.error('[WASM] HEAD probe threw', e); }
+      // If cfg was packed, point MAME at it so per-game input (e.g., Y invert) loads
+      if (true === true) {
+        Module.arguments.push("-cfg_directory", "cfg");
+      }
+      // Keep throttle enabled for smoother audio even in debug.
+      if ("false" === "true") {
+        Module.arguments.push("-autoboot_script", "autoboot.lua", "-autoboot_delay", "1");
+      }
+
+      Module.arguments.push("-brightness", "1.0");
+      Module.arguments.push("-contrast", "1.3");
+      Module.arguments.push("-gamma", "1.3");
+      Module.arguments.push("-bgfx_screen_chains", "default");
+      Module.arguments.push("-vector_glow_intensity", "0.02");
+    </script>
+    <script src="mame_performance_warning.js"></script>
+    <script src="roms.js"></script>
+    <script src="starwarswasm.js"></script>
+  </body>
+  </html>
