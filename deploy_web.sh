@@ -63,7 +63,7 @@ if [[ ! -d "$WEBDIR" ]] || [[ ! -f "$WEBDIR/index.html" ]]; then
 fi
 
 # Basic validation
-REQUIRED_FILES=(index.html starwarswasm.js starwarswasm.wasm roms.js roms.data)
+REQUIRED_FILES=(index.html starwarswasm.html starwarswasm.js starwarswasm.wasm roms.js roms.data)
 for f in "${REQUIRED_FILES[@]}"; do
     if [[ ! -f "$WEBDIR/$f" ]]; then
         error "Missing required file in webdist: $f"
