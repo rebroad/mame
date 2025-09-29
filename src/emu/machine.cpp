@@ -1399,7 +1399,7 @@ void running_machine::emscripten_main_loop()
 		static int fps_log_counter = 0;
 
 		// Real-time FPS values (calculated every frame)
-		static double fps_2 = 0.0, fps_4 = 0.0, fps_8 = 0.0, fps_16 = 0.0;
+		static double fps_4 = 0.0, fps_8 = 0.0, fps_16 = 0.0;
 
 		// Track timestamps of actual scheduler->timeslice() calls for FUPS calculation
 		static double timeslice_timestamps[30] = {0};
@@ -1407,7 +1407,7 @@ void running_machine::emscripten_main_loop()
 		static int timeslice_timestamps_collected = 0;
 
 		// Real-time TPS values (calculated every frame)
-		static double tps_2 = 0.0, tps_4 = 0.0, tps_8 = 0.0, tps_16 = 0.0;
+		static double tps_4 = 0.0, tps_8 = 0.0, tps_16 = 0.0;
 
 		// Store timestamp for this main loop frame
 		frame_timestamps[frame_timestamps_index] = current_time;
@@ -1426,23 +1426,6 @@ void running_machine::emscripten_main_loop()
 		}
 
 		// Calculate FPS and TPS over different time windows EVERY FRAME
-		// 2-frame FPS
-		if (frame_timestamps_collected >= 2) {
-			int idx2 = (frame_timestamps_index - 2 + 30) % 30;
-			double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx2];
-			if (time_span > 0) {
-				fps_2 = 1.0 * 1000.0 / time_span;
-			}
-		}
-		// 2-frame TPS
-		if (timeslice_timestamps_collected >= 2) {
-			int update_idx2 = (timeslice_timestamps_index - 2 + 30) % 30;
-			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx2];
-			if (update_time_span > 0) {
-				tps_2 = 1.0 * 1000.0 / update_time_span;
-			}
-		}
-
 		// 4-frame FPS
 		if (frame_timestamps_collected >= 4) {
 			int idx4 = (frame_timestamps_index - 4 + 30) % 30;
@@ -1505,8 +1488,8 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and TPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x count: %d | 2x count: %d\n",
-				fmod(current_time, 100000.0), fps_2, fps_4, fps_8, fps_16, tps_2, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x);
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x count: %d | 2x count: %d\n",
+				fmod(current_time, 100000.0), fps_4, fps_8, fps_16, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x);
 
 			// Reset counters for next period
 			fps_log_counter = 0; count_1x = 0; count_2x = 0;
