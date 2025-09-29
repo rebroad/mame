@@ -91,6 +91,9 @@ Playable web build of MAME running Atari Star Wars, compiled with Emscripten.
 Open `index.html` to start. Requires a modern browser with WebAssembly and WebGL.
 EOF
 
+# Capture original branch BEFORE any git operations
+ORIGINAL_BRANCH="$(git branch --show-current)"
+
 # Prepare worktree for gh-pages - always create fresh orphan branch
 info "📋 Creating fresh orphan gh-pages branch..."
 git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
@@ -114,7 +117,6 @@ git remote add origin "$ORIGIN_URL"
 popd >/dev/null
 
 # Return to the original branch in the main repo
-ORIGINAL_BRANCH="$(cd "$(dirname "$0")" && git branch --show-current)"
 if [[ -n "$ORIGINAL_BRANCH" ]]; then
     git checkout "$ORIGINAL_BRANCH" 2>/dev/null || true
 fi
