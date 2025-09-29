@@ -1494,6 +1494,9 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 
+        if (should_run_2x) { count_2x++; }
+        else { count_1x++; }
+
 		// Log comprehensive stats every 120 frames
 		fps_log_counter++;
 		if (fps_log_counter >= 120) {
@@ -1501,11 +1504,11 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and TPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps (2/4/8/16) | %.1f/%.1f/%.1f/%.1ftps (2/4/8/16) | Speed: %.1f%%\n",
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ftps | Speed: %.1f%%\n",
 				fmod(current_time, 100000.0), fps_2, fps_4, fps_8, fps_16, tps_2, tps_4, tps_8, tps_16, game_speed_percent);
 
 			// Reset counters for next period
-			fps_log_counter = 0;
+			fps_log_counter = 0; count_1x = 0; count_2x = 0;
 		}
 	}
 	// other, just pump video updates and sound mapping updates through
