@@ -11,7 +11,7 @@
 
     // Performance monitoring variables
     let frameCount = 0;
-    let lastTime = performance.now();
+    let lastTime = 0;
     let frameTimes = [];
     let isThrottled = false;
     let detectedFrameRate = 0;
@@ -36,7 +36,7 @@
         const now = performance.now();
         const deltaTime = now - lastTime;
 
-        if (lastTime > 0) {
+        if (frameCount > 0) {
             const fps = 1000 / deltaTime;
             frameTimes.push(fps);
 
@@ -83,18 +83,9 @@
                     }
                 }
             }
+            lastTime = now;
         }
 
-        // Log browser FPS every 120 frames (same as WEBASM reporting)
-        if (frameCount >= 120) {
-            if (avgFps > 0) {
-                const timestamp_ms = performance.now() % 100000;
-                console.log(`[${timestamp_ms.toFixed(0)}ms] 🖥️ Browser FPS Report: ${avgFps.toFixed(1)}fps (Chrome requestAnimationFrame)`);
-            }
-            frameCount = 0;
-        }
-
-        lastTime = now;
         frameCount++;
 
         // Continue monitoring if flag is still true
