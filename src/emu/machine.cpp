@@ -1377,8 +1377,6 @@ void running_machine::emscripten_main_loop()
 	static double frame_timestamps[30] = {0};
 	static int frame_timestamps_index = 0;
 	static int frame_timestamps_collected = 0;
-	static int frame_update_count = 0;
-	static int total_frame_updates = 0;
 	static int fps_log_counter = 0;
 
 	// Real-time FPS values (calculated every frame)
@@ -1470,10 +1468,6 @@ void running_machine::emscripten_main_loop()
 		}
 	}
 
-	// Add current frame updates to total
-	total_frame_updates += frame_update_count;
-	frame_update_count = 0; // Reset for next period
-
 	if (last_frame_time > 0) {
 		// FUPS-based compensation decision using 16-frame FUPS
 		static double target_fups = 60.0;
@@ -1483,13 +1477,13 @@ void running_machine::emscripten_main_loop()
 			// Use current FUPS_16 to predict what it would be with 1x vs 2x emulation
 			// Current FUPS_16 is already calculated above
 			if (fups_16 > 0) {
-				// Estimate what FUPS_16 would be if we add 1 more frame_update
+				// Estimate what FUPS_16 would be after 1 more frame_update
 				double frame_delta = current_frame_time - last_frame_time;
 				double additional_update_time = frame_delta; // Time for one more frame_update
-				double fups_16_with_1x = 16.0 * 1000.0 / (16.0 * 1000.0 / fups_16 + additional_update_time);
+				double fups_16_with_1x = 16.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 16 or 15?
 
-				// Estimate what FUPS_16 would be if we add 2 more frame_updates
-				double fups_16_with_2x = 17.0 * 1000.0 / (16.0 * 1000.0 / fups_16 + additional_update_time);
+				// Estimate what FUPS_16 would be after 2 more frame_updates
+				double fups_16_with_2x = 17.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 17 or 16?
 
 				// Choose the option that gets us closer to target FUPS
 				double error_1x = abs(fups_16_with_1x - target_fups);
@@ -1509,21 +1503,10 @@ void running_machine::emscripten_main_loop()
 				update_timestamps_collected++;
 			}
 		}
-		frame_update_count += updates;
 
 		// Log comprehensive stats every 120 frames
 		fps_log_counter++;
 		if (fps_log_counter >= 120) {
-			// Calculate frame updates per second using total
-			double updates_per_second = 0.0;
-			if (frame_timestamps_collected >= 2) {
-				double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] -
-								  frame_timestamps[frame_timestamps_index];
-				if (time_span > 0) {
-					updates_per_second = total_frame_updates * 1000.0 / time_span;
-				}
-			}
-
 			// Get game speed from video manager
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
@@ -1533,7 +1516,6 @@ void running_machine::emscripten_main_loop()
 
 			// Reset counters for next period
 			fps_log_counter = 0;
-			total_frame_updates = 0;
 		}
 	}
 	last_frame_time = current_frame_time;
