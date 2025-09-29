@@ -1357,155 +1357,140 @@ void running_machine::emscripten_main_loop()
 		// forward for the amount of time that has passed since the last frame
 		const attotime frametime(0,HZ_TO_ATTOSECONDS(60));
 		const attotime stoptime(scheduler->time() + frametime);
+		const double current_time = emscripten_get_now(); // TODO - not use scheduler->time() ?
 
-		while (!machine->m_paused && !machine->scheduled_event_pending() && scheduler->time() < stoptime)
-		{
-			scheduler->timeslice();
-			// handle save/load
-			if (machine->m_saveload_schedule != saveload_schedule::NONE)
+		// Check throttling level and determine emulation multiplier
+		static double last_loop_time = 0;
+		int emulation_passes = 1;
+		if (last_loop_time > 0) {
+			double loop_delta = current_time - last_loop_time;
+			// Dynamic scaling based on detected frame rate
+			if (loop_delta > 33.3) {      // < 30fps (33.3ms) -> 4x emulation
+				emulation_passes = 4;
+			} else if (loop_delta > 25.0) { // < 40fps (25ms) -> 3x emulation
+				emulation_passes = 3;
+			} else if (loop_delta > 20.0) { // < 50fps (20ms) -> 2x emulation
+				emulation_passes = 2;
+			} else {                        // >= 50fps -> 1x emulation
+				emulation_passes = 1;
+			}
+		}
+		last_loop_time = current_time;
+
+		for (int pass = 0; pass < emulation_passes; pass++) {
+			attotime current_stoptime = stoptime;
+			if (emulation_passes > 1 && pass > 0) {
+				// Additional passes: advance stoptime further to compensate for throttling
+				current_stoptime = scheduler->time() + frametime;
+			}
+
+			while (!machine->m_paused && !machine->scheduled_event_pending() && scheduler->time() < current_stoptime)
 			{
-				machine->handle_saveload();
+				scheduler->timeslice();
+				// handle save/load
+				if (machine->m_saveload_schedule != saveload_schedule::NONE)
+				{
+					machine->handle_saveload();
+					break;
+				}
+			}
+
+			// If save/load was handled, break out of both loops
+			if (machine->m_saveload_schedule != saveload_schedule::NONE) {
 				break;
 			}
 		}
-	}
-	// otherwise, just pump video updates through
-	else
-		machine->m_video->frame_update();
 
-	// THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
-	static double last_frame_time = 0;
+		// FPS and FUPS logging within the emulation section
+		static double frame_timestamps[30] = {0};
+		static int frame_timestamps_index = 0;
+		static int frame_timestamps_collected = 0;
+		static int fps_log_counter = 0;
 
-	// FPS CALCULATION: Collect timestamps and frame update counts
-	static double frame_timestamps[30] = {0};
-	static int frame_timestamps_index = 0;
-	static int frame_timestamps_collected = 0;
-	static int fps_log_counter = 0;
+		// Real-time FPS values (calculated every frame)
+		static double fps_4 = 0.0, fps_8 = 0.0, fps_16 = 0.0;
 
-	// Real-time FPS values (calculated every frame)
-	static double fps_2 = 0.0, fps_4 = 0.0, fps_8 = 0.0, fps_16 = 0.0;
+		// Track timestamps of actual scheduler->timeslice() calls for FUPS calculation
+		static double timeslice_timestamps[30] = {0};
+		static int timeslice_timestamps_index = 0;
+		static int timeslice_timestamps_collected = 0;
 
-	// Real-time FUPS values (calculated every frame)
-	static double fups_2 = 0.0, fups_4 = 0.0, fups_8 = 0.0, fups_16 = 0.0;
+		// Real-time TPS values (calculated every frame)
+		static double tps_4 = 0.0, tps_8 = 0.0, tps_16 = 0.0;
 
-	double current_frame_time = emscripten_get_now();
-
-	// Store timestamp for this frame
-	frame_timestamps[frame_timestamps_index] = current_frame_time;
-	frame_timestamps_index = (frame_timestamps_index + 1) % 30;
-	if (frame_timestamps_collected < 30) {
-		frame_timestamps_collected++;
-	}
-
-	// Track timestamps of actual frame_update() calls for FUPS calculation
-	static double update_timestamps[30] = {0};
-	static int update_timestamps_index = 0;
-	static int update_timestamps_collected = 0;
-
-	// Calculate FPS over different time windows EVERY FRAME
-	// 2-frame FPS
-	if (frame_timestamps_collected >= 2) {
-		int idx2 = (frame_timestamps_index - 2 + 30) % 30;
-		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx2];
-		if (time_span > 0) {
-			fps_2 = 1.0 * 1000.0 / time_span;
+		// Store timestamp for this main loop frame
+		frame_timestamps[frame_timestamps_index] = current_time;
+		frame_timestamps_index = (frame_timestamps_index + 1) % 30;
+		if (frame_timestamps_collected < 30) {
+			frame_timestamps_collected++;
 		}
-	}
-	// 2-frame FUPS
-	if (update_timestamps_collected >= 2) {
-		int update_idx2 = (update_timestamps_index - 2 + 30) % 30;
-		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx2];
-		if (update_time_span > 0) {
-			fups_2 = 1.0 * 1000.0 / update_time_span;
-		}
-	}
 
-	// 4-frame FPS
-	if (frame_timestamps_collected >= 4) {
-		int idx4 = (frame_timestamps_index - 4 + 30) % 30;
-		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx4];
-		if (time_span > 0) {
-			fps_4 = 3.0 * 1000.0 / time_span;
-		}
-	}
-	// 4-frame FUPS
-	if (update_timestamps_collected >= 4) {
-		int update_idx4 = (update_timestamps_index - 4 + 30) % 30;
-		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx4];
-		if (update_time_span > 0) {
-			fups_4 = 3.0 * 1000.0 / update_time_span;
-		}
-	}
-
-	// 8-frame FPS
-	if (frame_timestamps_collected >= 8) {
-		int idx8 = (frame_timestamps_index - 8 + 30) % 30;
-		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx8];
-		if (time_span > 0) {
-			fps_8 = 7.0 * 1000.0 / time_span;
-		}
-	}
-	// 8-frame FUPS
-	if (update_timestamps_collected >= 8) {
-		int update_idx8 = (update_timestamps_index - 8 + 30) % 30;
-		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx8];
-		if (update_time_span > 0) {
-			fups_8 = 7.0 * 1000.0 / update_time_span;
-		}
-	}
-
-	// 16-frame FPS
-	if (frame_timestamps_collected >= 16) {
-		int idx16 = (frame_timestamps_index - 16 + 30) % 30;
-		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx16];
-		if (time_span > 0) {
-			fps_16 = 15.0 * 1000.0 / time_span;
-		}
-	}
-	// 16-frame FUPS
-	if (update_timestamps_collected >= 16) {
-		int update_idx16 = (update_timestamps_index - 16 + 30) % 30;
-		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx16];
-		if (update_time_span > 0) {
-			fups_16 = 15.0 * 1000.0 / update_time_span;
-		}
-	}
-
-	if (last_frame_time > 0) {
-		// FUPS-based compensation decision using 16-frame FUPS
-		static double target_fups = 60.0;
-        static double error_1x_sum = 0, error_2x_sum = 0; static int count_1x = 0, count_2x = 0;
-		bool should_do_2x = false;
-
-		if (update_timestamps_collected >= 16) {
-			// Use current FUPS_16 to predict what it would be with 1x vs 2x emulation
-			// Current FUPS_16 is already calculated above
-			if (fups_16 > 0) {
-				// Estimate what FUPS_16 would be after 1 more frame_update
-				double frame_delta = current_frame_time - last_frame_time;
-				double additional_update_time = frame_delta; // Time for one more frame_update
-				double fups_16_with_1x = 16.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 16 or 15?
-
-				// Estimate what FUPS_16 would be after 2 more frame_updates
-				double fups_16_with_2x = 17.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 17 or 16?
-
-				// Choose the option that gets us closer to target FUPS
-				double error_1x = abs(fups_16_with_1x - target_fups); error_1x_sum += error_1x;
-				double error_2x = abs(fups_16_with_2x - target_fups); error_2x_sum += error_2x;
-
-				should_do_2x = error_2x < error_1x;
+		// Store timestamps for timeslice calls (track actual emulation advancement)
+		for (int pass = 0; pass < emulation_passes; pass++) {
+			timeslice_timestamps[timeslice_timestamps_index] = current_time;
+			timeslice_timestamps_index = (timeslice_timestamps_index + 1) % 30;
+			if (timeslice_timestamps_collected < 30) {
+				timeslice_timestamps_collected++;
 			}
 		}
 
-		if (should_do_2x) { machine->m_video->frame_update(); count_2x++; }
-		else { count_1x++; }
-		for (int updates = should_do_2x ? 2 : 1, i = 0; i < updates; ++i) {
-			update_timestamps[update_timestamps_index] = current_frame_time;
-			update_timestamps_index = (update_timestamps_index + 1) % 30;
-			if (update_timestamps_collected < 30) {
-				update_timestamps_collected++;
+		// Calculate FPS and TPS over different time windows EVERY FRAME
+		// 4-frame FPS
+		if (frame_timestamps_collected >= 4) {
+			int idx4 = (frame_timestamps_index - 4 + 30) % 30;
+			double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx4];
+			if (time_span > 0) {
+				fps_4 = 3.0 * 1000.0 / time_span;
 			}
 		}
+		// 4-frame TPS
+		if (timeslice_timestamps_collected >= 4) {
+			int update_idx4 = (timeslice_timestamps_index - 4 + 30) % 30;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx4];
+			if (update_time_span > 0) {
+				tps_4 = 3.0 * 1000.0 / update_time_span;
+			}
+		}
+
+		// 8-frame FPS
+		if (frame_timestamps_collected >= 8) {
+			int idx8 = (frame_timestamps_index - 8 + 30) % 30;
+			double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx8];
+			if (time_span > 0) {
+				fps_8 = 7.0 * 1000.0 / time_span;
+			}
+		}
+		// 8-frame TPS
+		if (timeslice_timestamps_collected >= 8) {
+			int update_idx8 = (timeslice_timestamps_index - 8 + 30) % 30;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx8];
+			if (update_time_span > 0) {
+				tps_8 = 7.0 * 1000.0 / update_time_span;
+			}
+		}
+
+		// 16-frame FPS
+		if (frame_timestamps_collected >= 16) {
+			int idx16 = (frame_timestamps_index - 16 + 30) % 30;
+			double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx16];
+			if (time_span > 0) {
+				fps_16 = 15.0 * 1000.0 / time_span;
+			}
+		}
+		// 16-frame TPS
+		if (timeslice_timestamps_collected >= 16) {
+			int update_idx16 = (timeslice_timestamps_index - 16 + 30) % 30;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx16];
+			if (update_time_span > 0) {
+				tps_16 = 15.0 * 1000.0 / update_time_span;
+			}
+		}
+
+		static int count_1x = 0, count_2x = 0, count_3x = 0, count_4x = 0;
+		if (emulation_passes == 1) { count_1x++; }
+		else if (emulation_passes == 2) { count_2x++; }
+		else if (emulation_passes == 3) { count_3x++; }
+		else if (emulation_passes == 4) { count_4x++; }
 
 		if (machine->options().wasm_debug())
 		{
@@ -1515,16 +1500,18 @@ void running_machine::emscripten_main_loop()
 			// Get game speed from video manager
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
-			// Use the real-time FPS and FUPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ffups | Speed: %.1f%% | Error 1x: %.1f | Error 2x: %.1f | 1x count: %d | 2x count: %d\n",
-				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent, error_1x_sum / 120, error_2x_sum / 120, count_1x, count_2x);
+			// Use the real-time FPS and TPS values calculated every frame
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
+				fmod(current_time, 100000.0), fps_4, fps_8, fps_16, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x, count_3x, count_4x);
 
 			// Reset counters for next period
-			fps_log_counter = 0; error_1x_sum = 0; error_2x_sum = 0; count_1x = 0; count_2x = 0;
+			fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
 		}
 		}
 	}
-	last_frame_time = current_frame_time;
+	// otherwise, just pump video updates through
+	else
+		machine->m_video->frame_update();
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
