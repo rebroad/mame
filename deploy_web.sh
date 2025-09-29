@@ -91,11 +91,11 @@ Playable web build of MAME running Atari Star Wars, compiled with Emscripten.
 Open `index.html` to start. Requires a modern browser with WebAssembly and WebGL.
 EOF
 
-# Prepare worktree for gh-pages - always create fresh
-info "📋 Creating fresh gh-pages branch..."
+# Prepare worktree for gh-pages - always create fresh orphan branch
+info "📋 Creating fresh orphan gh-pages branch..."
 git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
 git branch -D gh-pages 2>/dev/null || true  # Delete local branch if exists
-git worktree add -B gh-pages "$WORKTREE_DIR"
+git worktree add --orphan gh-pages "$WORKTREE_DIR"
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
@@ -109,7 +109,7 @@ DID_PAGES=true
 
 if $DID_PAGES; then
   info "🚀 Pushing to GitHub Pages..."
-  if git push origin gh-pages; then
+  if git push --force origin gh-pages; then
       success "✅ Deployed to GitHub Pages."
       REPO_URL="$(git config --get remote.origin.url)"
       if [[ "$REPO_URL" == *github.com* ]]; then
