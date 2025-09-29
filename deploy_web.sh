@@ -91,8 +91,10 @@ Playable web build of MAME running Atari Star Wars, compiled with Emscripten.
 Open `index.html` to start. Requires a modern browser with WebAssembly and WebGL.
 EOF
 
-# Capture original branch BEFORE any git operations
+# Capture original branch and remote URL BEFORE any git operations
 ORIGINAL_BRANCH="$(git branch --show-current)"
+ORIGIN_URL="$(git config --get remote.origin.url)"
+info "📡 Captured origin URL: $ORIGIN_URL"
 
 # Prepare worktree for gh-pages - always create fresh orphan branch
 info "📋 Creating fresh orphan gh-pages branch..."
@@ -106,11 +108,8 @@ git init
 git checkout --orphan gh-pages
 git rm -rf . 2>/dev/null || true  # Remove any existing files
 info "🔗 Adding origin remote..."
-# Add the origin remote from the main repo
-ORIGIN_URL="$(cd "$(dirname "$0")" && git config --get remote.origin.url)"
-info "📡 Origin URL: $ORIGIN_URL"
 if [[ -z "$ORIGIN_URL" ]]; then
-    error "❌ Could not find origin remote URL in $(dirname "$0")"
+    error "❌ Could not find origin remote URL"
     popd >/dev/null
     rm -rf "$WORKTREE_DIR" "$TMPDIR"
     exit 1
