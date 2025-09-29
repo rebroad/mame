@@ -105,8 +105,10 @@ pushd "$WORKTREE_DIR" >/dev/null
 git init
 git checkout --orphan gh-pages
 git rm -rf . 2>/dev/null || true  # Remove any existing files
+info "🔗 Adding origin remote..."
 # Add the origin remote from the main repo
 ORIGIN_URL="$(cd "$(dirname "$0")" && git config --get remote.origin.url)"
+info "📡 Origin URL: $ORIGIN_URL"
 if [[ -z "$ORIGIN_URL" ]]; then
     error "❌ Could not find origin remote URL in $(dirname "$0")"
     popd >/dev/null
@@ -114,12 +116,15 @@ if [[ -z "$ORIGIN_URL" ]]; then
     exit 1
 fi
 git remote add origin "$ORIGIN_URL"
+info "✅ Remote added successfully"
 popd >/dev/null
 
 # Return to the original branch in the main repo
+info "🔄 Returning to original branch: $ORIGINAL_BRANCH"
 if [[ -n "$ORIGINAL_BRANCH" ]]; then
     git checkout "$ORIGINAL_BRANCH" 2>/dev/null || true
 fi
+info "✅ Back on original branch"
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
