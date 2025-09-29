@@ -106,10 +106,18 @@ git rm -rf . 2>/dev/null || true  # Remove any existing files
 ORIGIN_URL="$(cd "$(dirname "$0")" && git config --get remote.origin.url)"
 if [[ -z "$ORIGIN_URL" ]]; then
     error "❌ Could not find origin remote URL in $(dirname "$0")"
+    popd >/dev/null
+    rm -rf "$WORKTREE_DIR" "$TMPDIR"
     exit 1
 fi
 git remote add origin "$ORIGIN_URL"
 popd >/dev/null
+
+# Return to the original branch in the main repo
+ORIGINAL_BRANCH="$(cd "$(dirname "$0")" && git branch --show-current)"
+if [[ -n "$ORIGINAL_BRANCH" ]]; then
+    git checkout "$ORIGINAL_BRANCH" 2>/dev/null || true
+fi
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
