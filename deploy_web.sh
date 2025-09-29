@@ -91,40 +91,21 @@ Playable web build of MAME running Atari Star Wars, compiled with Emscripten.
 Open `index.html` to start. Requires a modern browser with WebAssembly and WebGL.
 EOF
 
-# Prepare worktree for gh-pages
-if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-    info "📋 gh-pages branch exists; preparing worktree..."
-    git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
-    git worktree add -B gh-pages "$WORKTREE_DIR" origin/gh-pages 2>/dev/null || git worktree add -B gh-pages "$WORKTREE_DIR"
-else
-    info "📋 Creating gh-pages branch..."
-    git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
-    git worktree add -B gh-pages "$WORKTREE_DIR"
-fi
-
-info "🧹 Cleaning worktree..."
-rm -rf "$WORKTREE_DIR"/*
+# Prepare worktree for gh-pages - always create fresh
+info "📋 Creating fresh gh-pages branch..."
+git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
+git branch -D gh-pages 2>/dev/null || true  # Delete local branch if exists
+git worktree add -B gh-pages "$WORKTREE_DIR"
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
 
 pushd "$WORKTREE_DIR" >/dev/null
 
-DID_PAGES=false
-if git diff --quiet && git diff --cached --quiet; then
-    if $FORCE_DEPLOY; then
-        warn "No changes detected; forcing empty commit..."
-        git commit --allow-empty -m "$COMMIT_MESSAGE"
-        DID_PAGES=true
-    else
-        info "No changes to deploy to GitHub Pages. Proceeding to Cloudflare Worker (if requested)."
-    fi
-else
-    info "📝 Committing changes..."
-    git add .
-    git commit -m "$COMMIT_MESSAGE"
-    DID_PAGES=true
-fi
+info "📝 Creating initial commit..."
+git add -A
+git commit -m "$COMMIT_MESSAGE"
+DID_PAGES=true
 
 if $DID_PAGES; then
   info "🚀 Pushing to GitHub Pages..."
