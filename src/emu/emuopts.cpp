@@ -142,7 +142,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_VECTOR_DEFOCUS_SCALE,                       "1.0",       core_options::option_type::FLOAT,      "set vector defocus overdrive scale" },
 	{ OPTION_VECTOR_DEFOCUS_GAMMA,                       "2.2",       core_options::option_type::FLOAT,      "set vector defocus overdrive gamma" },
 	{ OPTION_VECTOR_DEFOCUS_MAXMUL,                      "2.0",       core_options::option_type::FLOAT,      "set vector defocus overdrive max multiplier" },
-	{ OPTION_VECTOR_GLOW_INTENSITY,                      "0.6",       core_options::option_type::FLOAT,      "set vector CRT glow intensity" },
+	{ OPTION_VECTOR_GLOW_INTENSITY,                      "0.02",      core_options::option_type::FLOAT,      "set vector CRT glow intensity" },
 	{ OPTION_VECTOR_ANTIALIAS,                           "1",         core_options::option_type::BOOLEAN,    "enable vector antialiasing" },
 
 	// sound options
