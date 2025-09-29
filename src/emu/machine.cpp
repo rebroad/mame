@@ -1385,14 +1385,11 @@ void running_machine::emscripten_main_loop()
 
 	// THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
 	static double last_frame_time = 0;
-	static bool in_compensation_mode = false;
 
 	// FPS CALCULATION: Collect timestamps and frame update counts
 	static double frame_timestamps[30] = {0};
 	static int frame_timestamps_index = 0;
 	static int frame_timestamps_collected = 0;
-	static int frame_update_count = 0;
-	static int total_frame_updates = 0;
 	static int fps_log_counter = 0;
 
 	// Real-time FPS values (calculated every frame)
@@ -1410,129 +1407,114 @@ void running_machine::emscripten_main_loop()
 		frame_timestamps_collected++;
 	}
 
-	// Track frame update counts per frame
-	static int frame_update_counts[30] = {0};
-	static int frame_update_sum = 0;
+	// Track timestamps of actual frame_update() calls for FUPS calculation
+	static double update_timestamps[30] = {0};
+	static int update_timestamps_index = 0;
+	static int update_timestamps_collected = 0;
 
-	// Store frame update count for this frame
-	frame_update_counts[frame_timestamps_index] = frame_update_count;
-	frame_update_sum += frame_update_count;
-
-	// Remove oldest frame update count if buffer is full
-	if (frame_timestamps_collected >= 30) {
-		frame_update_sum -= frame_update_counts[(frame_timestamps_index + 1) % 30];
-	}
-
-	// Calculate FPS and FUPS over different time windows EVERY FRAME
-	// 2-frame calculations
+	// Calculate FPS over different time windows EVERY FRAME
+	// 2-frame FPS
 	if (frame_timestamps_collected >= 2) {
 		int idx2 = (frame_timestamps_index - 2 + 30) % 30;
 		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx2];
 		if (time_span > 0) {
 			fps_2 = 1.0 * 1000.0 / time_span;
-			int updates_2 = frame_update_counts[(frame_timestamps_index - 1 + 30) % 30] + frame_update_counts[idx2];
-			fups_2 = updates_2 * 1000.0 / time_span;
+		}
+	}
+	// 2-frame FUPS
+	if (update_timestamps_collected >= 2) {
+		int update_idx2 = (update_timestamps_index - 2 + 30) % 30;
+		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx2];
+		if (update_time_span > 0) {
+			fups_2 = 1.0 * 1000.0 / update_time_span;
 		}
 	}
 
-	// 4-frame calculations
+	// 4-frame FPS
 	if (frame_timestamps_collected >= 4) {
 		int idx4 = (frame_timestamps_index - 4 + 30) % 30;
 		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx4];
 		if (time_span > 0) {
 			fps_4 = 3.0 * 1000.0 / time_span;
-			int updates_4 = 0;
-			for (int i = 0; i < 4; i++) {
-				updates_4 += frame_update_counts[(frame_timestamps_index - 1 - i + 30) % 30];
-			}
-			fups_4 = updates_4 * 1000.0 / time_span;
+		}
+	}
+	// 4-frame FUPS
+	if (update_timestamps_collected >= 4) {
+		int update_idx4 = (update_timestamps_index - 4 + 30) % 30;
+		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx4];
+		if (update_time_span > 0) {
+			fups_4 = 3.0 * 1000.0 / update_time_span;
 		}
 	}
 
-	// 8-frame calculations
+	// 8-frame FPS
 	if (frame_timestamps_collected >= 8) {
 		int idx8 = (frame_timestamps_index - 8 + 30) % 30;
 		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx8];
 		if (time_span > 0) {
 			fps_8 = 7.0 * 1000.0 / time_span;
-			int updates_8 = 0;
-			for (int i = 0; i < 8; i++) {
-				updates_8 += frame_update_counts[(frame_timestamps_index - 1 - i + 30) % 30];
-			}
-			fups_8 = updates_8 * 1000.0 / time_span;
+		}
+	}
+	// 8-frame FUPS
+	if (update_timestamps_collected >= 8) {
+		int update_idx8 = (update_timestamps_index - 8 + 30) % 30;
+		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx8];
+		if (update_time_span > 0) {
+			fups_8 = 7.0 * 1000.0 / update_time_span;
 		}
 	}
 
-	// 16-frame calculations
+	// 16-frame FPS
 	if (frame_timestamps_collected >= 16) {
 		int idx16 = (frame_timestamps_index - 16 + 30) % 30;
 		double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] - frame_timestamps[idx16];
 		if (time_span > 0) {
 			fps_16 = 15.0 * 1000.0 / time_span;
-			int updates_16 = 0;
-			for (int i = 0; i < 16; i++) {
-				updates_16 += frame_update_counts[(frame_timestamps_index - 1 - i + 30) % 30];
-			}
-			fups_16 = updates_16 * 1000.0 / time_span;
 		}
 	}
-
-	// Add current frame updates to total
-	total_frame_updates += frame_update_count;
-	frame_update_count = 0; // Reset for next period
+	// 16-frame FUPS
+	if (update_timestamps_collected >= 16) {
+		int update_idx16 = (update_timestamps_index - 16 + 30) % 30;
+		double update_time_span = update_timestamps[(update_timestamps_index - 1 + 30) % 30] - update_timestamps[update_idx16];
+		if (update_time_span > 0) {
+			fups_16 = 15.0 * 1000.0 / update_time_span;
+		}
+	}
 
 	if (last_frame_time > 0) {
 		// FUPS-based compensation decision using 16-frame FUPS
 		static double target_fups = 60.0;
+        static double error_1x_sum = 0, error_2x_sum = 0; static int count_1x = 0, count_2x = 0;
 		bool should_do_2x = false;
 
-		if (frame_timestamps_collected >= 16) {
-			// Calculate what FUPS_16 would be with 1x vs 2x emulation
-			// We need to predict the next frame's FUPS_16 based on current frame update count
-			double current_time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] -
-									  frame_timestamps[(frame_timestamps_index - 16 + 30) % 30];
+		if (update_timestamps_collected >= 16) {
+			// Use current FUPS_16 to predict what it would be with 1x vs 2x emulation
+			// Current FUPS_16 is already calculated above
+			if (fups_16 > 0) {
+				// Estimate what FUPS_16 would be after 1 more frame_update
+				double frame_delta = current_frame_time - last_frame_time;
+				double additional_update_time = frame_delta; // Time for one more frame_update
+				double fups_16_with_1x = 16.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 16 or 15?
 
-			if (current_time_span > 0) {
-				// Current 16-frame FUPS (without this frame's updates)
-				int current_updates_16 = 0;
-				for (int i = 1; i < 16; i++) { // Skip current frame
-					current_updates_16 += frame_update_counts[(frame_timestamps_index - 1 - i + 30) % 30];
-				}
-				double current_fups_16 = current_updates_16 * 1000.0 / current_time_span;
-
-				// Predict FUPS_16 with 1x emulation (add 1 update to oldest frame)
-				int oldest_frame_idx = (frame_timestamps_index - 16 + 30) % 30;
-				double fups_16_with_1x = (current_updates_16 - frame_update_counts[oldest_frame_idx] + 1) * 1000.0 / current_time_span;
-
-				// Predict FUPS_16 with 2x emulation (add 2 updates to oldest frame)
-				double fups_16_with_2x = (current_updates_16 - frame_update_counts[oldest_frame_idx] + 2) * 1000.0 / current_time_span;
+				// Estimate what FUPS_16 would be after 2 more frame_updates
+				double fups_16_with_2x = 17.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 17 or 16?
 
 				// Choose the option that gets us closer to target FUPS
-				double error_1x = abs(fups_16_with_1x - target_fups);
-				double error_2x = abs(fups_16_with_2x - target_fups);
+				double error_1x = abs(fups_16_with_1x - target_fups); error_1x_sum += error_1x;
+				double error_2x = abs(fups_16_with_2x - target_fups); error_2x_sum += error_2x;
 
 				should_do_2x = error_2x < error_1x;
 			}
 		}
 
-		if (should_do_2x) {
-			// Log when entering compensation mode
-			if (!in_compensation_mode) {
-				osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Entering 2x emulation mode (current FUPS_16: %.1f, target: %.1f)\n",
-					fmod(current_frame_time, 100000.0), fups_16, target_fups);
-				in_compensation_mode = true;
+		if (should_do_2x) { machine->m_video->frame_update(); count_2x++; }
+		else { count_1x++; }
+		for (int updates = should_do_2x ? 2 : 1, i = 0; i < updates; ++i) {
+			update_timestamps[update_timestamps_index] = current_frame_time;
+			update_timestamps_index = (update_timestamps_index + 1) % 30;
+			if (update_timestamps_collected < 30) {
+				update_timestamps_collected++;
 			}
-			// Run emulation twice - advance game state 2x faster
-			machine->m_video->frame_update();
-			frame_update_count += 2;
-		} else {
-			// Log when leaving compensation mode
-			if (in_compensation_mode) {
-				osd_printf_info("[%.0fms] THROTTLE COMPENSATION: Leaving 2x emulation mode (current FUPS_16: %.1f, target: %.1f)\n",
-					fmod(current_frame_time, 100000.0), fups_16, target_fups);
-				in_compensation_mode = false;
-			}
-			frame_update_count++;
 		}
 
 		if (machine->options().wasm_debug())
@@ -1540,26 +1522,15 @@ void running_machine::emscripten_main_loop()
 		// Log comprehensive stats every 120 frames
 		fps_log_counter++;
 		if (fps_log_counter >= 120) {
-			// Calculate frame updates per second using total
-			double updates_per_second = 0.0;
-			if (frame_timestamps_collected >= 2) {
-				double time_span = frame_timestamps[(frame_timestamps_index - 1 + 30) % 30] -
-								  frame_timestamps[frame_timestamps_index];
-				if (time_span > 0) {
-					updates_per_second = total_frame_updates * 1000.0 / time_span;
-				}
-			}
-
 			// Get game speed from video manager
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and FUPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps (2/4/8/16) | %.1f/%.1f/%.1f/%.1f FUPS (2/4/8/16) | Speed: %.1f%%\n",
-				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent);
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ffups | Speed: %.1f%% | Error 1x: %.1f | Error 2x: %.1f | 1x count: %d | 2x count: %d\n",
+				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent, error_1x_sum / 120, error_2x_sum / 120, count_1x, count_2x);
 
 			// Reset counters for next period
-			fps_log_counter = 0;
-			total_frame_updates = 0;
+			fps_log_counter = 0; error_1x_sum = 0; error_2x_sum = 0; count_1x = 0; count_2x = 0;
 		}
 		}
 	}
