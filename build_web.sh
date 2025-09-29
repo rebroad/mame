@@ -1054,7 +1054,9 @@ if $CONSOLE_DEBUG; then
     for chrome_cmd in chromium chromium-browser; do
         if command -v "$chrome_cmd" >/dev/null 2>&1; then
             {
-                nohup "$chrome_cmd" --user-data-dir="$TEMP_PROFILE_DIR" --no-first-run ${NOTHROT:+--disable-frame-rate-limit} "http://localhost:$USED_PORT" >/dev/null 2>&1
+                chrome_args=(--user-data-dir="$TEMP_PROFILE_DIR" --no-first-run)
+                $NOTHROT && chrome_args+=(--disable-frame-rate-limit)
+                nohup "$chrome_cmd" "${chrome_args[@]}" "http://localhost:$USED_PORT" >/dev/null 2>&1
 
                 rm -rf "$TEMP_PROFILE_DIR"
             } &
