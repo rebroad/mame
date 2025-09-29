@@ -99,6 +99,12 @@
         console.log('📊 Starting performance monitoring...');
         isMonitoring = true;
         monitorFrames();
+
+        // Stop monitoring after 8 seconds
+        setTimeout(() => {
+            console.log('📊 Stopping performance monitoring...');
+            isMonitoring = false;
+        }, 8000);
     }, 3000);
 
 
