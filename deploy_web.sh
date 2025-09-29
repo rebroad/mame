@@ -72,8 +72,8 @@ for f in "${REQUIRED_FILES[@]}"; do
 done
 success "✅ Web artifacts present in webdist/"
 
-TMPDIR="gh-pages-tmp"
-WORKTREE_DIR="gh-pages-deploy"
+TMPDIR="/tmp/gh-pages-tmp-$$"
+WORKTREE_DIR="/tmp/gh-pages-deploy-$$"
 
 info "🧹 Preparing temporary directory..."
 rm -rf "$TMPDIR" "$WORKTREE_DIR"
@@ -95,7 +95,21 @@ EOF
 info "📋 Creating fresh orphan gh-pages branch..."
 git worktree remove "$WORKTREE_DIR" 2>/dev/null || true
 git branch -D gh-pages 2>/dev/null || true  # Delete local branch if exists
-git worktree add --orphan gh-pages "$WORKTREE_DIR"
+
+# Create orphan branch in worktree directory
+mkdir -p "$WORKTREE_DIR"
+pushd "$WORKTREE_DIR" >/dev/null
+git init
+git checkout --orphan gh-pages
+git rm -rf . 2>/dev/null || true  # Remove any existing files
+# Add the origin remote from the main repo
+ORIGIN_URL="$(cd "$(dirname "$0")" && git config --get remote.origin.url)"
+if [[ -z "$ORIGIN_URL" ]]; then
+    error "❌ Could not find origin remote URL in $(dirname "$0")"
+    exit 1
+fi
+git remote add origin "$ORIGIN_URL"
+popd >/dev/null
 
 info "📦 Copying deployment files..."
 cp -a "$TMPDIR"/* "$WORKTREE_DIR"/
@@ -127,14 +141,14 @@ if $DID_PAGES; then
   else
       error "❌ Push failed."
       popd >/dev/null
-      git worktree remove "$WORKTREE_DIR"
+      rm -rf "$WORKTREE_DIR"
       rm -rf "$TMPDIR"
       exit 1
   fi
 fi
 
 popd >/dev/null
-git worktree remove "$WORKTREE_DIR" || true
+rm -rf "$WORKTREE_DIR"
 rm -rf "$TMPDIR"
 
 success "🎉 Deployment complete."
