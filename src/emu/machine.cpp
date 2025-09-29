@@ -1356,22 +1356,28 @@ void running_machine::emscripten_main_loop()
 		const attotime stoptime(scheduler->time() + frametime);
 		const double current_time = emscripten_get_now(); // TODO - not use scheduler->time() ?
 
-		// Check if we should run emulation at 2x speed due to throttling
+		// Check throttling level and determine emulation multiplier
 		static double last_loop_time = 0;
-		bool should_run_2x = false;
+		int emulation_passes = 1;
 		if (last_loop_time > 0) {
-			double loop_delta = emscripten_get_now() - last_loop_time;
-			// If loop is running slower than 60fps (16.67ms), run 2x emulation
-			should_run_2x = loop_delta > 20.0; // 20ms threshold (50fps)
+			double loop_delta = current_time - last_loop_time;
+			// Dynamic scaling based on detected frame rate
+			if (loop_delta > 33.3) {      // < 30fps (33.3ms) -> 4x emulation
+				emulation_passes = 4;
+			} else if (loop_delta > 25.0) { // < 40fps (25ms) -> 3x emulation
+				emulation_passes = 3;
+			} else if (loop_delta > 20.0) { // < 50fps (20ms) -> 2x emulation
+				emulation_passes = 2;
+			} else {                        // >= 50fps -> 1x emulation
+				emulation_passes = 1;
+			}
 		}
 		last_loop_time = current_time;
 
-		// Run emulation loop, potentially at 2x speed
-		int emulation_passes = should_run_2x ? 2 : 1;
 		for (int pass = 0; pass < emulation_passes; pass++) {
 			attotime current_stoptime = stoptime;
-			if (should_run_2x && pass == 1) {
-				// Second pass: advance stoptime further to compensate for throttling
+			if (emulation_passes > 1 && pass > 0) {
+				// Additional passes: advance stoptime further to compensate for throttling
 				current_stoptime = scheduler->time() + frametime;
 			}
 
@@ -1477,9 +1483,11 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 
-        static int count_1x = 0, count_2x = 0;
-        if (should_run_2x) { count_2x++; }
-        else { count_1x++; }
+		static int count_1x = 0, count_2x = 0, count_3x = 0, count_4x = 0;
+		if (emulation_passes == 1) { count_1x++; }
+		else if (emulation_passes == 2) { count_2x++; }
+		else if (emulation_passes == 3) { count_3x++; }
+		else if (emulation_passes == 4) { count_4x++; }
 
 		// Log comprehensive stats every 120 frames
 		fps_log_counter++;
@@ -1488,11 +1496,11 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and TPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x count: %d | 2x count: %d\n",
-				fmod(current_time, 100000.0), fps_4, fps_8, fps_16, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x);
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
+				fmod(current_time, 100000.0), fps_4, fps_8, fps_16, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x, count_3x, count_4x);
 
 			// Reset counters for next period
-			fps_log_counter = 0; count_1x = 0; count_2x = 0;
+			fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
 		}
 	}
 	// other, just pump video updates and sound mapping updates through
