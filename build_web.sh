@@ -666,7 +666,7 @@ if $AUTOSTART; then
 fi
 python3 "$PACKAGER" "${PACK_ARGS[@]}"
 
-# Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain)
+# Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain/vector glow)
 INI_ARGS_JS=""
 INI_FILE="$HOME/.mame/ini/${DRIVER_SHORTNAME}.ini"
 if [[ -f "$INI_FILE" ]]; then
@@ -675,6 +675,7 @@ if [[ -f "$INI_FILE" ]]; then
     INI_CONTRAST="$(awk 'tolower($1)=="contrast"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_GAMMA="$(awk 'tolower($1)=="gamma"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_BGFX_CHAIN="$(awk 'tolower($1)=="bgfx_screen_chains"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
+    INI_VECTOR_GLOW="$(awk 'tolower($1)=="vector_glow_intensity"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     INI_AUTOFRAMESKIP="$(awk 'tolower($1)=="autoframeskip"{print $2;exit}' "$INI_FILE" 2>/dev/null || true)"
     # Note: ignore waitvsync/syncrefresh in WASM, they can stall rendering in browsers
     if [[ -n "$INI_BRIGHTNESS" ]]; then
@@ -688,6 +689,9 @@ if [[ -f "$INI_FILE" ]]; then
     fi
     if [[ -n "$INI_BGFX_CHAIN" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-bgfx_screen_chains", '"\"$INI_BGFX_CHAIN\""');'
+    fi
+    if [[ -n "$INI_VECTOR_GLOW" ]]; then
+        INI_ARGS_JS+=$'\n      Module.arguments.push("-vector_glow_intensity", '"\"$INI_VECTOR_GLOW\""');'
     fi
     if [[ "$INI_AUTOFRAMESKIP" == "1" ]]; then
         INI_ARGS_JS+=$'\n      Module.arguments.push("-autoframeskip");'
