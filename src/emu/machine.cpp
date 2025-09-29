@@ -1484,6 +1484,7 @@ void running_machine::emscripten_main_loop()
 	if (last_frame_time > 0) {
 		// FUPS-based compensation decision using 16-frame FUPS
 		static double target_fups = 60.0;
+        static double error_1x_sum = 0, error_2x_sum = 0; static int count_1x = 0, count_2x = 0;
 		bool should_do_2x = false;
 
 		if (update_timestamps_collected >= 16) {
@@ -1499,16 +1500,15 @@ void running_machine::emscripten_main_loop()
 				double fups_16_with_2x = 17.0 * 1000.0 / (15.0 * 1000.0 / fups_16 + additional_update_time); // 17 or 16?
 
 				// Choose the option that gets us closer to target FUPS
-				double error_1x = abs(fups_16_with_1x - target_fups);
-				double error_2x = abs(fups_16_with_2x - target_fups);
+				double error_1x = abs(fups_16_with_1x - target_fups); error_1x_sum += error_1x;
+				double error_2x = abs(fups_16_with_2x - target_fups); error_2x_sum += error_2x;
 
 				should_do_2x = error_2x < error_1x;
 			}
 		}
 
-		if (should_do_2x) {
-			machine->m_video->frame_update();
-		}
+		if (should_do_2x) { machine->m_video->frame_update(); count_2x++; }
+		else { count_1x++; }
 		for (int updates = should_do_2x ? 2 : 1, i = 0; i < updates; ++i) {
 			update_timestamps[update_timestamps_index] = current_frame_time;
 			update_timestamps_index = (update_timestamps_index + 1) % 30;
@@ -1524,11 +1524,11 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// Use the real-time FPS and FUPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps (2/4/8/16) | %.1f/%.1f/%.1f/%.1f FUPS (2/4/8/16) | Speed: %.1f%%\n",
-				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent);
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1f/%.1ffps | %.1f/%.1f/%.1f/%.1ffups | Speed: %.1f%% | Error 1x: %.1f | Error 2x: %.1f | 1x count: %d | 2x count: %d\n",
+				fmod(current_frame_time, 100000.0), fps_2, fps_4, fps_8, fps_16, fups_2, fups_4, fups_8, fups_16, game_speed_percent, error_1x_sum / count_1x, error_2x_sum / count_2x, count_1x, count_2x);
 
 			// Reset counters for next period
-			fps_log_counter = 0;
+			fps_log_counter = 0; error_1x_sum = 0; error_2x_sum = 0; count_1x = 0; count_2x = 0;
 		}
 	}
 	last_frame_time = current_frame_time;
