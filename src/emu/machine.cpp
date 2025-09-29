@@ -10,10 +10,6 @@
 
 #include "emu.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 #include "config.h"
 #include "crsshair.h"
 #include "debug/debugcpu.h"
@@ -1372,7 +1368,6 @@ void running_machine::emscripten_main_loop()
 	}
 	// other, just pump video updates and sound mapping updates through
 	else {
-#if defined(__EMSCRIPTEN__)
         // THROTTLING COMPENSATION: If we're being throttled, run emulation twice as fast
         static double last_frame_time = 0;
 		static bool in_compensation_mode = false;
@@ -1403,7 +1398,6 @@ void running_machine::emscripten_main_loop()
 		}
 		//machine->sound().mapping_update();
 		last_frame_time = current_frame_time;
-#endif
 		machine->m_video->frame_update();
 	}
 
