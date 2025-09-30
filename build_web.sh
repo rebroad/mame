@@ -63,10 +63,12 @@ AUTOFRAMESKIP=false
 REFRESHSPEED=false
 NOTHROT=false
 VERBOSE_FLAG=
+INCLUDE_ROMS=false
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-no-build) DO_BUILD=false; shift;;
 		-no-server) START_SERVER=false; shift;;
+		-includeroms) INCLUDE_ROMS=true; shift;;
 		-port) SERVER_PORT="${2:-}"; shift 2;;
 		-rom) ROM_PATH="${2:-}"; shift 2;;
 		-driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
@@ -609,7 +611,45 @@ if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
 	fi
 fi
 
-echo "Skipping ROM packaging - ROMs will be loaded dynamically by user..."
+if $INCLUDE_ROMS; then
+	echo "Packaging ROM into roms.data (mounted at roms/)..."
+	# Optional parent ROM support (embed if present in same dir or default rom dir)
+	PARENT_ROM=""
+	ROM_DIR="$(dirname "$ROM_PATH")"
+	if [[ -f "$ROM_DIR/starwars.zip" ]]; then
+	  PARENT_ROM="$ROM_DIR/starwars.zip"
+	elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
+	  PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+	fi
+
+	# Determine the correct ROM path based on ROM file type
+	# Determine ROM mount path and always use the same PACK_ARGS template for DRYness
+	if [[ "$ROM_PATH" == *.zip ]]; then
+	       # For zip files, mount directly in roms/ directory
+	       ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
+	else
+	       # For individual files, mount the entire directory in roms/starwars/
+	       ROM_MOUNT_PATH="roms/starwars/"
+	fi
+	PACK_ARGS=(
+	       "$OUTDIR/roms.data"
+	       --preload "$ROM_PATH@$ROM_MOUNT_PATH"
+	       --export-name=Module
+	       --use-preload-cache
+	       --js-output="$OUTDIR/roms.js"
+	)
+	if [[ -n "$PARENT_ROM" ]]; then
+	  echo "Including parent ROM: $PARENT_ROM"
+	  PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
+	fi
+	# Preload autoboot if present
+	if $AUTOSTART; then
+	  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
+	fi
+	python3 "$PACKAGER" "${PACK_ARGS[@]}"
+else
+	echo "Skipping ROM packaging - ROMs will be loaded dynamically by user..."
+fi
 # Optional autoboot script must be preloaded into the Emscripten FS
 if $AUTOSTART; then
 cat > "$OUTDIR/autoboot.lua" <<'LUA'
@@ -728,9 +768,13 @@ cat > "$OUTDIR/index.html" <<EOF
 	<script>
 	  console.log('[BROWSER] HTML page starting to load...');
 	</script>
-	<style>
-		html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif}
-		#canvas{width:100%;height:100%;display:block}
+    <style>
+        html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}
+EOF
+
+if ! $INCLUDE_ROMS; then
+	# Dynamic ROM loading mode - user selects ROMs
+	cat >> "$OUTDIR/index.html" <<EOF
 		#rom-selector{position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.8);padding:15px;border:1px solid #333;border-radius:5px;z-index:1000;max-width:400px}
 		#rom-selector h3{margin:0 0 10px 0;color:#fff}
 		#rom-selector p{margin:5px 0;font-size:14px}
@@ -741,9 +785,19 @@ cat > "$OUTDIR/index.html" <<EOF
 		#rom-status{margin:10px 0;padding:8px;background:rgba(0,50,0,0.3);border:1px solid #0a0;border-radius:3px;display:none}
 		#rom-status.error{background:rgba(50,0,0,0.3);border-color:#a00}
 		.hidden{display:none}
+EOF
+cat >> "$OUTDIR/index.html" <<EOF
 	</style>
   </head>
   <body>
+EOF
+if $INCLUDE_ROMS; then
+	cat >> "$OUTDIR/index.html" <<EOF
+  <canvas id="canvas"></canvas>
+  <script>
+EOF
+else
+	cat >> "$OUTDIR/index.html" <<EOF
 	<div id="rom-selector">
 		<h3>🎮 ROM Selection</h3>
 		<p>Please select your ROM files:</p>
@@ -932,7 +986,6 @@ cat > "$OUTDIR/index.html" <<EOF
 		}
 
 		waitForFS();
-	  }
 
 		function loadROMFiles() {
 		  // Load each ROM file
@@ -1026,7 +1079,10 @@ cat > "$OUTDIR/index.html" <<EOF
 		console.log('[BROWSER] Starting MAME with dynamically loaded ROMs...');
 		// The MAME module will be initialized when the scripts load
 	  }
+EOF
+fi
 
+cat >> "$OUTDIR/index.html" <<EOF
 	  // Ensure canvas has explicit pixel size and is visible
 	  (function(){
 		var c = document.getElementById('canvas');
@@ -1179,6 +1235,16 @@ ${INI_ARGS_JS}
 	</script>
 	<script src="mame_performance_warning.js"></script>
 	<script src="roms.js"></script>
+EOF
+
+if $INCLUDE_ROMS; then
+	# Traditional mode - load MAME scripts immediately
+	cat >> "$OUTDIR/index.html" <<EOF
+	<script src="${ARTIFACT_BASE}.js"></script>
+EOF
+else
+	# Dynamic ROM loading mode - load MAME scripts when user clicks
+	cat >> "$OUTDIR/index.html" <<EOF
 	<script>
 	  // MAME scripts will be loaded when user clicks "Load ROMs"
 	  var mameScriptsLoaded = false;
@@ -1195,6 +1261,10 @@ ${INI_ARGS_JS}
 		}
 	  };
 	</script>
+EOF
+fi
+
+cat >> "$OUTDIR/index.html" <<EOF
   </body>
   </html>
 EOF
