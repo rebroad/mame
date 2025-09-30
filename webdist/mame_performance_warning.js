@@ -29,8 +29,10 @@
 	let warningDismissed = false; // Track if user dismissed the warning
 	let isMonitoring = false; // Track if monitoring is active
 	let warningDisplayCount = 0; // Track how warnings displayed
+	let dismissedFpsThreshold = 44; // Track FPS threshold when warning was dismissed
 	const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
 	const MAX_WARNINGS = 3; // Maximum warnings before stopping
+	const SIGNIFICANT_DROP_PERCENTAGE = 0.05; // FPS must drop by 5% to show new warning
 
 	// Monitor frame rate with throttling to avoid blocking event loop
 	let lastMonitorTime = 0;
@@ -74,17 +76,31 @@
 				}
 
 				// Only show GUI warning if MAME is running and FPS is low
-				if (mameIsRunning && avgFps < 44 && !warningDismissed && !window.warningDismissed) {
+				if (mameIsRunning && avgFps < 44) {
+					// Check if we should show a warning
+					let shouldShowWarning = false;
+
+					if (!warningDismissed && !window.warningDismissed) {
+						// First warning - show it
+						shouldShowWarning = true;
 						const existingWarning = document.querySelector('.mame-performance-warning');
 						if (existingWarning) {
 							existingWarning.remove();
 						}
+					} else if (avgFps < (dismissedFpsThreshold * (1 - SIGNIFICANT_DROP_PERCENTAGE))) {
+						// FPS has dropped significantly below the dismissed threshold (5% drop)
+						shouldShowWarning = true;
+						const dropPercentage = ((dismissedFpsThreshold - avgFps) / dismissedFpsThreshold * 100).toFixed(1);
+						console.log(`📉 Significant FPS drop detected: ${avgFps.toFixed(1)}fps (${dropPercentage}% drop from ${dismissedFpsThreshold.toFixed(1)}fps when dismissed)`);
+					}
 
+					if (shouldShowWarning) {
 						if (isChrome) {
 							showChromeWarning();
 						} else {
 							showGenericWarning();
 						}
+					}
 				}
 			}
 			lastTime = now;
@@ -195,6 +211,11 @@
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 
+				// Record the FPS threshold when dismissed
+				dismissedFpsThreshold = detectedFrameRate;
+				const newThreshold = dismissedFpsThreshold * (1 - SIGNIFICANT_DROP_PERCENTAGE);
+				console.log(`🔇 Warning dismissed at ${detectedFrameRate.toFixed(1)}fps - will only warn if FPS drops below ${newThreshold.toFixed(1)}fps (5% drop)`);
+
 				// Increment warning count when user dismisses
 				warningDisplayCount++;
 
@@ -284,7 +305,7 @@
 		warning.innerHTML = `
 			<div style="font-weight: bold; margin-bottom: 5px;">⚠️ ${title}</div>
 			<div style="margin-bottom: 8px;">${message}</div>
-			<button onclick="warningDisplayCount++; this.parentElement.remove();" style="
+			<button onclick="dismissedFpsThreshold = detectedFrameRate; warningDisplayCount++; this.parentElement.remove();" style="
 				background: rgba(255,255,255,0.2);
 				border: 1px solid rgba(255,255,255,0.3);
 				color: white;
