@@ -864,17 +864,20 @@ cat > "$OUTDIR/index.html" <<EOF
 	  });
 
 	  function loadMAMEScriptsAndROMs() {
+		console.log('[BROWSER] loadMAMEScriptsAndROMs() called');
 		if (mameScriptsLoaded) {
 		  // Scripts already loaded, just load ROMs
+		  console.log('[BROWSER] MAME scripts already loaded, loading ROMs...');
 		  loadROMsIntoFS();
 		  return;
 		}
 
 		// Load MAME scripts first
+		console.log('[BROWSER] Loading MAME scripts from ${ARTIFACT_BASE}.js...');
 		var script = document.createElement('script');
 		script.src = '${ARTIFACT_BASE}.js';
 		script.onload = function() {
-		  console.log('MAME scripts loaded, now loading ROMs...');
+		  console.log('[BROWSER] MAME scripts loaded, now loading ROMs...');
 		  showStatus('MAME scripts loaded, now loading ROMs...', false);
 		  mameScriptsLoaded = true;
 
@@ -1017,7 +1020,7 @@ cat > "$OUTDIR/index.html" <<EOF
 
 	  // Function to start MAME after ROMs are loaded
 	  function startMAME() {
-		console.log('Starting MAME with dynamically loaded ROMs...');
+		console.log('[BROWSER] Starting MAME with dynamically loaded ROMs...');
 		// The MAME module will be initialized when the scripts load
 	  }
 
@@ -1180,8 +1183,9 @@ ${INI_ARGS_JS}
 	  // Override startMAME to run MAME
 	  var originalStartMAME = startMAME;
 	  startMAME = function() {
-		console.log('Starting MAME...');
+		console.log('[BROWSER] Starting MAME...');
 		if (typeof Module !== 'undefined' && Module.run) {
+		  console.log('[BROWSER] Module.run() called - MAME execution starting');
 		  Module.run();
 		} else {
 		  showStatus('Error: MAME module not ready. Please try loading ROMs again.', true);

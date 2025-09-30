@@ -73,14 +73,13 @@ const path = require('path');
 		}
 
 		targetUrl = `http://localhost:${port}`;
-		console.log(`📍 Loading ${targetUrl}...`);
 	} else {
 		// URL provided, ensure it has protocol if not provided
 		if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
 			targetUrl = 'http://' + targetUrl;
 		}
-		console.log(`📍 Loading ${targetUrl}...`);
 	}
+    console.log(`📍 Target URL: ${targetUrl}`);
 
 	// Capture console messages
 	const consoleMessages = [];
@@ -89,9 +88,13 @@ const path = require('path');
 	  const type = msg.type();
 	  const text = msg.text();
 
+	  // Debug: Show all console messages we're receiving
+	  console.log(`🔍 CONSOLE CAPTURE: type=${type}, text="${text}"`);
+
 	  // Filter out annoying deprecation warnings
 	  if (text.includes('ScriptProcessorNode is deprecated') ||
 		  text.includes('AudioContext was not allowed to start')) {
+		console.log(`🔍 FILTERED OUT: ${text}`);
 		return; // Skip these warnings
 	  }
 
