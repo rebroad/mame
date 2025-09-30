@@ -84,6 +84,8 @@ const path = require('path');
 
 	// Capture console messages
 	const consoleMessages = [];
+	let mameStartTime = null;
+
 	page.on('console', msg => {
 	  const type = msg.type();
 	  const text = msg.text();
@@ -94,9 +96,21 @@ const path = require('path');
 		return; // Skip these warnings
 	  }
 
+	  // Detect when MAME starts to align our timing
+	  if (text.includes('Starting') && !mameStartTime) {
+		mameStartTime = performance.now();
+		console.log(`🎮 MAME start time captured: ${mameStartTime.toFixed(1)}ms`);
+	  }
+
 	  // Add timestamp in same format as MAME STATS (last 5 digits)
-	  const timestamp = Date.now();
-	  const timestampStr = `[${timestamp.toString().slice(-5)}ms]`;
+	  // Use performance.now() relative to MAME start time if available
+	  let timestamp;
+	  if (mameStartTime) {
+		timestamp = performance.now() - mameStartTime;
+	  } else {
+		timestamp = performance.now();
+	  }
+	  const timestampStr = `[${Math.round(timestamp).toString().slice(-5)}ms]`;
 
 	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
