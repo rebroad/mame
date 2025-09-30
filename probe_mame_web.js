@@ -114,12 +114,18 @@ const path = require('path');
 	// Also set up page error listener
 	page.on('pageerror', error => {
 	  console.log(`🔍 PAGE ERROR: ${error.message}`);
+	  console.log(`🔍 PAGE ERROR STACK: ${error.stack}`);
 	});
 
 	// Set up request listener to see when page starts loading
 	page.on('request', request => {
-	  if (request.url().includes('index.html')) {
-		console.log(`🔍 PAGE REQUEST: ${request.url()}`);
+	  console.log(`🔍 REQUEST: ${request.url()}`);
+	});
+
+	// Set up response listener to see when page finishes loading
+	page.on('response', response => {
+	  if (response.url().includes('index.html')) {
+		console.log(`🔍 RESPONSE: ${response.url()} - Status: ${response.status()}`);
 	  }
 	});
 
