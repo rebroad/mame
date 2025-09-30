@@ -89,9 +89,6 @@ const path = require('path');
 	  const type = msg.type();
 	  const text = msg.text();
 
-	  // Debug: Show all console messages we're receiving
-	  console.log(`🔍 CONSOLE CAPTURE: type=${type}, text="${text}"`);
-
 	  // Filter out annoying deprecation warnings
 	  if (text.includes('ScriptProcessorNode is deprecated') ||
 		  text.includes('AudioContext was not allowed to start')) {
