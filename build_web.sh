@@ -754,12 +754,37 @@ cat > "$OUTDIR/index.html" <<EOF
 		  <strong>Note:</strong> Files are loaded into browser memory only. No data is sent to any server.
 		</p>
 		<div id="rom-status"></div>
+		<div id="debug-info" style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.5);border:1px solid #333;border-radius:3px;font-size:12px;display:none;">
+		  <strong>Debug Info:</strong><br>
+		  <span id="debug-files">Files: 0</span><br>
+		  <span id="debug-buttons">Load: disabled, Start: disabled</span><br>
+		  <span id="debug-fs">FS: checking...</span>
+		</div>
 	</div>
 	<canvas id="canvas" class="hidden"></canvas>
 	<script>
 	  // ROM loading functionality
 	  var romFiles = [];
 	  var romsLoaded = false;
+
+	  // Custom logging that bypasses any console overrides
+	  function debugLog(message, data) {
+		// Try multiple logging methods
+		try {
+		  console.log('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		try {
+		  console.info('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		try {
+		  console.warn('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		// Also log to a global array for probe_mame_web to capture
+		if (typeof window.mameDebugLog === 'undefined') {
+		  window.mameDebugLog = [];
+		}
+		window.mameDebugLog.push('[MAME-DEBUG] ' + message + (data ? ' ' + JSON.stringify(data) : ''));
+	  }
 
 	  function showStatus(message, isError) {
 		var status = document.getElementById('rom-status');
@@ -772,11 +797,35 @@ cat > "$OUTDIR/index.html" <<EOF
 		document.getElementById('rom-status').style.display = 'none';
 	  }
 
+	  function updateDebugInfo() {
+		var debugInfo = document.getElementById('debug-info');
+		var debugFiles = document.getElementById('debug-files');
+		var debugButtons = document.getElementById('debug-buttons');
+		var debugFS = document.getElementById('debug-fs');
+
+		debugFiles.textContent = 'Files: ' + romFiles.length;
+		debugButtons.textContent = 'Load: ' + (document.getElementById('load-roms').disabled ? 'disabled' : 'enabled') +
+								 ', Start: ' + (document.getElementById('start-game').disabled ? 'disabled' : 'enabled');
+		debugFS.textContent = 'FS: ' + (typeof FS !== 'undefined' ? 'available' : 'not available');
+
+		// Show debug info if there are issues
+		if (romFiles.length > 0 && document.getElementById('load-roms').disabled) {
+		  debugInfo.style.display = 'block';
+		}
+	  }
+
 	  function updateButtons() {
 		var loadBtn = document.getElementById('load-roms');
 		var startBtn = document.getElementById('start-game');
 		loadBtn.disabled = romFiles.length === 0;
 		startBtn.disabled = !romsLoaded;
+		debugLog('Buttons updated', {
+		  romFilesLength: romFiles.length,
+		  loadButtonDisabled: loadBtn.disabled,
+		  startButtonDisabled: startBtn.disabled,
+		  romsLoaded: romsLoaded
+		});
+		updateDebugInfo();
 	  }
 
 	  // Handle ROM zip file selection
@@ -791,11 +840,13 @@ cat > "$OUTDIR/index.html" <<EOF
 
 	  // Handle ROM directory selection
 	  document.getElementById('rom-directory').addEventListener('change', function(e) {
+		debugLog('Directory selection changed', {filesLength: e.target.files.length});
 		if (e.target.files.length > 0) {
 		  romFiles = Array.from(e.target.files);
+		  debugLog('ROM files array populated', {count: romFiles.length, files: romFiles.map(f => f.name)});
 		  document.getElementById('rom-zip').value = '';
+		  showStatus('Selected ' + romFiles.length + ' ROM files. Click "Load ROMs into Browser" to continue.', false);
 		  updateButtons();
-		  hideStatus();
 		}
 	  });
 
@@ -846,8 +897,11 @@ cat > "$OUTDIR/index.html" <<EOF
 		function waitForFS() {
 		  fsWaitAttempts++;
 
-		  // Debug information
-		  console.log('FS check attempt', fsWaitAttempts, 'FS defined:', typeof FS !== 'undefined', 'FS.mkdir:', typeof FS !== 'undefined' && FS.mkdir);
+		  debugLog('FS check attempt', {
+			attempt: fsWaitAttempts,
+			fsDefined: typeof FS !== 'undefined',
+			fsMkdir: typeof FS !== 'undefined' && FS.mkdir
+		  });
 
 		  if (typeof FS !== 'undefined' && FS.mkdir) {
 			// Create roms directory in Emscripten filesystem

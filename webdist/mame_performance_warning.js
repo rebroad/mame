@@ -121,7 +121,7 @@
 
     function createDismissButton() {
         return `
-            <button onclick="this.parentElement.remove(); window.warningDismissed = true;" style="
+            <button id="mame-dismiss-btn" style="
                 background: rgba(255,255,255,0.2);
                 border: 1px solid rgba(255,255,255,0.3);
                 color: white;
@@ -164,9 +164,30 @@
 
         document.body.appendChild(warning);
 
-        // Auto-dismiss after specified time
+        // Add proper event listener for dismiss button
+        const dismissBtn = warning.querySelector('#mame-dismiss-btn');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Stop performance monitoring immediately
+                isMonitoring = false;
+                warningDismissed = true;
+                window.warningDismissed = true;
+
+                // Remove the warning
+                if (warning.parentElement) {
+                    warning.remove();
+                }
+
+                console.log('🔇 Performance monitoring stopped by user');
+            });
+        }
+
+        // Auto-dismiss after specified time (only if not manually dismissed)
         setTimeout(() => {
-            if (warning.parentElement) {
+            if (warning.parentElement && !warningDismissed) {
                 warning.remove();
             }
         }, config.autoDismissTime);
