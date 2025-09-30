@@ -1,10 +1,16 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 (async () => {
   console.log('🔍 Probing MAME WebAssembly build...');
 
-  // Check for -nothrot argument
-  const nothrot = process.argv.includes('-nothrot');
+  // Parse command line arguments
+  const args = process.argv.slice(2); // Remove 'node' and script name
+  const nothrot = args.includes('-nothrot');
+
+  // Filter out flags to get the port number
+  const portArg = args.find(arg => !arg.startsWith('-') && !isNaN(parseInt(arg)));
 
   const browserArgs = [
 	'--no-sandbox' // Required for Ubuntu 23.10+ with AppArmor restrictions
@@ -35,7 +41,29 @@ const puppeteer = require('puppeteer');
   }
 
   try {
-	const port = process.argv[2];
+	// Try to read port from file first, then fall back to command line argument
+
+	let port = portArg; // Command line argument takes precedence
+
+	if (!port) {
+		// Try to read from .mame_web_port file
+		const portFile = path.join(__dirname, '.mame_web_port');
+		try {
+			if (fs.existsSync(portFile)) {
+				port = fs.readFileSync(portFile, 'utf8').trim();
+				console.log(`📄 Using port ${port} from .mame_web_port file`);
+			}
+		} catch (err) {
+			console.log('⚠️  Could not read .mame_web_port file:', err.message);
+		}
+	}
+
+	// Final fallback
+	if (!port) {
+		port = '8000';
+		console.log('⚠️  No port specified, using default: 8000');
+	}
+
 	console.log(`📍 Loading http://localhost:${port}...`);
 
 	// Capture console messages
@@ -149,7 +177,6 @@ const puppeteer = require('puppeteer');
 	});
 
 	// Save console output to file
-	const fs = require('fs');
 	const output = {
 	  timestamp: new Date().toISOString(),
 	  port: port,

@@ -940,6 +940,10 @@ start_server() {
     fi
     echo "Starting local server on http://localhost:$port ..."
     LAST_SERVER_PORT="$port"
+
+    # Write port number to file for probe_mame_web.js to read
+    echo "$port" > "$REPO_ROOT/.mame_web_port"
+
     pushd "$OUTDIR" >/dev/null
     # Prefer Node server with COOP/COEP if available
     if command -v node >/dev/null 2>&1; then
@@ -1020,8 +1024,7 @@ if $START_SERVER; then
         else
             # Probe common ports for an existing healthy server from same project (fast path)
             for p in 8000 8001 8002 8003 8004 8005; do
-                if command -v curl >/dev/null 2>&1 && \
-                   is_server_from_same_project "$p"; then
+                if command -v curl >/dev/null 2>&1 && is_server_from_same_project "$p"; then
                     used_port="$p"; break
                 fi
             done
