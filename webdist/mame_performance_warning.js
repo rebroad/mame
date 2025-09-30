@@ -28,12 +28,25 @@
     const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
     const MAX_WARNINGS = 3; // Maximum warnings before stopping
 
-    // Monitor frame rate using requestAnimationFrame
+    // Monitor frame rate with throttling to avoid blocking event loop
+    let lastMonitorTime = 0;
+    const MONITOR_INTERVAL = 100; // Check every 100ms instead of every frame
+
     const monitorFrames = () => {
         // Stop monitoring if flag is set
         if (!isMonitoring) return;
 
         const now = performance.now();
+
+        // Throttle monitoring to avoid blocking event loop
+        if (now - lastMonitorTime < MONITOR_INTERVAL) {
+            if (isMonitoring) {
+                requestAnimationFrame(monitorFrames);
+            }
+            return;
+        }
+        lastMonitorTime = now;
+
         const deltaTime = now - lastTime;
 
         if (frameCount > 0) {
@@ -71,7 +84,6 @@
                     }
 
                     // Throttle console warnings to avoid spam
-                    const now = performance.now();
                     if (now - lastWarningTime > WARNING_THROTTLE_MS && warningCount < MAX_WARNINGS) {
                         console.warn('⚠️ Low frame rate detected:', avgFps.toFixed(1), 'fps');
                         lastWarningTime = now;
@@ -164,12 +176,14 @@
 
         document.body.appendChild(warning);
 
-        // Add proper event listener for dismiss button
+        // Add proper event listener for dismiss button with event delegation
         const dismissBtn = warning.querySelector('#mame-dismiss-btn');
         if (dismissBtn) {
-            dismissBtn.addEventListener('click', function(e) {
+            // Use both click and mousedown events for better responsiveness
+            const handleDismiss = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
 
                 // Stop performance monitoring immediately
                 isMonitoring = false;
@@ -182,7 +196,14 @@
                 }
 
                 console.log('🔇 Performance monitoring stopped by user');
-            });
+
+                // Remove event listeners to prevent double-firing
+                dismissBtn.removeEventListener('click', handleDismiss);
+                dismissBtn.removeEventListener('mousedown', handleDismiss);
+            };
+
+            dismissBtn.addEventListener('click', handleDismiss, { capture: true });
+            dismissBtn.addEventListener('mousedown', handleDismiss, { capture: true });
         }
 
         // Auto-dismiss after specified time (only if not manually dismissed)
