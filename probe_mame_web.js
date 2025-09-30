@@ -1,4 +1,6 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 (async () => {
   console.log('🔍 Probing MAME WebAssembly build...');
@@ -36,8 +38,6 @@ const puppeteer = require('puppeteer');
 
   try {
 	// Try to read port from file first, then fall back to command line argument
-	const fs = require('fs');
-	const path = require('path');
 
 	let port = process.argv[2]; // Command line argument takes precedence
 
@@ -173,7 +173,6 @@ const puppeteer = require('puppeteer');
 	});
 
 	// Save console output to file
-	const fs = require('fs');
 	const output = {
 	  timestamp: new Date().toISOString(),
 	  port: port,
