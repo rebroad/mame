@@ -998,7 +998,7 @@ cat > "$OUTDIR/index.html" <<EOF
 
 		// Start the process
 		waitForFS();
-	  });
+	  };
 
 	  // Start the game
 	  document.getElementById('start-game').addEventListener('click', function() {
