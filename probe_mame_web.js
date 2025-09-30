@@ -11,7 +11,10 @@ const path = require('path');
   const args = process.argv.slice(2); // Remove 'node' and script name
   const nothrot = args.includes('-nothrot');
 
-  // Filter out flags to get the port number
+  // Get URL from command line arguments (first non-flag argument that's NOT a number)
+  const urlArg = args.find(arg => !arg.startsWith('-') && isNaN(parseInt(arg)));
+
+  // Filter out flags to get the port number (for localhost fallback)
   const portArg = args.find(arg => !arg.startsWith('-') && !isNaN(parseInt(arg)));
 
   const browserArgs = [
@@ -43,51 +46,135 @@ const path = require('path');
   }
 
   try {
-	// Try to read port from file first, then fall back to command line argument
+	// Determine target URL
+	let targetUrl = urlArg;
 
-	let port = portArg; // Command line argument takes precedence
+	if (!targetUrl) {
+		// No URL provided, try to read port from file first, then fall back to command line argument
+		let port = portArg; // Command line argument takes precedence
 
-	if (!port) {
-		// Try to read from .mame_web_port file
-		const portFile = path.join(__dirname, '.mame_web_port');
-		try {
-			if (fs.existsSync(portFile)) {
-				port = fs.readFileSync(portFile, 'utf8').trim();
-				console.log(`📄 Using port ${port} from .mame_web_port file`);
+		if (!port) {
+			// Try to read from .mame_web_port file
+			const portFile = path.join(__dirname, '.mame_web_port');
+			try {
+				if (fs.existsSync(portFile)) {
+					port = fs.readFileSync(portFile, 'utf8').trim();
+					console.log(`📄 Using port ${port} from .mame_web_port file`);
+				}
+			} catch (err) {
+				console.log('⚠️  Could not read .mame_web_port file:', err.message);
 			}
-		} catch (err) {
-			console.log('⚠️  Could not read .mame_web_port file:', err.message);
+		}
+
+		// Final fallback
+		if (!port) {
+			port = '8000';
+			console.log('⚠️  No port specified, using default: 8000');
+		}
+
+		targetUrl = `http://localhost:${port}`;
+	} else {
+		// URL provided, ensure it has protocol if not provided
+		if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+			targetUrl = 'http://' + targetUrl;
 		}
 	}
+    console.log(`📍 Target URL: ${targetUrl}`);
 
-	// Final fallback
-	if (!port) {
-		port = '8000';
-		console.log('⚠️  No port specified, using default: 8000');
-	}
-
-	console.log(`📍 Loading http://localhost:${port}...`);
-
-	// Capture console messages
+	// Capture console messages - set up BEFORE page loads
 	const consoleMessages = [];
+
+	// Set up console listener immediately after page creation
 	page.on('console', msg => {
 	  const type = msg.type();
 	  const text = msg.text();
 
+	  // Debug: Show all console messages we're receiving
+	  console.log(`🔍 CONSOLE CAPTURE: type=${type}, text="${text}"`);
+
 	  // Filter out annoying deprecation warnings
 	  if (text.includes('ScriptProcessorNode is deprecated') ||
 		  text.includes('AudioContext was not allowed to start')) {
+		console.log(`🔍 FILTERED OUT: ${text}`);
 		return; // Skip these warnings
 	  }
 
-	  consoleMessages.push(`[${type.toUpperCase()}] ${text}`);
-	  console.log(`[${type.toUpperCase()}] ${text}`);
+	  // Add timestamp in same format as MAME STATS (last 5 digits)
+	  // Use performance.now() directly - it's already in milliseconds
+	  const timestamp = performance.now();
+
+	  // Round down to integer milliseconds (like machine.cpp does)
+	  const timestampMs = Math.floor(timestamp);
+	  const timestampStr = `[${timestampMs.toString().slice(-5)}ms]`;
+
+	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
+	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	});
 
-	// Capture page errors
+	// Also set up page error listener
 	page.on('pageerror', error => {
-	  consoleMessages.push(`[PAGE ERROR] ${error.message}`);
-	  console.log(`[PAGE ERROR] ${error.message}`);
+	  console.log(`🔍 PAGE ERROR: ${error.message}`);
+	  console.log(`🔍 PAGE ERROR STACK: ${error.stack}`);
+	});
+
+	// Set up request listener to see when page starts loading
+	page.on('request', request => {
+	  console.log(`🔍 REQUEST: ${request.url()}`);
+	});
+
+	// Set up response listener to see when page finishes loading
+	page.on('response', response => {
+	  if (response.url().includes('index.html')) {
+		console.log(`🔍 RESPONSE: ${response.url()} - Status: ${response.status()}`);
+	  }
+	});
+
+	// Capture page errors with detailed information
+	page.on('pageerror', error => {
+	  const errorInfo = {
+		message: error.message,
+		stack: error.stack,
+		name: error.name
+	  };
+
+	  // Extract line number from stack trace if available
+	  let lineInfo = '';
+	  if (error.stack) {
+		const stackLines = error.stack.split('\n');
+
+		// Look for line numbers in various formats
+		for (const line of stackLines) {
+		  // Try different patterns for line numbers
+		  const patterns = [
+			/\(http:\/\/localhost:\d+\/\):(\d+)/,  // (http://localhost:8001/):281
+			/\(http:\/\/localhost:\d+\/index\.html\):(\d+)/,  // (http://localhost:8001/index.html):281
+			/\(https?:\/\/[^)]+\):(\d+)/,  // (http://example.com/):281 or (https://example.com/):281
+			/\(https?:\/\/[^)]+\/index\.html\):(\d+)/,  // (http://example.com/index.html):281
+			/index\.html:(\d+)/,  // index.html:281
+			/:(\d+):(\d+)/,  // :281:28 (line:column)
+			/at.*:(\d+)/  // at <anonymous>:281
+		  ];
+
+		  for (const pattern of patterns) {
+			const match = line.match(pattern);
+			if (match) {
+			  lineInfo = ` (line ${match[1]})`;
+			  break;
+			}
+		  }
+
+		  if (lineInfo) break;
+		}
+	  }
+
+	  const errorMessage = `[PAGE ERROR] ${error.message}${lineInfo}`;
+	  consoleMessages.push(errorMessage);
+	  console.log(errorMessage);
+
+	  // Also log the full stack trace for debugging
+	  if (error.stack) {
+		console.log(`[STACK TRACE] ${error.stack}`);
+	  }
 	});
 
 	// Capture network errors (but filter out normal Emscripten behavior)
@@ -104,7 +191,7 @@ const path = require('path');
 	  console.log(`[NETWORK ERROR] ${url} - ${errorText}`);
 	});
 
-	await page.goto(`http://localhost:${port}`, {
+	await page.goto(targetUrl, {
 	  waitUntil: 'networkidle0',
 	  timeout: 30000
 	});
@@ -181,7 +268,7 @@ const path = require('path');
 	// Save console output to file
 	const output = {
 	  timestamp: new Date().toISOString(),
-	  port: port,
+	  url: targetUrl,
 	  canvasInfo: canvasInfo,
 	  moduleInfo: moduleInfo,
 	  consoleMessages: consoleMessages,
