@@ -84,10 +84,35 @@ const path = require('path');
 	  console.log(`[${type.toUpperCase()}] ${text}`);
 	});
 
-	// Capture page errors
+	// Capture page errors with detailed information
 	page.on('pageerror', error => {
-	  consoleMessages.push(`[PAGE ERROR] ${error.message}`);
-	  console.log(`[PAGE ERROR] ${error.message}`);
+	  const errorInfo = {
+		message: error.message,
+		stack: error.stack,
+		name: error.name
+	  };
+
+	  // Extract line number from stack trace if available
+	  let lineInfo = '';
+	  if (error.stack) {
+		const stackLines = error.stack.split('\n');
+		const relevantLine = stackLines.find(line => line.includes('index.html'));
+		if (relevantLine) {
+		  const match = relevantLine.match(/index\.html:(\d+)/);
+		  if (match) {
+			lineInfo = ` (line ${match[1]})`;
+		  }
+		}
+	  }
+
+	  const errorMessage = `[PAGE ERROR] ${error.message}${lineInfo}`;
+	  consoleMessages.push(errorMessage);
+	  console.log(errorMessage);
+
+	  // Also log the full stack trace for debugging
+	  if (error.stack) {
+		console.log(`[STACK TRACE] ${error.stack}`);
+	  }
 	});
 
 	// Capture network errors (but filter out normal Emscripten behavior)

@@ -995,7 +995,6 @@ cat > "$OUTDIR/index.html" <<EOF
 		}
 
 		loadNextFile();
-		}
 
 		// Start the process
 		waitForFS();
