@@ -628,32 +628,49 @@ CFG_FILE="$HOME/.mame/cfg/${DRIVER_SHORTNAME}.cfg"
 USE_CFG=false
 if [[ -f "$CFG_FILE" ]]; then
   echo "Including per-game cfg: $CFG_FILE"
-  # Create a minimal roms.js that just includes the cfg file
-  cat > "$OUTDIR/roms.js" <<EOF
-// Minimal roms.js for cfg file only
-var Module = Module || {};
-Module.preRun = Module.preRun || [];
-Module.preRun.push(function() {
-  if (typeof FS !== 'undefined') {
-	// Create cfg directory
-	try { FS.mkdir('cfg'); } catch(e) {}
-	// The cfg file will be loaded dynamically by the user
-  }
-});
-EOF
   USE_CFG=true
-else
-  # Create empty roms.js since we're not packaging ROMs
-  cat > "$OUTDIR/roms.js" <<EOF
-// Empty roms.js - ROMs will be loaded dynamically by user
-var Module = Module || {};
-EOF
 fi
-# Preload autoboot if present
-if $AUTOSTART; then
-  PACK_ARGS+=(--preload "$OUTDIR/autoboot.lua@autoboot.lua")
-fi
-python3 "$PACKAGER" "${PACK_ARGS[@]}"
+
+# Create roms.js with proper autoboot and cfg support
+{
+  echo "// roms.js - ROMs will be loaded dynamically by user"
+  echo "var Module = Module || {};"
+  echo "Module.preRun = Module.preRun || [];"
+  echo "Module.preRun.push(function() {"
+  echo "  if (typeof FS !== 'undefined') {"
+  echo "    // Create directories"
+  echo "    try { FS.mkdir('roms'); } catch(e) {}"
+  echo "    try { FS.mkdir('roms/starwars'); } catch(e) {}"
+  echo "    try { FS.mkdir('cfg'); } catch(e) {}"
+  echo ""
+
+  # Include autoboot.lua if AUTOSTART is enabled
+  if $AUTOSTART; then
+	echo "    // Preload autoboot.lua"
+	echo "    try {"
+	echo "      var autobootLua = \`$(cat "$OUTDIR/autoboot.lua" | sed 's/`/\\`/g')\`;"
+	echo "      FS.writeFile('autoboot.lua', autobootLua);"
+	echo "      console.log('Preloaded autoboot.lua');"
+	echo "    } catch(e) {"
+	echo "      console.error('Failed to preload autoboot.lua:', e);"
+	echo "    }"
+  fi
+
+  # Include cfg file if present
+  if $USE_CFG; then
+	echo "    // Preload cfg file"
+	echo "    try {"
+	echo "      var cfgData = \`$(cat "$CFG_FILE" | sed 's/`/\\`/g')\`;"
+	echo "      FS.writeFile('cfg/${DRIVER_SHORTNAME}.cfg', cfgData);"
+	echo "      console.log('Preloaded ${DRIVER_SHORTNAME}.cfg');"
+	echo "    } catch(e) {"
+	echo "      console.error('Failed to preload cfg file:', e);"
+	echo "    }"
+  fi
+
+  echo "  }"
+  echo "});"
+} > "$OUTDIR/roms.js"
 
 # Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain/vector glow)
 INI_ARGS_JS=""
