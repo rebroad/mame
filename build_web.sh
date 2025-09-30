@@ -806,14 +806,48 @@ cat > "$OUTDIR/index.html" <<EOF
 		  return;
 		}
 
-		showStatus('Preparing to load ROMs into browser memory...', false);
+		showStatus('Loading MAME scripts first...', false);
 
+		// Load MAME scripts first, then load ROMs
+		loadMAMEScriptsAndROMs();
+	  });
+
+	  function loadMAMEScriptsAndROMs() {
+		if (mameScriptsLoaded) {
+		  // Scripts already loaded, just load ROMs
+		  loadROMsIntoFS();
+		  return;
+		}
+
+		// Load MAME scripts first
+		var script = document.createElement('script');
+		script.src = '${ARTIFACT_BASE}.js';
+		script.onload = function() {
+		  console.log('MAME scripts loaded, now loading ROMs...');
+		  showStatus('MAME scripts loaded, now loading ROMs...', false);
+		  mameScriptsLoaded = true;
+
+		  // Wait a bit for FS to be available after script load
+		  setTimeout(function() {
+			loadROMsIntoFS();
+		  }, 500);
+		};
+		script.onerror = function() {
+		  showStatus('Error: Failed to load MAME scripts', true);
+		};
+		document.head.appendChild(script);
+	  }
+
+	  function loadROMsIntoFS() {
 		// Wait for Emscripten filesystem to be ready
 		var fsWaitAttempts = 0;
 		var maxFsWaitAttempts = 50; // 5 seconds max wait
 
 		function waitForFS() {
 		  fsWaitAttempts++;
+
+		  // Debug information
+		  console.log('FS check attempt', fsWaitAttempts, 'FS defined:', typeof FS !== 'undefined', 'FS.mkdir:', typeof FS !== 'undefined' && FS.mkdir);
 
 		  if (typeof FS !== 'undefined' && FS.mkdir) {
 			// Create roms directory in Emscripten filesystem
@@ -823,16 +857,22 @@ cat > "$OUTDIR/index.html" <<EOF
 			  showStatus('Loading ROMs into browser memory...', false);
 			  loadROMFiles();
 			} catch(e) {
-			  showStatus('Error: Failed to create directories in filesystem', true);
+			  showStatus('Error: Failed to create directories in filesystem: ' + e.message, true);
 			}
 		  } else if (fsWaitAttempts >= maxFsWaitAttempts) {
-			showStatus('Error: Browser filesystem not available. Please refresh the page and try again.', true);
+			// Better error message with debug info
+			var debugInfo = 'FS defined: ' + (typeof FS !== 'undefined') + ', FS.mkdir: ' + (typeof FS !== 'undefined' && FS.mkdir);
+			showStatus('Error: Browser filesystem not ready. Debug: ' + debugInfo + '. Try loading MAME scripts first.', true);
+			console.error('FS not available after', fsWaitAttempts, 'attempts. Debug:', debugInfo);
 		  } else {
 			// Wait a bit more for FS to be available
 			showStatus('Waiting for browser filesystem to initialize... (' + fsWaitAttempts + '/' + maxFsWaitAttempts + ')', false);
 			setTimeout(waitForFS, 100);
 		  }
 		}
+
+		waitForFS();
+	  }
 
 		function loadROMFiles() {
 		  // Load each ROM file
@@ -1081,34 +1121,18 @@ ${INI_ARGS_JS}
 	<script src="mame_performance_warning.js"></script>
 	<script src="roms.js"></script>
 	<script>
-	  // Load MAME scripts only after ROMs are loaded
+	  // MAME scripts will be loaded when user clicks "Load ROMs"
 	  var mameScriptsLoaded = false;
 
-	  function loadMAMEScripts() {
-		if (mameScriptsLoaded) return;
-		mameScriptsLoaded = true;
-
-		var script = document.createElement('script');
-		script.src = '${ARTIFACT_BASE}.js';
-		script.onload = function() {
-		  console.log('MAME scripts loaded successfully');
-		};
-		script.onerror = function() {
-		  console.error('Failed to load MAME scripts');
-		};
-		document.head.appendChild(script);
-	  }
-
-	  // Override startMAME to load scripts first
+	  // Override startMAME to run MAME
 	  var originalStartMAME = startMAME;
 	  startMAME = function() {
-		loadMAMEScripts();
-		// Wait a bit for scripts to load, then start
-		setTimeout(function() {
-		  if (typeof Module !== 'undefined' && Module.run) {
-			Module.run();
-		  }
-		}, 100);
+		console.log('Starting MAME...');
+		if (typeof Module !== 'undefined' && Module.run) {
+		  Module.run();
+		} else {
+		  showStatus('Error: MAME module not ready. Please try loading ROMs again.', true);
+		}
 	  };
 	</script>
   </body>
