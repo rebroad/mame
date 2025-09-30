@@ -96,29 +96,12 @@ const path = require('path');
 	  }
 
 	  // Add timestamp in same format as MAME STATS (last 5 digits)
-	  // Use performance.now() but investigate the units
+	  // Use performance.now() directly - it's already in milliseconds
 	  const timestamp = performance.now();
 
-	  // Debug: Let's see what performance.now() actually returns
-	  console.log(`🔍 performance.now() = ${timestamp} (type: ${typeof timestamp})`);
-
-	  // Check if it's in nanoseconds (divide by 1,000,000) or microseconds (divide by 1,000)
-	  let timestampMs;
-	  if (timestamp > 1000000) {
-		// Likely nanoseconds, convert to milliseconds
-		timestampMs = timestamp / 1000000;
-		console.log(`🔍 Converted from nanoseconds: ${timestampMs}ms`);
-	  } else if (timestamp > 1000) {
-		// Likely microseconds, convert to milliseconds
-		timestampMs = timestamp / 1000;
-		console.log(`🔍 Converted from microseconds: ${timestampMs}ms`);
-	  } else {
-		// Already in milliseconds
-		timestampMs = timestamp;
-		console.log(`🔍 Already in milliseconds: ${timestampMs}ms`);
-	  }
-
-	  const timestampStr = `[${Math.round(timestampMs).toString().slice(-5)}ms]`;
+	  // Round down to integer milliseconds (like machine.cpp does)
+	  const timestampMs = Math.floor(timestamp);
+	  const timestampStr = `[${timestampMs.toString().slice(-5)}ms]`;
 
 	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
