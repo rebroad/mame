@@ -96,12 +96,27 @@ const path = require('path');
 	  let lineInfo = '';
 	  if (error.stack) {
 		const stackLines = error.stack.split('\n');
-		const relevantLine = stackLines.find(line => line.includes('index.html'));
-		if (relevantLine) {
-		  const match = relevantLine.match(/index\.html:(\d+)/);
-		  if (match) {
-			lineInfo = ` (line ${match[1]})`;
+
+		// Look for line numbers in various formats
+		for (const line of stackLines) {
+		  // Try different patterns for line numbers
+		  const patterns = [
+			/\(http:\/\/localhost:\d+\/\):(\d+)/,  // (http://localhost:8001/):281
+			/\(http:\/\/localhost:\d+\/index\.html\):(\d+)/,  // (http://localhost:8001/index.html):281
+			/index\.html:(\d+)/,  // index.html:281
+			/:(\d+):(\d+)/,  // :281:28 (line:column)
+			/at.*:(\d+)/  // at <anonymous>:281
+		  ];
+
+		  for (const pattern of patterns) {
+			const match = line.match(pattern);
+			if (match) {
+			  lineInfo = ` (line ${match[1]})`;
+			  break;
+			}
 		  }
+
+		  if (lineInfo) break;
 		}
 	  }
 
