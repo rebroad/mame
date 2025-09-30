@@ -803,22 +803,29 @@ cat > "$OUTDIR/index.html" <<EOF
 		  return;
 		}
 
-		showStatus('Loading ROMs...', false);
+		showStatus('Loading ROMs locally...', false);
 
-		// Create roms directory in Emscripten filesystem
-		try {
-		  if (typeof FS !== 'undefined') {
-			try { FS.mkdir('roms'); } catch(e) {}
-			try { FS.mkdir('roms/starwars'); } catch(e) {}
+		// Wait for Emscripten filesystem to be ready
+		function waitForFS() {
+		  if (typeof FS !== 'undefined' && FS.mkdir) {
+			// Create roms directory in Emscripten filesystem
+			try {
+			  try { FS.mkdir('roms'); } catch(e) {}
+			  try { FS.mkdir('roms/starwars'); } catch(e) {}
+			  loadROMFiles();
+			} catch(e) {
+			  showStatus('Error: Failed to create directories in filesystem', true);
+			}
+		  } else {
+			// Wait a bit more for FS to be available
+			setTimeout(waitForFS, 100);
 		  }
-		} catch(e) {
-		  showStatus('Error: Emscripten filesystem not ready', true);
-		  return;
 		}
 
-		// Load each ROM file
-		var loadedCount = 0;
-		var totalCount = romFiles.length;
+		function loadROMFiles() {
+		  // Load each ROM file
+		  var loadedCount = 0;
+		  var totalCount = romFiles.length;
 
 		function loadNextFile() {
 		  if (loadedCount >= totalCount) {
@@ -867,7 +874,7 @@ cat > "$OUTDIR/index.html" <<EOF
 			  console.log('Loaded ROM file:', mountPath);
 
 			  loadedCount++;
-			  showStatus('Loading ROMs... (' + loadedCount + '/' + totalCount + ')', false);
+			  showStatus('Loading ROMs locally... (' + loadedCount + '/' + totalCount + ')', false);
 			  loadNextFile();
 			} catch(error) {
 			  showStatus('Error loading ' + filename + ': ' + error.message, true);
@@ -882,6 +889,10 @@ cat > "$OUTDIR/index.html" <<EOF
 		}
 
 		loadNextFile();
+		}
+
+		// Start the process
+		waitForFS();
 	  });
 
 	  // Start the game
