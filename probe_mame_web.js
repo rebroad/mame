@@ -11,7 +11,10 @@ const path = require('path');
   const args = process.argv.slice(2); // Remove 'node' and script name
   const nothrot = args.includes('-nothrot');
 
-  // Filter out flags to get the port number
+  // Get URL from command line arguments (first non-flag argument that's NOT a number)
+  const urlArg = args.find(arg => !arg.startsWith('-') && isNaN(parseInt(arg)));
+
+  // Filter out flags to get the port number (for localhost fallback)
   const portArg = args.find(arg => !arg.startsWith('-') && !isNaN(parseInt(arg)));
 
   const browserArgs = [
@@ -43,30 +46,41 @@ const path = require('path');
   }
 
   try {
-	// Try to read port from file first, then fall back to command line argument
+	// Determine target URL
+	let targetUrl = urlArg;
 
-	let port = portArg; // Command line argument takes precedence
+	if (!targetUrl) {
+		// No URL provided, try to read port from file first, then fall back to command line argument
+		let port = portArg; // Command line argument takes precedence
 
-	if (!port) {
-		// Try to read from .mame_web_port file
-		const portFile = path.join(__dirname, '.mame_web_port');
-		try {
-			if (fs.existsSync(portFile)) {
-				port = fs.readFileSync(portFile, 'utf8').trim();
-				console.log(`📄 Using port ${port} from .mame_web_port file`);
+		if (!port) {
+			// Try to read from .mame_web_port file
+			const portFile = path.join(__dirname, '.mame_web_port');
+			try {
+				if (fs.existsSync(portFile)) {
+					port = fs.readFileSync(portFile, 'utf8').trim();
+					console.log(`📄 Using port ${port} from .mame_web_port file`);
+				}
+			} catch (err) {
+				console.log('⚠️  Could not read .mame_web_port file:', err.message);
 			}
-		} catch (err) {
-			console.log('⚠️  Could not read .mame_web_port file:', err.message);
 		}
-	}
 
-	// Final fallback
-	if (!port) {
-		port = '8000';
-		console.log('⚠️  No port specified, using default: 8000');
-	}
+		// Final fallback
+		if (!port) {
+			port = '8000';
+			console.log('⚠️  No port specified, using default: 8000');
+		}
 
-	console.log(`📍 Loading http://localhost:${port}...`);
+		targetUrl = `http://localhost:${port}`;
+		console.log(`📍 Loading ${targetUrl}...`);
+	} else {
+		// URL provided, ensure it has protocol if not provided
+		if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+			targetUrl = 'http://' + targetUrl;
+		}
+		console.log(`📍 Loading ${targetUrl}...`);
+	}
 
 	// Capture console messages
 	const consoleMessages = [];
@@ -103,6 +117,8 @@ const path = require('path');
 		  const patterns = [
 			/\(http:\/\/localhost:\d+\/\):(\d+)/,  // (http://localhost:8001/):281
 			/\(http:\/\/localhost:\d+\/index\.html\):(\d+)/,  // (http://localhost:8001/index.html):281
+			/\(https?:\/\/[^)]+\):(\d+)/,  // (http://example.com/):281 or (https://example.com/):281
+			/\(https?:\/\/[^)]+\/index\.html\):(\d+)/,  // (http://example.com/index.html):281
 			/index\.html:(\d+)/,  // index.html:281
 			/:(\d+):(\d+)/,  // :281:28 (line:column)
 			/at.*:(\d+)/  // at <anonymous>:281
@@ -144,7 +160,7 @@ const path = require('path');
 	  console.log(`[NETWORK ERROR] ${url} - ${errorText}`);
 	});
 
-	await page.goto(`http://localhost:${port}`, {
+	await page.goto(targetUrl, {
 	  waitUntil: 'networkidle0',
 	  timeout: 30000
 	});
@@ -221,7 +237,7 @@ const path = require('path');
 	// Save console output to file
 	const output = {
 	  timestamp: new Date().toISOString(),
-	  port: port,
+	  url: targetUrl,
 	  canvasInfo: canvasInfo,
 	  moduleInfo: moduleInfo,
 	  consoleMessages: consoleMessages,
