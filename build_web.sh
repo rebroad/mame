@@ -723,7 +723,7 @@ cat > "$OUTDIR/index.html" <<EOF
   <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<title>Star Wars</title>
+	<title>MAME Web</title>
 	<link rel="icon" href="data:,"/>
 	<style>
 		html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif}
@@ -742,12 +742,12 @@ cat > "$OUTDIR/index.html" <<EOF
   </head>
   <body>
 	<div id="rom-selector">
-		<h3>🎮 Star Wars ROM Selection</h3>
-		<p>Please select your Star Wars ROM files:</p>
+		<h3>🎮 ROM Selection</h3>
+		<p>Please select your ROM files:</p>
 		<p><strong>Option 1:</strong> Select ROM zip file</p>
 		<input type="file" id="rom-zip" accept=".zip" />
-		<p><strong>Option 2:</strong> Select individual ROM files</p>
-		<input type="file" id="rom-files" multiple accept=".1f,.2f,.3f,.4f,.5f,.6f,.7f,.8f,.9f,.a,.b,.c,.d,.e,.f" />
+		<p><strong>Option 2:</strong> Select ROM directory</p>
+		<input type="file" id="rom-directory" webkitdirectory directory multiple />
 		<button id="load-roms" disabled>Load ROMs</button>
 		<button id="start-game" disabled>Start Game</button>
 		<div id="rom-status"></div>
@@ -780,14 +780,14 @@ cat > "$OUTDIR/index.html" <<EOF
 	  document.getElementById('rom-zip').addEventListener('change', function(e) {
 		if (e.target.files.length > 0) {
 		  romFiles = Array.from(e.target.files);
-		  document.getElementById('rom-files').value = '';
+		  document.getElementById('rom-directory').value = '';
 		  updateButtons();
 		  hideStatus();
 		}
 	  });
 
-	  // Handle individual ROM files selection
-	  document.getElementById('rom-files').addEventListener('change', function(e) {
+	  // Handle ROM directory selection
+	  document.getElementById('rom-directory').addEventListener('change', function(e) {
 		if (e.target.files.length > 0) {
 		  romFiles = Array.from(e.target.files);
 		  document.getElementById('rom-zip').value = '';
@@ -835,13 +835,31 @@ cat > "$OUTDIR/index.html" <<EOF
 			try {
 			  var data = new Uint8Array(e.target.result);
 			  var filename = file.name;
+			  var webkitRelativePath = file.webkitRelativePath || '';
 
-			  // Determine mount path based on file type
+			  // Determine mount path based on file type and structure
 			  var mountPath;
 			  if (filename.toLowerCase().endsWith('.zip')) {
+				// For zip files, mount directly in roms/ directory
 				mountPath = 'roms/' + filename;
 			  } else {
-				mountPath = 'roms/starwars/' + filename;
+				// For individual files, preserve directory structure
+				if (webkitRelativePath) {
+				  // Directory selection - preserve the directory structure
+				  var pathParts = webkitRelativePath.split('/');
+				  var gameDir = pathParts[0]; // First directory is the game name
+				  mountPath = 'roms/' + gameDir + '/' + filename;
+				} else {
+				  // Single file selection - use default game directory
+				  mountPath = 'roms/starwars/' + filename;
+				}
+			  }
+
+			  // Create directory if it doesn't exist
+			  var pathParts = mountPath.split('/');
+			  var dirPath = pathParts.slice(0, -1).join('/');
+			  if (dirPath && dirPath !== 'roms') {
+				try { FS.mkdir(dirPath); } catch(e) {}
 			  }
 
 			  // Write file to Emscripten filesystem
