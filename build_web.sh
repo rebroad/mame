@@ -650,6 +650,7 @@ if $INCLUDE_ROMS; then
 else
 	echo "Skipping ROM packaging - ROMs will be loaded dynamically by user..."
 fi
+
 # Optional autoboot script must be preloaded into the Emscripten FS
 if $AUTOSTART; then
 cat > "$OUTDIR/autoboot.lua" <<'LUA'
@@ -671,46 +672,28 @@ if [[ -f "$CFG_FILE" ]]; then
   USE_CFG=true
 fi
 
-# Create roms.js with proper autoboot and cfg support
-{
-  echo "// roms.js - ROMs will be loaded dynamically by user"
-  echo "var Module = Module || {};"
-  echo "Module.preRun = Module.preRun || [];"
-  echo "Module.preRun.push(function() {"
-  echo "  if (typeof FS !== 'undefined') {"
-  echo "    // Create directories"
-  echo "    try { FS.mkdir('roms'); } catch(e) {}"
-  echo "    try { FS.mkdir('roms/starwars'); } catch(e) {}"
-  echo "    try { FS.mkdir('cfg'); } catch(e) {}"
-  echo ""
-
-  # Include autoboot.lua if AUTOSTART is enabled
-  if $AUTOSTART; then
-	echo "    // Preload autoboot.lua"
-	echo "    try {"
-	echo "      var autobootLua = \`$(cat "$OUTDIR/autoboot.lua" | sed 's/`/\\`/g')\`;"
-	echo "      FS.writeFile('autoboot.lua', autobootLua);"
-	echo "      console.log('Preloaded autoboot.lua');"
-	echo "    } catch(e) {"
-	echo "      console.error('Failed to preload autoboot.lua:', e);"
-	echo "    }"
+if $INCLUDE_ROMS; then
+  # Determine the correct ROM path based on ROM file type
+  # Determine ROM mount path and always use the same PACK_ARGS template for DRYness
+  if [[ "$ROM_PATH" == *.zip ]]; then
+    # For zip files, mount directly in roms/ directory
+    ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
+  else
+    # For individual files, mount the entire directory in roms/starwars/
+    ROM_MOUNT_PATH="roms/starwars/"
   fi
-
-  # Include cfg file if present
-  if $USE_CFG; then
-	echo "    // Preload cfg file"
-	echo "    try {"
-	echo "      var cfgData = \`$(cat "$CFG_FILE" | sed 's/`/\\`/g')\`;"
-	echo "      FS.writeFile('cfg/${DRIVER_SHORTNAME}.cfg', cfgData);"
-	echo "      console.log('Preloaded ${DRIVER_SHORTNAME}.cfg');"
-	echo "    } catch(e) {"
-	echo "      console.error('Failed to preload cfg file:', e);"
-	echo "    }"
+  PACK_ARGS=(
+    "$OUTDIR/roms.data"
+    --preload "$ROM_PATH@$ROM_MOUNT_PATH"
+    --export-name=Module
+    --use-preload-cache
+    --js-output="$OUTDIR/roms.js"
+  )
+  if [[ -n "$PARENT_ROM" ]]; then
+    echo "Including parent ROM: $PARENT_ROM"
+    PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
   fi
-
-  echo "  }"
-  echo "});"
-} > "$OUTDIR/roms.js"
+fi
 
 # Collect per-game INI overrides if available (brightness/contrast/gamma/bgfx chain/vector glow)
 INI_ARGS_JS=""
