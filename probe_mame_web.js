@@ -1,4 +1,6 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 (async () => {
   console.log('🔍 Probing MAME WebAssembly build...');
@@ -35,7 +37,29 @@ const puppeteer = require('puppeteer');
   }
 
   try {
-	const port = process.argv[2];
+	// Try to read port from file first, then fall back to command line argument
+
+	let port = process.argv[2]; // Command line argument takes precedence
+
+	if (!port) {
+		// Try to read from .mame_web_port file
+		const portFile = path.join(__dirname, '.mame_web_port');
+		try {
+			if (fs.existsSync(portFile)) {
+				port = fs.readFileSync(portFile, 'utf8').trim();
+				console.log(`📄 Using port ${port} from .mame_web_port file`);
+			}
+		} catch (err) {
+			console.log('⚠️  Could not read .mame_web_port file:', err.message);
+		}
+	}
+
+	// Final fallback
+	if (!port) {
+		port = '8000';
+		console.log('⚠️  No port specified, using default: 8000');
+	}
+
 	console.log(`📍 Loading http://localhost:${port}...`);
 
 	// Capture console messages
@@ -149,7 +173,6 @@ const puppeteer = require('puppeteer');
 	});
 
 	// Save console output to file
-	const fs = require('fs');
 	const output = {
 	  timestamp: new Date().toISOString(),
 	  port: port,
