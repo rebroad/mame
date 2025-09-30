@@ -94,9 +94,9 @@ const path = require('path');
 		return; // Skip these warnings
 	  }
 
-	  // Add timestamp in same format as MAME STATS
+	  // Add timestamp in same format as MAME STATS (last 5 digits)
 	  const timestamp = Date.now();
-	  const timestampStr = `[${timestamp}ms]`;
+	  const timestampStr = `[${timestamp.toString().slice(-5)}ms]`;
 
 	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
