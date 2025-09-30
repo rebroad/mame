@@ -791,6 +791,8 @@ cat >> "$OUTDIR/index.html" <<EOF
   </head>
   <body>
 EOF
+fi
+
 if $INCLUDE_ROMS; then
 	cat >> "$OUTDIR/index.html" <<EOF
   <canvas id="canvas"></canvas>
