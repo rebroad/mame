@@ -748,8 +748,11 @@ cat > "$OUTDIR/index.html" <<EOF
 		<input type="file" id="rom-zip" accept=".zip" />
 		<p><strong>Option 2:</strong> Select ROM directory</p>
 		<input type="file" id="rom-directory" webkitdirectory directory multiple />
-		<button id="load-roms" disabled>Load ROMs</button>
+		<button id="load-roms" disabled>Load ROMs into Browser</button>
 		<button id="start-game" disabled>Start Game</button>
+		<p style="font-size:12px;color:#888;margin-top:10px;">
+		  <strong>Note:</strong> Files are loaded into browser memory only. No data is sent to any server.
+		</p>
 		<div id="rom-status"></div>
 	</div>
 	<canvas id="canvas" class="hidden"></canvas>
@@ -803,21 +806,30 @@ cat > "$OUTDIR/index.html" <<EOF
 		  return;
 		}
 
-		showStatus('Loading ROMs locally...', false);
+		showStatus('Preparing to load ROMs into browser memory...', false);
 
 		// Wait for Emscripten filesystem to be ready
+		var fsWaitAttempts = 0;
+		var maxFsWaitAttempts = 50; // 5 seconds max wait
+
 		function waitForFS() {
+		  fsWaitAttempts++;
+
 		  if (typeof FS !== 'undefined' && FS.mkdir) {
 			// Create roms directory in Emscripten filesystem
 			try {
 			  try { FS.mkdir('roms'); } catch(e) {}
 			  try { FS.mkdir('roms/starwars'); } catch(e) {}
+			  showStatus('Loading ROMs into browser memory...', false);
 			  loadROMFiles();
 			} catch(e) {
 			  showStatus('Error: Failed to create directories in filesystem', true);
 			}
+		  } else if (fsWaitAttempts >= maxFsWaitAttempts) {
+			showStatus('Error: Browser filesystem not available. Please refresh the page and try again.', true);
 		  } else {
 			// Wait a bit more for FS to be available
+			showStatus('Waiting for browser filesystem to initialize... (' + fsWaitAttempts + '/' + maxFsWaitAttempts + ')', false);
 			setTimeout(waitForFS, 100);
 		  }
 		}
@@ -874,7 +886,7 @@ cat > "$OUTDIR/index.html" <<EOF
 			  console.log('Loaded ROM file:', mountPath);
 
 			  loadedCount++;
-			  showStatus('Loading ROMs locally... (' + loadedCount + '/' + totalCount + ')', false);
+			  showStatus('Loading ROMs into browser memory... (' + loadedCount + '/' + totalCount + ')', false);
 			  loadNextFile();
 			} catch(error) {
 			  showStatus('Error loading ' + filename + ': ' + error.message, true);
