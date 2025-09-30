@@ -116,12 +116,19 @@
 
 	// Detect when MAME starts running
 	function detectMAMEStart() {
-		// Look for MAME canvas or Module initialization
+		// Look for actual MAME activity, not just environment setup
 		const canvas = document.querySelector('canvas');
 		const hasModule = typeof Module !== 'undefined';
-		const hasMameLog = document.querySelector('[id*="mame"], [class*="mame"]');
 
-		if (canvas && hasModule && !mameIsRunning) {
+		// Check if MAME is actually running (not just loaded)
+		// Look for "Starting" message which indicates MAME has begun execution
+		const hasMameExecution = (
+			// Check for MAME-specific console output
+			document.body.textContent.includes('Starting')
+		);
+
+		// Only trigger if we have Module loaded and MAME has started
+		if (canvas && hasModule && hasMameExecution && !mameIsRunning) {
 			mameIsRunning = true;
 			mameStartTime = performance.now();
 			console.log('🎮 MAME detected as running - starting performance monitoring...');

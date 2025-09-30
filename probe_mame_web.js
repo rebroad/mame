@@ -94,8 +94,12 @@ const path = require('path');
 		return; // Skip these warnings
 	  }
 
-	  consoleMessages.push(`[${type.toUpperCase()}] ${text}`);
-	  console.log(`[${type.toUpperCase()}] ${text}`);
+	  // Add timestamp in same format as MAME STATS
+	  const timestamp = Date.now();
+	  const timestampStr = `[${timestamp}ms]`;
+
+	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
+	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	});
 
 	// Capture page errors with detailed information
