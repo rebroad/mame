@@ -81,9 +81,10 @@ const path = require('path');
 	}
     console.log(`📍 Target URL: ${targetUrl}`);
 
-	// Capture console messages
+	// Capture console messages - set up BEFORE page loads
 	const consoleMessages = [];
 
+	// Set up console listener immediately after page creation
 	page.on('console', msg => {
 	  const type = msg.type();
 	  const text = msg.text();
@@ -108,6 +109,18 @@ const path = require('path');
 
 	  consoleMessages.push(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
 	  console.log(`[${type.toUpperCase()}] ${timestampStr} ${text}`);
+	});
+
+	// Also set up page error listener
+	page.on('pageerror', error => {
+	  console.log(`🔍 PAGE ERROR: ${error.message}`);
+	});
+
+	// Set up request listener to see when page starts loading
+	page.on('request', request => {
+	  if (request.url().includes('index.html')) {
+		console.log(`🔍 PAGE REQUEST: ${request.url()}`);
+	  }
 	});
 
 	// Capture page errors with detailed information

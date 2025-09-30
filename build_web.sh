@@ -725,6 +725,9 @@ cat > "$OUTDIR/index.html" <<EOF
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>MAME Web</title>
 	<link rel="icon" href="data:,"/>
+	<script>
+	  console.log('[BROWSER] HTML page starting to load...');
+	</script>
 	<style>
 		html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif}
 		#canvas{width:100%;height:100%;display:block}
