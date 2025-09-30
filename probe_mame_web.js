@@ -7,8 +7,12 @@ const path = require('path');
 (async () => {
   console.log('🔍 Probing MAME WebAssembly build...');
 
-  // Check for -nothrot argument
-  const nothrot = process.argv.includes('-nothrot');
+  // Parse command line arguments
+  const args = process.argv.slice(2); // Remove 'node' and script name
+  const nothrot = args.includes('-nothrot');
+
+  // Filter out flags to get the port number
+  const portArg = args.find(arg => !arg.startsWith('-') && !isNaN(parseInt(arg)));
 
   const browserArgs = [
 	'--no-sandbox' // Required for Ubuntu 23.10+ with AppArmor restrictions
@@ -41,7 +45,7 @@ const path = require('path');
   try {
 	// Try to read port from file first, then fall back to command line argument
 
-	let port = process.argv[2]; // Command line argument takes precedence
+	let port = portArg; // Command line argument takes precedence
 
 	if (!port) {
 		// Try to read from .mame_web_port file
