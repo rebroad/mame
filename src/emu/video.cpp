@@ -212,29 +212,6 @@ void video_manager::set_frameskip(int frameskip)
 
 void video_manager::frame_update(bool from_debugger)
 {
-	// DEBUG: Measure actual visual frame rate
-	static int visual_frame_count = 0;
-	static osd_ticks_t last_visual_fps_time = 0;
-	static osd_ticks_t start_visual_time = 0;
-
-	// DEBUG: Track frameskip statistics for last 60 frames
-	static int paused_count = 0;
-	static int update_in_pause_count = 0;
-	static int anything_changed_count = 0;
-	static int skipped_count = 0;
-	static int update_screens_count = 0;
-	static int effective_throttle_count = 0;
-	static int low_latency_count = 0;
-	static int from_debugger_count = 0;
-	static int phase_gt_init_count = 0;
-	static int phase_running_count = 0;
-	static int frame_stat_counter = 0;
-
-	if (start_visual_time == 0) {
-		start_visual_time = osd_ticks();
-		last_visual_fps_time = osd_ticks();
-	}
-
 	// only render sound and video if we're in the running phase
 	machine_phase const phase = machine().phase();
 	bool skipped_it = m_skipping_this_frame;
@@ -247,32 +224,6 @@ void video_manager::frame_update(bool from_debugger)
 
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
-
-	// Count frame statistics (after all anything_changed modifications)
-	if (machine().paused()) paused_count++;
-	if (machine().options().update_in_pause()) update_in_pause_count++;
-	if (anything_changed) anything_changed_count++;
-	if (skipped_it) skipped_count++;
-	if (update_screens) update_screens_count++;
-	if (effective_throttle()) effective_throttle_count++;
-	if (m_low_latency) low_latency_count++;
-	if (from_debugger) from_debugger_count++;
-	if (phase > machine_phase::INIT) phase_gt_init_count++;
-	if (phase == machine_phase::RUNNING) phase_running_count++;
-	frame_stat_counter++;
-
-	// Report statistics every 60 frames and reset counters
-	if (frame_stat_counter >= 60) {
-		// osd_printf_info("FRAMESKIP STATS (last %d frames): paused=%d, update_in_pause=%d, anything_changed_count=%d, skipped=%d, update_screens=%d, effective_throttle=%d, low_latency=%d, from_debugger=%d, phase_gt_init=%d, phase_running=%d\n",
-		//	frame_stat_counter, paused_count, update_in_pause_count, anything_changed_count, skipped_count, update_screens_count, effective_throttle_count, low_latency_count, from_debugger_count, phase_gt_init_count, phase_running_count);
-
-		// Reset counters
-		paused_count = update_in_pause_count = anything_changed_count = 0;
-		skipped_count = update_screens_count = 0;
-		effective_throttle_count = low_latency_count = from_debugger_count = 0;
-		phase_gt_init_count = phase_running_count = 0;
-		frame_stat_counter = 0;
-	}
 
 	// if none of the screens changed and we haven't skipped too many frames in a row,
 	// mark this frame as skipped to prevent throttling; this helps for games that
@@ -323,32 +274,6 @@ void video_manager::frame_update(bool from_debugger)
 		bool const within_instruction_hook = debugger_enabled && machine().debugger().within_instruction_hook();
 		if (screen && ((machine().paused() && machine().options().update_in_pause()) || from_debugger || within_instruction_hook))
 			screen->reset_partial_updates();
-	}
-
-	// DEBUG: Count actual visual frames and measure real FPS
-	visual_frame_count++;
-	if (visual_frame_count % 60 == 0) { // Log every 60 visual frames
-		osd_ticks_t current_visual_time = osd_ticks();
-		osd_ticks_t visual_time_delta = current_visual_time - last_visual_fps_time;
-		double visual_actual_fps = 0.0;
-		if (visual_time_delta > 0) {
-			double visual_time_seconds = (double)visual_time_delta / (double)osd_ticks_per_second();
-			visual_actual_fps = 60.0 / visual_time_seconds; // 60 frames in X seconds
-		}
-
-		// osd_printf_info("VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
-		//	visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
-
-		// Also log to error.log
-		// FILE* debug_file = fopen("error.log", "a");
-		// if (debug_file) {
-		//	fprintf(debug_file, "VISUAL FPS: %.1ffps actual @ %.1f%% speed [frames=%d]\n",
-		//		visual_actual_fps, 100 * m_speed_percent, visual_frame_count);
-		//	fclose(debug_file);
-		// }
-
-		// Reset for next measurement
-		last_visual_fps_time = current_visual_time;
 	}
 }
 
@@ -576,6 +501,15 @@ void video_manager::exit()
 	// free the snapshot target
 	machine().render().target_free(m_snap_target);
 	m_snap_bitmap.reset();
+
+	// print a final result if we have at least 2 seconds' worth of data
+	if (!emulator_info::standalone() && m_overall_emutime.seconds() >= 1)
+	{
+		osd_ticks_t tps = osd_ticks_per_second();
+		double final_real_time = (double)m_overall_real_seconds + (double)m_overall_real_ticks / (double)tps;
+		double final_emu_time = m_overall_emutime.as_double();
+		osd_printf_info("Average speed: %.2f%% (%d seconds)\n", 100 * final_emu_time / final_real_time, (m_overall_emutime + attotime(0, ATTOSECONDS_PER_SECOND / 2)).seconds());
+	}
 }
 
 
@@ -1027,11 +961,6 @@ void video_manager::recompute_speed(const attotime &emutime)
 		osd_ticks_t realtime = osd_ticks();
 		osd_ticks_t delta_realtime = realtime - m_speed_last_realtime;
 		osd_ticks_t tps = osd_ticks_per_second();
-
-		// DEBUG: Add speed calculation debug
-		//osd_printf_info("SPEED DEBUG: delta_emutime=%.6f delta_realtime=%llu tps=%llu -> speed=%.6f\n",
-		//	delta_emutime.as_double(), delta_realtime, tps, delta_emutime.as_double() * (double)tps / (double)delta_realtime);
-
 		m_speed_percent = delta_emutime.as_double() * (double)tps / (double)delta_realtime;
 
 		// remember the last times
