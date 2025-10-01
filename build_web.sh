@@ -28,9 +28,9 @@ PROFILER_DEBUG=true    # Enable profiler by default
 
 print_usage() {
 	echo "Usage: $0 [options]"
-	echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
+	echo "  -no-build              Skip compiling MAME (reuse existing wasm artifacts)"
 	echo "  -no-server             Do not start a local web server"
-    echo "  -includeroms           Include ROMs in the build"
+	echo "  -includeroms           Include ROMs in the build"
 	echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars)"
 	echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
 	echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
@@ -175,6 +175,54 @@ if [[ "$ROM_FOUND" != "true" ]]; then
 fi
 
 version_ge() { printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1 | grep -qx "$2"; }
+
+# Function to find the source file for a given driver in mame.lst
+find_driver_source() {
+	local driver="$1"
+	local mame_lst="$REPO_ROOT/src/mame/mame.lst"
+
+	if [[ ! -f "$mame_lst" ]]; then
+		echo "Error: mame.lst not found at $mame_lst" >&2
+		exit 1
+	fi
+
+	# Parse mame.lst line by line, remembering the last @source: line
+	local current_source=""
+	local found_driver=false
+
+	while IFS= read -r line; do
+		# Check if this is a @source: line
+		if [[ "$line" =~ ^@source: ]]; then
+			current_source="${line#@source:}"
+		# Check if this is our target driver (exact match, not just contains)
+		elif [[ "$line" == "$driver" ]]; then
+			found_driver=true
+			break
+		fi
+	done < "$mame_lst"
+
+	if [[ "$found_driver" != "true" ]]; then
+		echo "Error: Driver '$driver' not found in mame.lst" >&2
+		echo "Available drivers in mame.lst:" >&2
+		grep "^@source:" "$mame_lst" | head -10 | sed 's/@source:/  /' >&2
+		echo "..." >&2
+		exit 1
+	fi
+
+	if [[ -z "$current_source" ]]; then
+		echo "Error: No source file found for driver '$driver'" >&2
+		exit 1
+	fi
+
+	# Verify the source file exists
+	local full_source_path="$REPO_ROOT/src/mame/$current_source"
+	if [[ ! -f "$full_source_path" ]]; then
+		echo "Error: Source file not found: $full_source_path" >&2
+		exit 1
+	fi
+
+	echo "$full_source_path"
+}
 
 # Ensure emscripten environment is active and compatible without affecting other projects
 ensure_emscripten() {
@@ -386,15 +434,27 @@ else
 	echo "Using existing build configuration: $CUR_BUILD_CONFIG (mode: $CUR_MODE)"
 fi
 
+# Find the source file for the specified driver
+DRIVER_SOURCE=$(find_driver_source "$DRIVER_SHORTNAME")
+echo "Using source file: $DRIVER_SOURCE"
+
+# Convert to relative path for make
+DRIVER_SOURCE_REL="${DRIVER_SOURCE#$REPO_ROOT/}"
+echo "Relative source path: $DRIVER_SOURCE_REL"
+
+# Create dynamic subtarget based on driver
+SUBTARGET="${DRIVER_SHORTNAME}wasm"
+echo "Using subtarget: $SUBTARGET"
+
 # Optional build
 if $DO_BUILD; then
-	echo "Building MAME (Star Wars subset) for WebAssembly..."
+	echo "Building MAME ($DRIVER_SHORTNAME subset) for WebAssembly..."
 	# Maintain separate object trees for worker vs non-worker builds to avoid thrashing
 	BUILD_BASE="$REPO_ROOT/build"
 	ASMJS_LINK="$BUILD_BASE/asmjs"
 	MODE_TAG=$($ENABLE_WORKERS && echo "pthread" || echo "single")
 	ASMJS_MODE_DIR="$BUILD_BASE/asmjs-$MODE_TAG"
-	GEN_BASE="$REPO_ROOT/build/projects/sdl/mamestarwarswasm"
+	GEN_BASE="$REPO_ROOT/build/projects/sdl/mame${SUBTARGET}"
 	GMAKE_LINK="$GEN_BASE/gmake-asmjs"
 	GMAKE_MODE_DIR="$GEN_BASE/gmake-asmjs-$MODE_TAG"
 	mkdir -p "$ASMJS_MODE_DIR"
@@ -469,8 +529,8 @@ if $DO_BUILD; then
 			ccache_env="CCACHE_DIR=\"$CCACHE_DIR\" PATH=\"$(dirname $(which ccache)):\$PATH\" "
 		fi
 		setsid bash -c "${ccache_env}emmake make \
-			SUBTARGET=starwarswasm \
-			SOURCES=src/mame/atari/starwars.cpp \
+			SUBTARGET=$SUBTARGET \
+			SOURCES=$DRIVER_SOURCE_REL \
 			WEBASSEMBLY=1 \
 			TOOLS=0 \
 			REGENIE=$regenie_flag \
@@ -553,16 +613,16 @@ fi
 # Locate artifacts (repo root after build; webdist for -no-build runs)
 SRC_ROOT="$REPO_ROOT"
 if ! $DO_BUILD; then
-	if [[ -f "$OUTDIR/starwarswasm.html" ]]; then
+	if [[ -f "$OUTDIR/${SUBTARGET}.html" ]]; then
 		SRC_ROOT="$OUTDIR"
 	fi
 fi
 
 # Verify artifacts (handle both debug and release builds)
 if [[ "$BUILD_CONFIG" == "debug32" ]]; then
-	ARTIFACT_BASE="starwarswasmd"
+	ARTIFACT_BASE="${SUBTARGET}d"
 else
-	ARTIFACT_BASE="starwarswasm"
+	ARTIFACT_BASE="$SUBTARGET"
 fi
 
 for f in "$SRC_ROOT/${ARTIFACT_BASE}.html" "$SRC_ROOT/${ARTIFACT_BASE}.js" "$SRC_ROOT/${ARTIFACT_BASE}.wasm"; do
@@ -577,19 +637,19 @@ mkdir -p "$OUTDIR"
 if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
 	mv -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/" 2>/dev/null || cp -f "$SRC_ROOT/${ARTIFACT_BASE}."{html,js,wasm} "$OUTDIR/"
 	# Also stage worker bootstrap if present (pthreads/workers builds)
-	if [[ -f "$SRC_ROOT/starwarswasm.worker.js" ]]; then
+	if [[ -f "$SRC_ROOT/${SUBTARGET}.worker.js" ]]; then
 		echo "Injecting shims."
-		cp -f "$SRC_ROOT/starwarswasm.worker.js" "$OUTDIR/"
+		cp -f "$SRC_ROOT/${SUBTARGET}.worker.js" "$OUTDIR/"
 		# Inject shims at top of worker to define `window` and `globalThis`
-		if ! grep -q "self.window = self" "$OUTDIR/starwarswasm.worker.js" 2>/dev/null; then
+		if ! grep -q "self.window = self" "$OUTDIR/${SUBTARGET}.worker.js" 2>/dev/null; then
 			tmpfile="$(mktemp)"
 			{
 				echo '/* injected by build_web.sh: worker global shims */'
 				echo 'self.window = self;'
 				echo 'self.globalThis = self.globalThis || self;'
 			} > "$tmpfile"
-			cat "$OUTDIR/starwarswasm.worker.js" >> "$tmpfile"
-			mv -f "$tmpfile" "$OUTDIR/starwarswasm.worker.js"
+			cat "$OUTDIR/${SUBTARGET}.worker.js" >> "$tmpfile"
+			mv -f "$tmpfile" "$OUTDIR/${SUBTARGET}.worker.js"
 		fi
 	else
 		echo "No worker file to inject."
@@ -1167,7 +1227,7 @@ cat >> "$OUTDIR/index.html" <<EOF
 	  }
 	  // Probe the Content-Encoding the browser actually received for the WASM
 	  try {
-		fetch('starwarswasm.wasm', { method: 'HEAD', cache: 'no-store' }).then(function(r){
+		fetch('${SUBTARGET}.wasm', { method: 'HEAD', cache: 'no-store' }).then(function(r){
 		  console.log('[WASM] Content-Encoding:', r.headers.get('content-encoding') || '(none)');
 		  console.log('[WASM] Content-Type:', r.headers.get('content-type'));
 		}).catch(function(e){ console.error('[WASM] HEAD probe failed', e); });
@@ -1228,16 +1288,16 @@ if $DO_COMPRESS; then
 	COMPRESS_BROTLI=false
 	COMPRESS_GZIP=false
 
-	if [[ -f "$OUTDIR/starwarswasm.wasm.br" ]]; then
-		if [[ "$OUTDIR/starwarswasm.wasm" -nt "$OUTDIR/starwarswasm.wasm.br" ]]; then
+	if [[ -f "$OUTDIR/${SUBTARGET}.wasm.br" ]]; then
+		if [[ "$OUTDIR/${SUBTARGET}.wasm" -nt "$OUTDIR/${SUBTARGET}.wasm.br" ]]; then
 			COMPRESS_BROTLI=true
 		fi
 	else
 		COMPRESS_BROTLI=true
 	fi
 
-	if [[ -f "$OUTDIR/starwarswasm.wasm.gz" ]]; then
-		if [[ "$OUTDIR/starwarswasm.wasm" -nt "$OUTDIR/starwarswasm.wasm.gz" ]]; then
+	if [[ -f "$OUTDIR/${SUBTARGET}.wasm.gz" ]]; then
+		if [[ "$OUTDIR/${SUBTARGET}.wasm" -nt "$OUTDIR/${SUBTARGET}.wasm.gz" ]]; then
 			COMPRESS_GZIP=true
 		fi
 	else
@@ -1247,12 +1307,12 @@ if $DO_COMPRESS; then
 	if $COMPRESS_BROTLI || $COMPRESS_GZIP; then
 		echo "Compressing wasm for deployment..."
 		if $COMPRESS_BROTLI && command -v brotli >/dev/null 2>&1; then
-			brotli -f -q 11 "$OUTDIR/starwarswasm.wasm" -o "$OUTDIR/starwarswasm.wasm.br" || true
+			brotli -f -q 11 "$OUTDIR/${SUBTARGET}.wasm" -o "$OUTDIR/${SUBTARGET}.wasm.br" || true
 		elif $COMPRESS_BROTLI; then
 			echo "brotli not found; skipping .wasm.br. Install: sudo apt install brotli"
 		fi
 		if $COMPRESS_GZIP && command -v gzip >/dev/null 2>&1; then
-			gzip -f -9 -c "$OUTDIR/starwarswasm.wasm" > "$OUTDIR/starwarswasm.wasm.gz" || true
+			gzip -f -9 -c "$OUTDIR/${SUBTARGET}.wasm" > "$OUTDIR/${SUBTARGET}.wasm.gz" || true
 		elif $COMPRESS_GZIP; then
 			echo "gzip not found; skipping .wasm.gz"
 		fi
