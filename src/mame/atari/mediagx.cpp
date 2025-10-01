@@ -67,13 +67,19 @@
 */
 
 #include "emu.h"
-#include "pcshare.h"
 
+#include "bus/isa/isa_cards.h"
 #include "cpu/i386/i386.h"
+#include "machine/8042kbdc.h"
+#include "machine/mc146818.h"
+#include "machine/mediagx_cs5530_bridge.h"
+#include "machine/mediagx_cs5530_ide.h"
+#include "machine/mediagx_cs5530_video.h"
+#include "machine/mediagx_host.h"
 #include "machine/lpci.h"
+#include "machine/pci.h"
 #include "machine/pc_lpt.h"
 #include "machine/pckeybrd.h"
-#include "machine/idectrl.h"
 #include "machine/timer.h"
 #include "sound/dmadac.h"
 #include "video/ramdac.h"
@@ -87,11 +93,14 @@ namespace {
 
 #define SPEEDUP_HACKS   1
 
-class mediagx_state : public pcat_base_state
+class mediagx_state : public driver_device
 {
 public:
 	mediagx_state(const machine_config &mconfig, device_type type, const char *tag) :
-		pcat_base_state(mconfig, type, tag),
+		driver_device(mconfig, type, tag),
+		m_maincpu(*this, "maincpu"),
+		m_rtc(*this, "rtc"),
+		m_kbdc(*this, "kbdc"),
 		m_ide(*this, "ide"),
 		m_ramdac(*this, "ramdac"),
 		m_dmadac(*this, "dac%u", 0U),
@@ -166,6 +175,9 @@ private:
 		COMBINE_DATA(&m_cx5510_regs[reg/4]);
 	}
 
+	required_device<cpu_device> m_maincpu;
+	required_device<ds1287_device> m_rtc;
+	required_device<kbdc8042_device> m_kbdc;
 	required_device<ide_controller_32_device> m_ide;
 	required_device<ramdac_device> m_ramdac;
 	required_device_array<dmadac_sound_device, 2> m_dmadac;
@@ -760,13 +772,11 @@ void mediagx_state::mediagx_map(address_map &map)
 
 void mediagx_state::mediagx_io(address_map &map)
 {
-	pcat32_io_common(map);
+	// Legacy I/O ports for compatibility
 	map(0x0022, 0x0023).rw(FUNC(mediagx_state::io20_r), FUNC(mediagx_state::io20_w));
 	map(0x00e8, 0x00eb).noprw();     // I/O delay port
-	map(0x01f0, 0x01f7).rw(m_ide, FUNC(ide_controller_32_device::cs0_r), FUNC(ide_controller_32_device::cs0_w));
 	map(0x0378, 0x037b).rw(FUNC(mediagx_state::parallel_port_r), FUNC(mediagx_state::parallel_port_w));
 	map(0x03bc, 0x03bf).rw(m_lpt0, FUNC(pc_lpt_device::read), FUNC(pc_lpt_device::write)).umask16(0x00ff);
-	map(0x03f0, 0x03f7).rw(m_ide, FUNC(ide_controller_32_device::cs1_r), FUNC(ide_controller_32_device::cs1_w));
 	map(0x0400, 0x04ff).rw(FUNC(mediagx_state::ad1847_r), FUNC(mediagx_state::ad1847_w));
 	map(0x0cf8, 0x0cff).rw("pcibus", FUNC(pci_bus_legacy_device::read), FUNC(pci_bus_legacy_device::write));
 }
@@ -881,19 +891,54 @@ void mediagx_state::mediagx(machine_config &config)
 	MEDIAGX(config, m_maincpu, 166000000);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mediagx_state::mediagx_map);
 	m_maincpu->set_addrmap(AS_IO, &mediagx_state::mediagx_io);
-	m_maincpu->set_irq_acknowledge_callback("pic8259_1", FUNC(pic8259_device::inta_cb));
+	m_maincpu->set_irq_acknowledge_callback("pci:12.0:pic8259_master", FUNC(pic8259_device::inta_cb));
 
-	// TODO: checked at POST, wants a debug device?
-	PC_LPT(config, m_lpt0);
-//  m_lpt0->irq_handler().set("mb:pic8259", FUNC(pic8259_device::ir7_w));
+	// RTC
+	DS1287(config, m_rtc, 32.768_kHz_XTAL);
+	m_rtc->set_binary(true);
+	m_rtc->set_epoch(1980);
+	m_rtc->irq().set("pci:12.0", FUNC(mediagx_cs5530_bridge_device::pc_irq8n_w));
 
-	pcat_common(config);
+	// Keyboard controller
+	KBDC8042(config, m_kbdc, 0);
+	m_kbdc->set_keyboard_type(kbdc8042_device::KBDC8042_STANDARD);
+	m_kbdc->system_reset_callback().set_inputline(":maincpu", INPUT_LINE_RESET);
+	m_kbdc->gate_a20_callback().set_inputline(":maincpu", INPUT_LINE_A20);
+	m_kbdc->input_buffer_full_callback().set(":pci:12.0", FUNC(mediagx_cs5530_bridge_device::pc_irq1_w));
+	m_kbdc->set_keyboard_tag("at_keyboard");
 
+	at_keyboard_device &at_keyb(AT_KEYB(config, "at_keyboard", pc_keyboard_device::KEYBOARD_TYPE::AT, 1));
+	at_keyb.keypress().set(m_kbdc, FUNC(kbdc8042_device::keyboard_w));
+
+	// PCI root
+	PCI_ROOT(config, "pci", 0);
+	MEDIAGX_HOST(config, "pci:00.0", 0, "maincpu", 128*1024*1024);
+	
+	// PCI bridge
+	PCI_BRIDGE(config, "pci:01.0", 0, 0x10780000, 0);
+
+	// CS5530 southbridge
+	mediagx_cs5530_bridge_device &isa(MEDIAGX_CS5530_BRIDGE(config, "pci:12.0", 0, "maincpu", "pci:12.2"));
+	isa.set_kbdc_tag("kbdc");
+	isa.boot_state_hook().set([](u8 data) { /* printf("%02x\n", data); */ });
+	isa.rtcale().set([this](u8 data) { m_rtc->address_w(data); });
+	isa.rtccs_read().set([this]() { return m_rtc->data_r(); });
+	isa.rtccs_write().set([this](u8 data) { m_rtc->data_w(data); });
+
+	// CS5530 IDE controller
+	mediagx_cs5530_ide_device &ide(MEDIAGX_CS5530_IDE(config, "pci:12.2", 0, "maincpu"));
+	ide.irq_pri().set("pci:12.0", FUNC(mediagx_cs5530_bridge_device::pc_irq14_w));
+	ide.irq_sec().set("pci:12.0", FUNC(mediagx_cs5530_bridge_device::pc_irq15_w));
+
+	// CS5530 video
+	MEDIAGX_CS5530_VIDEO(config, "pci:12.4", 0);
+
+	// Legacy PCI device for CX5510 compatibility
 	pci_bus_legacy_device &pcibus(PCI_BUS_LEGACY(config, "pcibus", 0, 0));
 	pcibus.set_device(18, FUNC(mediagx_state::cx5510_pci_r), FUNC(mediagx_state::cx5510_pci_w));
 
-	ide_controller_32_device &ide(IDE_CONTROLLER_32(config, "ide").options(ata_devices, "hdd", nullptr, true));
-	ide.irq_handler().set(m_pic8259_2, FUNC(pic8259_device::ir6_w));
+	// Parallel port
+	PC_LPT(config, m_lpt0);
 
 	TIMER(config, "sound_timer").configure_generic(FUNC(mediagx_state::sound_timer_callback));
 
@@ -917,6 +962,10 @@ void mediagx_state::mediagx(machine_config &config)
 	DMADAC(config, m_dmadac[0]).add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
 
 	DMADAC(config, m_dmadac[1]).add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
+
+	// ISA slots
+	ISA16_SLOT(config, "isa1", 0, "pci:12.0:isabus", pc_isa16_cards, nullptr, false);
+	ISA16_SLOT(config, "isa2", 0, "pci:12.0:isabus", pc_isa16_cards, nullptr, false);
 }
 
 
