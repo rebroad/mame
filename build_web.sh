@@ -63,10 +63,12 @@ AUTOFRAMESKIP=false
 REFRESHSPEED=false
 NOTHROT=false
 VERBOSE_FLAG=
+INCLUDE_ROMS=false
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-no-build) DO_BUILD=false; shift;;
 		-no-server) START_SERVER=false; shift;;
+		-includeroms) INCLUDE_ROMS=true; shift;;
 		-port) SERVER_PORT="${2:-}"; shift 2;;
 		-rom) ROM_PATH="${2:-}"; shift 2;;
 		-driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
@@ -609,14 +611,39 @@ if [[ "$SRC_ROOT" != "$OUTDIR" ]]; then
 	fi
 fi
 
-echo "Packaging ROM into roms.data (mounted at roms/)..."
-# Optional parent ROM support (embed if present in same dir or default rom dir)
-PARENT_ROM=""
-ROM_DIR="$(dirname "$ROM_PATH")"
-if [[ -f "$ROM_DIR/starwars.zip" ]]; then
-  PARENT_ROM="$ROM_DIR/starwars.zip"
-elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
-  PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+if $INCLUDE_ROMS; then
+	echo "Packaging ROM into roms.data (mounted at roms/)..."
+	# Optional parent ROM support (embed if present in same dir or default rom dir)
+	PARENT_ROM=""
+	ROM_DIR="$(dirname "$ROM_PATH")"
+	if [[ -f "$ROM_DIR/starwars.zip" ]]; then
+		PARENT_ROM="$ROM_DIR/starwars.zip"
+	elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
+		PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+	fi
+
+	# Determine the correct ROM path based on ROM file type
+	# Determine ROM mount path and always use the same PACK_ARGS template for DRYness
+	if [[ "$ROM_PATH" == *.zip ]]; then
+		# For zip files, mount directly in roms/ directory
+		ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
+	else
+		# For individual files, mount the entire directory in roms/starwars/
+		ROM_MOUNT_PATH="roms/starwars/"
+	fi
+	PACK_ARGS=(
+		"$OUTDIR/roms.data"
+		--preload "$ROM_PATH@$ROM_MOUNT_PATH"
+		--export-name=Module
+		--use-preload-cache
+		--js-output="$OUTDIR/roms.js"
+	)
+	if [[ -n "$PARENT_ROM" ]]; then
+		echo "Including parent ROM: $PARENT_ROM"
+		PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
+	fi
+else
+	echo "Skipping ROM packaging - ROMs will be loaded dynamically by user..."
 fi
 
 # Optional autoboot script must be preloaded into the Emscripten FS
@@ -632,26 +659,6 @@ end)
 LUA
 fi
 
-# Determine the correct ROM path based on ROM file type
-# Determine ROM mount path and always use the same PACK_ARGS template for DRYness
-if [[ "$ROM_PATH" == *.zip ]]; then
-	# For zip files, mount directly in roms/ directory
-	ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
-else
-	# For individual files, mount the entire directory in roms/starwars/
-	ROM_MOUNT_PATH="roms/starwars/"
-fi
-PACK_ARGS=(
-	"$OUTDIR/roms.data"
-	--preload "$ROM_PATH@$ROM_MOUNT_PATH"
-	--export-name=Module
-	--use-preload-cache
-	--js-output="$OUTDIR/roms.js"
-)
-if [[ -n "$PARENT_ROM" ]]; then
-  echo "Including parent ROM: $PARENT_ROM"
-  PACK_ARGS=("${PACK_ARGS[@]}" --preload "$PARENT_ROM@roms/$(basename "$PARENT_ROM")")
-fi
 # Optional per-game cfg (to carry input inversion, etc.)
 CFG_FILE="$HOME/.mame/cfg/${DRIVER_SHORTNAME}.cfg"
 USE_CFG=false
@@ -717,13 +724,329 @@ cat > "$OUTDIR/index.html" <<EOF
   <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<title>Star Wars</title>
+	<title>MAME Web</title>
 	<link rel="icon" href="data:,"/>
-	<style>html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}</style>
+	<script>
+	  console.log('[BROWSER] HTML page starting to load...');
+	</script>
+	<style>
+	  html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}
+EOF
+
+if ! $INCLUDE_ROMS; then
+	# Dynamic ROM loading mode - user selects ROMs
+	cat >> "$OUTDIR/index.html" <<EOF
+		#rom-selector{position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.8);padding:15px;border:1px solid #333;border-radius:5px;z-index:1000;max-width:400px}
+		#rom-selector h3{margin:0 0 10px 0;color:#fff}
+		#rom-selector p{margin:5px 0;font-size:14px}
+		#rom-selector input[type="file"]{margin:5px 0;width:100%}
+		#rom-selector button{background:#444;color:#fff;border:1px solid #666;padding:8px 15px;border-radius:3px;cursor:pointer;margin:5px 5px 5px 0}
+		#rom-selector button:hover{background:#555}
+		#rom-selector button:disabled{background:#222;color:#666;cursor:not-allowed}
+		#rom-status{margin:10px 0;padding:8px;background:rgba(0,50,0,0.3);border:1px solid #0a0;border-radius:3px;display:none}
+		#rom-status.error{background:rgba(50,0,0,0.3);border-color:#a00}
+		.hidden{display:none}
+EOF
+fi
+
+cat >> "$OUTDIR/index.html" <<EOF
+	</style>
   </head>
   <body>
+EOF
+
+if $INCLUDE_ROMS; then
+	cat >> "$OUTDIR/index.html" <<EOF
 	<canvas id="canvas"></canvas>
 	<script>
+EOF
+else
+	cat >> "$OUTDIR/index.html" <<EOF
+	<div id="rom-selector">
+		<h3>🎮 ROM Selection</h3>
+		<p>Please select your ROM files:</p>
+		<p><strong>Option 1:</strong> Select ROM zip file</p>
+		<input type="file" id="rom-zip" accept=".zip" />
+		<p><strong>Option 2:</strong> Select ROM directory</p>
+		<input type="file" id="rom-directory" webkitdirectory directory multiple />
+		<button id="load-roms" disabled>Load ROMs into Browser</button>
+		<button id="start-game" disabled>Start Game</button>
+		<p style="font-size:12px;color:#888;margin-top:10px;">
+		  <strong>Note:</strong> Files are loaded into browser memory only. No data is sent to any server.
+		</p>
+		<div id="rom-status"></div>
+		<div id="debug-info" style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.5);border:1px solid #333;border-radius:3px;font-size:12px;display:none;">
+		  <strong>Debug Info:</strong><br>
+		  <span id="debug-files">Files: 0</span><br>
+		  <span id="debug-buttons">Load: disabled, Start: disabled</span><br>
+		  <span id="debug-fs">FS: checking...</span>
+		</div>
+	</div>
+	<canvas id="canvas" class="hidden"></canvas>
+	<script>
+	  // ROM loading functionality
+	  var romFiles = [];
+	  var romsLoaded = false;
+
+	  // Custom logging that bypasses any console overrides
+	  function debugLog(message, data) {
+		// Try multiple logging methods
+		try {
+		  console.log('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		try {
+		  console.info('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		try {
+		  console.warn('[MAME-DEBUG]', message, data || '');
+		} catch(e) {}
+		// Also log to a global array for probe_mame_web to capture
+		if (typeof window.mameDebugLog === 'undefined') {
+		  window.mameDebugLog = [];
+		}
+		window.mameDebugLog.push('[MAME-DEBUG] ' + message + (data ? ' ' + JSON.stringify(data) : ''));
+	  }
+
+	  function showStatus(message, isError) {
+		var status = document.getElementById('rom-status');
+		status.textContent = message;
+		status.className = isError ? 'error' : '';
+		status.style.display = 'block';
+	  }
+
+	  function hideStatus() {
+		document.getElementById('rom-status').style.display = 'none';
+	  }
+
+	  function updateDebugInfo() {
+		var debugInfo = document.getElementById('debug-info');
+		var debugFiles = document.getElementById('debug-files');
+		var debugButtons = document.getElementById('debug-buttons');
+		var debugFS = document.getElementById('debug-fs');
+
+		debugFiles.textContent = 'Files: ' + romFiles.length;
+		debugButtons.textContent = 'Load: ' + (document.getElementById('load-roms').disabled ? 'disabled' : 'enabled') +
+								 ', Start: ' + (document.getElementById('start-game').disabled ? 'disabled' : 'enabled');
+		debugFS.textContent = 'FS: ' + (typeof FS !== 'undefined' ? 'available' : 'not available');
+
+		// Show debug info if there are issues
+		if (romFiles.length > 0 && document.getElementById('load-roms').disabled) {
+		  debugInfo.style.display = 'block';
+		}
+	  }
+
+	  function updateButtons() {
+		var loadBtn = document.getElementById('load-roms');
+		var startBtn = document.getElementById('start-game');
+		loadBtn.disabled = romFiles.length === 0;
+		startBtn.disabled = !romsLoaded;
+		debugLog('Buttons updated', {
+		  romFilesLength: romFiles.length,
+		  loadButtonDisabled: loadBtn.disabled,
+		  startButtonDisabled: startBtn.disabled,
+		  romsLoaded: romsLoaded
+		});
+		updateDebugInfo();
+	  }
+
+	  // Handle ROM zip file selection
+	  document.getElementById('rom-zip').addEventListener('change', function(e) {
+		if (e.target.files.length > 0) {
+		  romFiles = Array.from(e.target.files);
+		  document.getElementById('rom-directory').value = '';
+		  updateButtons();
+		  hideStatus();
+		}
+	  });
+
+	  // Handle ROM directory selection
+	  document.getElementById('rom-directory').addEventListener('change', function(e) {
+		debugLog('Directory selection changed', {filesLength: e.target.files.length});
+		if (e.target.files.length > 0) {
+		  romFiles = Array.from(e.target.files);
+		  debugLog('ROM files array populated', {count: romFiles.length, files: romFiles.map(f => f.name)});
+		  document.getElementById('rom-zip').value = '';
+		  showStatus('Selected ' + romFiles.length + ' ROM files. Click "Load ROMs into Browser" to continue.', false);
+		  updateButtons();
+		}
+	  });
+
+	  // Load ROMs into Emscripten filesystem
+	  document.getElementById('load-roms').addEventListener('click', function() {
+		if (romFiles.length === 0) {
+		  showStatus('Please select ROM files first', true);
+		  return;
+		}
+
+		showStatus('Loading MAME scripts first...', false);
+
+		// Load MAME scripts first, then load ROMs
+		loadMAMEScriptsAndROMs();
+	  });
+
+	  function loadMAMEScriptsAndROMs() {
+		console.log('[BROWSER] loadMAMEScriptsAndROMs() called');
+		if (mameScriptsLoaded) {
+		  // Scripts already loaded, just load ROMs
+		  console.log('[BROWSER] MAME scripts already loaded, loading ROMs...');
+		  loadROMsIntoFS();
+		  return;
+		}
+
+		// Load MAME scripts first
+		console.log('[BROWSER] Loading MAME scripts from ${ARTIFACT_BASE}.js...');
+		var script = document.createElement('script');
+		script.src = '${ARTIFACT_BASE}.js';
+		script.onload = function() {
+		  console.log('[BROWSER] MAME scripts loaded, now loading ROMs...');
+		  showStatus('MAME scripts loaded, now loading ROMs...', false);
+		  mameScriptsLoaded = true;
+
+		  // Wait a bit for FS to be available after script load
+		  setTimeout(function() {
+			loadROMsIntoFS();
+		  }, 500);
+		};
+		script.onerror = function() {
+		  showStatus('Error: Failed to load MAME scripts', true);
+		};
+		document.head.appendChild(script);
+	  }
+
+	  function loadROMsIntoFS() {
+		// Wait for Emscripten filesystem to be ready
+		var fsWaitAttempts = 0;
+		var maxFsWaitAttempts = 50; // 5 seconds max wait
+
+		function waitForFS() {
+		  fsWaitAttempts++;
+
+		  debugLog('FS check attempt', {
+			attempt: fsWaitAttempts,
+			fsDefined: typeof FS !== 'undefined',
+			fsMkdir: typeof FS !== 'undefined' && FS.mkdir
+		  });
+
+		  if (typeof FS !== 'undefined' && FS.mkdir) {
+			// Create roms directory in Emscripten filesystem
+			try {
+			  try { FS.mkdir('roms'); } catch(e) {}
+			  try { FS.mkdir('roms/starwars'); } catch(e) {}
+			  showStatus('Loading ROMs into browser memory...', false);
+			  loadROMFiles();
+			} catch(e) {
+			  showStatus('Error: Failed to create directories in filesystem: ' + e.message, true);
+			}
+		  } else if (fsWaitAttempts >= maxFsWaitAttempts) {
+			// Better error message with debug info
+			var debugInfo = 'FS defined: ' + (typeof FS !== 'undefined') + ', FS.mkdir: ' + (typeof FS !== 'undefined' && FS.mkdir);
+			showStatus('Error: Browser filesystem not ready. Debug: ' + debugInfo + '. Try loading MAME scripts first.', true);
+			console.error('FS not available after', fsWaitAttempts, 'attempts. Debug:', debugInfo);
+		  } else {
+			// Wait a bit more for FS to be available
+			showStatus('Waiting for browser filesystem to initialize... (' + fsWaitAttempts + '/' + maxFsWaitAttempts + ')', false);
+			setTimeout(waitForFS, 100);
+		  }
+		}
+
+		waitForFS();
+
+		function loadROMFiles() {
+		  // Load each ROM file
+		  var loadedCount = 0;
+		  var totalCount = romFiles.length;
+
+		function loadNextFile() {
+		  if (loadedCount >= totalCount) {
+			romsLoaded = true;
+			updateButtons();
+			showStatus('ROMs loaded successfully! Click "Start Game" to begin.', false);
+			return;
+		  }
+
+		  var file = romFiles[loadedCount];
+		  var reader = new FileReader();
+
+		  reader.onload = function(e) {
+			try {
+			  var data = new Uint8Array(e.target.result);
+			  var filename = file.name;
+			  var webkitRelativePath = file.webkitRelativePath || '';
+
+			  // Determine mount path based on file type and structure
+			  var mountPath;
+			  if (filename.toLowerCase().endsWith('.zip')) {
+				// For zip files, mount directly in roms/ directory
+				mountPath = 'roms/' + filename;
+			  } else {
+				// For individual files, preserve directory structure
+				if (webkitRelativePath) {
+				  // Directory selection - preserve the directory structure
+				  var pathParts = webkitRelativePath.split('/');
+				  var gameDir = pathParts[0]; // First directory is the game name
+				  mountPath = 'roms/' + gameDir + '/' + filename;
+				} else {
+				  // Single file selection - use default game directory
+				  mountPath = 'roms/starwars/' + filename;
+				}
+			  }
+
+			  // Create directory if it doesn't exist
+			  var pathParts = mountPath.split('/');
+			  var dirPath = pathParts.slice(0, -1).join('/');
+			  if (dirPath && dirPath !== 'roms') {
+				try { FS.mkdir(dirPath); } catch(e) {}
+			  }
+
+			  // Write file to Emscripten filesystem
+			  FS.writeFile(mountPath, data);
+			  console.log('Loaded ROM file:', mountPath);
+
+			  loadedCount++;
+			  showStatus('Loading ROMs into browser memory... (' + loadedCount + '/' + totalCount + ')', false);
+			  loadNextFile();
+			} catch(error) {
+			  showStatus('Error loading ' + filename + ': ' + error.message, true);
+			}
+		  };
+
+		  reader.onerror = function() {
+			showStatus('Error reading file: ' + file.name, true);
+		  };
+
+		  reader.readAsArrayBuffer(file);
+		}
+
+		loadNextFile();
+
+		// Start the process
+		waitForFS();
+	  };
+
+	  // Start the game
+	  document.getElementById('start-game').addEventListener('click', function() {
+		if (!romsLoaded) {
+		  showStatus('Please load ROMs first', true);
+		  return;
+		}
+
+		// Hide ROM selector and show canvas
+		document.getElementById('rom-selector').style.display = 'none';
+		document.getElementById('canvas').classList.remove('hidden');
+
+		// Start MAME
+		startMAME();
+	  });
+
+	  // Function to start MAME after ROMs are loaded
+	  function startMAME() {
+		console.log('[BROWSER] Starting MAME with dynamically loaded ROMs...');
+		// The MAME module will be initialized when the scripts load
+	  }
+EOF
+fi
+
+cat >> "$OUTDIR/index.html" <<EOF
 	  // Ensure canvas has explicit pixel size and is visible
 	  (function(){
 		var c = document.getElementById('canvas');
@@ -760,6 +1083,7 @@ cat > "$OUTDIR/index.html" <<EOF
 	  var urlVideo = (urlParams.get('video')||'').toLowerCase();
 	  var chosenVideo = urlVideo === 'soft' || urlVideo === 'bgfx' ? urlVideo : ("${VIDEO_MODE}" === "auto" ? detectPreferredVideo() : "${VIDEO_MODE}");
 	  var latencyOverride = urlParams.get('latency');
+	  // MAME Module configuration
 	  var Module = {
 		canvas: (function(){ return document.getElementById('canvas'); })(),
 		arguments: [
@@ -875,7 +1199,36 @@ ${INI_ARGS_JS}
 	</script>
 	<script src="mame_performance_warning.js"></script>
 	<script src="roms.js"></script>
+EOF
+
+if $INCLUDE_ROMS; then
+	# Traditional mode - load MAME scripts immediately
+	cat >> "$OUTDIR/index.html" <<EOF
 	<script src="${ARTIFACT_BASE}.js"></script>
+EOF
+else
+	# Dynamic ROM loading mode - load MAME scripts when user clicks
+	cat >> "$OUTDIR/index.html" <<EOF
+	<script>
+	  // MAME scripts will be loaded when user clicks "Load ROMs"
+	  var mameScriptsLoaded = false;
+
+	  // Override startMAME to run MAME
+	  var originalStartMAME = startMAME;
+	  startMAME = function() {
+		console.log('[BROWSER] Starting MAME...');
+		if (typeof Module !== 'undefined' && Module.run) {
+		  console.log('[BROWSER] Module.run() called - MAME execution starting');
+		  Module.run();
+		} else {
+		  showStatus('Error: MAME module not ready. Please try loading ROMs again.', true);
+		}
+	  };
+	</script>
+EOF
+fi
+
+cat >> "$OUTDIR/index.html" <<EOF
   </body>
   </html>
 EOF
