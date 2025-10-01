@@ -13,27 +13,44 @@
 	let frameCount = 0;
 	let lastTime = 0;
 	let frameTimes = [];
-	let isThrottled = false;
 	let detectedFrameRate = 0;
 	let mameSpeed = 0;
 	let mameFrame = 0;
 	let mameFps = 0;
 
+	// MAME detection variables
+	let mameIsRunning = false;
+	let mameStartTime = 0;
+	let baselineFps = 0;
+	let warningShown = false;
+
 	// Warning throttling
-	let lastWarningTime = 0;
-	let warningCount = 0;
+	let lastMonitorTime = 0;
+	let lastFpsLogTime = 0;
 	let warningDismissed = false; // Track if user dismissed the warning
 	let isMonitoring = false; // Track if monitoring is active
 	let warningDisplayCount = 0; // Track how warnings displayed
-	const WARNING_THROTTLE_MS = 5000; // Only warn every 5 seconds
+	let dismissedFpsThreshold = 44; // Track FPS threshold when warning was dismissed
+	const MONITOR_INTERVAL = 100; // Check every 100ms instead of every frame
+	const LOGFPS_INTERVAL = 5000; // Only warn every 5 seconds
 	const MAX_WARNINGS = 3; // Maximum warnings before stopping
+	const SIGNIFICANT_DROP_PERCENTAGE = 0.05; // FPS must drop by 5% to show new warning
 
-	// Monitor frame rate using requestAnimationFrame
 	const monitorFrames = () => {
 		// Stop monitoring if flag is set
 		if (!isMonitoring) return;
 
 		const now = performance.now();
+
+		// Throttle monitoring to avoid blocking event loop
+		if (now - lastMonitorTime < MONITOR_INTERVAL) {
+			if (isMonitoring) {
+				requestAnimationFrame(monitorFrames);
+			}
+			return;
+		}
+		lastMonitorTime = now;
+
 		const deltaTime = now - lastTime;
 
 		if (frameCount > 0) {
@@ -50,35 +67,36 @@
 				const avgFps = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
 				detectedFrameRate = avgFps;
 
-				if (avgFps < 44) {
-					isThrottled = true;
+				// Always log FPS to console (every 5 seconds)
+				if (now - lastFpsLogTime > LOGFPS_INTERVAL) {
+					console.log('Frame rate detected:', avgFps.toFixed(1), 'fps');
+					lastFpsLogTime = now;
+				}
+
+				// Only show GUI warning if MAME is running and FPS is low
+				if (mameIsRunning && avgFps < 44) {
+					// Check if we should show a warning
+					let shouldShowWarning = false;
 
 					if (!warningDismissed && !window.warningDismissed) {
+						// First warning - show it
+						shouldShowWarning = true;
 						const existingWarning = document.querySelector('.mame-performance-warning');
 						if (existingWarning) {
 							existingWarning.remove();
-							warningDisplayCount--;
 						}
+					} else if (avgFps < (dismissedFpsThreshold * (1 - SIGNIFICANT_DROP_PERCENTAGE))) {
+						// FPS has dropped significantly below the dismissed threshold (5% drop)
+						shouldShowWarning = true;
+						const dropPercentage = ((dismissedFpsThreshold - avgFps) / dismissedFpsThreshold * 100).toFixed(1);
+						console.log(`📉 Significant FPS drop detected: ${avgFps.toFixed(1)}fps (${dropPercentage}% drop from ${dismissedFpsThreshold.toFixed(1)}fps when dismissed)`);
+					}
 
-						// Increment warning display count
-						warningDisplayCount++;
-
+					if (shouldShowWarning) {
 						if (isChrome) {
 							showChromeWarning();
 						} else {
 							showGenericWarning();
-						}
-					}
-
-					// Throttle console warnings to avoid spam
-					const now = performance.now();
-					if (now - lastWarningTime > WARNING_THROTTLE_MS && warningCount < MAX_WARNINGS) {
-						console.warn('⚠️ Low frame rate detected:', avgFps.toFixed(1), 'fps');
-						lastWarningTime = now;
-						warningCount++;
-
-						if (warningCount >= MAX_WARNINGS) {
-							console.log('🔇 Performance warnings muted (too many low frame rate detections)');
 						}
 					}
 				}
@@ -94,17 +112,42 @@
 		}
 	};
 
-	// Start monitoring after MAME initializes
+	// Detect when MAME starts running
+	function detectMAMEStart() {
+		// Look for actual MAME activity, not just environment setup
+		const canvas = document.querySelector('canvas');
+		const hasModule = typeof Module !== 'undefined';
+
+		// Check if MAME is actually running (not just loaded)
+		// Look for "Starting" message which indicates MAME has begun execution
+		const hasMameExecution = (
+			// Check for MAME-specific console output
+			document.body.textContent.includes('Starting')
+		);
+
+		// Only trigger if we have Module loaded and MAME has started
+		if (canvas && hasModule && hasMameExecution && !mameIsRunning) {
+			mameIsRunning = true;
+			mameStartTime = performance.now();
+			console.log('🎮 MAME detected as running - starting performance monitoring...');
+			isMonitoring = true;
+			monitorFrames();
+		}
+	}
+
+	// Start monitoring after a delay, but only show warnings after MAME is running
 	setTimeout(() => {
 		console.log('📊 Starting performance monitoring...');
 		isMonitoring = true;
 		monitorFrames();
 
-		// Stop monitoring after 8 seconds
-		setTimeout(() => {
-			console.log('📊 Stopping performance monitoring...');
-			isMonitoring = false;
-		}, 8000);
+		// Check for MAME every 500ms
+		const mameCheckInterval = setInterval(() => {
+			detectMAMEStart();
+			if (mameIsRunning) {
+				clearInterval(mameCheckInterval);
+			}
+		}, 500);
 	}, 3000);
 
 
@@ -121,7 +164,7 @@
 
 	function createDismissButton() {
 		return `
-			<button onclick="this.parentElement.remove(); window.warningDismissed = true;" style="
+			<button id="mame-dismiss-btn" style="
 				background: rgba(255,255,255,0.2);
 				border: 1px solid rgba(255,255,255,0.3);
 				color: white;
@@ -164,36 +207,127 @@
 
 		document.body.appendChild(warning);
 
-		// Auto-dismiss after specified time
+		// Add proper event listener for dismiss button with event delegation
+		const dismissBtn = warning.querySelector('#mame-dismiss-btn');
+		if (dismissBtn) {
+			// Use both click and mousedown events for better responsiveness
+			const handleDismiss = function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+
+				// Record the FPS threshold when dismissed
+				dismissedFpsThreshold = detectedFrameRate;
+				const newThreshold = dismissedFpsThreshold * (1 - SIGNIFICANT_DROP_PERCENTAGE);
+				console.log(`🔇 Warning dismissed at ${detectedFrameRate.toFixed(1)}fps - will only warn if FPS drops below ${newThreshold.toFixed(1)}fps (5% drop)`);
+
+				// Increment warning count when user dismisses
+				warningDisplayCount++;
+
+				// Stop performance monitoring immediately
+				isMonitoring = false;
+				warningDismissed = true;
+				window.warningDismissed = true;
+
+				// Remove the warning
+				if (warning.parentElement) {
+					warning.remove();
+				}
+
+				console.log('🔇 Performance monitoring stopped by user');
+
+				// Remove event listeners to prevent double-firing
+				dismissBtn.removeEventListener('click', handleDismiss);
+				dismissBtn.removeEventListener('mousedown', handleDismiss);
+			};
+
+			dismissBtn.addEventListener('click', handleDismiss, { capture: true });
+			dismissBtn.addEventListener('mousedown', handleDismiss, { capture: true });
+		}
+
+		// Auto-dismiss after specified time (only if not manually dismissed)
 		setTimeout(() => {
-			if (warning.parentElement) {
+			if (warning.parentElement && !warningDismissed) {
 				warning.remove();
 			}
 		}, config.autoDismissTime);
 	}
 
 	function showChromeWarning() {
-		showWarning({
-			backgroundColor: '#ff6b6b',
-			title: `⚠️ Chrome Performance Issue (Warning #${warningDisplayCount})`,
-			description: 'MAME is running slower than expected due to Chrome\'s frame rate limiting.',
-			solution: 'Launch Chrome with:',
-			additionalInfo: `
-				<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 10px;">
-					--disable-frame-rate-limit --autoplay-policy=no-user-gesture-required
-				</div>
-			`,
-			autoDismissTime: 25000
-		});
+		// Show compact warning if MAME is running and this is a subsequent warning
+		if (mameIsRunning && warningDisplayCount > 1) {
+			showCompactWarning('Chrome Performance Issue', 'FPS dropped during gameplay');
+		} else {
+			showWarning({
+				backgroundColor: '#ff6b6b',
+				title: `⚠️ Chrome Performance Issue (Warning #${warningDisplayCount})`,
+				description: 'MAME is running slower than expected due to Chrome\'s frame rate limiting.',
+				solution: 'Launch Chrome with:',
+				additionalInfo: `
+					<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 10px;">
+						--disable-frame-rate-limit --autoplay-policy=no-user-gesture-required
+					</div>
+				`,
+				autoDismissTime: 25000
+			});
+		}
 	}
 
 	function showGenericWarning() {
-		showWarning({
-			backgroundColor: '#ffa726',
-			title: `⚠️ Performance Issue (Warning #${warningDisplayCount})`,
-			description: 'MAME may not be running at optimal performance.',
-			additionalInfo: 'Try using Firefox for better performance, or launch Chrome with performance flags.',
-			autoDismissTime: 20000
-		});
+		// Show compact warning if MAME is running and this is a subsequent warning
+		if (mameIsRunning && warningDisplayCount > 1) {
+			showCompactWarning('Performance Issue', 'FPS dropped during gameplay');
+		} else {
+			showWarning({
+				backgroundColor: '#ffa726',
+				title: `⚠️ Performance Issue (Warning #${warningDisplayCount})`,
+				description: 'MAME may not be running at optimal performance.',
+				additionalInfo: 'Try using Firefox for better performance, or launch Chrome with performance flags.',
+				autoDismissTime: 20000
+			});
+		}
+	}
+
+	function showCompactWarning(title, message) {
+		const warning = document.createElement('div');
+		warning.className = 'mame-performance-warning';
+		warning.style.cssText = `
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			background: rgba(255, 107, 107, 0.9);
+			color: white;
+			padding: 10px 15px;
+			border-radius: 6px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+			z-index: 10000;
+			max-width: 300px;
+			font-family: Arial, sans-serif;
+			font-size: 13px;
+			line-height: 1.3;
+		`;
+
+		warning.innerHTML = `
+			<div style="font-weight: bold; margin-bottom: 5px;">⚠️ ${title}</div>
+			<div style="margin-bottom: 8px;">${message}</div>
+			<button onclick="dismissedFpsThreshold = detectedFrameRate; warningDisplayCount++; this.parentElement.remove();" style="
+				background: rgba(255,255,255,0.2);
+				border: 1px solid rgba(255,255,255,0.3);
+				color: white;
+				padding: 4px 8px;
+				border-radius: 3px;
+				cursor: pointer;
+				font-size: 11px;
+			">Dismiss</button>
+		`;
+
+		document.body.appendChild(warning);
+
+		// Auto-dismiss after 8 seconds
+		setTimeout(() => {
+			if (warning.parentElement) {
+				warning.remove();
+			}
+		}, 8000);
 	}
 })();
