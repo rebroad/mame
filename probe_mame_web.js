@@ -92,7 +92,6 @@ const path = require('path');
 	  // Filter out annoying deprecation warnings
 	  if (text.includes('ScriptProcessorNode is deprecated') ||
 		  text.includes('AudioContext was not allowed to start')) {
-		console.log(`🔍 FILTERED OUT: ${text}`);
 		return; // Skip these warnings
 	  }
 
