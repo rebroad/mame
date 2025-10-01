@@ -31,6 +31,7 @@ print_usage() {
 	echo "Usage: $0 [options]"
 	echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
 	echo "  -no-server             Do not start a local web server"
+    echo "  -includeroms           Include ROMs in the build"
 	echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
 	echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars.zip)"
 	echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars)"
