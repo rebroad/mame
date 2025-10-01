@@ -12,7 +12,6 @@ SERVER_PORT=""
 VIDEO_MODE="soft"
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
 DRIVER_SHORTNAME="starwars"
-ROM_PATH="$HOME/.mame/roms/starwars.zip"
 AUDIO_LATENCY="5"
 DO_WIPE=false
 JOBS="$(nproc)"
@@ -32,15 +31,12 @@ print_usage() {
 	echo "  -no-build              Skip compiling MAME (reuse existing starwarswasm.*)"
 	echo "  -no-server             Do not start a local web server"
     echo "  -includeroms           Include ROMs in the build"
-	echo "  -port <N>              Serve on a specific port (default: first free 8000-8005)"
-	echo "  -rom <path>            ROM zip to embed (default: $HOME/.mame/roms/starwars.zip)"
 	echo "  -driver <shortname>    MAME driver shortname to launch (default: starwars)"
 	echo "  -emsdk-version <ver>   Emscripten version to use (default: $EMSDK_VERSION)"
 	echo "  -use-local-emsdk       Use local project clone instead of ~/src/emsdk"
 	echo "  -no-ccache             Disable ccache wrapper for this build"
 	echo "  -console-debug         Run MAME with -verbose for browser console logs"
 	echo "  -build-debug           Enable Emscripten debug build flags (no size opts)"
-	echo "  -no-profiler           Disable profiler debug output"
 	echo "  -latency <N>           Set -audio_latency (default: $AUDIO_LATENCY)"
 	echo "  -j <N>, --jobs <N>     Use N jobs for 'make -j' (default: CPU count)"
 	echo "  -link-threads <N>      Use N threads for wasm-ld (-Wl,--threads=N)"
@@ -70,8 +66,6 @@ while [[ $# -gt 0 ]]; do
 		-no-build) DO_BUILD=false; shift;;
 		-no-server) START_SERVER=false; shift;;
 		-includeroms) INCLUDE_ROMS=true; shift;;
-		-port) SERVER_PORT="${2:-}"; shift 2;;
-		-rom) ROM_PATH="${2:-}"; shift 2;;
 		-driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
 		-latency) AUDIO_LATENCY="${2:-}"; shift 2;;
 		-emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
@@ -81,7 +75,6 @@ while [[ $# -gt 0 ]]; do
 		-console-debug) CONSOLE_DEBUG=true; VERBOSE_FLAG="-verbose"; shift;;
 		-debug-build) set -- "-build-debug" "${@:2}";;
 		-build-debug) BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
-		-no-profiler) PROFILER_DEBUG=false; shift;;
 		-debug) CONSOLE_DEBUG=true; BUILD_DEBUG=true; BUILD_CONFIG="debug32"; shift;;
 		-j) set -- "--jobs" "${@:2}";;
 		--jobs) JOBS="${2:-}"; shift 2;;
@@ -154,39 +147,30 @@ if $DO_WIPE; then
 	fi
 fi
 
+# Derive ROM path from driver shortname
+ROM_PATH="$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip"
+
 # Ensure ROM exists - check for zip first, then individual files
 ROM_FOUND=false
 if [[ -f "$ROM_PATH" ]]; then
 	ROM_FOUND=true
 	echo "Using ROM zip: $ROM_PATH"
 else
-	# Check for individual ROM files in starwars directory
-	ROM_DIR="$HOME/.mame/roms/starwars"
+	# Check for individual ROM files in driver directory
+	ROM_DIR="$HOME/.mame/roms/${DRIVER_SHORTNAME}"
 	if [[ -d "$ROM_DIR" ]]; then
 		echo "ROM zip not found, checking for individual files in $ROM_DIR"
-
-		# Check for 214 version first (preferred), then 114
-		# Check for either 214 or 114 version ROM file (prefer 214)
-		for ver in 214 114; do
-			if [[ -f "$ROM_DIR/136021.$ver.1f" ]]; then
-				echo "Found Star Wars $ver version ROM files"
-				ROM_FOUND=true
-				ROM_PATH="$ROM_DIR"  # Use individual files directly - no need to zip
-				break
-			fi
-		done
-		if [[ "$ROM_FOUND" != "true" ]]; then
-			echo "No Star Wars ROM files found in $ROM_DIR"
-			echo "Expected files: 136021.214.1f (preferred) or 136021.114.1f"
-		fi
+		ROM_FOUND=true
+		ROM_PATH="$ROM_DIR"  # Use individual files directly - no need to zip
+		echo "Found ROM directory: $ROM_DIR"
 	fi
 fi
 
 if [[ "$ROM_FOUND" != "true" ]]; then
-	echo "Error: ROM not found at $ROM_PATH and no individual ROM files found"
+	echo "Error: ROM not found for driver '$DRIVER_SHORTNAME'"
 	echo "Please ensure you have either:"
-	echo "  - $HOME/.mame/roms/starwars.zip, or"
-	echo "  - Individual ROM files in $HOME/.mame/roms/starwars/ (prefer 214 over 114)"
+	echo "  - $HOME/.mame/roms/${DRIVER_SHORTNAME}.zip, or"
+	echo "  - Individual ROM files in $HOME/.mame/roms/${DRIVER_SHORTNAME}/"
 	exit 1
 fi
 
@@ -617,10 +601,10 @@ if $INCLUDE_ROMS; then
 	# Optional parent ROM support (embed if present in same dir or default rom dir)
 	PARENT_ROM=""
 	ROM_DIR="$(dirname "$ROM_PATH")"
-	if [[ -f "$ROM_DIR/starwars.zip" ]]; then
-		PARENT_ROM="$ROM_DIR/starwars.zip"
-	elif [[ -f "$HOME/.mame/roms/starwars.zip" ]]; then
-		PARENT_ROM="$HOME/.mame/roms/starwars.zip"
+	if [[ -f "$ROM_DIR/${DRIVER_SHORTNAME}.zip" ]]; then
+		PARENT_ROM="$ROM_DIR/${DRIVER_SHORTNAME}.zip"
+	elif [[ -f "$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip" ]]; then
+		PARENT_ROM="$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip"
 	fi
 
 	# Determine the correct ROM path based on ROM file type
@@ -629,8 +613,8 @@ if $INCLUDE_ROMS; then
 		# For zip files, mount directly in roms/ directory
 		ROM_MOUNT_PATH="roms/$(basename "$ROM_PATH")"
 	else
-		# For individual files, mount the entire directory in roms/starwars/
-		ROM_MOUNT_PATH="roms/starwars/"
+		# For individual files, mount the entire directory in roms/{driver}/
+		ROM_MOUNT_PATH="roms/${DRIVER_SHORTNAME}/"
 	fi
 	PACK_ARGS=(
 		"$OUTDIR/roms.data"
@@ -932,7 +916,7 @@ else
 			// Create roms directory in Emscripten filesystem
 			try {
 			  try { FS.mkdir('roms'); } catch(e) {}
-			  try { FS.mkdir('roms/starwars'); } catch(e) {}
+			  try { FS.mkdir('roms/${DRIVER_SHORTNAME}'); } catch(e) {}
 			  showStatus('Loading ROMs into browser memory...', false);
 			  loadROMFiles();
 			} catch(e) {
@@ -988,7 +972,7 @@ else
 				  mountPath = 'roms/' + gameDir + '/' + filename;
 				} else {
 				  // Single file selection - use default game directory
-				  mountPath = 'roms/starwars/' + filename;
+				  mountPath = 'roms/${DRIVER_SHORTNAME}/' + filename;
 				}
 			  }
 
