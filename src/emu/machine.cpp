@@ -1550,7 +1550,6 @@ void running_machine::emscripten_set_running_machine(running_machine *machine)
 	EM_ASM (
 		JSMESS.running = true;
 	);
-	// Try unlimited FPS but compensate for Chrome throttling by running game logic faster
 	emscripten_set_main_loop(&(emscripten_main_loop), 0, 1);
 }
 
