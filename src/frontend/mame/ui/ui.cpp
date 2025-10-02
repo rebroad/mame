@@ -1712,6 +1712,10 @@ uint32_t mame_ui_manager::handler_ingame(render_container &container)
 	if (machine().ui_input().pressed(IPT_UI_PAUSE))
 		machine().toggle_pause();
 
+	// toggle antithrottle
+	if (machine().ui_input().pressed(IPT_UI_ANTITHROTTLE))
+		machine().toggle_antithrottle();
+
 	// pause single step
 	if (machine().ui_input().pressed(IPT_UI_PAUSE_SINGLE))
 	{
