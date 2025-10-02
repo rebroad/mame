@@ -1520,9 +1520,9 @@ void running_machine::emscripten_main_loop()
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
 			// One printf to rule them all! 🧙‍♂️
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %s/%.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
 				fmod(current_time, 100000.0), fps_4, fps_8, fps_16,
-				(tps_4 > 0.0 ? std::to_string(tps_4) : "?"), tps_8, tps_16, tps_32,
+                (tps_4 > 0.0 ? tps_4: tps_8), (tps_4 > 0.0 ? tps_8 : tps_16), (tps_4 > 0.0 ? tps_16 : tps_32),
 				game_speed_percent, count_1x, count_2x, count_3x, count_4x);
 
 			// Reset counters for next period
