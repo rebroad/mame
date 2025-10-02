@@ -67,6 +67,7 @@ running_machine::running_machine(const machine_config &_config, machine_manager 
 	, m_manager(manager)
 	, m_current_phase(machine_phase::PREINIT)
 	, m_paused(false)
+	, m_antithrottle(_config.options().antithrottle())
 	, m_hard_reset_pending(false)
 	, m_exit_pending(false)
 	, m_soft_reset_timer(nullptr)
@@ -762,6 +763,16 @@ void running_machine::toggle_pause()
 
 
 //-------------------------------------------------
+//  toggle_antithrottle - toggles the antithrottle state
+//-------------------------------------------------
+
+void running_machine::toggle_antithrottle()
+{
+	m_antithrottle = !m_antithrottle;
+}
+
+
+//-------------------------------------------------
 //  add_notifier - add a notifier of the
 //  given type
 //-------------------------------------------------
@@ -1372,7 +1383,7 @@ void running_machine::emscripten_main_loop()
 		// Check throttling level and determine emulation multiplier
 		static double last_loop_time = 0;
 		int emulation_passes = 1;
-		if (last_loop_time > 0) {
+		if (!machine->antithrottle() && last_loop_time > 0) {
 			double loop_delta = current_time - last_loop_time;
 			// Dynamic scaling based on detected frame rate
 			if (loop_delta > 33.3) {      // < 30fps (33.3ms) -> 4x emulation

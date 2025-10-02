@@ -72,6 +72,7 @@
 #define OPTION_FRAMESKIP            "frameskip"
 #define OPTION_SECONDS_TO_RUN       "seconds_to_run"
 #define OPTION_THROTTLE             "throttle"
+#define OPTION_ANTITHROTTLE         "antithrottle"
 #define OPTION_SLEEP                "sleep"
 #define OPTION_SPEED                "speed"
 #define OPTION_REFRESHSPEED         "refreshspeed"
@@ -362,6 +363,7 @@ public:
 	int frameskip() const { return int_value(OPTION_FRAMESKIP); }
 	int seconds_to_run() const { return int_value(OPTION_SECONDS_TO_RUN); }
 	bool throttle() const { return bool_value(OPTION_THROTTLE); }
+	bool antithrottle() const { return bool_value(OPTION_ANTITHROTTLE); }
 	bool sleep() const { return m_sleep; }
 	float speed() const { return float_value(OPTION_SPEED); }
 	bool refresh_speed() const { return m_refresh_speed; }

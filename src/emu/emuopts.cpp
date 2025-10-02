@@ -91,6 +91,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_FRAMESKIP ";fs(0-10)",                      "0",         core_options::option_type::INTEGER,    "set frameskip to fixed value, 0-10 (upper limit with autoframeskip)" },
 	{ OPTION_SECONDS_TO_RUN ";str",                      "0",         core_options::option_type::INTEGER,    "number of emulated seconds to run before automatically exiting" },
 	{ OPTION_THROTTLE,                                   "1",         core_options::option_type::BOOLEAN,    "throttle emulation to keep system running in sync with real time" },
+	{ OPTION_ANTITHROTTLE,                               "0",         core_options::option_type::BOOLEAN,    "enable antithrottle to compensate for browser FPS throttling by advancing emulation more per frame" },
 	{ OPTION_SLEEP,                                      "1",         core_options::option_type::BOOLEAN,    "enable sleeping, which gives time back to other applications when idle" },
 	{ OPTION_SPEED "(0.1-100)",                          "1.0",       core_options::option_type::FLOAT,      "controls the speed of gameplay, relative to realtime; smaller numbers are slower" },
 	{ OPTION_REFRESHSPEED ";rs",                         "0",         core_options::option_type::BOOLEAN,    "automatically adjust emulation speed to keep the emulated refresh rate slower than the host screen" },

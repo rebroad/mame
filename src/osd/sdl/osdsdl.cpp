@@ -388,6 +388,11 @@ void sdl_osd_interface::customize_input_type_list(std::vector<input_type_entry> 
 			entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_F10, input_seq::not_code, KEYCODE_LALT);
 			break;
 
+		// F9 for antithrottle toggle
+		case IPT_UI_ANTITHROTTLE:
+			entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_F9);
+			break;
+
 		// LALT-F8 to decrease OpenGL prescaling
 		case IPT_OSD_6:
 			entry.configure_osd("DECREASE_PRESCALE", N_p("input-name", "Decrease Prescaling"));
