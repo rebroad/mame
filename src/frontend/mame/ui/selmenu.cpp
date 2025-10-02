@@ -2242,6 +2242,7 @@ bool menu_select_launch::handle_keys(u32 flags, int &iptkey)
 			case IPT_UI_FOCUS_NEXT:
 			case IPT_UI_FOCUS_PREV:
 			case IPT_UI_PAUSE:
+			case IPT_UI_ANTITHROTTLE:
 				continue;
 			}
 

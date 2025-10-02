@@ -143,6 +143,7 @@ public:
 	template <class DriverClass> DriverClass *driver_data() const { return &downcast<DriverClass &>(root_device()); }
 	machine_phase phase() const { return m_current_phase; }
 	bool paused() const { return m_paused || (m_current_phase != machine_phase::RUNNING); }
+	bool antithrottle() const { return m_antithrottle; }
 	bool exit_pending() const { return m_exit_pending; }
 	bool hard_reset_pending() const { return m_hard_reset_pending; }
 	const std::string &basename() const { return m_basename; }
@@ -168,6 +169,7 @@ public:
 	void pause();
 	void resume();
 	void toggle_pause();
+	void toggle_antithrottle();
 	void add_notifier(machine_notification event, machine_notify_delegate callback, bool first = false);
 	void call_notifiers(machine_notification which);
 	void add_logerror_callback(logerror_callback callback);
@@ -289,6 +291,7 @@ private:
 	// system state
 	machine_phase           m_current_phase;        // current execution phase
 	bool                    m_paused;               // paused?
+	bool                    m_antithrottle;         // antithrottle enabled?
 	bool                    m_hard_reset_pending;   // is a hard reset pending?
 	bool                    m_exit_pending;         // is an exit pending?
 	emu_timer *             m_soft_reset_timer;     // timer used to schedule a soft reset
