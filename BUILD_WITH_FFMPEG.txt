@@ -1,0 +1,132 @@
+===============================================================================
+  MAME FFmpeg Recording Support - Build Instructions
+===============================================================================
+
+📹 **GREAT NEWS!** MAME now AUTO-DETECTS FFmpeg and enables compressed video
+recording automatically if the libraries are available!
+
+-------------------------------------------------------------------------------
+1. INSTALL FFMPEG DEVELOPMENT LIBRARIES
+-------------------------------------------------------------------------------
+
+Ubuntu/Debian:
+  sudo apt-get install libavcodec-dev libavformat-dev libavutil-dev \
+                       libswscale-dev libswresample-dev
+
+Fedora/RHEL/CentOS:
+  sudo dnf install ffmpeg-devel
+
+macOS (Homebrew):
+  brew install ffmpeg
+
+Windows (MSYS2/MinGW):
+  pacman -S mingw-w64-x86_64-ffmpeg
+
+-------------------------------------------------------------------------------
+2. BUILD MAME (FFmpeg AUTO-DETECTED!)
+-------------------------------------------------------------------------------
+
+Option A: Just type make! (RECOMMENDED)
+-----------------------------------
+  make REGENIE=1
+
+✨ The REGENIE=1 flag regenerates build files and detects FFmpeg automatically.
+   You should see: "FFmpeg detected! Enabling compressed video recording"
+
+   After the first build, regular 'make' works fine.
+
+Option B: Disable FFmpeg (if you don't want it)
+-----------------------------------
+  make NO_USE_FFMPEG=1
+
+Option C: Manual FFmpeg configuration
+-----------------------------------
+If auto-detection doesn't work, you can specify libraries manually:
+
+  make FFMPEG_LIBS="-lavcodec -lavformat -lavutil -lswscale -lswresample" \
+       FFMPEG_CFLAGS="-I/path/to/ffmpeg/include"
+
+-------------------------------------------------------------------------------
+3. VERIFY THE BUILD
+-------------------------------------------------------------------------------
+
+After building, verify FFmpeg support is enabled by running:
+
+  ./mame -help | grep -E "aviwrite|ffmpeg"
+
+You should see:
+  -aviwrite <filename>       optional filename to write video (default: compressed)
+  -aviwrite_format <format>  video format: 'compressed' (default) or 'raw'
+  -ffmpeg_format <format>    container format (mp4, mkv, avi, etc.)
+  -ffmpeg_preset <preset>    encoding preset (ultrafast to veryslow)
+  -ffmpeg_crf <value>        constant rate factor (0-51, lower=better)
+
+-------------------------------------------------------------------------------
+4. USAGE EXAMPLES
+-------------------------------------------------------------------------------
+
+★ DEFAULT BEHAVIOR - Compressed video (RECOMMENDED):
+  ./mame pacman -aviwrite auto
+
+  This now uses FFmpeg H.264 encoding by default! No more huge raw files!
+
+High quality recording:
+  ./mame galaga -aviwrite galaga.mp4 -ffmpeg_preset veryslow -ffmpeg_crf 18
+
+Fast recording:
+  ./mame sf2 -aviwrite sf2.mp4 -ffmpeg_preset ultrafast
+
+Record to MKV:
+  ./mame dkong -aviwrite dkong.mkv -ffmpeg_format mkv
+
+Old-style raw AVI (only if you really need it):
+  ./mame pacman -aviwrite raw.avi -aviwrite_format raw
+
+-------------------------------------------------------------------------------
+5. TROUBLESHOOTING
+-------------------------------------------------------------------------------
+
+Build Error: "ffmpeg headers not found"
+  - Install ffmpeg development packages (see step 1)
+  - Make sure pkg-config is installed: sudo apt-get install pkg-config
+  - Check FFmpeg is detected: pkg-config --modversion libavcodec
+
+Link Error: "undefined reference to av_*"
+  - Make sure LDFLAGS includes all FFmpeg libraries
+  - Check library location: ldconfig -p | grep libavcodec
+  - May need to add library path: LDFLAGS="-L/usr/local/lib ..."
+
+Runtime Error: "FFmpeg not available"
+  - MAME was not compiled with -DMAME_FFMPEG flag
+  - Rebuild with the flag enabled
+
+-------------------------------------------------------------------------------
+6. ADVANCED BUILD OPTIONS
+-------------------------------------------------------------------------------
+
+For pkg-config auto-detection (recommended):
+  CXXFLAGS="-DMAME_FFMPEG $(pkg-config --cflags libavcodec libavformat libavutil libswscale libswresample)"
+  LDFLAGS="$(pkg-config --libs libavcodec libavformat libavutil libswscale libswresample)"
+
+Static linking (for distribution):
+  LDFLAGS="-lavcodec -lavformat -lavutil -lswscale -lswresample -static-libgcc -static-libstdc++"
+
+-------------------------------------------------------------------------------
+7. FILES ADDED/MODIFIED FOR FFMPEG SUPPORT
+-------------------------------------------------------------------------------
+
+New files:
+  src/osd/modules/render/ffmpegwrite.h
+  src/osd/modules/render/ffmpegwrite.cpp
+  FFMPEG_RECORDING.md
+  BUILD_WITH_FFMPEG.txt
+
+Modified files:
+  src/emu/emuopts.h         - Added FFmpeg option definitions
+  src/emu/emuopts.cpp       - Added FFmpeg option entries
+  src/emu/video.h           - Added FFmpeg recording methods
+  src/emu/video.cpp         - Added FFmpeg recording implementation
+  src/emu/machine.cpp       - Added FFmpeg recording startup
+
+===============================================================================
+

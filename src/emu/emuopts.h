@@ -60,6 +60,10 @@
 #define OPTION_MNGWRITE             "mngwrite"
 #define OPTION_AVIWRITE             "aviwrite"
 #define OPTION_WAVWRITE             "wavwrite"
+#define OPTION_AVIWRITE_FORMAT      "aviwrite_format"
+#define OPTION_FFMPEG_FORMAT        "ffmpeg_format"
+#define OPTION_FFMPEG_PRESET        "ffmpeg_preset"
+#define OPTION_FFMPEG_CRF           "ffmpeg_crf"
 #define OPTION_SNAPNAME             "snapname"
 #define OPTION_SNAPSIZE             "snapsize"
 #define OPTION_SNAPVIEW             "snapview"
@@ -351,6 +355,10 @@ public:
 	const char *mng_write() const { return value(OPTION_MNGWRITE); }
 	const char *avi_write() const { return value(OPTION_AVIWRITE); }
 	const char *wav_write() const { return value(OPTION_WAVWRITE); }
+	const char *aviwrite_format() const { return value(OPTION_AVIWRITE_FORMAT); }
+	const char *ffmpeg_format() const { return value(OPTION_FFMPEG_FORMAT); }
+	const char *ffmpeg_preset() const { return value(OPTION_FFMPEG_PRESET); }
+	const char *ffmpeg_crf() const { return value(OPTION_FFMPEG_CRF); }
 	const char *snap_name() const { return value(OPTION_SNAPNAME); }
 	const char *snap_size() const { return value(OPTION_SNAPSIZE); }
 	const char *snap_view() const { return value(OPTION_SNAPVIEW); }

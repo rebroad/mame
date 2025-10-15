@@ -21,6 +21,10 @@
 
 #include <system_error>
 
+#ifdef MAME_FFMPEG
+class ffmpeg_write;
+#endif
+
 
 //**************************************************************************
 //  CONSTANTS
@@ -87,6 +91,12 @@ public:
 	void end_recording();
 	void add_sound_to_recording(const s16 *sound, int numsamples);
 	bool is_recording() const { return !m_movie_recordings.empty(); }
+
+#ifdef MAME_FFMPEG
+	void begin_ffmpeg_recording(const char *name);
+	void end_ffmpeg_recording();
+	bool is_ffmpeg_recording() const { return m_ffmpeg_writer != nullptr; }
+#endif
 
 private:
 	// internal helpers
@@ -165,6 +175,10 @@ private:
 
 	// movie recordings
 	std::vector<movie_recording::ptr> m_movie_recordings;
+
+#ifdef MAME_FFMPEG
+	std::unique_ptr<ffmpeg_write> m_ffmpeg_writer;  // FFmpeg video encoder
+#endif
 
 	static const bool   s_skiptable[FRAMESKIP_LEVELS][FRAMESKIP_LEVELS];
 

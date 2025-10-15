@@ -231,9 +231,28 @@ void running_machine::start()
 	if (filename[0] != 0)
 		m_video->begin_recording(filename, movie_recording::format::MNG);
 
+	// Check -aviwrite option
 	filename = options().avi_write();
 	if (filename[0] != 0 && !m_video->is_recording())
+	{
+#ifdef MAME_FFMPEG
+		// Default to compressed (FFmpeg) unless explicitly set to raw
+		const char *format = options().aviwrite_format();
+		if (strcmp(format, "raw") == 0)
+		{
+			// Use raw uncompressed AVI
+			m_video->begin_recording(filename, movie_recording::format::AVI);
+		}
+		else
+		{
+			// Use FFmpeg compressed video (default)
+			m_video->begin_ffmpeg_recording(filename);
+		}
+#else
+		// FFmpeg not available, fall back to raw AVI
 		m_video->begin_recording(filename, movie_recording::format::AVI);
+#endif
+	}
 
 	const char *savegame = options().state();
 	if (savegame[0] != 0)
