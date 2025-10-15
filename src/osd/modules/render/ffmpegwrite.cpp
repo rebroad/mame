@@ -207,6 +207,8 @@ struct ffmpeg_write::encode_job
 
 	// Video data
 	std::vector<uint32_t> video_data;
+	const uint32_t* video_ptr = nullptr;  // Direct pointer to avoid copy
+	size_t video_data_size = 0;           // Size for direct pointer
 	int video_width;
 	int video_height;
 	int video_rowpixels;
@@ -607,9 +609,22 @@ void ffmpeg_write::encoder_thread()
 					m_height = job->video_height;
 				}
 
-				const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(job->video_data.data()) };
-				// Use actual width (no padding) since we copied only visible pixels
-				int src_linesize[1] = { job->video_width * 4 };
+				// Use direct pointer if available, otherwise copied data
+				const uint8_t *src_data[1];
+				int src_linesize[1];
+
+				if (job->video_ptr)
+				{
+					// Direct pointer - no copy was made
+					src_data[0] = reinterpret_cast<const uint8_t *>(job->video_ptr);
+					src_linesize[0] = job->video_width * 4;
+				}
+				else
+				{
+					// Copied data
+					src_data[0] = reinterpret_cast<const uint8_t *>(job->video_data.data());
+					src_linesize[0] = job->video_width * 4;
+				}
 
 				sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
 					job->video_height,
@@ -706,18 +721,23 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 
 		auto alloc_time = std::chrono::high_resolution_clock::now();
 
-		// Copy only actual visible pixels (not padding in rowpixels)
+		// Try direct pointer access to avoid copy entirely
 		int actual_pixels = job->video_width * job->video_height;
-		job->video_data.resize(actual_pixels);
 
 		if (job->video_width == job->video_rowpixels)
 		{
-			// No padding - single memcpy
-			std::memcpy(job->video_data.data(), snap.raw_pixptr(0), actual_pixels * sizeof(uint32_t));
+			// No padding - use direct pointer, no copy needed!
+			job->video_data.clear();
+			job->video_data.shrink_to_fit();  // Free memory
+			job->video_ptr = static_cast<const uint32_t*>(snap.raw_pixptr(0, 0));  // Direct pointer
+			job->video_data_size = actual_pixels * sizeof(uint32_t);
 		}
 		else
 		{
-			// Has padding - copy row by row
+			// Has padding - need to copy row by row
+			job->video_data.resize(actual_pixels);
+			job->video_ptr = nullptr;
+
 			uint32_t *dst = job->video_data.data();
 			for (int y = 0; y < job->video_height; y++)
 			{
@@ -745,8 +765,9 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 			auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - copy_time).count();
 			auto total_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
-				m_frame, alloc_us, copy_us, queue_us, total_us,
+			const char* copy_type = (job->video_ptr) ? "direct" : "copy";
+			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, %s=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
+				m_frame, alloc_us, copy_type, copy_us, queue_us, total_us,
 				(actual_pixels * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
 		}
 
