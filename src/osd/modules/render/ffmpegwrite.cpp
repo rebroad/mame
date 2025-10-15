@@ -421,8 +421,10 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		check_av_error("avformat_write_header", avformat_write_header(m_ffmpeg->format_ctx, &header_opt));
 
 		// Initialize scaler
+		// MAME uses 0xAARRGGBB which in little-endian memory is: BB GG RR AA bytes
+		// FFmpeg BGRA format expects: BB GG RR AA - perfect match!
 		m_ffmpeg->sws_ctx = sws_getContext(
-			m_width, m_height, AV_PIX_FMT_BGR32,
+			m_width, m_height, AV_PIX_FMT_BGRA,
 			m_ffmpeg->video_stream.ctx->width, m_ffmpeg->video_stream.ctx->height,
 			m_ffmpeg->video_stream.ctx->pix_fmt,
 			SWS_BICUBIC, nullptr, nullptr, nullptr);
@@ -594,7 +596,7 @@ void ffmpeg_write::encoder_thread()
 						sws_freeContext(m_ffmpeg->sws_ctx);
 
 					m_ffmpeg->sws_ctx = sws_getContext(
-						job->video_width, job->video_height, AV_PIX_FMT_BGR32,
+						job->video_width, job->video_height, AV_PIX_FMT_BGRA,
 						m_ffmpeg->video_stream.ctx->width, m_ffmpeg->video_stream.ctx->height,
 						m_ffmpeg->video_stream.ctx->pix_fmt,
 						SWS_BICUBIC, nullptr, nullptr, nullptr);
