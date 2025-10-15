@@ -794,11 +794,40 @@ def collect_lua_directives(options):
     return result
 
 
-def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
+def build_device_map(root):
+    """Build a map of device class names to their source files"""
+    device_map = {}
+
+    # Scan all device source files for DEFINE_DEVICE_TYPE
+    devices_dir = os.path.join(root, 'src', 'devices')
+    if not os.path.isdir(devices_dir):
+        return device_map
+
+    import re
+    device_type_re = re.compile(r'DEFINE_DEVICE_TYPE\s*\(\s*\w+\s*,\s*(\w+)\s*,')
+
+    for dirpath, dirnames, filenames in os.walk(devices_dir):
+        for filename in filenames:
+            if filename.endswith('.cpp'):
+                filepath = os.path.join(dirpath, filename)
+                try:
+                    with io.open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read(50000)  # Read first 50KB
+                        for match in device_type_re.finditer(content):
+                            device_class = match.group(1)
+                            # Store relative path from root
+                            rel_path = os.path.relpath(filepath, root).replace(os.sep, '/')
+                            device_map[device_class] = rel_path
+                except:
+                    pass
+
+    return device_map
+
+def scan_source_dependencies(root, sources, smart=True, depth_limit=4):
     """
     Scan source dependencies with optional smart mode.
 
-    smart=True: Only follow includes to limited depth, skip device transitive deps
+    smart=True: Only follow includes to limited depth, detect device usage
     smart=False: Original behavior (everything transitively)
     depth_limit: How many levels of #include to follow in smart mode
     """
@@ -811,6 +840,11 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     if not smart:
         # Fall back to original recursive behavior
         depth_limit = 999
+    else:
+        # Build device map for smart mode
+        sys.stderr.write("Building device map for smart dependency resolution...\n")
+        device_map = build_device_map(root)
+        sys.stderr.write("  Found %d device types\n" % len(device_map))
 
     def locate_include(path):
         split = [ ]
@@ -923,18 +957,13 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         for aspect in ('_a', '_v', '_m'):
                                             test_siblings(components_dir, base + aspect, depth)
 
-                                # SMART MODE: Check depth and skip deep device includes
+                                # SMART MODE: Check depth limit only
+                                # Device-specific filtering was too aggressive
                                 if smart and depth > depth_limit:
-                                    # Don't follow this include - too deep, but siblings already found
+                                    # Don't follow this include - too deep
                                     pass
-                                elif smart and depth > 0 and len(components) > 2:
-                                    # Skip transitive device dependencies
-                                    if components[1] == 'devices' and depth > 1:
-                                        pass  # Don't follow device→device includes, but siblings already found
-                                    else:
-                                        remaining.append((path, depth))
                                 else:
-                                    # Original behavior or within limits
+                                    # Within depth limit - include it
                                     remaining.append((path, depth))
 
     handler = CppParser.Handler()
@@ -967,6 +996,12 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
 
         sys.stderr.write('Using SMART dependency resolution (depth_limit=%d)\n' % (depth_limit, ))
 
+    # Device usage pattern (for smart mode)
+    if smart:
+        import re
+        # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE>
+        device_finder_re = re.compile(r'(?:required_device|optional_device|device_finder)\s*<\s*(\w+)\s*>')
+
     while remaining:
         source, depth = remaining.pop()
         components = tuple(source.split('/'))
@@ -976,15 +1011,37 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
         except IOError:
             sys.stderr.write('Unable to open source file "%s"\n' % (source, ))
             sys.exit(1)
+
+        file_content = None
         try:
             with f:
-                parser.parse(f)
+                file_content = f.read()
+                # Scan for device usage in smart mode
+                if smart and file_content:
+                    for match in device_finder_re.finditer(file_content):
+                        device_class = match.group(1)
+                        if device_class in device_map:
+                            device_file = device_map[device_class]
+                            if device_file not in seen:
+                                seen.add(device_file)
+                                remaining.append((device_file, 0))  # Add at depth 0
+                                sys.stderr.write('  + Device: %s -> %s (added to build)\n' % (device_class, device_file))
+                            else:
+                                sys.stderr.write('  = Device: %s already in build\n' % device_class)
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
         except Exception as e:
-            sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
-            sys.exit(1)
+            sys.stderr.write('Error scanning source file "%s": %s\n' % (source, e))
+
+        # Now parse for includes
+        if file_content:
+            try:
+                import io as io_module
+                parser.parse(io_module.StringIO(file_content))
+            except Exception as e:
+                sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
+                sys.exit(1)
 
     if smart:
         sys.stderr.write('Smart scan found %d files (vs ~thousands with full transitive scan)\n' % (len(seen), ))
