@@ -10,6 +10,8 @@
 
 #include "emu.h"
 
+#include <utility>
+
 #include "crsshair.h"
 #include "debugger.h"
 #include "emuopts.h"
@@ -1351,9 +1353,37 @@ void video_manager::begin_ffmpeg_recording(const char *name)
 	// End any existing FFmpeg recording
 	end_ffmpeg_recording();
 
-	// Compute snapshot dimensions
-	s32 width, height;
-	compute_snapshot_size(width, height);
+	// Get actual screen dimensions - use visible area but check physical aspect
+	s32 width = 640, height = 480;  // defaults
+	screen_device *screen = screen_device_enumerator(machine().root_device()).first();
+	if (screen)
+	{
+		const rectangle &visarea = screen->visible_area();
+		std::pair<unsigned, unsigned> phys_aspect = screen->physical_aspect();
+
+		// If physical aspect matches native pixels (square pixels), use visible area as-is
+		// Otherwise, the visible area has been adjusted for display and we need native size
+		width = visarea.width();
+		height = visarea.height();
+
+		// Check if pixels are non-square (physical aspect != native aspect)
+		// If width was doubled for display, halve it back to native resolution
+		if (phys_aspect.first > 0 && phys_aspect.second > 0)
+		{
+			float physical_ratio = float(phys_aspect.first) / float(phys_aspect.second);
+			float visible_ratio = float(width) / float(height);
+
+			// If display is wider than it should be (pixels were stretched), use native width
+			if (visible_ratio > physical_ratio * 1.1f)  // 10% tolerance
+			{
+				width = width / 2;  // Undo the pixel doubling
+			}
+		}
+
+		// Apply orientation if the screen is rotated
+		if (screen->orientation() & ORIENTATION_SWAP_XY)
+			std::swap(width, height);
+	}
 
 	// Create the FFmpeg writer
 	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
