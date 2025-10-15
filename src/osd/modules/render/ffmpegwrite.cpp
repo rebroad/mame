@@ -205,8 +205,9 @@ struct ffmpeg_write::encode_job
 
 	type job_type;
 
-	// Video data
-	std::vector<uint32_t> video_data;
+	// Video data - supports both copy and zero-copy modes
+	std::vector<uint32_t> video_data;               // Copy mode: data is copied here
+	std::unique_ptr<bitmap_rgb32> video_bitmap;     // Zero-copy mode: bitmap ownership transferred
 	int video_width;
 	int video_height;
 	int video_rowpixels;
@@ -216,10 +217,9 @@ struct ffmpeg_write::encode_job
 	int audio_samples;
 };
 
-ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height, bool async_encode)
+ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height)
 	: m_machine(machine)
 	, m_recording(false)
-	, m_async_encode(async_encode)
 	, m_width(width)
 	, m_height(height)
 	, m_frame(0)
@@ -227,7 +227,15 @@ ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t he
 	, m_next_frame_time(attotime::zero)
 	, m_thread_running(false)
 	, m_thread_stop(false)
+	, m_current_render_bitmap(nullptr)
 {
+	// Pre-allocate bitmap pool for zero-copy rendering (5 bitmaps)
+	for (int i = 0; i < 5; i++)
+	{
+		auto bmp = std::make_unique<bitmap_rgb32>();
+		// Bitmaps will be resized on-demand when first used
+		m_bitmap_pool.push_back(std::move(bmp));
+	}
 }
 
 //============================================================
@@ -443,18 +451,11 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 
 		m_recording = true;
 
-		if (m_async_encode)
-		{
-			// Start background encoder thread
-			m_thread_stop = false;
-			m_thread_running = true;
-			m_encoder_thread = std::make_unique<std::thread>(&ffmpeg_write::encoder_thread, this);
-			osd_printf_info("Started FFmpeg recording to %s (async mode with background thread)\n", m_ffmpeg->outfile.c_str());
-		}
-		else
-		{
-			osd_printf_info("Started FFmpeg recording to %s (sync mode with direct memory access)\n", m_ffmpeg->outfile.c_str());
-		}
+		// Start background encoder thread
+		m_thread_stop = false;
+		m_thread_running = true;
+		m_encoder_thread = std::make_unique<std::thread>(&ffmpeg_write::encoder_thread, this);
+		osd_printf_info("Started FFmpeg recording to %s (async background encoding)\n", m_ffmpeg->outfile.c_str());
 	}
 	catch (int err)
 	{
@@ -614,9 +615,22 @@ void ffmpeg_write::encoder_thread()
 					m_height = job->video_height;
 				}
 
-				const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(job->video_data.data()) };
-				// Use actual width (no padding) since we copied only visible pixels
-				int src_linesize[1] = { job->video_width * 4 };
+				// Support both zero-copy (bitmap) and copy (vector) modes
+				const uint8_t *src_data[1];
+				int src_linesize[1];
+
+				if (job->video_bitmap)
+				{
+					// Zero-copy mode: use bitmap data directly
+					src_data[0] = reinterpret_cast<const uint8_t *>(job->video_bitmap->raw_pixptr(0));
+					src_linesize[0] = job->video_rowpixels * 4;  // Use actual rowpixels (may have padding)
+				}
+				else
+				{
+					// Copy mode: use copied vector data
+					src_data[0] = reinterpret_cast<const uint8_t *>(job->video_data.data());
+					src_linesize[0] = job->video_width * 4;  // No padding in copied data
+				}
 
 				sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
 					job->video_height,
@@ -663,12 +677,24 @@ void ffmpeg_write::encoder_thread()
 			osd_printf_error("FFmpeg encoder thread error\n");
 		}
 
-		// Return video jobs to pool for reuse (audio jobs are small, don't pool)
-		if (job && job->job_type == encode_job::type::VIDEO && m_frame_pool.size() < 10)
+		// Return bitmaps and jobs to pools for reuse
+		if (job && job->job_type == encode_job::type::VIDEO)
 		{
-			job->video_data.clear();  // Keep capacity, clear size
 			std::lock_guard<std::mutex> lock(m_queue_mutex);
-			m_frame_pool.push_back(std::move(job));
+
+			// Return zero-copy bitmap to pool
+			if (job->video_bitmap && m_bitmap_pool.size() < 10)
+			{
+				m_bitmap_pool.push_back(std::move(job->video_bitmap));
+			}
+
+			// Return encode job to pool (audio jobs are small, don't pool)
+			if (m_frame_pool.size() < 10)
+			{
+				job->video_data.clear();  // Keep capacity, clear size
+				job->video_bitmap.reset();  // Clear bitmap pointer
+				m_frame_pool.push_back(std::move(job));
+			}
 		}
 	}
 
@@ -690,104 +716,71 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 	// Loop until we hit the right time
 	while (m_next_frame_time <= curtime)
 	{
-		if (m_async_encode)
+		auto start = std::chrono::high_resolution_clock::now();
+
+		// Get a frame from the pool (or create new if pool empty)
+		std::unique_ptr<encode_job> job;
 		{
-			// Async mode: copy data and queue for background encoding
-			auto start = std::chrono::high_resolution_clock::now();
-
-			// Get a frame from the pool (or create new if pool empty)
-			std::unique_ptr<encode_job> job;
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			if (!m_frame_pool.empty())
 			{
-				std::lock_guard<std::mutex> lock(m_queue_mutex);
-				if (!m_frame_pool.empty())
-				{
-					job = std::move(m_frame_pool.back());
-					m_frame_pool.pop_back();
-				}
+				job = std::move(m_frame_pool.back());
+				m_frame_pool.pop_back();
 			}
+		}
 
-			if (!job)
-				job = std::make_unique<encode_job>();
+		if (!job)
+			job = std::make_unique<encode_job>();
 
-			job->job_type = encode_job::type::VIDEO;
-			job->video_width = snap.width();
-			job->video_height = snap.height();
-			job->video_rowpixels = snap.rowpixels();
+		job->job_type = encode_job::type::VIDEO;
+		job->video_width = snap.width();
+		job->video_height = snap.height();
+		job->video_rowpixels = snap.rowpixels();
 
-			auto alloc_time = std::chrono::high_resolution_clock::now();
+		auto alloc_time = std::chrono::high_resolution_clock::now();
 
-			// Copy visible pixels (async encoding requires data copy)
-			int actual_pixels = job->video_width * job->video_height;
-			job->video_data.resize(actual_pixels);
+		// Copy visible pixels (async encoding requires data copy)
+		int actual_pixels = job->video_width * job->video_height;
+		job->video_data.resize(actual_pixels);
 
-			if (job->video_width == job->video_rowpixels)
-			{
-				// No padding - single memcpy
-				std::memcpy(job->video_data.data(), snap.raw_pixptr(0), actual_pixels * sizeof(uint32_t));
-			}
-			else
-			{
-				// Has padding - copy row by row
-				uint32_t *dst = job->video_data.data();
-				for (int y = 0; y < job->video_height; y++)
-				{
-					std::memcpy(dst, &snap.pix(y, 0), job->video_width * sizeof(uint32_t));
-					dst += job->video_width;
-				}
-			}
-
-			auto copy_time = std::chrono::high_resolution_clock::now();
-
-			// Queue the job for background encoding
-			{
-				std::lock_guard<std::mutex> lock(m_queue_mutex);
-				m_encode_queue.push(std::move(job));
-			}
-			m_queue_cv.notify_one();
-
-			auto end = std::chrono::high_resolution_clock::now();
-
-			// Log timing every 100 frames
-			if (m_frame % 100 == 0 && m_frame > 0)
-			{
-				auto alloc_us = std::chrono::duration_cast<std::chrono::microseconds>(alloc_time - start).count();
-				auto copy_us = std::chrono::duration_cast<std::chrono::microseconds>(copy_time - alloc_time).count();
-				auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - copy_time).count();
-				auto total_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-
-				osd_printf_info("FFmpeg frame %d (async): alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
-					m_frame, alloc_us, copy_us, queue_us, total_us,
-					(actual_pixels * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
-			}
+		if (job->video_width == job->video_rowpixels)
+		{
+			// No padding - single memcpy
+			std::memcpy(job->video_data.data(), snap.raw_pixptr(0), actual_pixels * sizeof(uint32_t));
 		}
 		else
 		{
-			// Sync mode: encode directly with no copy (direct memory access)
-			auto start = std::chrono::high_resolution_clock::now();
-
-			check_av_error("av_frame_make_writable", av_frame_make_writable(m_ffmpeg->video_stream.frame));
-
-			// Use direct pointer to snap bitmap (no copy)
-			const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(snap.raw_pixptr(0)) };
-			int src_linesize[1] = { snap.rowpixels() * 4 };
-
-			sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
-				snap.height(),
-				m_ffmpeg->video_stream.frame->data,
-				m_ffmpeg->video_stream.frame->linesize);
-
-			m_ffmpeg->video_stream.frame->pts = m_ffmpeg->frames_written;
-			write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->video_stream);
-			m_ffmpeg->frames_written++;
-
-			auto end = std::chrono::high_resolution_clock::now();
-
-			// Log timing every 100 frames
-			if (m_frame % 100 == 0 && m_frame > 0)
+			// Has padding - copy row by row
+			uint32_t *dst = job->video_data.data();
+			for (int y = 0; y < job->video_height; y++)
 			{
-				auto encode_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-				osd_printf_info("FFmpeg frame %d (sync): encode=%ldµs\n", m_frame, encode_us);
+				std::memcpy(dst, &snap.pix(y, 0), job->video_width * sizeof(uint32_t));
+				dst += job->video_width;
 			}
+		}
+
+		auto copy_time = std::chrono::high_resolution_clock::now();
+
+		// Queue the job for background encoding
+		{
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			m_encode_queue.push(std::move(job));
+		}
+		m_queue_cv.notify_one();
+
+		auto end = std::chrono::high_resolution_clock::now();
+
+		// Log timing every 100 frames
+		if (m_frame % 100 == 0 && m_frame > 0)
+		{
+			auto alloc_us = std::chrono::duration_cast<std::chrono::microseconds>(alloc_time - start).count();
+			auto copy_us = std::chrono::duration_cast<std::chrono::microseconds>(copy_time - alloc_time).count();
+			auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - copy_time).count();
+			auto total_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
+				m_frame, alloc_us, copy_us, queue_us, total_us,
+				(actual_pixels * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
 		}
 
 		m_next_frame_time += m_frame_period;
@@ -819,6 +812,77 @@ void ffmpeg_write::audio_frame(const int16_t *buffer, int samples_this_frame)
 		m_encode_queue.push(std::move(job));
 	}
 	m_queue_cv.notify_one();
+}
+
+//============================================================
+//  get_render_bitmap - get a bitmap for MAME to render into
+//============================================================
+
+bitmap_rgb32* ffmpeg_write::get_render_bitmap()
+{
+	if (!m_recording || !m_ffmpeg)
+		return nullptr;
+
+	// Get a bitmap from the pool
+	std::lock_guard<std::mutex> lock(m_queue_mutex);
+	if (!m_bitmap_pool.empty())
+	{
+		m_current_render_bitmap = m_bitmap_pool.back().release();
+		m_bitmap_pool.pop_back();
+		return m_current_render_bitmap;
+	}
+
+	// Pool exhausted - fall back to creating a new one
+	m_current_render_bitmap = new bitmap_rgb32();
+	return m_current_render_bitmap;
+}
+
+//============================================================
+//  queue_rendered_bitmap - queue a rendered bitmap (ZERO COPY!)
+//============================================================
+
+void ffmpeg_write::queue_rendered_bitmap(bitmap_rgb32* bmp)
+{
+	if (!m_recording || !m_ffmpeg || !bmp)
+		return;
+
+	// Get current time
+	attotime curtime = m_machine.time();
+
+	// Check if it's time to encode this frame
+	if (m_next_frame_time > curtime)
+		return;  // Skip this frame
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	// Create a job that OWNS the bitmap (zero copy!)
+	auto job = std::make_unique<encode_job>();
+	job->job_type = encode_job::type::VIDEO;
+	job->video_bitmap = std::unique_ptr<bitmap_rgb32>(bmp);  // Transfer ownership!
+	job->video_width = bmp->width();
+	job->video_height = bmp->height();
+	job->video_rowpixels = bmp->rowpixels();
+
+	m_current_render_bitmap = nullptr;  // We no longer own it
+
+	// Queue the job for background encoding
+	{
+		std::lock_guard<std::mutex> lock(m_queue_mutex);
+		m_encode_queue.push(std::move(job));
+	}
+	m_queue_cv.notify_one();
+
+	auto end = std::chrono::high_resolution_clock::now();
+
+	// Log timing every 100 frames
+	if (m_frame % 100 == 0 && m_frame > 0)
+	{
+		auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+		osd_printf_info("FFmpeg frame %d: ZERO-COPY queue=%ldµs\n", m_frame, queue_us);
+	}
+
+	m_next_frame_time += m_frame_period;
+	m_frame++;
 }
 
 #endif // MAME_FFMPEG

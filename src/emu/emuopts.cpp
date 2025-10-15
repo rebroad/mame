@@ -82,7 +82,6 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_FFMPEG_FORMAT,                              "mp4",       core_options::option_type::STRING,     "container format for compressed video (mp4, mkv, avi, etc.)" },
 	{ OPTION_FFMPEG_PRESET,                              "medium",    core_options::option_type::STRING,     "encoding preset (ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)" },
 	{ OPTION_FFMPEG_CRF,                                 "23",        core_options::option_type::STRING,     "constant rate factor for quality (0-51, lower=better, recommended: 18-28)" },
-	{ OPTION_FFMPEG_ASYNC ";ffmpeg_noasync",             "1",         core_options::option_type::BOOLEAN,    "use async background encoding (1) or sync direct encoding (0)" },
 	{ OPTION_SNAPNAME,                                   "%g/%i",     core_options::option_type::STRING,     "override of the default snapshot/movie naming; %g == gamename, %i == index" },
 	{ OPTION_SNAPSIZE,                                   "auto",      core_options::option_type::STRING,     "specify snapshot/movie resolution (<width>x<height>) or 'auto' to use minimal size " },
 	{ OPTION_SNAPVIEW,                                   "auto",      core_options::option_type::STRING,     "snapshot/movie view - 'auto' for default, or 'native' for per-screen pixel-aspect views" },

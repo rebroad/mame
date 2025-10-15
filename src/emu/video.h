@@ -86,6 +86,8 @@ public:
 	render_target &snapshot_target() { return *m_snap_target; }
 	void save_snapshot(screen_device *screen, util::core_file &file);
 	void save_active_screen_snapshots();
+	bitmap_rgb32 &get_snapshot_bitmap() { return m_snap_bitmap; }  // Get current snapshot bitmap
+	void swap_snapshot_bitmap(bitmap_rgb32 &other) { std::swap(m_snap_bitmap, other); }  // Swap for zero-copy recording
 
 	// movies
 	void begin_recording(const char *name, movie_recording::format format);

@@ -32,13 +32,17 @@ class running_machine;
 class ffmpeg_write
 {
 public:
-	ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height, bool async_encode = true);
+	ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height);
 	~ffmpeg_write();
 
 	void record(std::string_view name);
 	void stop();
 	void audio_frame(const int16_t *buffer, int samples_this_frame);
 	void video_frame(bitmap_rgb32& snap);
+
+	// Zero-copy recording support
+	bitmap_rgb32* get_render_bitmap();  // Get a bitmap from pool for MAME to render into
+	void queue_rendered_bitmap(bitmap_rgb32* bmp);  // Queue pre-rendered bitmap (zero copy!)
 
 	// Getters
 	bool recording() const { return m_recording; }
@@ -54,7 +58,6 @@ private:
 
 	running_machine&            m_machine;
 	bool                        m_recording;
-	bool                        m_async_encode;  // Async background encoding vs sync direct encoding
 	uint32_t                    m_width;
 	uint32_t                    m_height;
 	std::unique_ptr<ffmpeg_state> m_ffmpeg;
@@ -71,6 +74,10 @@ private:
 	std::vector<std::unique_ptr<encode_job>> m_frame_pool;  // Pre-allocated frame pool
 	bool                        m_thread_running;
 	bool                        m_thread_stop;
+
+	// Zero-copy bitmap pool
+	std::vector<std::unique_ptr<bitmap_rgb32>> m_bitmap_pool;  // Pool of bitmaps for MAME to render into
+	bitmap_rgb32                *m_current_render_bitmap;      // Current bitmap being rendered (not queued yet)
 };
 
 #endif // MAME_FFMPEG

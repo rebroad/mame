@@ -1281,11 +1281,31 @@ void video_manager::record_frame()
 		end_recording();
 
 #ifdef MAME_FFMPEG
-	// Also record with FFmpeg if active
+	// Also record with FFmpeg if active (ZERO-COPY!)
 	if (m_ffmpeg_writer && m_ffmpeg_writer->recording())
 	{
-		create_snapshot_bitmap(nullptr);
-		m_ffmpeg_writer->video_frame(m_snap_bitmap);
+		// Get a bitmap from FFmpeg's pool for MAME to render into
+		bitmap_rgb32 *render_bmp = m_ffmpeg_writer->get_render_bitmap();
+		if (render_bmp)
+		{
+			// Swap it into m_snap_bitmap so create_snapshot_bitmap() renders into it
+			swap_snapshot_bitmap(*render_bmp);
+
+			// Render the frame directly into the pooled bitmap
+			create_snapshot_bitmap(nullptr);
+
+			// Swap it back and get ownership
+			swap_snapshot_bitmap(*render_bmp);
+
+			// Queue the rendered bitmap for encoding (ZERO COPY - just transfers ownership!)
+			m_ffmpeg_writer->queue_rendered_bitmap(render_bmp);
+		}
+		else
+		{
+			// Fallback to copy mode if no bitmap available (shouldn't happen)
+			create_snapshot_bitmap(nullptr);
+			m_ffmpeg_writer->video_frame(m_snap_bitmap);
+		}
 	}
 #endif
 }
@@ -1395,7 +1415,7 @@ void video_manager::begin_ffmpeg_recording(const char *name)
 	}
 
 	// Create the FFmpeg writer with the snapshot dimensions
-	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height, machine().options().ffmpeg_async());
+	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
 
 	// Start recording
 	try
