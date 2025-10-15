@@ -36,6 +36,8 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+#include <algorithm>
+
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -194,6 +196,24 @@ static void close_stream(av_stream_data *stream_data)
 //  ffmpeg_write - constructor
 //============================================================
 
+// Job structure for background encoding
+struct ffmpeg_write::encode_job
+{
+	enum class type { VIDEO, AUDIO };
+
+	type job_type;
+
+	// Video data
+	std::vector<uint32_t> video_data;
+	int video_width;
+	int video_height;
+	int video_rowpixels;
+
+	// Audio data
+	std::vector<int16_t> audio_data;
+	int audio_samples;
+};
+
 ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height)
 	: m_machine(machine)
 	, m_recording(false)
@@ -202,6 +222,8 @@ ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t he
 	, m_frame(0)
 	, m_frame_period(attotime::zero)
 	, m_next_frame_time(attotime::zero)
+	, m_thread_running(false)
+	, m_thread_stop(false)
 {
 }
 
@@ -415,7 +437,13 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		m_frame_period = attotime::from_seconds(1) / framerate;
 
 		m_recording = true;
-		osd_printf_info("Started FFmpeg recording to %s\n", m_ffmpeg->outfile.c_str());
+
+		// Start background encoder thread
+		m_thread_stop = false;
+		m_thread_running = true;
+		m_encoder_thread = std::make_unique<std::thread>(&ffmpeg_write::encoder_thread, this);
+
+		osd_printf_info("Started FFmpeg recording to %s (with background encoding thread)\n", m_ffmpeg->outfile.c_str());
 	}
 	catch (int err)
 	{
@@ -441,6 +469,23 @@ void ffmpeg_write::end_ffmpeg_recording()
 {
 	if (!m_ffmpeg)
 		return;
+
+	// Stop encoder thread if running
+	if (m_encoder_thread)
+	{
+		{
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			m_thread_stop = true;
+		}
+		m_queue_cv.notify_one();
+		m_encoder_thread->join();
+		m_encoder_thread.reset();
+		m_thread_running = false;
+
+		// Clear any remaining jobs
+		while (!m_encode_queue.empty())
+			m_encode_queue.pop();
+	}
 
 	try
 	{
@@ -507,6 +552,110 @@ void ffmpeg_write::end_ffmpeg_recording()
 }
 
 //============================================================
+//  encoder_thread - background encoding thread
+//============================================================
+
+void ffmpeg_write::encoder_thread()
+{
+	osd_printf_verbose("FFmpeg encoder thread started\n");
+
+	while (true)
+	{
+		std::unique_ptr<encode_job> job;
+
+		{
+			std::unique_lock<std::mutex> lock(m_queue_mutex);
+			m_queue_cv.wait(lock, [this] { return m_thread_stop || !m_encode_queue.empty(); });
+
+			if (m_thread_stop && m_encode_queue.empty())
+				break;
+
+			if (!m_encode_queue.empty())
+			{
+				job = std::move(m_encode_queue.front());
+				m_encode_queue.pop();
+			}
+		}
+
+		if (!job)
+			continue;
+
+		try
+		{
+			if (job->job_type == encode_job::type::VIDEO)
+			{
+				// Encode video frame
+				check_av_error("av_frame_make_writable", av_frame_make_writable(m_ffmpeg->video_stream.frame));
+
+				// Check if scaler needs updating
+				if (job->video_width != m_width || job->video_height != m_height)
+				{
+					if (m_ffmpeg->sws_ctx)
+						sws_freeContext(m_ffmpeg->sws_ctx);
+
+					m_ffmpeg->sws_ctx = sws_getContext(
+						job->video_width, job->video_height, AV_PIX_FMT_BGR32,
+						m_ffmpeg->video_stream.ctx->width, m_ffmpeg->video_stream.ctx->height,
+						m_ffmpeg->video_stream.ctx->pix_fmt,
+						SWS_BICUBIC, nullptr, nullptr, nullptr);
+
+					m_width = job->video_width;
+					m_height = job->video_height;
+				}
+
+				const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(job->video_data.data()) };
+				int src_linesize[1] = { job->video_rowpixels * 4 };
+
+				sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
+					job->video_height,
+					m_ffmpeg->video_stream.frame->data,
+					m_ffmpeg->video_stream.frame->linesize);
+
+				m_ffmpeg->video_stream.frame->pts = m_ffmpeg->frames_written;
+				write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->video_stream);
+				m_ffmpeg->frames_written++;
+			}
+			else if (job->job_type == encode_job::type::AUDIO)
+			{
+				// Process audio (keep existing buffering logic)
+				m_ffmpeg->audio_buffer.insert(m_ffmpeg->audio_buffer.end(),
+					job->audio_data.begin(), job->audio_data.end());
+
+				int required_samples = m_ffmpeg->audio_stream.ctx->frame_size * m_ffmpeg->audio_channels;
+
+				while (m_ffmpeg->audio_buffer.size() >= (size_t)required_samples)
+				{
+					const uint8_t *in_data[1] = { reinterpret_cast<const uint8_t *>(m_ffmpeg->audio_buffer.data()) };
+					int in_samples = m_ffmpeg->audio_stream.ctx->frame_size;
+
+					int out_samples = swr_convert(m_ffmpeg->swr_ctx,
+						m_ffmpeg->audio_stream.frame->data,
+						m_ffmpeg->audio_stream.frame->nb_samples,
+						in_data,
+						in_samples);
+
+					if (out_samples > 0)
+					{
+						m_ffmpeg->audio_stream.frame->pts = m_ffmpeg->samples_written;
+						m_ffmpeg->samples_written += out_samples;
+						write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->audio_stream);
+					}
+
+					m_ffmpeg->audio_buffer.erase(m_ffmpeg->audio_buffer.begin(),
+						m_ffmpeg->audio_buffer.begin() + required_samples);
+				}
+			}
+		}
+		catch (...)
+		{
+			osd_printf_error("FFmpeg encoder thread error\n");
+		}
+	}
+
+	osd_printf_verbose("FFmpeg encoder thread stopped\n");
+}
+
+//============================================================
 //  video_frame
 //============================================================
 
@@ -521,57 +670,28 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 	// Loop until we hit the right time
 	while (m_next_frame_time <= curtime)
 	{
-		try
+		// Create a job with copied frame data for background encoding
+		auto job = std::make_unique<encode_job>();
+		job->job_type = encode_job::type::VIDEO;
+		job->video_width = snap.width();
+		job->video_height = snap.height();
+		job->video_rowpixels = snap.rowpixels();
+
+		// Copy bitmap data (needed because snap will be reused by emulation)
+		int pixel_count = job->video_height * job->video_rowpixels;
+		job->video_data.resize(pixel_count);
+		const uint32_t *src = &snap.pix(0);
+		std::copy(src, src + pixel_count, job->video_data.begin());
+
+		// Queue the job for background encoding
 		{
-			// Make frame writable
-			check_av_error("av_frame_make_writable", av_frame_make_writable(m_ffmpeg->video_stream.frame));
-
-			// Use actual bitmap dimensions
-			int src_width = snap.width();
-			int src_height = snap.height();
-
-			// Check if scaler needs to be recreated (dimensions changed)
-			if (src_width != m_width || src_height != m_height)
-			{
-				osd_printf_verbose("FFmpeg: Bitmap size changed from %dx%d to %dx%d, recreating scaler\n",
-					m_width, m_height, src_width, src_height);
-
-				if (m_ffmpeg->sws_ctx)
-					sws_freeContext(m_ffmpeg->sws_ctx);
-
-				m_ffmpeg->sws_ctx = sws_getContext(
-					src_width, src_height, AV_PIX_FMT_BGR32,
-					m_ffmpeg->video_stream.ctx->width, m_ffmpeg->video_stream.ctx->height,
-					m_ffmpeg->video_stream.ctx->pix_fmt,
-					SWS_BICUBIC, nullptr, nullptr, nullptr);
-
-				m_width = src_width;
-				m_height = src_height;
-			}
-
-			// Convert bitmap to frame format
-			const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(snap.raw_pixptr(0)) };
-			int src_linesize[1] = { static_cast<int>(snap.rowpixels() * 4) };
-
-			// Scale to encoder dimensions
-			sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
-				src_height,
-				m_ffmpeg->video_stream.frame->data,
-				m_ffmpeg->video_stream.frame->linesize);
-
-			m_ffmpeg->video_stream.frame->pts = m_ffmpeg->frames_written;
-			write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->video_stream);
-
-			m_ffmpeg->frames_written++;
-			m_next_frame_time += m_frame_period;
-			m_frame++;
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			m_encode_queue.push(std::move(job));
 		}
-		catch (int err)
-		{
-			osd_printf_error("Error while encoding video frame\n");
-			end_ffmpeg_recording();
-			return;
-		}
+		m_queue_cv.notify_one();
+
+		m_next_frame_time += m_frame_period;
+		m_frame++;
 	}
 }
 
@@ -584,48 +704,21 @@ void ffmpeg_write::audio_frame(const int16_t *buffer, int samples_this_frame)
 	if (!m_recording || !m_ffmpeg || !m_ffmpeg->has_audio)
 		return;
 
-	try
+	// Create an audio job with copied data
+	auto job = std::make_unique<encode_job>();
+	job->job_type = encode_job::type::AUDIO;
+	job->audio_samples = samples_this_frame;
+
+	// Copy audio data (interleaved stereo/mono)
+	int total_samples = samples_this_frame * m_ffmpeg->audio_channels;
+	job->audio_data.assign(buffer, buffer + total_samples);
+
+	// Queue the job for background encoding
 	{
-		// Add samples to buffer (interleaved stereo/mono)
-		int total_samples = samples_this_frame * m_ffmpeg->audio_channels;
-		m_ffmpeg->audio_buffer.insert(m_ffmpeg->audio_buffer.end(), buffer, buffer + total_samples);
-
-		// Required samples per frame for AAC encoder
-		int required_samples = m_ffmpeg->audio_stream.ctx->frame_size * m_ffmpeg->audio_channels;
-
-		// Process all complete frames in the buffer
-		while (m_ffmpeg->audio_buffer.size() >= (size_t)required_samples)
-		{
-			// Resample/convert the audio
-			const uint8_t *in_data[1] = { reinterpret_cast<const uint8_t *>(m_ffmpeg->audio_buffer.data()) };
-			int in_samples = m_ffmpeg->audio_stream.ctx->frame_size;
-
-			int out_samples = swr_convert(m_ffmpeg->swr_ctx,
-				m_ffmpeg->audio_stream.frame->data,
-				m_ffmpeg->audio_stream.frame->nb_samples,
-				in_data,
-				in_samples);
-
-			if (out_samples > 0)
-			{
-				m_ffmpeg->audio_stream.frame->pts = m_ffmpeg->samples_written;
-				m_ffmpeg->samples_written += out_samples;
-
-				write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->audio_stream);
-			}
-
-			// Remove processed samples from buffer
-			m_ffmpeg->audio_buffer.erase(m_ffmpeg->audio_buffer.begin(), m_ffmpeg->audio_buffer.begin() + required_samples);
-		}
+		std::lock_guard<std::mutex> lock(m_queue_mutex);
+		m_encode_queue.push(std::move(job));
 	}
-	catch (int err)
-	{
-		osd_printf_error("FFmpeg: Audio encoding error %d\n", err);
-	}
-	catch (...)
-	{
-		osd_printf_error("FFmpeg: Audio encoding error (unknown)\n");
-	}
+	m_queue_cv.notify_one();
 }
 
 #endif // MAME_FFMPEG

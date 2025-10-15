@@ -21,6 +21,11 @@
 
 #include <string_view>
 #include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <vector>
 
 class running_machine;
 
@@ -41,9 +46,11 @@ public:
 private:
 	void begin_ffmpeg_recording(std::string_view name);
 	void end_ffmpeg_recording();
+	void encoder_thread();  // Background encoding thread
 
 	// Forward declaration of implementation
 	struct ffmpeg_state;
+	struct encode_job;
 
 	running_machine&            m_machine;
 	bool                        m_recording;
@@ -54,6 +61,14 @@ private:
 	int                         m_frame;
 	attotime                    m_frame_period;
 	attotime                    m_next_frame_time;
+
+	// Threading for async encoding
+	std::unique_ptr<std::thread> m_encoder_thread;
+	std::mutex                  m_queue_mutex;
+	std::condition_variable     m_queue_cv;
+	std::queue<std::unique_ptr<encode_job>> m_encode_queue;
+	bool                        m_thread_running;
+	bool                        m_thread_stop;
 };
 
 #endif // MAME_FFMPEG
