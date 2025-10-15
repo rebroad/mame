@@ -261,7 +261,7 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		const char *crf = m_machine.options().ffmpeg_crf();
 		const char *format = m_machine.options().ffmpeg_format();
 
-		if (!preset || preset[0] == 0) preset = "medium";
+		if (!preset || preset[0] == 0) preset = "ultrafast";  // Fast encoding for real-time recording
 		if (!crf || crf[0] == 0) crf = "23";
 		if (!format || format[0] == 0) format = "mp4";
 
@@ -305,9 +305,16 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		// Add video stream
 		add_stream(&m_ffmpeg->video_stream, m_ffmpeg->format_ctx, AV_CODEC_ID_H264);
 
+		// Round dimensions to even numbers (required for H.264)
+		int encode_width = (m_width + 1) & ~1;
+		int encode_height = (m_height + 1) & ~1;
+
+		osd_printf_verbose("FFmpeg: Video dimensions %dx%d -> %dx%d (rounded to even)\n",
+			m_width, m_height, encode_width, encode_height);
+
 		m_ffmpeg->video_stream.ctx->codec_id = AV_CODEC_ID_H264;
-		m_ffmpeg->video_stream.ctx->width = m_width;
-		m_ffmpeg->video_stream.ctx->height = m_height;
+		m_ffmpeg->video_stream.ctx->width = encode_width;
+		m_ffmpeg->video_stream.ctx->height = encode_height;
 		m_ffmpeg->video_stream.st->time_base = AVRational{1, framerate};
 		m_ffmpeg->video_stream.ctx->time_base = m_ffmpeg->video_stream.st->time_base;
 		m_ffmpeg->video_stream.ctx->gop_size = 250;
@@ -394,11 +401,15 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 	{
 		osd_printf_error("Failed to start FFmpeg recording (error code: %d)\n", err);
 		end_ffmpeg_recording();
+		m_ffmpeg.reset();  // Ensure state is fully cleared
+		m_recording = false;
 	}
 	catch (...)
 	{
 		osd_printf_error("Failed to start FFmpeg recording (unknown error)\n");
 		end_ffmpeg_recording();
+		m_ffmpeg.reset();  // Ensure state is fully cleared
+		m_recording = false;
 	}
 }
 
@@ -413,48 +424,61 @@ void ffmpeg_write::end_ffmpeg_recording()
 
 	try
 	{
-		// Flush video encoder
-		if (m_ffmpeg->video_stream.ctx)
+		// Flush video encoder (only if recording was active)
+		if (m_recording && m_ffmpeg->video_stream.ctx)
 		{
 			avcodec_send_frame(m_ffmpeg->video_stream.ctx, nullptr);
-			flush_packets(m_ffmpeg->format_ctx, &m_ffmpeg->video_stream);
+			if (m_ffmpeg->format_ctx)
+				flush_packets(m_ffmpeg->format_ctx, &m_ffmpeg->video_stream);
 		}
 
 		// Flush audio encoder
-		if (m_ffmpeg->has_audio && m_ffmpeg->audio_stream.ctx)
+		if (m_recording && m_ffmpeg->has_audio && m_ffmpeg->audio_stream.ctx)
 		{
 			avcodec_send_frame(m_ffmpeg->audio_stream.ctx, nullptr);
-			flush_packets(m_ffmpeg->format_ctx, &m_ffmpeg->audio_stream);
+			if (m_ffmpeg->format_ctx)
+				flush_packets(m_ffmpeg->format_ctx, &m_ffmpeg->audio_stream);
 		}
 
-		// Write trailer
-		if (m_ffmpeg->format_ctx)
+		// Write trailer (only if recording was active and format context is valid)
+		if (m_recording && m_ffmpeg->format_ctx && m_ffmpeg->format_ctx->pb)
 			av_write_trailer(m_ffmpeg->format_ctx);
 
-		// Clean up
-		close_stream(&m_ffmpeg->video_stream);
-		if (m_ffmpeg->has_audio)
+		// Clean up streams - safe even if partially initialized
+		if (m_ffmpeg->video_stream.ctx)
+			close_stream(&m_ffmpeg->video_stream);
+
+		if (m_ffmpeg->has_audio && m_ffmpeg->audio_stream.ctx)
 		{
 			close_stream(&m_ffmpeg->audio_stream);
 			if (m_ffmpeg->swr_ctx)
+			{
 				swr_free(&m_ffmpeg->swr_ctx);
+				m_ffmpeg->swr_ctx = nullptr;
+			}
 		}
 
 		if (m_ffmpeg->sws_ctx)
+		{
 			sws_freeContext(m_ffmpeg->sws_ctx);
+			m_ffmpeg->sws_ctx = nullptr;
+		}
 
+		// Clean up format context
 		if (m_ffmpeg->format_ctx)
 		{
 			if (m_ffmpeg->format_ctx->pb)
 				avio_closep(&m_ffmpeg->format_ctx->pb);
 			avformat_free_context(m_ffmpeg->format_ctx);
+			m_ffmpeg->format_ctx = nullptr;
 		}
 
-		osd_printf_info("Stopped FFmpeg recording after %d frames\n", m_frame);
+		if (m_recording && m_frame > 0)
+			osd_printf_info("Stopped FFmpeg recording after %d frames\n", m_frame);
 	}
 	catch (...)
 	{
-		osd_printf_error("Error while stopping FFmpeg recording\n");
+		osd_printf_error("Error while stopping FFmpeg recording (cleanup may be incomplete)\n");
 	}
 
 	m_ffmpeg.reset();
@@ -482,12 +506,36 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 			// Make frame writable
 			check_av_error("av_frame_make_writable", av_frame_make_writable(m_ffmpeg->video_stream.frame));
 
+			// Use actual bitmap dimensions
+			int src_width = snap.width();
+			int src_height = snap.height();
+
+			// Check if scaler needs to be recreated (dimensions changed)
+			if (src_width != m_width || src_height != m_height)
+			{
+				osd_printf_verbose("FFmpeg: Bitmap size changed from %dx%d to %dx%d, recreating scaler\n",
+					m_width, m_height, src_width, src_height);
+
+				if (m_ffmpeg->sws_ctx)
+					sws_freeContext(m_ffmpeg->sws_ctx);
+
+				m_ffmpeg->sws_ctx = sws_getContext(
+					src_width, src_height, AV_PIX_FMT_BGR32,
+					m_ffmpeg->video_stream.ctx->width, m_ffmpeg->video_stream.ctx->height,
+					m_ffmpeg->video_stream.ctx->pix_fmt,
+					SWS_BICUBIC, nullptr, nullptr, nullptr);
+
+				m_width = src_width;
+				m_height = src_height;
+			}
+
 			// Convert bitmap to frame format
 			const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(snap.raw_pixptr(0)) };
 			int src_linesize[1] = { static_cast<int>(snap.rowpixels() * 4) };
 
+			// Scale to encoder dimensions
 			sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
-				m_ffmpeg->video_stream.frame->height,
+				src_height,
 				m_ffmpeg->video_stream.frame->data,
 				m_ffmpeg->video_stream.frame->linesize);
 

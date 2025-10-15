@@ -1353,48 +1353,42 @@ void video_manager::begin_ffmpeg_recording(const char *name)
 	// End any existing FFmpeg recording
 	end_ffmpeg_recording();
 
-	// Get actual screen dimensions - use visible area but check physical aspect
-	s32 width = 640, height = 480;  // defaults
-	screen_device *screen = screen_device_enumerator(machine().root_device()).first();
-	if (screen)
+	// Use the snapshot system's dimensions (which handles aspect ratio and resolution correctly)
+	// Create a snapshot to determine the actual render dimensions
+	create_snapshot_bitmap(nullptr);
+	s32 width = m_snap_bitmap.width();
+	s32 height = m_snap_bitmap.height();
+
+	if (width == 0 || height == 0)
 	{
-		const rectangle &visarea = screen->visible_area();
-		std::pair<unsigned, unsigned> phys_aspect = screen->physical_aspect();
-
-		// If physical aspect matches native pixels (square pixels), use visible area as-is
-		// Otherwise, the visible area has been adjusted for display and we need native size
-		width = visarea.width();
-		height = visarea.height();
-
-		// Check if pixels are non-square (physical aspect != native aspect)
-		// If width was doubled for display, halve it back to native resolution
-		if (phys_aspect.first > 0 && phys_aspect.second > 0)
-		{
-			float physical_ratio = float(phys_aspect.first) / float(phys_aspect.second);
-			float visible_ratio = float(width) / float(height);
-
-			// If display is wider than it should be (pixels were stretched), use native width
-			if (visible_ratio > physical_ratio * 1.1f)  // 10% tolerance
-			{
-				width = width / 2;  // Undo the pixel doubling
-			}
-		}
-
-		// Apply orientation if the screen is rotated
-		if (screen->orientation() & ORIENTATION_SWAP_XY)
-			std::swap(width, height);
+		// Fallback to defaults if snapshot failed
+		width = 640;
+		height = 480;
 	}
 
-	// Create the FFmpeg writer
+	// Create the FFmpeg writer with the snapshot dimensions
 	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
 
 	// Start recording
-	m_ffmpeg_writer->record(name);
+	try
+	{
+		m_ffmpeg_writer->record(name);
 
-	if (m_ffmpeg_writer->recording())
-		machine().popmessage("Recording FFmpeg video to %s", name);
-	else
+		if (m_ffmpeg_writer->recording())
+		{
+			machine().popmessage("Recording FFmpeg video to %s", name);
+		}
+		else
+		{
+			machine().popmessage("Failed to start FFmpeg recording");
+			m_ffmpeg_writer.reset();
+		}
+	}
+	catch (...)
+	{
+		machine().popmessage("FFmpeg recording error - check dimensions and codec support");
 		m_ffmpeg_writer.reset();
+	}
 }
 
 //-------------------------------------------------
