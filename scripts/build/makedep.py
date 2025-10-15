@@ -837,6 +837,10 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     elif os.getenv('SMART_DEPS') == '1':
         smart = True
 
+    # Convert sources to list if it's a generator (to allow multiple iterations)
+    if not isinstance(sources, list):
+        sources = list(sources)
+
     if not smart:
         # Fall back to original recursive behavior
         depth_limit = 999
@@ -845,6 +849,28 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
         sys.stderr.write("Building device map for smart dependency resolution...\n")
         device_map = build_device_map(root)
         sys.stderr.write("  Found %d device types\n" % len(device_map))
+
+        # Extract relevant bus systems from source files
+        relevant_bus_systems = set()
+        for source in sources:
+            parts = source.split('/')
+            # Source paths are like: src/mame/acorn/bbcb.cpp or acorn/bbcb.cpp
+            # Find the manufacturer directory (after src/mame prefix if present)
+            start_idx = 0
+            if len(parts) > 0 and parts[0] == 'src':
+                start_idx = 1
+                if len(parts) > 1 and parts[1] == 'mame':
+                    start_idx = 2
+
+            if len(parts) > start_idx:
+                # Add the manufacturer/system directory (e.g., 'acorn', 'midway', 'atari')
+                relevant_bus_systems.add(parts[start_idx])
+                # Add any explicit bus references (e.g., 'bus/bbc')
+                for i, part in enumerate(parts):
+                    if part == 'bus' and i + 1 < len(parts):
+                        relevant_bus_systems.add(parts[i + 1])
+
+        sys.stderr.write("  Relevant systems/buses: %s\n" % ', '.join(sorted(relevant_bus_systems)))
 
     def locate_include(path):
         split = [ ]
@@ -957,13 +983,37 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         for aspect in ('_a', '_v', '_m'):
                                             test_siblings(components_dir, base + aspect, depth)
 
-                                # SMART MODE: Check depth limit only
-                                # Device-specific filtering was too aggressive
-                                if smart and depth > depth_limit:
-                                    # Don't follow this include - too deep
-                                    pass
+                                # SMART MODE: Check depth limit and bus relevance
+                                if smart:
+                                    # Check if this is a bus include from an unrelated system
+                                    path_parts = components
+                                    is_irrelevant_bus = False
+                                    is_bus_file = len(path_parts) >= 3 and path_parts[1] == 'bus'
+
+                                    if is_bus_file:
+                                        bus_system = path_parts[2]
+                                        # Skip bus systems that aren't in our relevant set
+                                        if bus_system not in relevant_bus_systems:
+                                            # Also check if it's a generic bus (like generic/slot) - keep those
+                                            if bus_system not in ('generic', 'centronics', 'rs232', 'ata', 'scsi'):
+                                                is_irrelevant_bus = True
+                                                # Uncomment for debugging:
+                                                print("  [SKIP] Irrelevant bus: %s (not in %s)" % (path, relevant_bus_systems), file=sys.stderr)
+
+                                    # Use stricter depth limit for bus files (max depth 2) to prevent transitive dependencies
+                                    effective_depth_limit = 2 if is_bus_file else depth_limit
+
+                                    if is_irrelevant_bus:
+                                        # Skip this unrelated bus
+                                        pass
+                                    elif depth > effective_depth_limit:
+                                        # Too deep
+                                        pass
+                                    else:
+                                        # Within depth limit and relevant - include it
+                                        remaining.append((path, depth))
                                 else:
-                                    # Within depth limit - include it
+                                    # Not smart mode - include everything
                                     remaining.append((path, depth))
 
     handler = CppParser.Handler()
