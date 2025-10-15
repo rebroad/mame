@@ -298,6 +298,20 @@ SILENT := @
 MAKEPARAMS += --no-print-directory
 endif
 
+# FFmpeg support - auto-detect via pkg-config, manual override if FFMPEG_LIBS is set
+ifndef FFMPEG_LIBS
+# Try auto-detection via pkg-config
+FFMPEG_DETECTED := $(shell pkg-config --exists libavcodec libavformat libavutil libswscale libswresample 2>/dev/null && echo 1 || echo 0)
+ifeq ($(FFMPEG_DETECTED),1)
+FFMPEG_LIBS := $(shell pkg-config --libs libavcodec libavformat libavutil libswscale libswresample 2>/dev/null)
+endif
+endif
+
+ifdef FFMPEG_LIBS
+CXXFLAGS += -DMAME_FFMPEG
+export CXXFLAGS
+endif
+
 ifndef BUILDDIR
 BUILDDIR := build
 endif
