@@ -9,6 +9,8 @@
 --
 ---------------------------------------------------------------------------
 
+dofile('ffmpeg.lua')
+
 function string.starts(String,Start)
 	return string.sub(String,1,string.len(Start))==Start
 end
@@ -344,6 +346,14 @@ function osdmodulesbuild()
 			"USE_QTDEBUG=0",
 		}
 	end
+
+	-- FFmpeg support for compressed video recording (always include files)
+	files {
+		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.cpp",
+		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.h",
+	}
+
+	ffmpeg_support()
 
 end
 
@@ -759,3 +769,18 @@ if not _OPTIONS["USE_QTDEBUG"] then
 		_OPTIONS["USE_QTDEBUG"] = "1"
 	end
 end
+
+newoption {
+	trigger = "NO_USE_FFMPEG",
+	description = "Disable FFmpeg video recording support",
+}
+
+newoption {
+	trigger = "FFMPEG_LIBS",
+	description = "FFmpeg libraries to link (manual configuration)",
+}
+
+newoption {
+	trigger = "FFMPEG_CFLAGS",
+	description = "FFmpeg compiler flags (manual configuration)",
+}

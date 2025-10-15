@@ -29,6 +29,10 @@
 
 #include "rendersw.hxx"
 
+#ifdef MAME_FFMPEG
+#include "modules/render/ffmpegwrite.h"
+#endif
+
 
 //**************************************************************************
 //  DEBUGGING
@@ -201,6 +205,16 @@ void video_manager::set_frameskip(int frameskip)
 		m_auto_frameskip = false;
 		m_frameskip_level = std::min<int>(frameskip, MAX_FRAMESKIP);
 	}
+}
+
+
+//-------------------------------------------------
+//  ~video_manager - destructor
+//-------------------------------------------------
+
+video_manager::~video_manager()
+{
+	// Defined here so that ffmpeg_write is a complete type
 }
 
 
@@ -1229,8 +1243,13 @@ std::error_condition video_manager::open_next(emu_file &file, const char *extens
 void video_manager::record_frame()
 {
 	// ignore if nothing to do
+#ifdef MAME_FFMPEG
+	if (!is_recording() && !is_ffmpeg_recording())
+		return;
+#else
 	if (!is_recording())
 		return;
+#endif
 
 	// start the profiler and get the current time
 	auto profile = g_profiler.start(PROFILER_MOVIE_REC);
@@ -1252,6 +1271,15 @@ void video_manager::record_frame()
 
 	if (error)
 		end_recording();
+
+#ifdef MAME_FFMPEG
+	// Also record with FFmpeg if active
+	if (m_ffmpeg_writer && m_ffmpeg_writer->recording())
+	{
+		create_snapshot_bitmap(nullptr);
+		m_ffmpeg_writer->video_frame(m_snap_bitmap);
+	}
+#endif
 }
 
 
@@ -1261,6 +1289,39 @@ void video_manager::record_frame()
 
 void video_manager::toggle_record_movie(movie_recording::format format)
 {
+#ifdef MAME_FFMPEG
+	// Check if we should use FFmpeg for AVI format
+	if (!is_recording() && !is_ffmpeg_recording())
+	{
+		if (format == movie_recording::format::AVI)
+		{
+			// Default to FFmpeg compressed video unless explicitly set to raw
+			const char *aviformat = machine().options().aviwrite_format();
+			if (strcmp(aviformat, "raw") == 0)
+			{
+				begin_recording(nullptr, format);
+				machine().popmessage("REC START (RAW AVI)");
+			}
+			else
+			{
+				begin_ffmpeg_recording(nullptr);
+				machine().popmessage("REC START (H.264/MP4)");
+			}
+		}
+		else
+		{
+			begin_recording(nullptr, format);
+			machine().popmessage("REC START (MNG)");
+		}
+	}
+	else
+	{
+		end_recording();
+		end_ffmpeg_recording();
+		machine().popmessage("REC STOP");
+	}
+#else
+	// Original behavior without FFmpeg
 	if (!is_recording())
 	{
 		begin_recording(nullptr, format);
@@ -1271,9 +1332,53 @@ void video_manager::toggle_record_movie(movie_recording::format format)
 		end_recording();
 		machine().popmessage("REC STOP");
 	}
+#endif
 }
 
 void video_manager::end_recording()
 {
 	m_movie_recordings.clear();
 }
+
+#ifdef MAME_FFMPEG
+
+//-------------------------------------------------
+//  begin_ffmpeg_recording - start FFmpeg video recording
+//-------------------------------------------------
+
+void video_manager::begin_ffmpeg_recording(const char *name)
+{
+	// End any existing FFmpeg recording
+	end_ffmpeg_recording();
+
+	// Compute snapshot dimensions
+	s32 width, height;
+	compute_snapshot_size(width, height);
+
+	// Create the FFmpeg writer
+	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
+
+	// Start recording
+	m_ffmpeg_writer->record(name);
+
+	if (m_ffmpeg_writer->recording())
+		machine().popmessage("Recording FFmpeg video to %s", name);
+	else
+		m_ffmpeg_writer.reset();
+}
+
+//-------------------------------------------------
+//  end_ffmpeg_recording - stop FFmpeg video recording
+//-------------------------------------------------
+
+void video_manager::end_ffmpeg_recording()
+{
+	if (m_ffmpeg_writer)
+	{
+		m_ffmpeg_writer->stop();
+		m_ffmpeg_writer.reset();
+		machine().popmessage("FFmpeg recording stopped");
+	}
+}
+
+#endif // MAME_FFMPEG
