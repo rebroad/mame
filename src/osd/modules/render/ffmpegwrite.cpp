@@ -272,12 +272,15 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		m_ffmpeg->samples_written = 0;
 		m_ffmpeg->frames_written = 0;
 
-		// Create temporary file path
-		emu_file tempfile(m_machine.options().snapshot_directory(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
+		// Create file path - check if absolute or relative
+		bool const is_absolute_path = !name.empty() && osd_is_absolute_path(std::string(name));
+		emu_file tempfile(
+			is_absolute_path ? "" : m_machine.options().snapshot_directory(),
+			OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
 		std::error_condition filerr;
 
-		osd_printf_verbose("FFmpeg: Creating file, name='%s', format='%s'\n",
-			name.empty() ? "auto" : std::string(name).c_str(), format);
+		osd_printf_verbose("FFmpeg: Creating file, name='%s', format='%s', absolute=%d\n",
+			name.empty() ? "auto" : std::string(name).c_str(), format, is_absolute_path);
 
 		if (name.empty() || name == "auto")
 			filerr = m_machine.video().open_next(tempfile, format);
