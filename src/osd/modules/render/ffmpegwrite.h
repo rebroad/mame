@@ -40,6 +40,10 @@ public:
 	void audio_frame(const int16_t *buffer, int samples_this_frame);
 	void video_frame(bitmap_rgb32& snap);
 
+	// Zero-copy recording support
+	bitmap_rgb32* get_render_bitmap();  // Get a bitmap from pool for MAME to render into
+	void queue_rendered_bitmap(bitmap_rgb32* bmp);  // Queue pre-rendered bitmap (zero copy!)
+
 	// Getters
 	bool recording() const { return m_recording; }
 
@@ -67,8 +71,13 @@ private:
 	std::mutex                  m_queue_mutex;
 	std::condition_variable     m_queue_cv;
 	std::queue<std::unique_ptr<encode_job>> m_encode_queue;
+	std::vector<std::unique_ptr<encode_job>> m_frame_pool;  // Pre-allocated frame pool
 	bool                        m_thread_running;
 	bool                        m_thread_stop;
+
+	// Zero-copy bitmap pool
+	std::vector<std::unique_ptr<bitmap_rgb32>> m_bitmap_pool;  // Pool of bitmaps for MAME to render into
+	bitmap_rgb32                *m_current_render_bitmap;      // Current bitmap being rendered (not queued yet)
 };
 
 #endif // MAME_FFMPEG
