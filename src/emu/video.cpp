@@ -502,6 +502,12 @@ void video_manager::add_sound_to_recording(const s16 *sound, int numsamples)
 {
 	for (auto &recording : m_movie_recordings)
 		recording->add_sound_to_recording(sound, numsamples);
+
+#ifdef MAME_FFMPEG
+	// Also add audio to FFmpeg recording if active
+	if (m_ffmpeg_writer && m_ffmpeg_writer->recording())
+		m_ffmpeg_writer->audio_frame(sound, numsamples);
+#endif
 }
 
 
@@ -1364,6 +1370,28 @@ void video_manager::begin_ffmpeg_recording(const char *name)
 		// Fallback to defaults if snapshot failed
 		width = 640;
 		height = 480;
+	}
+
+	// Cap resolution to avoid performance issues (max 1920x1440)
+	// Maintain aspect ratio when scaling down
+	if (width > 1920 || height > 1440)
+	{
+		float aspect = float(width) / float(height);
+		s32 old_width = width, old_height = height;
+
+		if (width > 1920)
+		{
+			width = 1920;
+			height = s32(width / aspect);
+		}
+		if (height > 1440)
+		{
+			height = 1440;
+			width = s32(height * aspect);
+		}
+
+		osd_printf_verbose("FFmpeg: Capping video resolution %dx%d -> %dx%d\n",
+			old_width, old_height, width, height);
 	}
 
 	// Create the FFmpeg writer with the snapshot dimensions
