@@ -653,7 +653,7 @@ else
 	end
 end
 
--- FFmpeg video recording support (global define)
+-- FFmpeg video recording support (global define and libs)
 if _OPTIONS["NO_USE_FFMPEG"]~="1" then
 	local pkgconfig = os.getenv("PKG_CONFIG")
 	if pkgconfig == nil then
@@ -664,11 +664,23 @@ if _OPTIONS["NO_USE_FFMPEG"]~="1" then
 	local ffmpeg_libs = backtick(pkgconfig .. " --libs libavcodec libavformat libavutil libswscale libswresample 2>/dev/null")
 
 	if ffmpeg_cflags ~= nil and ffmpeg_cflags ~= "" then
-		print("FFmpeg detected! Enabling compressed video recording")
+		print("FFmpeg detected via pkg-config! Enabling compressed video recording")
 		defines { "MAME_FFMPEG" }
+		-- Parse and add FFmpeg libraries
+		for w in ffmpeg_libs:gmatch("%S+") do
+			if w:sub(1,2)=="-l" then
+				links { w:sub(3) }
+			end
+		end
 	elseif _OPTIONS["FFMPEG_LIBS"] ~= nil then
 		print("FFmpeg manually configured")
 		defines { "MAME_FFMPEG" }
+		-- Parse and add manually specified libraries
+		for w in _OPTIONS["FFMPEG_LIBS"]:gmatch("%S+") do
+			if w:sub(1,2)=="-l" then
+				links { w:sub(3) }
+			end
+		end
 	else
 		print("FFmpeg not found - compressed video recording will not be available")
 	end

@@ -298,19 +298,27 @@ SILENT := @
 MAKEPARAMS += --no-print-directory
 endif
 
-# FFmpeg support - add define if FFMPEG_LIBS is set
+# FFmpeg support - auto-detect via pkg-config, manual override if FFMPEG_LIBS is set
+ifndef FFMPEG_LIBS
+# Try auto-detection via pkg-config
+FFMPEG_DETECTED := $(shell pkg-config --exists libavcodec libavformat libavutil libswscale libswresample 2>/dev/null && echo 1 || echo 0)
+ifeq ($(FFMPEG_DETECTED),1)
+FFMPEG_LIBS := $(shell pkg-config --libs libavcodec libavformat libavutil libswscale libswresample 2>/dev/null)
+endif
+endif
+
 ifdef FFMPEG_LIBS
-PARAMS += --ffmpeg
 CXXFLAGS += -DMAME_FFMPEG
 export CXXFLAGS
 endif
 
-# Quick driver build - specify DRIVERS="spyhunt bbcb" to build only those
-ifdef DRIVERS
-SUBTARGET := quickbuild
-DRIVER_FLT := $(BUILDDIR)/quickbuild.flt
-$(shell python3 scripts/build/minimal_driver_deps.py $(DRIVERS) > src/mame/quickbuild.flt 2>/dev/null || echo "\"**/*.cpp\"" > src/mame/quickbuild.flt)
+# Smart dependency resolution - limits transitive includes to avoid bloat
+# Set SMART_DEPS=0 to disable (use full transitive dependencies)
+# Set SMART_DEPS=1 to enable (default for filter builds)
+ifndef SMART_DEPS
+SMART_DEPS := 1
 endif
+export SMART_DEPS
 
 ifndef BUILDDIR
 BUILDDIR := build
