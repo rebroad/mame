@@ -1286,18 +1286,32 @@ endif
 $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS) --gcc=linux-gcc --gcc_version=$(GCC_VERSION) $(MAKETYPE)
 
+# Auto-clean if filter file is newer than project
+.PHONY: check_filter
+check_filter:
+ifdef SUBTARGET
+	@if [ -f "src/mame/$(SUBTARGET).flt" ] && [ -d "$(PROJECTDIR)" ]; then \
+		if [ "src/mame/$(SUBTARGET).flt" -nt "$(PROJECTDIR)" ]; then \
+			echo "Filter file updated - cleaning and regenerating..."; \
+			rm -rf "$(PROJECTDIR)"; \
+			rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/bin/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+			rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/obj/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+		fi; \
+	fi
+endif
+
 .PHONY: linux_x64
-linux_x64: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x64: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64
 
 .PHONY: linux_x86
-linux_x86: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x86: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32
 
 .PHONY: linux
-linux: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG) precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)
 
