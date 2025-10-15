@@ -369,6 +369,26 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 				osd_printf_error("Could not allocate resampler\n");
 				throw -1;
 			}
+
+			// Configure resampler
+#ifdef HAVE_CH_LAYOUT
+			av_opt_set_chlayout(m_ffmpeg->swr_ctx, "in_chlayout", &m_ffmpeg->audio_stream.ctx->ch_layout, 0);
+			av_opt_set_chlayout(m_ffmpeg->swr_ctx, "out_chlayout", &m_ffmpeg->audio_stream.ctx->ch_layout, 0);
+#else
+			av_opt_set_int(m_ffmpeg->swr_ctx, "in_channel_layout", m_ffmpeg->audio_stream.ctx->channel_layout, 0);
+			av_opt_set_int(m_ffmpeg->swr_ctx, "out_channel_layout", m_ffmpeg->audio_stream.ctx->channel_layout, 0);
+#endif
+			av_opt_set_int(m_ffmpeg->swr_ctx, "in_sample_rate", m_ffmpeg->audio_sample_rate, 0);
+			av_opt_set_int(m_ffmpeg->swr_ctx, "out_sample_rate", m_ffmpeg->audio_stream.ctx->sample_rate, 0);
+			av_opt_set_sample_fmt(m_ffmpeg->swr_ctx, "in_sample_fmt", AV_SAMPLE_FMT_S16, 0);
+			av_opt_set_sample_fmt(m_ffmpeg->swr_ctx, "out_sample_fmt", m_ffmpeg->audio_stream.ctx->sample_fmt, 0);
+
+			// Initialize the resampler
+			if (swr_init(m_ffmpeg->swr_ctx) < 0)
+			{
+				osd_printf_error("Failed to initialize audio resampler\n");
+				throw -1;
+			}
 		}
 
 		// Open output file
@@ -564,10 +584,48 @@ void ffmpeg_write::audio_frame(const int16_t *buffer, int samples_this_frame)
 	if (!m_recording || !m_ffmpeg || !m_ffmpeg->has_audio)
 		return;
 
-	// For now, we'll skip audio encoding as it requires more complex buffering
-	// and synchronization with video frames. This can be added in a future enhancement.
+	try
+	{
+		// Add samples to buffer (interleaved stereo/mono)
+		int total_samples = samples_this_frame * m_ffmpeg->audio_channels;
+		m_ffmpeg->audio_buffer.insert(m_ffmpeg->audio_buffer.end(), buffer, buffer + total_samples);
 
-	// TODO: Implement audio encoding with proper sample buffering and conversion
+		// Required samples per frame for AAC encoder
+		int required_samples = m_ffmpeg->audio_stream.ctx->frame_size * m_ffmpeg->audio_channels;
+
+		// Process all complete frames in the buffer
+		while (m_ffmpeg->audio_buffer.size() >= (size_t)required_samples)
+		{
+			// Resample/convert the audio
+			const uint8_t *in_data[1] = { reinterpret_cast<const uint8_t *>(m_ffmpeg->audio_buffer.data()) };
+			int in_samples = m_ffmpeg->audio_stream.ctx->frame_size;
+
+			int out_samples = swr_convert(m_ffmpeg->swr_ctx,
+				m_ffmpeg->audio_stream.frame->data,
+				m_ffmpeg->audio_stream.frame->nb_samples,
+				in_data,
+				in_samples);
+
+			if (out_samples > 0)
+			{
+				m_ffmpeg->audio_stream.frame->pts = m_ffmpeg->samples_written;
+				m_ffmpeg->samples_written += out_samples;
+
+				write_frame(m_ffmpeg->format_ctx, &m_ffmpeg->audio_stream);
+			}
+
+			// Remove processed samples from buffer
+			m_ffmpeg->audio_buffer.erase(m_ffmpeg->audio_buffer.begin(), m_ffmpeg->audio_buffer.begin() + required_samples);
+		}
+	}
+	catch (int err)
+	{
+		osd_printf_error("FFmpeg: Audio encoding error %d\n", err);
+	}
+	catch (...)
+	{
+		osd_printf_error("FFmpeg: Audio encoding error (unknown)\n");
+	}
 }
 
 #endif // MAME_FFMPEG
