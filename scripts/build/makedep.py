@@ -852,17 +852,41 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                 seen.add(path)
 
         # SMART MODE: Also include disassembler for CPU devices
-        if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu':
-            # Check for common disassembler naming patterns
-            for suffix in ('d', 'dasm', 'dis'):
-                dasm_path = pathbase + basename + suffix + '.cpp'
-                if (dasm_path not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.cpp')):
-                    remaining.append((dasm_path, depth))
-                    seen.add(dasm_path)
-                    # Also add the header
-                    dasm_h = pathbase + basename + suffix + '.h'
+        is_cpu_device = len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu'
+        if smart and is_cpu_device:
+            print("  [DEBUG] Checking for disassembler for CPU: %s (basename=%s)" % (pathbase, basename), file=sys.stderr)
+
+            # Method 1: Check for common disassembler naming patterns based on basename
+            for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                dasm_cpp = pathbase + basename + suffix + '.cpp'
+                dasm_h = pathbase + basename + suffix + '.h'
+                dasm_file = os.path.join(dirname, basename + suffix + '.cpp')
+
+                if (dasm_cpp not in seen) and os.path.isfile(dasm_file):
+                    # Add disassembler source - don't count toward depth limit
+                    remaining.append((dasm_cpp, 0))  # depth=0 so it's always included
+                    seen.add(dasm_cpp)
+                    print("  ✓ Found CPU disassembler: %s" % dasm_cpp, file=sys.stderr)
+
+                    # Also add the header if it exists
                     if (dasm_h not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.h')):
                         seen.add(dasm_h)
+
+            # Method 2: Scan directory for ANY file containing 'dasm' or ending in 'd.cpp'
+            if os.path.isdir(dirname):
+                for filename in os.listdir(dirname):
+                    if filename.endswith('.cpp') and ('dasm' in filename or filename.endswith('d.cpp')):
+                        dasm_path = pathbase + filename
+                        if dasm_path not in seen:
+                            remaining.append((dasm_path, 0))
+                            seen.add(dasm_path)
+                            print("  ✓ Found CPU disassembler (scan): %s" % dasm_path, file=sys.stderr)
+
+                            # Also add the header
+                            h_filename = filename[:-4] + '.h'
+                            h_path = pathbase + h_filename
+                            if (h_path not in seen) and os.path.isfile(os.path.join(dirname, h_filename)):
+                                seen.add(h_path)
 
         # SMART MODE: Also include format files for imagedev
         if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'imagedev':
@@ -888,35 +912,30 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                         if components:
                             path = '/'.join(components)
                             if path not in seen:
+                                seen.add(path)
+                                base, ext = os.path.splitext(components[-1])
+
+                                # ALWAYS call test_siblings for headers to find disassemblers/siblings
+                                if ext.lower().startswith('.h'):
+                                    components_dir = components[:-1]
+                                    test_siblings(components_dir, base, depth)
+                                    if components_dir[:2] == ('src', 'mame'):
+                                        for aspect in ('_a', '_v', '_m'):
+                                            test_siblings(components_dir, base + aspect, depth)
+
                                 # SMART MODE: Check depth and skip deep device includes
                                 if smart and depth > depth_limit:
-                                    # Don't follow this include - too deep
+                                    # Don't follow this include - too deep, but siblings already found
                                     pass
                                 elif smart and depth > 0 and len(components) > 2:
                                     # Skip transitive device dependencies
                                     if components[1] == 'devices' and depth > 1:
-                                        pass  # Don't follow device→device includes
+                                        pass  # Don't follow device→device includes, but siblings already found
                                     else:
                                         remaining.append((path, depth))
-                                        seen.add(path)
-                                        base, ext = os.path.splitext(components[-1])
-                                        if ext.lower().startswith('.h'):
-                                            components = components[:-1]
-                                            test_siblings(components, base, depth)
-                                            if components[:2] == ('src', 'mame'):
-                                                for aspect in ('_a', '_v', '_m'):
-                                                    test_siblings(components, base + aspect, depth)
                                 else:
                                     # Original behavior or within limits
                                     remaining.append((path, depth))
-                                    seen.add(path)
-                                    base, ext = os.path.splitext(components[-1])
-                                    if ext.lower().startswith('.h'):
-                                        components = components[:-1]
-                                        test_siblings(components, base, depth)
-                                        if components[:2] == ('src', 'mame'):
-                                            for aspect in ('_a', '_v', '_m'):
-                                                test_siblings(components, base + aspect, depth)
 
     handler = CppParser.Handler()
     handler.line = line_hook
