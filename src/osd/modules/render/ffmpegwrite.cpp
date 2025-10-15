@@ -37,6 +37,8 @@ extern "C" {
 }
 
 #include <algorithm>
+#include <chrono>
+#include <cstring>
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
@@ -672,6 +674,8 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 	// Loop until we hit the right time
 	while (m_next_frame_time <= curtime)
 	{
+		auto start = std::chrono::high_resolution_clock::now();
+
 		// Create a job with copied frame data for background encoding
 		auto job = std::make_unique<encode_job>();
 		job->job_type = encode_job::type::VIDEO;
@@ -679,11 +683,15 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 		job->video_height = snap.height();
 		job->video_rowpixels = snap.rowpixels();
 
+		auto alloc_time = std::chrono::high_resolution_clock::now();
+
 		// Copy bitmap data (needed because snap will be reused by emulation)
 		int pixel_count = job->video_height * job->video_rowpixels;
 		job->video_data.resize(pixel_count);
-		const uint32_t *src = &snap.pix(0);
-		std::copy(src, src + pixel_count, job->video_data.begin());
+		// Use memcpy for maximum speed
+		std::memcpy(job->video_data.data(), snap.raw_pixptr(0), pixel_count * sizeof(uint32_t));
+
+		auto copy_time = std::chrono::high_resolution_clock::now();
 
 		// Queue the job for background encoding
 		{
@@ -691,6 +699,21 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 			m_encode_queue.push(std::move(job));
 		}
 		m_queue_cv.notify_one();
+
+		auto end = std::chrono::high_resolution_clock::now();
+
+		// Log timing every 100 frames
+		if (m_frame % 100 == 0 && m_frame > 0)
+		{
+			auto alloc_us = std::chrono::duration_cast<std::chrono::microseconds>(alloc_time - start).count();
+			auto copy_us = std::chrono::duration_cast<std::chrono::microseconds>(copy_time - alloc_time).count();
+			auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - copy_time).count();
+			auto total_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
+				m_frame, alloc_us, copy_us, queue_us, total_us,
+				(pixel_count * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
+		}
 
 		m_next_frame_time += m_frame_period;
 		m_frame++;
