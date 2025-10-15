@@ -30,7 +30,7 @@
 #include "rendersw.hxx"
 
 #ifdef MAME_FFMPEG
-#include "../osd/modules/render/ffmpegwrite.h"
+#include "modules/render/ffmpegwrite.h"
 #endif
 
 
@@ -205,6 +205,16 @@ void video_manager::set_frameskip(int frameskip)
 		m_auto_frameskip = false;
 		m_frameskip_level = std::min<int>(frameskip, MAX_FRAMESKIP);
 	}
+}
+
+
+//-------------------------------------------------
+//  ~video_manager - destructor
+//-------------------------------------------------
+
+video_manager::~video_manager()
+{
+	// Defined here so that ffmpeg_write is a complete type
 }
 
 

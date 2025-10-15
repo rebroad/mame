@@ -48,6 +48,7 @@ class video_manager
 public:
 	// construction/destruction
 	video_manager(running_machine &machine);
+	~video_manager();
 
 	// getters
 	running_machine &machine() const { return m_machine; }

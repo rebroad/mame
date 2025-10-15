@@ -305,6 +305,13 @@ CXXFLAGS += -DMAME_FFMPEG
 export CXXFLAGS
 endif
 
+# Quick driver build - specify DRIVERS="spyhunt bbcb" to build only those
+ifdef DRIVERS
+SUBTARGET := quickbuild
+DRIVER_FLT := $(BUILDDIR)/quickbuild.flt
+$(shell python3 scripts/build/minimal_driver_deps.py $(DRIVERS) > src/mame/quickbuild.flt 2>/dev/null || echo "\"**/*.cpp\"" > src/mame/quickbuild.flt)
+endif
+
 ifndef BUILDDIR
 BUILDDIR := build
 endif
