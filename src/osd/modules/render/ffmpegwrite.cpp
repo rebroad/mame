@@ -608,7 +608,8 @@ void ffmpeg_write::encoder_thread()
 				}
 
 				const uint8_t *src_data[1] = { reinterpret_cast<const uint8_t *>(job->video_data.data()) };
-				int src_linesize[1] = { job->video_rowpixels * 4 };
+				// Use actual width (no padding) since we copied only visible pixels
+				int src_linesize[1] = { job->video_width * 4 };
 
 				sws_scale(m_ffmpeg->sws_ctx, src_data, src_linesize, 0,
 					job->video_height,
@@ -654,6 +655,14 @@ void ffmpeg_write::encoder_thread()
 		{
 			osd_printf_error("FFmpeg encoder thread error\n");
 		}
+
+		// Return video jobs to pool for reuse (audio jobs are small, don't pool)
+		if (job && job->job_type == encode_job::type::VIDEO && m_frame_pool.size() < 10)
+		{
+			job->video_data.clear();  // Keep capacity, clear size
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			m_frame_pool.push_back(std::move(job));
+		}
 	}
 
 	osd_printf_verbose("FFmpeg encoder thread stopped\n");
@@ -676,8 +685,20 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 	{
 		auto start = std::chrono::high_resolution_clock::now();
 
-		// Create a job with copied frame data for background encoding
-		auto job = std::make_unique<encode_job>();
+		// Get a frame from the pool (or create new if pool empty)
+		std::unique_ptr<encode_job> job;
+		{
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			if (!m_frame_pool.empty())
+			{
+				job = std::move(m_frame_pool.back());
+				m_frame_pool.pop_back();
+			}
+		}
+
+		if (!job)
+			job = std::make_unique<encode_job>();
+
 		job->job_type = encode_job::type::VIDEO;
 		job->video_width = snap.width();
 		job->video_height = snap.height();
@@ -685,11 +706,25 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 
 		auto alloc_time = std::chrono::high_resolution_clock::now();
 
-		// Copy bitmap data (needed because snap will be reused by emulation)
-		int pixel_count = job->video_height * job->video_rowpixels;
-		job->video_data.resize(pixel_count);
-		// Use memcpy for maximum speed
-		std::memcpy(job->video_data.data(), snap.raw_pixptr(0), pixel_count * sizeof(uint32_t));
+		// Copy only actual visible pixels (not padding in rowpixels)
+		int actual_pixels = job->video_width * job->video_height;
+		job->video_data.resize(actual_pixels);
+
+		if (job->video_width == job->video_rowpixels)
+		{
+			// No padding - single memcpy
+			std::memcpy(job->video_data.data(), snap.raw_pixptr(0), actual_pixels * sizeof(uint32_t));
+		}
+		else
+		{
+			// Has padding - copy row by row
+			uint32_t *dst = job->video_data.data();
+			for (int y = 0; y < job->video_height; y++)
+			{
+				std::memcpy(dst, &snap.pix(y, 0), job->video_width * sizeof(uint32_t));
+				dst += job->video_width;
+			}
+		}
 
 		auto copy_time = std::chrono::high_resolution_clock::now();
 
@@ -712,7 +747,7 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 
 			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
 				m_frame, alloc_us, copy_us, queue_us, total_us,
-				(pixel_count * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
+				(actual_pixels * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
 		}
 
 		m_next_frame_time += m_frame_period;

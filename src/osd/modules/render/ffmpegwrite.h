@@ -67,6 +67,7 @@ private:
 	std::mutex                  m_queue_mutex;
 	std::condition_variable     m_queue_cv;
 	std::queue<std::unique_ptr<encode_job>> m_encode_queue;
+	std::vector<std::unique_ptr<encode_job>> m_frame_pool;  // Pre-allocated frame pool
 	bool                        m_thread_running;
 	bool                        m_thread_stop;
 };
