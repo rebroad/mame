@@ -32,7 +32,7 @@ class running_machine;
 class ffmpeg_write
 {
 public:
-	ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height);
+	ffmpeg_write(running_machine& machine, uint32_t width, uint32_t height, bool async_encode = true);
 	~ffmpeg_write();
 
 	void record(std::string_view name);
@@ -54,6 +54,7 @@ private:
 
 	running_machine&            m_machine;
 	bool                        m_recording;
+	bool                        m_async_encode;  // Async background encoding vs sync direct encoding
 	uint32_t                    m_width;
 	uint32_t                    m_height;
 	std::unique_ptr<ffmpeg_state> m_ffmpeg;

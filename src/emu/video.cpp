@@ -1395,7 +1395,7 @@ void video_manager::begin_ffmpeg_recording(const char *name)
 	}
 
 	// Create the FFmpeg writer with the snapshot dimensions
-	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
+	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height, machine().options().ffmpeg_async());
 
 	// Start recording
 	try

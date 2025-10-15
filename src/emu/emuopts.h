@@ -64,6 +64,7 @@
 #define OPTION_FFMPEG_FORMAT        "ffmpeg_format"
 #define OPTION_FFMPEG_PRESET        "ffmpeg_preset"
 #define OPTION_FFMPEG_CRF           "ffmpeg_crf"
+#define OPTION_FFMPEG_ASYNC         "ffmpeg_async"
 #define OPTION_SNAPNAME             "snapname"
 #define OPTION_SNAPSIZE             "snapsize"
 #define OPTION_SNAPVIEW             "snapview"
@@ -359,6 +360,7 @@ public:
 	const char *ffmpeg_format() const { return value(OPTION_FFMPEG_FORMAT); }
 	const char *ffmpeg_preset() const { return value(OPTION_FFMPEG_PRESET); }
 	const char *ffmpeg_crf() const { return value(OPTION_FFMPEG_CRF); }
+	bool ffmpeg_async() const { return bool_value(OPTION_FFMPEG_ASYNC); }
 	const char *snap_name() const { return value(OPTION_SNAPNAME); }
 	const char *snap_size() const { return value(OPTION_SNAPSIZE); }
 	const char *snap_view() const { return value(OPTION_SNAPVIEW); }
