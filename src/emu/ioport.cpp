@@ -1250,6 +1250,21 @@ void ioport_field::frame_update(ioport_value &result)
 		return;
 	}
 
+	// for keyboard/keypad inputs, check if the sequence is bound to a UI function
+	// if so, let the UI have it and don't pass it to the emulated system
+	// (but only when UI mode is active - when disabled, all keys go to emulated system)
+	if ((m_type == IPT_KEYBOARD || m_type == IPT_KEYPAD) && machine().ui().ui_active())
+	{
+		// check all UI input types to see if any match this keyboard field's sequence
+		for (ioport_type ui_type = ioport_type(IPT_UI_FIRST + 1); ui_type < IPT_UI_LAST; ++ui_type)
+		{
+			// if this UI input's sequence matches our keyboard sequence and it's pressed,
+			// don't process this keyboard input (let UI have priority)
+			if (seq() == manager().type_seq(ui_type, 0) && manager().type_pressed(ui_type, 0))
+				return;
+		}
+	}
+
 	// if the state changed, look for switch down/switch up
 	bool curstate = m_digital_value || machine().input().seq_pressed(seq());
 	bool changed = false;

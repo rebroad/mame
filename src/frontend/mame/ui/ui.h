@@ -194,7 +194,7 @@ public:
 
 	template <typename Format, typename... Params> void popup_time(int seconds, Format &&fmt, Params &&... args);
 	void set_ui_active(bool active) { m_ui_active = active; }
-	bool ui_active() const { return m_ui_active; }
+	bool ui_active() const override { return m_ui_active; }
 	void show_fps_temp(double seconds);
 	void set_show_fps(bool show);
 	bool show_fps() const;

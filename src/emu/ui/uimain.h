@@ -33,6 +33,9 @@ public:
 	// is a menuing system active?  we want to disable certain keyboard/mouse inputs under such context
 	virtual bool is_menu_active() { return false; }
 
+	// is the UI active (vs emulated keyboard having priority)?
+	virtual bool ui_active() const { return true; }
+
 	virtual void popup_time_string(int seconds, std::string message) { }
 
 	virtual void menu_reset() { }
