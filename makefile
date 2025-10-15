@@ -298,6 +298,13 @@ SILENT := @
 MAKEPARAMS += --no-print-directory
 endif
 
+# FFmpeg support - add define if FFMPEG_LIBS is set
+ifdef FFMPEG_LIBS
+PARAMS += --ffmpeg
+CXXFLAGS += -DMAME_FFMPEG
+export CXXFLAGS
+endif
+
 ifndef BUILDDIR
 BUILDDIR := build
 endif

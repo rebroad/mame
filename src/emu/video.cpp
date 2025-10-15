@@ -1279,6 +1279,39 @@ void video_manager::record_frame()
 
 void video_manager::toggle_record_movie(movie_recording::format format)
 {
+#ifdef MAME_FFMPEG
+	// Check if we should use FFmpeg for AVI format
+	if (!is_recording() && !is_ffmpeg_recording())
+	{
+		if (format == movie_recording::format::AVI)
+		{
+			// Default to FFmpeg compressed video unless explicitly set to raw
+			const char *aviformat = machine().options().aviwrite_format();
+			if (strcmp(aviformat, "raw") == 0)
+			{
+				begin_recording(nullptr, format);
+				machine().popmessage("REC START (RAW AVI)");
+			}
+			else
+			{
+				begin_ffmpeg_recording(nullptr);
+				machine().popmessage("REC START (H.264/MP4)");
+			}
+		}
+		else
+		{
+			begin_recording(nullptr, format);
+			machine().popmessage("REC START (MNG)");
+		}
+	}
+	else
+	{
+		end_recording();
+		end_ffmpeg_recording();
+		machine().popmessage("REC STOP");
+	}
+#else
+	// Original behavior without FFmpeg
 	if (!is_recording())
 	{
 		begin_recording(nullptr, format);
@@ -1289,6 +1322,7 @@ void video_manager::toggle_record_movie(movie_recording::format format)
 		end_recording();
 		machine().popmessage("REC STOP");
 	}
+#endif
 }
 
 void video_manager::end_recording()

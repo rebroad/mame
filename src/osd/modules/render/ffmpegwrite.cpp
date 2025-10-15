@@ -239,6 +239,9 @@ void ffmpeg_write::stop()
 
 void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 {
+	osd_printf_verbose("FFmpeg: begin_ffmpeg_recording called with name='%s'\n",
+		name.empty() ? "(empty)" : std::string(name).c_str());
+
 	// Stop any existing recording
 	end_ffmpeg_recording();
 
@@ -253,13 +256,14 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		const screen_device *primary_screen = screen_device_enumerator(m_machine.root_device()).first();
 		const int framerate = primary_screen ? ATTOSECONDS_TO_HZ(primary_screen->frame_period().m_attoseconds) : screen_device::DEFAULT_FRAME_RATE;
 
-		// Get options
-		const char *preset = m_machine.options().exists("ffmpeg_preset") ?
-			m_machine.options().value("ffmpeg_preset") : "medium";
-		const char *crf = m_machine.options().exists("ffmpeg_crf") ?
-			m_machine.options().value("ffmpeg_crf") : "23";
-		const char *format = m_machine.options().exists("ffmpeg_format") ?
-			m_machine.options().value("ffmpeg_format") : "mp4";
+		// Get options (with fallback defaults)
+		const char *preset = m_machine.options().ffmpeg_preset();
+		const char *crf = m_machine.options().ffmpeg_crf();
+		const char *format = m_machine.options().ffmpeg_format();
+
+		if (!preset || preset[0] == 0) preset = "medium";
+		if (!crf || crf[0] == 0) crf = "23";
+		if (!format || format[0] == 0) format = "mp4";
 
 		// Audio setup
 		m_ffmpeg->has_audio = m_machine.sound().outputs_count() > 0;
@@ -272,6 +276,9 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		emu_file tempfile(m_machine.options().snapshot_directory(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
 		std::error_condition filerr;
 
+		osd_printf_verbose("FFmpeg: Creating file, name='%s', format='%s'\n",
+			name.empty() ? "auto" : std::string(name).c_str(), format);
+
 		if (name.empty() || name == "auto")
 			filerr = m_machine.video().open_next(tempfile, format);
 		else
@@ -279,12 +286,14 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 
 		if (filerr)
 		{
-			osd_printf_error("Error creating output file\n");
+			osd_printf_error("FFmpeg: Error creating output file: %s\n", filerr.message().c_str());
 			return;
 		}
 
 		m_ffmpeg->outfile = tempfile.fullpath();
 		tempfile.close();
+
+		osd_printf_verbose("FFmpeg: Output file will be: %s\n", m_ffmpeg->outfile.c_str());
 
 		// Allocate output context
 		check_av_error("avformat_alloc_output_context2",
@@ -378,9 +387,14 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 		m_recording = true;
 		osd_printf_info("Started FFmpeg recording to %s\n", m_ffmpeg->outfile.c_str());
 	}
+	catch (int err)
+	{
+		osd_printf_error("Failed to start FFmpeg recording (error code: %d)\n", err);
+		end_ffmpeg_recording();
+	}
 	catch (...)
 	{
-		osd_printf_error("Failed to start FFmpeg recording\n");
+		osd_printf_error("Failed to start FFmpeg recording (unknown error)\n");
 		end_ffmpeg_recording();
 	}
 }

@@ -226,6 +226,13 @@ void running_machine::start()
 	// load cheat files
 	manager().load_cheatfiles(*this);
 
+	// Debug: Check FFmpeg availability at startup
+#ifdef MAME_FFMPEG
+	osd_printf_info("*** MAME compiled with FFmpeg support ***\n");
+#else
+	osd_printf_info("*** MAME compiled WITHOUT FFmpeg support ***\n");
+#endif
+
 	// start recording movie if specified
 	const char *filename = options().mng_write();
 	if (filename[0] != 0)
@@ -236,20 +243,25 @@ void running_machine::start()
 	if (filename[0] != 0 && !m_video->is_recording())
 	{
 #ifdef MAME_FFMPEG
+		osd_printf_verbose("MAME_FFMPEG is defined - using compressed video\n");
 		// Default to compressed (FFmpeg) unless explicitly set to raw
 		const char *format = options().aviwrite_format();
+		osd_printf_verbose("aviwrite_format = '%s'\n", format);
 		if (strcmp(format, "raw") == 0)
 		{
 			// Use raw uncompressed AVI
+			osd_printf_info("Using RAW AVI recording\n");
 			m_video->begin_recording(filename, movie_recording::format::AVI);
 		}
 		else
 		{
 			// Use FFmpeg compressed video (default)
+			osd_printf_info("Using FFmpeg H.264 recording to: %s\n", filename);
 			m_video->begin_ffmpeg_recording(filename);
 		}
 #else
 		// FFmpeg not available, fall back to raw AVI
+		osd_printf_warning("MAME_FFMPEG NOT defined - using raw AVI\n");
 		m_video->begin_recording(filename, movie_recording::format::AVI);
 #endif
 	}

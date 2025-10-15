@@ -50,15 +50,23 @@ mame pacman -aviwrite raw.avi -aviwrite_format raw
 sudo apt-get install libavcodec-dev libavformat-dev libavutil-dev \
                      libswscale-dev libswresample-dev
 
-# 2. Build MAME with FFmpeg detection
-make REGENIE=1  # Force regeneration to detect FFmpeg
+# 2. Build MAME with FFmpeg (choose one):
+
+# Option A: Auto-detection (full rebuild needed first time)
+make REGENIE=1
 # You should see: "FFmpeg detected! Enabling compressed video recording"
+
+# Option B: Manual (fast, no rebuild - RECOMMENDED if you already have MAME built!)
+make FFMPEG_LIBS="-lavcodec -lavformat -lavutil -lswscale -lswresample"
+
+# Option C: Testing with minimal rebuild
+make SUBTARGET=tiny FFMPEG_LIBS="-lavcodec -lavformat -lavutil -lswscale -lswresample"
 
 # 3. Record compressed video
 mame galaga -aviwrite video.mp4
 ```
 
-**Note:** Use `REGENIE=1` on first build or after installing FFmpeg to trigger detection. Regular `make` after that works fine.
+**Pro Tip:** Use Option B to add FFmpeg to an existing build without regenerating everything!
 
 ## Full Documentation
 

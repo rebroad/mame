@@ -202,8 +202,6 @@ function osdmodulesbuild()
 		MAME_DIR .. "src/osd/modules/render/drawbgfx.cpp",
 		MAME_DIR .. "src/osd/modules/render/aviwrite.cpp",
 		MAME_DIR .. "src/osd/modules/render/aviwrite.h",
-		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.cpp",
-		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.h",
 		MAME_DIR .. "src/osd/modules/render/bgfxutil.cpp",
 		MAME_DIR .. "src/osd/modules/render/bgfxutil.h",
 		MAME_DIR .. "src/osd/modules/render/binpacker.cpp",
@@ -349,7 +347,12 @@ function osdmodulesbuild()
 		}
 	end
 
-	-- FFmpeg support for compressed video recording
+	-- FFmpeg support for compressed video recording (always include files)
+	files {
+		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.cpp",
+		MAME_DIR .. "src/osd/modules/render/ffmpegwrite.h",
+	}
+
 	ffmpeg_support()
 
 end
