@@ -177,6 +177,8 @@ fi
 version_ge() { printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1 | grep -qx "$2"; }
 
 # Function to find the source file for a given driver in mame.lst
+# DEPRECATED: This functionality is now handled by makedep.py with DRIVERS= parameter
+# Kept for backwards compatibility in case other scripts use it
 find_driver_source() {
 	local driver="$1"
 	local mame_lst="$REPO_ROOT/src/mame/mame.lst"
@@ -434,13 +436,8 @@ else
 	echo "Using existing build configuration: $CUR_BUILD_CONFIG (mode: $CUR_MODE)"
 fi
 
-# Find the source file for the specified driver
-DRIVER_SOURCE=$(find_driver_source "$DRIVER_SHORTNAME")
-echo "Using source file: $DRIVER_SOURCE"
-
-# Convert to relative path for make
-DRIVER_SOURCE_REL="${DRIVER_SOURCE#$REPO_ROOT/}"
-echo "Relative source path: $DRIVER_SOURCE_REL"
+# Use driver name directly (makedep.py will map to source file)
+echo "Building driver: $DRIVER_SHORTNAME"
 
 # Create dynamic subtarget based on driver
 SUBTARGET="${DRIVER_SHORTNAME}wasm"
@@ -530,7 +527,7 @@ if $DO_BUILD; then
 		fi
 		setsid bash -c "${ccache_env}emmake make \
 			SUBTARGET=$SUBTARGET \
-			SOURCES=$DRIVER_SOURCE_REL \
+			DRIVERS=$DRIVER_SHORTNAME \
 			WEBASSEMBLY=1 \
 			TOOLS=0 \
 			REGENIE=$regenie_flag \
