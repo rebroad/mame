@@ -804,16 +804,21 @@ def collect_lua_directives(options):
 
 
 def build_device_map(root):
-    """Build a map of device class names to their source files"""
+    """Build maps of device class names and type constants to their source files
+    Returns: (device_map, device_type_map)
+        device_map: {class_name -> source_file}
+        device_type_map: {TYPE_CONSTANT -> class_name}
+    """
     device_map = {}
+    device_type_map = {}
 
     # Scan all device source files for DEFINE_DEVICE_TYPE
     devices_dir = os.path.join(root, 'src', 'devices')
     if not os.path.isdir(devices_dir):
-        return device_map
+        return device_map, device_type_map
 
     import re
-    device_type_re = re.compile(r'DEFINE_DEVICE_TYPE\s*\(\s*\w+\s*,\s*(\w+)\s*,')
+    device_type_re = re.compile(r'DEFINE_DEVICE_TYPE\s*\(\s*(\w+)\s*,\s*(\w+)\s*,')
 
     for dirpath, dirnames, filenames in os.walk(devices_dir):
         for filename in filenames:
@@ -823,14 +828,16 @@ def build_device_map(root):
                     with io.open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                         content = f.read(50000)  # Read first 50KB
                         for match in device_type_re.finditer(content):
-                            device_class = match.group(1)
+                            type_constant = match.group(1)
+                            device_class = match.group(2)
                             # Store relative path from root
                             rel_path = os.path.relpath(filepath, root).replace(os.sep, '/')
                             device_map[device_class] = rel_path
+                            device_type_map[type_constant] = device_class
                 except:
                     pass
 
-    return device_map
+    return device_map, device_type_map
 
 def find_inheritance_chain(device_class, device_map, seen_devices, root):
     """
@@ -904,7 +911,7 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     else:
         # Build device map for smart mode
         sys.stderr.write("Building device map for smart dependency resolution...\n")
-        device_map = build_device_map(root)
+        device_map, device_type_map = build_device_map(root)
         sys.stderr.write("  Found %d device types\n" % len(device_map))
 
         # Extract relevant bus systems from source files
@@ -1089,6 +1096,8 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
         import re
         # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE> (including _array variants)
         device_finder_re = re.compile(r'(?:required_device(?:_array)?|optional_device(?:_array)?|device_finder)\s*<\s*(\w+)\s*[,>]')
+        # Match device type references in option_add calls: option_add("name", DEVICE_TYPE)
+        device_type_re = re.compile(r'option_add(?:_internal)?\s*\([^,]+,\s*([A-Z][A-Z0-9_]+)\s*\)')
 
     while remaining:
         source, depth = remaining.pop()
@@ -1106,9 +1115,29 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                 file_content = f.read()
                 # Scan for device usage in smart mode
                 if smart and file_content:
+                    # Scan for device_finder/required_device/optional_device patterns
                     for match in device_finder_re.finditer(file_content):
                         device_class = match.group(1)
                         if device_class in device_map:
+                            device_file = device_map[device_class]
+                            # Scan the device file itself for option_add calls BEFORE following inheritance
+                            try:
+                                full_device_path = os.path.join(root, device_file)
+                                with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
+                                    device_file_content = df.read()
+                                    for type_match in device_type_re.finditer(device_file_content):
+                                        device_type_constant = type_match.group(1)
+                                        if device_type_constant in device_type_map:
+                                            type_device_class = device_type_map[device_type_constant]
+                                            if type_device_class in device_map:
+                                                type_device_file = device_map[type_device_class]
+                                                if type_device_file not in seen:
+                                                    seen.add(type_device_file)
+                                                    remaining.append((type_device_file, 0))
+                                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
+                            except:
+                                pass
+
                             # Follow inheritance chain to include parent classes
                             inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
                             for parent_class, parent_file in inheritance_chain:
@@ -1120,6 +1149,19 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, source))
                                     else:
                                         sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
+
+                    # Scan for device type references in option_add calls
+                    for match in device_type_re.finditer(file_content):
+                        device_type_constant = match.group(1)
+                        # Look up the class name from the constant
+                        if device_type_constant in device_type_map:
+                            device_class = device_type_map[device_type_constant]
+                            if device_class in device_map:
+                                device_file = device_map[device_class]
+                                if device_file not in seen:
+                                    seen.add(device_file)
+                                    remaining.append((device_file, 0))
+                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
