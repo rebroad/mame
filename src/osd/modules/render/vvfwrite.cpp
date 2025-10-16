@@ -17,27 +17,12 @@
 //  HELPER FUNCTIONS
 //**************************************************************************
 
-static void write_u8(std::ofstream &file, uint8_t value)
-{
-	file.write(reinterpret_cast<const char *>(&value), sizeof(value));
-}
-
-static void write_u16(std::ofstream &file, uint16_t value)
-{
-	file.write(reinterpret_cast<const char *>(&value), sizeof(value));
-}
-
 static void write_u32(std::ofstream &file, uint32_t value)
 {
 	file.write(reinterpret_cast<const char *>(&value), sizeof(value));
 }
 
 static void write_u64(std::ofstream &file, uint64_t value)
-{
-	file.write(reinterpret_cast<const char *>(&value), sizeof(value));
-}
-
-static void write_s16(std::ofstream &file, int16_t value)
 {
 	file.write(reinterpret_cast<const char *>(&value), sizeof(value));
 }
