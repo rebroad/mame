@@ -76,10 +76,10 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_EXIT_AFTER_PLAYBACK,                        "0",         core_options::option_type::BOOLEAN,    "close the program at the end of playback" },
 
 	{ OPTION_MNGWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a MNG movie of the current session" },
-	{ OPTION_AVIWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a video of the current session (default: compressed)" },
+	{ OPTION_AVIWRITE,                                   nullptr,     core_options::option_type::PATH,       "filename to write video of current session (format auto-detected from extension: .mp4, .avi, .mkv, etc.)" },
 	{ OPTION_WAVWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a WAV file of the current session" },
 	{ OPTION_AVIWRITE_FORMAT,                            "compressed", core_options::option_type::STRING,    "video format for -aviwrite: 'compressed' (default, uses FFmpeg) or 'raw' (uncompressed AVI)" },
-	{ OPTION_FFMPEG_FORMAT,                              "mp4",       core_options::option_type::STRING,     "container format for compressed video (mp4, mkv, avi, etc.)" },
+	{ OPTION_FFMPEG_FORMAT,                              nullptr,     core_options::option_type::STRING,     "override container format for compressed video (normally auto-detected from extension: mp4, mkv, avi, mov, webm)" },
 	{ OPTION_FFMPEG_PRESET,                              "medium",    core_options::option_type::STRING,     "encoding preset (ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)" },
 	{ OPTION_FFMPEG_CRF,                                 "23",        core_options::option_type::STRING,     "constant rate factor for quality (0-51, lower=better, recommended: 18-28)" },
 	{ OPTION_SNAPNAME,                                   "%g/%i",     core_options::option_type::STRING,     "override of the default snapshot/movie naming; %g == gamename, %i == index" },
