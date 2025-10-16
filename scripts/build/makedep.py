@@ -1162,12 +1162,18 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
 
                     # Scan for device type references in option_add calls
                     # SKIP bus controller files (they define ALL possible options, creating bloat)
-                    # Only scan device implementation files
-                    skip_option_scan = any(x in source for x in ['/ieee488.cpp', '/cbmiec.cpp', '/rs232.cpp',
-                                                                   '/centronics/ctronics.cpp', '/ata/atadev.cpp',
-                                                                   '/nscsi/devices.cpp', '/scsi/scsi.cpp',
-                                                                   '/vcs_ctrl/ctrl.cpp', '/c64/user.cpp', '/pet/user.cpp',
-                                                                   '/midi/midi.cpp', '/generic/carts.cpp'])
+                    # Heuristic: If file is in devices/bus/BUSNAME/ and filename matches BUSNAME or is a known controller name
+                    skip_option_scan = False
+                    if source.startswith('src/devices/bus/'):
+                        parts = source.split('/')
+                        if len(parts) >= 4:  # src/devices/bus/BUSNAME/file.cpp
+                            bus_name = parts[3]
+                            filename = os.path.splitext(parts[-1])[0]
+                            # Skip if filename matches bus name OR is a known controller file
+                            controller_names = [bus_name, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                            if filename in controller_names:
+                                skip_option_scan = True
+
                     if not skip_option_scan:
                         for match in device_type_re.finditer(file_content):
                             device_type_constant = match.group(1)
