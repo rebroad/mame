@@ -1429,7 +1429,15 @@ if _OPTIONS["DRIVERS"] ~= nil then
 	if #OUT_STR == 0 then
 		error("Error creating projects from specified drivers")
 	end
-	load(OUT_STR)()
+	local chunk, err = load(OUT_STR)
+	if not chunk then
+		print("Error loading Lua from makedep.py driversproject:")
+		print(err)
+		print("Output was:")
+		print(OUT_STR)
+		error("Failed to load driversproject output")
+	end
+	chunk()
 
 	-- Generate .flt file using driversfilter command
 	local driverfilter = path.join(GEN_DIR, _OPTIONS["target"], _OPTIONS["subtarget"] .. ".flt")
