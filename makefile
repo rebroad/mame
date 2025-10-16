@@ -1307,7 +1307,7 @@ check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="14"; \
+	CURRENT_VERSION="16"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \
@@ -1330,9 +1330,12 @@ ifdef SUBTARGET
 		fi; \
 	fi; \
 	if [ $$NEED_REBUILD -eq 1 ]; then \
+		echo "Cleaning old build artifacts..."; \
+		echo "  Deleting: $(PROJECTDIR)"; \
 		rm -rf "$(PROJECTDIR)"; \
-		rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/bin/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
-		rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/obj/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+		echo "  Deleting bin/obj for $(TARGET)_$(SUBTARGET)"; \
+		find "$(BUILDDIR)" -type d -name "$(TARGET)_$(SUBTARGET)" -exec rm -rf {} + 2>/dev/null || true; \
+		find "$(BUILDDIR)" -type f -name "liboptional.a" -path "*/$(TARGET)_$(SUBTARGET)/*" -delete 2>/dev/null || true; \
 		$(MAKE) REGENIE=1 SUBTARGET=$(SUBTARGET) DRIVERS=$(DRIVERS) SOURCES=$(SOURCES) generate; \
 	fi; \
 	mkdir -p "$$(dirname "$$PARAM_FILE")" 2>/dev/null || true; \
