@@ -1161,17 +1161,25 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
 
                     # Scan for device type references in option_add calls
-                    for match in device_type_re.finditer(file_content):
-                        device_type_constant = match.group(1)
-                        # Look up the class name from the constant
-                        if device_type_constant in device_type_map:
-                            device_class = device_type_map[device_type_constant]
-                            if device_class in device_map:
-                                device_file = device_map[device_class]
-                                if device_file not in seen:
-                                    seen.add(device_file)
-                                    remaining.append((device_file, 0))
-                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
+                    # SKIP bus controller files (they define ALL possible options, creating bloat)
+                    # Only scan device implementation files
+                    skip_option_scan = any(x in source for x in ['/ieee488.cpp', '/cbmiec.cpp', '/rs232.cpp',
+                                                                   '/centronics/ctronics.cpp', '/ata/atadev.cpp',
+                                                                   '/nscsi/devices.cpp', '/scsi/scsi.cpp',
+                                                                   '/vcs_ctrl/ctrl.cpp', '/c64/user.cpp', '/pet/user.cpp',
+                                                                   '/midi/midi.cpp', '/generic/carts.cpp'])
+                    if not skip_option_scan:
+                        for match in device_type_re.finditer(file_content):
+                            device_type_constant = match.group(1)
+                            # Look up the class name from the constant
+                            if device_type_constant in device_type_map:
+                                device_class = device_type_map[device_type_constant]
+                                if device_class in device_map:
+                                    device_file = device_map[device_class]
+                                    if device_file not in seen:
+                                        seen.add(device_file)
+                                        remaining.append((device_file, 0))
+                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
 
                     # Also scan the header file for device patterns
                     if header_content:
