@@ -78,6 +78,29 @@ MAME now supports compressed video recording using FFmpeg libraries (H.264/AAC e
   - `raw` - Uses uncompressed AVI (huge files, for compatibility only)
   - Example: `-aviwrite video.avi -aviwrite_format raw` (forces raw AVI)
 
+**Resolution and Scaling Options:**
+- **`-aviwrite_scale <N>`** - Integer pixel scaling for crisp pixel art (default: 0=auto)
+  - `2` = 2x2 pixels (e.g., 320x240 → 640x480)
+  - `3` = 3x3 pixels (e.g., 320x240 → 960x720)
+  - `4` = 4x4 pixels (e.g., 320x240 → 1280x960)
+  - Disables bilinear filtering for sharp, retro look
+  - Perfect for pixel art games!
+  - Example: `-aviwrite_scale 3` for 3x upscaling
+
+- **`-aviwrite_res <WxH>`** - Target resolution with bilinear filtering (default: auto)
+  - Renders at specified resolution with smooth filtering
+  - Good for modern, polished look
+  - Example: `-aviwrite_res 1920x1080` for Full HD
+  - Example: `-aviwrite_res 1280x720` for 720p
+
+- **`-aviwrite_bgfx <0|1>`** - Record with BGFX shaders/CRT effects (default: 0)
+  - Captures BGFX output with all shader effects applied
+  - Great for CRT scanlines, bloom, etc.
+  - **Note:** Not yet implemented - coming soon!
+  - Example: `-aviwrite_bgfx 1`
+
+**Priority:** `-aviwrite_scale` takes precedence over `-aviwrite_res`, both override auto resolution.
+
 **FFmpeg Quality Options:**
 - **`-ffmpeg_format <format>`** - Override container format (normally auto-detected from extension)
   - Supported: mp4, matroska (for .mkv), avi, mov, webm
@@ -104,28 +127,46 @@ MAME now supports compressed video recording using FFmpeg libraries (H.264/AAC e
    ```
    ✨ **That's it!** The `.mp4` extension automatically selects H.264/AAC compression!
 
-2. **Record to MKV** (just change the extension!):
+2. **Crisp pixel art** with 3x upscaling (perfect for retro games!):
    ```bash
-   mame galaga -aviwrite gameplay.mkv
+   mame defender -aviwrite defender_3x.mp4 -aviwrite_scale 3
    ```
-   🎯 **Auto-detected!** No need to specify `-ffmpeg_format mkv`
+   🎮 Native 292x240 → 876x720 with sharp pixels, no blur!
 
-3. **High-quality recording** for archival:
+3. **Smooth Full HD** with bilinear filtering:
    ```bash
-   mame galaga -aviwrite galaga_hq.mp4 -ffmpeg_preset veryslow -ffmpeg_crf 18
+   mame defender -aviwrite defender_hd.mp4 -aviwrite_res 1920x1080
    ```
+   📺 Looks great on modern displays with smooth scaling!
 
-4. **Fast recording** for streaming/quick capture:
+4. **4x pixel perfect** for maximum clarity:
    ```bash
-   mame sf2 -aviwrite sf2_fast.mp4 -ffmpeg_preset ultrafast -ffmpeg_crf 24
+   mame galaga -aviwrite galaga_4x.mp4 -aviwrite_scale 4
+   ```
+   🔲 Each pixel becomes a crisp 4x4 square!
+
+5. **High-quality recording** for archival:
+   ```bash
+   mame galaga -aviwrite galaga_hq.mp4 -aviwrite_res 1280x960 -ffmpeg_preset veryslow -ffmpeg_crf 18
    ```
 
-5. **WebM for web sharing**:
+6. **Fast 720p recording** for streaming:
+   ```bash
+   mame sf2 -aviwrite sf2_fast.mp4 -aviwrite_res 1280x720 -ffmpeg_preset ultrafast
+   ```
+
+7. **Record to MKV** (just change the extension!):
+   ```bash
+   mame galaga -aviwrite gameplay.mkv -aviwrite_scale 2
+   ```
+   🎯 **Auto-detected format** + 2x crisp pixels!
+
+8. **WebM for web sharing**:
    ```bash
    mame dkong -aviwrite dkong.webm
    ```
 
-6. **Old-style raw AVI** (if you really need it - HUGE files!):
+9. **Old-style raw AVI** (if you really need it - HUGE files!):
    ```bash
    mame pacman -aviwrite raw_video.avi -aviwrite_format raw
    ```
