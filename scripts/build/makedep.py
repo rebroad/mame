@@ -828,6 +828,40 @@ def build_device_map(root):
 
     return device_map
 
+def find_inheritance_chain(device_class, device_map, seen_devices):
+    """
+    Find all parent classes in the inheritance chain for a device.
+    Returns a list of (device_class, device_file) tuples.
+    """
+    chain = []
+    current_class = device_class
+
+    # Follow inheritance chain (max depth 5 to avoid infinite loops)
+    for depth in range(5):
+        if current_class not in device_map:
+            break
+        device_file = device_map[current_class]
+        if device_file in seen_devices:
+            break
+        chain.append((current_class, device_file))
+        seen_devices.add(device_file)
+
+        # Find parent class by reading the source file
+        try:
+            with open(device_file, 'r') as f:
+                content = f.read()
+                # Look for class inheritance: class child : public parent
+                import re
+                class_match = re.search(r'class\s+' + re.escape(current_class) + r'\s*:\s*public\s+(\w+)', content)
+                if class_match:
+                    current_class = class_match.group(1)
+                else:
+                    break
+        except:
+            break
+
+    return chain
+
 def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     """
     Scan source dependencies with optional smart mode.
@@ -1057,12 +1091,17 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                     for match in device_finder_re.finditer(file_content):
                         device_class = match.group(1)
                         if device_class in device_map:
-                            device_file = device_map[device_class]
-                            if device_file not in seen:
-                                seen.add(device_file)
-                                remaining.append((device_file, 0))  # Add at depth 0
-                                # Show which file triggered this device addition
-                                sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (device_class, device_file, source))
+                            # Follow inheritance chain to include parent classes
+                            inheritance_chain = find_inheritance_chain(device_class, device_map, seen)
+                            for parent_class, parent_file in inheritance_chain:
+                                if parent_file not in seen:
+                                    seen.add(parent_file)
+                                    remaining.append((parent_file, 0))  # Add at depth 0
+                                    # Show which file triggered this device addition
+                                    if parent_class == device_class:
+                                        sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, source))
+                                    else:
+                                        sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
