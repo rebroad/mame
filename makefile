@@ -278,7 +278,15 @@ TARGET := mame
 endif
 
 ifndef SUBTARGET
+ifdef DRIVERS
+# Auto-generate SUBTARGET from DRIVERS parameter (use first driver name)
+SUBTARGET := $(firstword $(subst ,, ,$(DRIVERS)))
+else ifdef SOURCES
+# Auto-generate SUBTARGET from SOURCES parameter
+SUBTARGET := custom
+else
 SUBTARGET := $(TARGET)
+endif
 endif
 
 SUBTARGET_FULL := $(subst -,_,$(SUBTARGET))
@@ -867,6 +875,10 @@ endif
 
 ifdef QT_HOME
 PARAMS += --QT_HOME='$(QT_HOME)'
+endif
+
+ifdef DRIVERS
+PARAMS += --DRIVERS='$(DRIVERS)'
 endif
 
 ifdef SOURCES
