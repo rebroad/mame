@@ -1062,7 +1062,7 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                 seen.add(device_file)
                                 remaining.append((device_file, 0))  # Add at depth 0
                                 # Show which file triggered this device addition
-                                sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (device_class, device_file, path))
+                                sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (device_class, device_file, source))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
