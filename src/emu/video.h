@@ -93,19 +93,25 @@ public:
 	void begin_recording(const char *name, movie_recording::format format);
 	void end_recording();
 	void add_sound_to_recording(const s16 *sound, int numsamples);
-	bool is_recording() const { return !m_movie_recordings.empty(); }
-
+	bool is_recording() const {
 #ifdef MAME_FFMPEG
-	void begin_ffmpeg_recording(const char *name);
-	void end_ffmpeg_recording();
-	bool is_ffmpeg_recording() const { return m_ffmpeg_writer != nullptr; }
+		return !m_movie_recordings.empty() || m_ffmpeg_writer != nullptr;
+#else
+		return !m_movie_recordings.empty();
 #endif
+	}
 
 private:
 	// internal helpers
 	void exit();
 	void screenless_update_callback(s32 param);
 	void postload();
+
+#ifdef MAME_FFMPEG
+	// FFmpeg recording implementation (internal)
+	void begin_ffmpeg_recording(std::string_view name);
+	bool is_ffmpeg_recording() const { return m_ffmpeg_writer != nullptr; }
+#endif
 
 	// effective value helpers
 	bool effective_autoframeskip() const;

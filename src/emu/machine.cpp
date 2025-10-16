@@ -242,27 +242,16 @@ void running_machine::start()
 	filename = options().avi_write();
 	if (filename[0] != 0 && !m_video->is_recording())
 	{
-#ifdef MAME_FFMPEG
-		osd_printf_verbose("MAME_FFMPEG is defined - using compressed video\n");
-		// Default to compressed (FFmpeg) unless explicitly set to raw
-		const char *format = options().aviwrite_format();
-		osd_printf_verbose("aviwrite_format = '%s'\n", format);
-		if (strcmp(format, "raw") == 0)
-		{
-			// Use raw uncompressed AVI
-			osd_printf_info("Using RAW AVI recording\n");
-			m_video->begin_recording(filename, movie_recording::format::AVI);
-		}
-		else
-		{
-			// Use FFmpeg compressed video (default)
-			osd_printf_info("Using FFmpeg H.264 recording to: %s\n", filename);
-			m_video->begin_ffmpeg_recording(filename);
-		}
-#else
-		// FFmpeg not available, fall back to raw AVI
-		osd_printf_warning("MAME_FFMPEG NOT defined - using raw AVI\n");
+		// begin_recording() will automatically choose FFmpeg vs raw based on aviwrite_format option
 		m_video->begin_recording(filename, movie_recording::format::AVI);
+#ifdef MAME_FFMPEG
+		const char *format = options().aviwrite_format();
+		if (strcmp(format, "raw") == 0)
+			osd_printf_info("Recording raw AVI to: %s\n", filename);
+		else
+			osd_printf_info("Recording H.264/MP4 to: %s\n", filename);
+#else
+		osd_printf_info("Recording raw AVI to: %s\n", filename);
 #endif
 	}
 
