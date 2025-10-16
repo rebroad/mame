@@ -177,6 +177,9 @@ video_manager::video_manager(running_machine &machine)
 	if (sscanf(machine.options().snap_size(), "%dx%d", &m_snap_width, &m_snap_height) != 2)
 		m_snap_width = m_snap_height = 0;
 
+	// Initialize bilinear override to -1 (use default option)
+	m_snap_bilinear_override = -1;
+
 	// if no screens, create a periodic timer to drive updates
 	if (no_screens)
 	{
@@ -1082,7 +1085,13 @@ void video_manager::create_snapshot_bitmap(screen_device *screen)
 	// render the screen there
 	render_primitive_list &primlist = m_snap_target->get_primitives();
 	primlist.acquire_lock();
-	if (machine().options().snap_bilinear())
+
+	// Check bilinear override first, then fall back to option
+	bool use_bilinear = (m_snap_bilinear_override >= 0)
+		? (m_snap_bilinear_override > 0)
+		: machine().options().snap_bilinear();
+
+	if (use_bilinear)
 		snap_renderer_bilinear::draw_primitives(primlist, &m_snap_bitmap.pix(0), width, height, m_snap_bitmap.rowpixels());
 	else
 		snap_renderer::draw_primitives(primlist, &m_snap_bitmap.pix(0), width, height, m_snap_bitmap.rowpixels());
@@ -1398,7 +1407,7 @@ void video_manager::begin_ffmpeg_recording(std::string_view name)
 	// Determine recording resolution based on options (priority: scale > res > auto)
 	s32 width = 0, height = 0;
 
-	if (scale > 1)
+	if (scale > 0)
 	{
 		// Option 1: Integer pixel scaling (crisp pixels)
 		// Get native resolution first
@@ -1410,9 +1419,10 @@ void video_manager::begin_ffmpeg_recording(std::string_view name)
 		width = native_width * scale;
 		height = native_height * scale;
 
-		// Set target resolution and re-render
+		// Set target resolution and DISABLE bilinear filtering for crisp pixels!
 		m_snap_width = width;
 		m_snap_height = height;
+		m_snap_bilinear_override = 0;  // Force off bilinear for crisp pixels
 		create_snapshot_bitmap(nullptr);
 
 		// Read back actual dimensions (may differ due to constraints)
@@ -1498,6 +1508,7 @@ void video_manager::begin_ffmpeg_recording(std::string_view name)
 	// Restore original snap settings for normal snapshots
 	m_snap_width = saved_snap_width;
 	m_snap_height = saved_snap_height;
+	m_snap_bilinear_override = -1;  // Restore default bilinear behavior
 
 	// Create the FFmpeg writer with the snapshot dimensions
 	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);
