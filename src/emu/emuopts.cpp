@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    emuopts.cpp
+	emuopts.cpp
 
-    Options file and command line management.
+	Options file and command line management.
 
 ***************************************************************************/
 
@@ -79,6 +79,9 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_AVIWRITE,                                   nullptr,     core_options::option_type::PATH,       "filename to write video of current session (format auto-detected from extension: .mp4, .avi, .mkv, etc.)" },
 	{ OPTION_WAVWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a WAV file of the current session" },
 	{ OPTION_AVIWRITE_FORMAT,                            "compressed", core_options::option_type::STRING,    "video format for -aviwrite: 'compressed' (default, uses FFmpeg) or 'raw' (uncompressed AVI)" },
+	{ OPTION_AVIWRITE_SCALE,                             "0",         core_options::option_type::INTEGER,    "integer pixel scale for video recording (0=auto, 2=2x2, 3=3x3, etc.) - gives crisp pixel art look" },
+	{ OPTION_AVIWRITE_RES,                               "auto",      core_options::option_type::STRING,     "target resolution for video recording (WIDTHxHEIGHT, e.g. '1920x1080') - applies filtering for smooth look" },
+	{ OPTION_AVIWRITE_BGFX,                              "0",         core_options::option_type::BOOLEAN,    "record video with BGFX shaders/filters applied (CRT effects, etc.)" },
 	{ OPTION_FFMPEG_FORMAT,                              nullptr,     core_options::option_type::STRING,     "override container format for compressed video (normally auto-detected from extension: mp4, mkv, avi, mov, webm)" },
 	{ OPTION_FFMPEG_PRESET,                              "medium",    core_options::option_type::STRING,     "encoding preset (ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)" },
 	{ OPTION_FFMPEG_CRF,                                 "23",        core_options::option_type::STRING,     "constant rate factor for quality (0-51, lower=better, recommended: 18-28)" },

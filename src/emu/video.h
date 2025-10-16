@@ -187,6 +187,9 @@ private:
 
 #ifdef MAME_FFMPEG
 	std::unique_ptr<ffmpeg_write> m_ffmpeg_writer;  // FFmpeg video encoder
+	s32 m_ffmpeg_width = 0;
+	s32 m_ffmpeg_height = 0;
+	s8 m_ffmpeg_bilinear_override = -1;
 #endif
 
 	static const bool   s_skiptable[FRAMESKIP_LEVELS][FRAMESKIP_LEVELS];
