@@ -278,7 +278,15 @@ TARGET := mame
 endif
 
 ifndef SUBTARGET
+ifdef DRIVERS
+# Auto-generate SUBTARGET from DRIVERS parameter (use first driver name)
+SUBTARGET := $(firstword $(subst ,, ,$(DRIVERS)))
+else ifdef SOURCES
+# Auto-generate SUBTARGET from SOURCES parameter
+SUBTARGET := custom
+else
 SUBTARGET := $(TARGET)
+endif
 endif
 
 SUBTARGET_FULL := $(subst -,_,$(SUBTARGET))
@@ -869,6 +877,10 @@ ifdef QT_HOME
 PARAMS += --QT_HOME='$(QT_HOME)'
 endif
 
+ifdef DRIVERS
+PARAMS += --DRIVERS='$(DRIVERS)'
+endif
+
 ifdef SOURCES
 PARAMS += --SOURCES='$(SOURCES)'
 endif
@@ -1288,13 +1300,13 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 
 # Auto-clean if filter file is newer than project
 # Auto-detect parameter changes and trigger rebuild
-# Version 4: Fixed 'path' undefined error in device detection
+# Version 5: Added DRIVERS parameter passing to genie + auto SUBTARGET
 .PHONY: check_params
 check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="4"; \
+	CURRENT_VERSION="5"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \
