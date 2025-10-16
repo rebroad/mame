@@ -278,12 +278,7 @@ TARGET := mame
 endif
 
 ifndef SUBTARGET
-ifdef DRIVERS
-# Auto-generate SUBTARGET from DRIVERS parameter (use first driver name)
-# Extract first driver by finding text before first comma
-SUBTARGET := $(shell echo "$(DRIVERS)" | cut -d',' -f1)
-$(info Auto-generated SUBTARGET from DRIVERS: $(SUBTARGET))
-else ifdef SOURCES
+ifdef SOURCES
 # Auto-generate SUBTARGET from SOURCES parameter
 SUBTARGET := custom
 else
@@ -1307,7 +1302,7 @@ check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="17"; \
+	CURRENT_VERSION="18"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \
