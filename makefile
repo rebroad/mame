@@ -1328,6 +1328,8 @@ ifdef SUBTARGET
 		echo "Cleaning old build artifacts..."; \
 		echo "  Deleting: $(PROJECTDIR)"; \
 		rm -rf "$(PROJECTDIR)"; \
+		echo "  Deleting: $(BUILDDIR)/generated"; \
+		rm -rf "$(BUILDDIR)/generated"; \
 		echo "  Deleting: $(BUILDDIR)/*/obj (all object files)"; \
 		rm -rf "$(BUILDDIR)"/*/obj; \
 		echo "  Deleting: $(BUILDDIR)/*/bin (all libraries/binaries)"; \
