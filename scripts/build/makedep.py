@@ -853,18 +853,28 @@ def find_inheritance_chain(device_class, device_map, seen_devices, root):
         chain.append((current_class, device_file))
         checked_files.add(device_file)
 
-        # Find parent class by reading the source file
+        # Find parent class by reading the source file (try .h then .cpp)
         try:
-            full_path = os.path.join(root, device_file)
-            with open(full_path, 'r') as f:
-                content = f.read()
-                # Look for class inheritance: class child : public parent
-                import re
-                class_match = re.search(r'class\s+' + re.escape(current_class) + r'\s*:\s*public\s+(\w+)', content)
-                if class_match:
-                    current_class = class_match.group(1)
-                else:
-                    break
+            import re
+            content = None
+            # Try header file first (.h)
+            header_path = os.path.splitext(device_file)[0] + '.h'
+            full_header_path = os.path.join(root, header_path)
+            if os.path.exists(full_header_path):
+                with open(full_header_path, 'r') as f:
+                    content = f.read()
+            # If not found in header, try .cpp
+            if not content:
+                full_path = os.path.join(root, device_file)
+                with open(full_path, 'r') as f:
+                    content = f.read()
+
+            # Look for class inheritance: class child : public parent
+            class_match = re.search(r'class\s+' + re.escape(current_class) + r'\s*:\s*public\s+(\w+)', content)
+            if class_match:
+                current_class = class_match.group(1)
+            else:
+                break
         except:
             break
 
