@@ -1302,7 +1302,7 @@ check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="20"; \
+	CURRENT_VERSION="21"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \
@@ -1328,6 +1328,8 @@ ifdef SUBTARGET
 		echo "Cleaning old build artifacts..."; \
 		echo "  Deleting: $(PROJECTDIR)"; \
 		rm -rf "$(PROJECTDIR)"; \
+		echo "  Deleting: $(BUILDDIR)/generated"; \
+		rm -rf "$(BUILDDIR)/generated"; \
 		echo "  Deleting bin/obj for $(TARGET)_$(SUBTARGET)"; \
 		find "$(BUILDDIR)" -type d -name "$(TARGET)_$(SUBTARGET)" -exec rm -rf {} + 2>/dev/null || true; \
 		find "$(BUILDDIR)" -type f -name "liboptional.a" -path "*/$(TARGET)_$(SUBTARGET)/*" -delete 2>/dev/null || true; \
