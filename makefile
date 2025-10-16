@@ -1288,13 +1288,26 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 
 # Auto-clean if filter file is newer than project
 # Auto-detect parameter changes and trigger rebuild
+# Version 2: Added generator exhaustion fix - force rebuild if old version
 .PHONY: check_params
 check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
+	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
+	CURRENT_VERSION="2"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
-	if [ -f "$$PARAM_FILE" ]; then \
+	if [ -f "$$VERSION_FILE" ]; then \
+		PREV_VERSION=$$(cat "$$VERSION_FILE" 2>/dev/null || echo "0"); \
+		if [ "$$PREV_VERSION" != "$$CURRENT_VERSION" ]; then \
+			echo "Build system updated (v$$PREV_VERSION -> v$$CURRENT_VERSION) - regenerating..."; \
+			NEED_REBUILD=1; \
+		fi; \
+	elif [ -d "$(PROJECTDIR)" ]; then \
+		echo "Build version not found - regenerating..."; \
+		NEED_REBUILD=1; \
+	fi; \
+	if [ -f "$$PARAM_FILE" ] && [ $$NEED_REBUILD -eq 0 ]; then \
 		PREV_PARAMS=$$(cat "$$PARAM_FILE" 2>/dev/null || echo ""); \
 		if [ "$$PREV_PARAMS" != "$$CURRENT_PARAMS" ]; then \
 			echo "Build parameters changed - regenerating..."; \
@@ -1302,9 +1315,6 @@ ifdef SUBTARGET
 			echo "  Current:  $$CURRENT_PARAMS"; \
 			NEED_REBUILD=1; \
 		fi; \
-	elif [ -d "$(PROJECTDIR)" ]; then \
-		echo "No previous build params found - regenerating..."; \
-		NEED_REBUILD=1; \
 	fi; \
 	if [ $$NEED_REBUILD -eq 1 ]; then \
 		rm -rf "$(PROJECTDIR)"; \
@@ -1313,7 +1323,8 @@ ifdef SUBTARGET
 		$(MAKE) REGENIE=1 SUBTARGET=$(SUBTARGET) DRIVERS=$(DRIVERS) SOURCES=$(SOURCES) generate; \
 	fi; \
 	mkdir -p "$$(dirname "$$PARAM_FILE")" 2>/dev/null || true; \
-	echo "$$CURRENT_PARAMS" > "$$PARAM_FILE"
+	echo "$$CURRENT_PARAMS" > "$$PARAM_FILE"; \
+	echo "$$CURRENT_VERSION" > "$$VERSION_FILE"
 endif
 
 .PHONY: check_filter
