@@ -1438,7 +1438,13 @@ if _OPTIONS["DRIVERS"] ~= nil then
 		error("Failed to load driversproject output")
 	end
 	chunk()
-	-- No need to generate .flt file - we already have the driver list
+
+	-- Generate .flt file using driversfilter command
+	local driverfilter = path.join(GEN_DIR, _OPTIONS["target"], _OPTIONS["subtarget"] .. ".flt")
+	os.outputof(
+		string.format(
+			"%s %s -r %s driversfilter -l %s %s > %s",
+			PYTHON, makedep, MAME_DIR, driverlist, driverargs, driverfilter))
 elseif _OPTIONS["SOURCES"] ~= nil then
 	if _OPTIONS["SOURCEFILTER"] ~= nil then
 		error("SOURCES and SOURCEFILTER cannot be combined")
