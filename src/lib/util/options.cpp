@@ -856,7 +856,33 @@ void core_options::parse_command_line(const std::vector<std::string> &args, int 
 		if (!curentry)
 		{
 			if (!ignore_unknown_options)
-				throw options_error_exception("Error: unknown option: -%s\n", optionname);
+			{
+				if (is_unadorned)
+				{
+					// Better error for positional arguments
+					if (arg > 1)
+					{
+						const char *prevarg = args[arg - 1].c_str();
+						throw options_error_exception(
+							"Error: unexpected argument '%s'\n"
+							"This looks like a value without an option name.\n"
+							"Did you forget to use '=' with the previous option '%s'?\n"
+							"Try: %s=%s\n",
+							curarg, prevarg, prevarg, curarg);
+					}
+					else
+					{
+						throw options_error_exception(
+							"Error: unexpected positional argument '%s'\n"
+							"This doesn't match any expected system or software name.\n",
+							curarg);
+					}
+				}
+				else
+				{
+					throw options_error_exception("Error: unknown option: -%s\n", optionname);
+				}
+			}
 			continue;
 		}
 
