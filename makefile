@@ -1302,13 +1302,13 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 
 # Auto-clean if filter file is newer than project
 # Auto-detect parameter changes and trigger rebuild
-# Version 5: Added DRIVERS parameter passing to genie + auto SUBTARGET
+# Version 8: Auto-generate SUBTARGET from DRIVERS parameter
 .PHONY: check_params
 check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="7"; \
+	CURRENT_VERSION="8"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \

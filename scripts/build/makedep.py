@@ -832,27 +832,31 @@ def build_device_map(root):
 
     return device_map
 
-def find_inheritance_chain(device_class, device_map, seen_devices):
+def find_inheritance_chain(device_class, device_map, seen_devices, root):
     """
     Find all parent classes in the inheritance chain for a device.
     Returns a list of (device_class, device_file) tuples.
+    Does NOT modify seen_devices - caller handles that.
     """
     chain = []
     current_class = device_class
+    checked_files = set()  # Track what we've checked in this chain to avoid loops
 
     # Follow inheritance chain (max depth 5 to avoid infinite loops)
     for depth in range(5):
         if current_class not in device_map:
             break
         device_file = device_map[current_class]
-        if device_file in seen_devices:
+        # Skip if already in the build OR already checked in this chain
+        if device_file in seen_devices or device_file in checked_files:
             break
         chain.append((current_class, device_file))
-        seen_devices.add(device_file)
+        checked_files.add(device_file)
 
         # Find parent class by reading the source file
         try:
-            with open(device_file, 'r') as f:
+            full_path = os.path.join(root, device_file)
+            with open(full_path, 'r') as f:
                 content = f.read()
                 # Look for class inheritance: class child : public parent
                 import re
@@ -1096,7 +1100,7 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                         device_class = match.group(1)
                         if device_class in device_map:
                             # Follow inheritance chain to include parent classes
-                            inheritance_chain = find_inheritance_chain(device_class, device_map, seen)
+                            inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
                             for parent_class, parent_file in inheritance_chain:
                                 if parent_file not in seen:
                                     seen.add(parent_file)
