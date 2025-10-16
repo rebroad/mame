@@ -78,6 +78,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_MNGWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a MNG movie of the current session" },
 	{ OPTION_AVIWRITE,                                   nullptr,     core_options::option_type::PATH,       "filename to write video of current session (format auto-detected from extension: .mp4, .avi, .mkv, etc.)" },
 	{ OPTION_WAVWRITE,                                   nullptr,     core_options::option_type::PATH,       "optional filename to write a WAV file of the current session" },
+	{ OPTION_VVFWRITE,                                   nullptr,     core_options::option_type::PATH,       "filename to write VVF vector video (for vector games only - auto-detects Star Wars, Asteroids, etc.)" },
 	{ OPTION_AVIWRITE_FORMAT,                            "compressed", core_options::option_type::STRING,    "video format for -aviwrite: 'compressed' (default, uses FFmpeg) or 'raw' (uncompressed AVI)" },
 	{ OPTION_AVIWRITE_SCALE,                             "0",         core_options::option_type::INTEGER,    "integer pixel scale for video recording (0=auto, 2=2x2, 3=3x3, etc.) - gives crisp pixel art look" },
 	{ OPTION_AVIWRITE_RES,                               "auto",      core_options::option_type::STRING,     "target resolution for video recording (WIDTHxHEIGHT, e.g. '1920x1080') - applies filtering for smooth look" },

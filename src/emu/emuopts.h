@@ -64,6 +64,7 @@
 #define OPTION_AVIWRITE_SCALE       "aviwrite_scale"
 #define OPTION_AVIWRITE_RES         "aviwrite_res"
 #define OPTION_AVIWRITE_BGFX        "aviwrite_bgfx"
+#define OPTION_VVFWRITE             "vvfwrite"
 #define OPTION_FFMPEG_FORMAT        "ffmpeg_format"
 #define OPTION_FFMPEG_PRESET        "ffmpeg_preset"
 #define OPTION_FFMPEG_CRF           "ffmpeg_crf"
@@ -358,6 +359,7 @@ public:
 	const char *mng_write() const { return value(OPTION_MNGWRITE); }
 	const char *avi_write() const { return value(OPTION_AVIWRITE); }
 	const char *wav_write() const { return value(OPTION_WAVWRITE); }
+	const char *vvf_write() const { return value(OPTION_VVFWRITE); }
 	const char *aviwrite_format() const { return value(OPTION_AVIWRITE_FORMAT); }
 	int aviwrite_scale() const { return int_value(OPTION_AVIWRITE_SCALE); }
 	const char *aviwrite_res() const { return value(OPTION_AVIWRITE_RES); }
