@@ -1089,6 +1089,8 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
         import re
         # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE> (including _array variants)
         device_finder_re = re.compile(r'(?:required_device(?:_array)?|optional_device(?:_array)?|device_finder)\s*<\s*(\w+)\s*[,>]')
+        # Match device type references in option_add calls: option_add("name", DEVICE_TYPE)
+        device_type_re = re.compile(r'option_add(?:_internal)?\s*\([^,]+,\s*([A-Z][A-Z0-9_]+)\s*\)')
 
     while remaining:
         source, depth = remaining.pop()
@@ -1106,6 +1108,7 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                 file_content = f.read()
                 # Scan for device usage in smart mode
                 if smart and file_content:
+                    # Scan for device_finder/required_device/optional_device patterns
                     for match in device_finder_re.finditer(file_content):
                         device_class = match.group(1)
                         if device_class in device_map:
@@ -1120,6 +1123,16 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, source))
                                     else:
                                         sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
+
+                    # Scan for device type references in option_add calls
+                    for match in device_type_re.finditer(file_content):
+                        device_type_name = match.group(1)
+                        if device_type_name in device_map:
+                            device_file = device_map[device_type_name]
+                            if device_file not in seen:
+                                seen.add(device_file)
+                                remaining.append((device_file, 0))
+                                sys.stderr.write('  + DeviceType: %s -> %s (option_add in %s)\n' % (device_type_name, device_file, source))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
