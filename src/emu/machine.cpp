@@ -226,13 +226,6 @@ void running_machine::start()
 	// load cheat files
 	manager().load_cheatfiles(*this);
 
-	// Debug: Check FFmpeg availability at startup
-#ifdef MAME_FFMPEG
-	osd_printf_info("*** MAME compiled with FFmpeg support ***\n");
-#else
-	osd_printf_info("*** MAME compiled WITHOUT FFmpeg support ***\n");
-#endif
-
 	// start recording movie if specified
 	const char *filename = options().mng_write();
 	if (filename[0] != 0)
@@ -253,6 +246,28 @@ void running_machine::start()
 #else
 		osd_printf_info("Recording raw AVI to: %s\n", filename);
 #endif
+	}
+
+	// Check -vvfwrite option for vector recording
+	filename = options().vvf_write();
+	if (filename[0] != 0)
+	{
+		osd_printf_info("VVF: Starting recording...\n");
+		// Get native vector resolution (for Star Wars, typically 640x480)
+		// We'll use screen resolution as a proxy for vector coordinate system
+		screen_device_enumerator screens(root_device());
+		screen_device *screen = screens.first();
+		int width = 640;
+		int height = 480;
+
+		if (screen)
+		{
+			const rectangle &visarea = screen->visible_area();
+			width = visarea.width();
+			height = visarea.height();
+		}
+
+		m_video->begin_vvf_recording(filename, width, height);
 	}
 
 	const char *savegame = options().state();

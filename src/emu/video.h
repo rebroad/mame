@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    video.h
+	video.h
 
-    Core MAME video routines.
+	Core MAME video routines.
 
 ***************************************************************************/
 
@@ -24,6 +24,8 @@
 #ifdef MAME_FFMPEG
 class ffmpeg_write;
 #endif
+
+class vvf_write;
 
 
 //**************************************************************************
@@ -100,6 +102,14 @@ public:
 		return !m_movie_recordings.empty();
 #endif
 	}
+
+	// VVF vector recording (called by vector_device)
+	void begin_vector_frame();
+	void record_vector_line(int x1, int y1, int x2, int y2, rgb_t color, int intensity);
+	void end_vector_frame();
+	bool is_vvf_recording() const { return m_vvf_writer != nullptr; }
+	void begin_vvf_recording(const char *name, s32 width, s32 height);
+	void end_vvf_recording();
 
 private:
 	// internal helpers
@@ -192,6 +202,8 @@ private:
 	s32 m_ffmpeg_height = 0;
 	s8 m_ffmpeg_bilinear_override = -1;
 #endif
+
+	std::unique_ptr<vvf_write> m_vvf_writer;  // VVF vector video encoder
 
 	static const bool   s_skiptable[FRAMESKIP_LEVELS][FRAMESKIP_LEVELS];
 

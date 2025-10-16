@@ -47,6 +47,7 @@
 #include "emuopts.h"
 #include "render.h"
 #include "screen.h"
+#include "video.h"
 
 
 #define VECTOR_WIDTH_DENOM 512
@@ -211,6 +212,17 @@ void vector_device::add_point(int x, int y, rgb_t color, int intensity)
 	newpoint->col = color;
 	newpoint->intensity = intensity;
 
+	// Record line to VVF if recording
+	// Vector games draw lines as consecutive points, so draw line from previous point to current
+	if (m_vector_index > 0)
+	{
+		point *prevpoint = &m_vector_list[m_vector_index - 1];
+		machine().video().record_vector_line(
+			prevpoint->x, prevpoint->y,
+			newpoint->x, newpoint->y,
+			newpoint->col, newpoint->intensity);
+	}
+
 	m_vector_index++;
 	if (m_vector_index >= MAX_POINTS)
 	{
@@ -226,6 +238,9 @@ void vector_device::add_point(int x, int y, rgb_t color, int intensity)
  */
 void vector_device::clear_list(void)
 {
+	// Start new VVF frame
+	machine().video().begin_vector_frame();
+
 	m_vector_index = 0;
 }
 
@@ -421,6 +436,9 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		curpoint++;
 	}
+
+	// End VVF frame
+	machine().video().end_vector_frame();
 
 	return 0;
 }
