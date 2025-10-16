@@ -226,13 +226,6 @@ void running_machine::start()
 	// load cheat files
 	manager().load_cheatfiles(*this);
 
-	// Debug: Check FFmpeg availability at startup
-#ifdef MAME_FFMPEG
-	osd_printf_info("*** MAME compiled with FFmpeg support ***\n");
-#else
-	osd_printf_info("*** MAME compiled WITHOUT FFmpeg support ***\n");
-#endif
-
 	// start recording movie if specified
 	const char *filename = options().mng_write();
 	if (filename[0] != 0)
@@ -253,6 +246,28 @@ void running_machine::start()
 #else
 		osd_printf_info("Recording raw AVI to: %s\n", filename);
 #endif
+	}
+
+	// Check -vvfwrite option for vector recording
+	filename = options().vvf_write();
+	if (filename[0] != 0)
+	{
+		osd_printf_info("VVF: Starting recording...\n");
+		// Get native vector resolution (for Star Wars, typically 640x480)
+		// We'll use screen resolution as a proxy for vector coordinate system
+		screen_device_enumerator screens(root_device());
+		screen_device *screen = screens.first();
+		int width = 640;
+		int height = 480;
+
+		if (screen)
+		{
+			const rectangle &visarea = screen->visible_area();
+			width = visarea.width();
+			height = visarea.height();
+		}
+
+		m_video->begin_vvf_recording(filename, width, height);
 	}
 
 	const char *savegame = options().state();
@@ -1528,7 +1543,7 @@ void running_machine::emscripten_main_loop()
 				tps_16 = 15.0 * 1000.0 / update_time_span;
 			}
 		}
-		
+
 		// 32-frame TPS (only meaningful when running > 2x emulation)
 		if (timeslice_timestamps_collected >= 32) {
 			int update_idx32 = (timeslice_timestamps_index - 32 + 30) % 30;
@@ -1553,7 +1568,7 @@ void running_machine::emscripten_main_loop()
 			// One printf to rule them all! 🧙‍♂️
 			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
 				fmod(current_time, 100000.0), fps_4, fps_8, fps_16,
-                (tps_4 > 0.0 ? tps_4: tps_8), (tps_4 > 0.0 ? tps_8 : tps_16), (tps_4 > 0.0 ? tps_16 : tps_32),
+				(tps_4 > 0.0 ? tps_4: tps_8), (tps_4 > 0.0 ? tps_8 : tps_16), (tps_4 > 0.0 ? tps_16 : tps_32),
 				game_speed_percent, count_1x, count_2x, count_3x, count_4x);
 
 			// Reset counters for next period

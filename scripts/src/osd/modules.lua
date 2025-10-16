@@ -355,6 +355,12 @@ function osdmodulesbuild()
 
 	ffmpeg_support()
 
+	-- VVF support for vector video recording (always compiled - no external dependencies)
+	files {
+		MAME_DIR .. "src/osd/modules/render/vvfwrite.cpp",
+		MAME_DIR .. "src/osd/modules/render/vvfwrite.h",
+	}
+
 end
 
 

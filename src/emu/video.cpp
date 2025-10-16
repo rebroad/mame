@@ -35,6 +35,8 @@
 #include "modules/render/ffmpegwrite.h"
 #endif
 
+#include "modules/render/vvfwrite.h"
+
 
 //**************************************************************************
 //  DEBUGGING
@@ -1378,6 +1380,9 @@ void video_manager::end_recording()
 		m_ffmpeg_writer.reset();
 	}
 #endif
+
+	// Stop VVF recording if active
+	end_vvf_recording();
 }
 
 #ifdef MAME_FFMPEG
@@ -1536,3 +1541,64 @@ void video_manager::begin_ffmpeg_recording(std::string_view name)
 }
 
 #endif // MAME_FFMPEG
+
+//-------------------------------------------------
+//  VVF vector recording methods
+//-------------------------------------------------
+
+void video_manager::begin_vvf_recording(const char *name, s32 width, s32 height)
+{
+	if (m_vvf_writer)
+		end_vvf_recording();
+
+	m_vvf_writer = std::make_unique<vvf_write>(machine(), width, height);
+	m_vvf_writer->record(name ? std::string_view(name) : std::string_view(""));
+
+	if (m_vvf_writer->recording())
+	{
+		machine().popmessage("Recording VVF vector video to %s", name ? name : "auto");
+		osd_printf_info("VVF: Started recording to '%s' at %dx%d\n", name ? name : "auto", width, height);
+	}
+	else
+	{
+		machine().popmessage("Failed to start VVF recording");
+		m_vvf_writer.reset();
+	}
+}
+
+void video_manager::end_vvf_recording()
+{
+	if (m_vvf_writer)
+	{
+		m_vvf_writer->stop();
+		m_vvf_writer.reset();
+	}
+}
+
+void video_manager::begin_vector_frame()
+{
+	if (m_vvf_writer && m_vvf_writer->recording())
+	{
+		m_vvf_writer->begin_frame();
+	}
+}
+
+void video_manager::record_vector_line(int x1, int y1, int x2, int y2, rgb_t color, int intensity)
+{
+	if (m_vvf_writer && m_vvf_writer->recording())
+	{
+		m_vvf_writer->draw_line(x1, y1, x2, y2, color, (uint8_t)intensity);
+	}
+}
+
+void video_manager::end_vector_frame()
+{
+	if (m_vvf_writer && m_vvf_writer->recording())
+	{
+		m_vvf_writer->end_frame();
+
+		// Also record audio
+		// TODO: Get actual audio samples from sound system
+		// For now, VVF will record video only
+	}
+}
