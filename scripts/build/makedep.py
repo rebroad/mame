@@ -1110,9 +1110,19 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
             sys.exit(1)
 
         file_content = None
+        header_content = None
         try:
             with f:
                 file_content = f.read()
+                # If this is a .cpp file, also read the corresponding .h file
+                if smart and source.endswith('.cpp'):
+                    header_path = os.path.splitext(source)[0] + '.h'
+                    try:
+                        with io.open(os.path.join(root, header_path), 'r', encoding='utf-8', errors='ignore') as hf:
+                            header_content = hf.read()
+                    except:
+                        pass
+
                 # Scan for device usage in smart mode
                 if smart and file_content:
                     # Scan for device_finder/required_device/optional_device patterns
@@ -1162,6 +1172,24 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                     seen.add(device_file)
                                     remaining.append((device_file, 0))
                                     sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
+
+                    # Also scan the header file for device patterns
+                    if header_content:
+                        for match in device_finder_re.finditer(header_content):
+                            device_class = match.group(1)
+                            if device_class in device_map:
+                                device_file = device_map[device_class]
+                                # Follow inheritance chain to include parent classes
+                                inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
+                                for parent_class, parent_file in inheritance_chain:
+                                    if parent_file not in seen:
+                                        seen.add(parent_file)
+                                        remaining.append((parent_file, 0))
+                                        header_path = os.path.splitext(source)[0] + '.h'
+                                        if parent_class == device_class:
+                                            sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, header_path))
+                                        else:
+                                            sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, header_path))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
