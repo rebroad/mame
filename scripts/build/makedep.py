@@ -916,12 +916,10 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                 remaining.append((path, depth))
                 seen.add(path)
 
-        # SMART MODE: Also include disassembler for CPU devices
+        # SMART MODE: Also include disassembler for CPU devices (only exact basename match)
         is_cpu_device = len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu'
         if smart and is_cpu_device:
-            print("  [DEBUG] Checking for disassembler for CPU: %s (basename=%s)" % (pathbase, basename), file=sys.stderr)
-
-            # Method 1: Check for common disassembler naming patterns based on basename
+            # Check for common disassembler naming patterns based on basename
             for suffix in ('d', 'dasm', 'dis', 'disasm'):
                 dasm_cpp = pathbase + basename + suffix + '.cpp'
                 dasm_h = pathbase + basename + suffix + '.h'
@@ -931,27 +929,10 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                     # Add disassembler source - don't count toward depth limit
                     remaining.append((dasm_cpp, 0))  # depth=0 so it's always included
                     seen.add(dasm_cpp)
-                    print("  ✓ Found CPU disassembler: %s" % dasm_cpp, file=sys.stderr)
 
                     # Also add the header if it exists
                     if (dasm_h not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.h')):
                         seen.add(dasm_h)
-
-            # Method 2: Scan directory for ANY file containing 'dasm' or ending in 'd.cpp'
-            if os.path.isdir(dirname):
-                for filename in os.listdir(dirname):
-                    if filename.endswith('.cpp') and ('dasm' in filename or filename.endswith('d.cpp')):
-                        dasm_path = pathbase + filename
-                        if dasm_path not in seen:
-                            remaining.append((dasm_path, 0))
-                            seen.add(dasm_path)
-                            print("  ✓ Found CPU disassembler (scan): %s" % dasm_path, file=sys.stderr)
-
-                            # Also add the header
-                            h_filename = filename[:-4] + '.h'
-                            h_path = pathbase + h_filename
-                            if (h_path not in seen) and os.path.isfile(os.path.join(dirname, h_filename)):
-                                seen.add(h_path)
 
         # SMART MODE: Also include format files for imagedev
         if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'imagedev':
@@ -1080,9 +1061,8 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                             if device_file not in seen:
                                 seen.add(device_file)
                                 remaining.append((device_file, 0))  # Add at depth 0
-                                sys.stderr.write('  + Device: %s -> %s (added to build)\n' % (device_class, device_file))
-                            else:
-                                sys.stderr.write('  = Device: %s already in build\n' % device_class)
+                                # Show which file triggered this device addition
+                                sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (device_class, device_file, path))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)

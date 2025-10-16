@@ -1288,13 +1288,13 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 
 # Auto-clean if filter file is newer than project
 # Auto-detect parameter changes and trigger rebuild
-# Version 2: Added generator exhaustion fix - force rebuild if old version
+# Version 3: Fixed generator exhaustion + removed aggressive disassembler scan
 .PHONY: check_params
 check_params:
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
-	CURRENT_VERSION="2"; \
+	CURRENT_VERSION="3"; \
 	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
 	NEED_REBUILD=0; \
 	if [ -f "$$VERSION_FILE" ]; then \
