@@ -296,7 +296,52 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 
 		if (!preset || preset[0] == 0) preset = "ultrafast";  // Fast encoding for real-time recording
 		if (!crf || crf[0] == 0) crf = "23";
-		if (!format || format[0] == 0) format = "mp4";
+
+		// Auto-detect format from file extension if not explicitly set
+		if (!format || format[0] == 0)
+		{
+			// Extract extension from filename
+			std::string filename_str(name);
+			size_t dot_pos = filename_str.rfind('.');
+
+			if (dot_pos != std::string::npos && dot_pos < filename_str.length() - 1)
+			{
+				std::string ext = filename_str.substr(dot_pos + 1);
+
+				// Convert to lowercase for comparison
+				for (char &c : ext)
+					c = std::tolower(static_cast<unsigned char>(c));
+
+				// Map extension to FFmpeg format
+				if (ext == "mp4")
+					format = "mp4";
+				else if (ext == "avi")
+					format = "avi";
+				else if (ext == "mkv")
+					format = "matroska";
+				else if (ext == "mov")
+					format = "mov";
+				else if (ext == "webm")
+					format = "webm";
+				else
+				{
+					osd_printf_verbose("FFmpeg: Unknown extension '.%s', defaulting to MP4\n", ext.c_str());
+					format = "mp4";
+				}
+
+				osd_printf_info("FFmpeg: Auto-detected format '%s' from extension '.%s'\n", format, ext.c_str());
+			}
+			else
+			{
+				// No extension found, default to MP4
+				format = "mp4";
+				osd_printf_verbose("FFmpeg: No file extension found, defaulting to MP4\n");
+			}
+		}
+		else
+		{
+			osd_printf_info("FFmpeg: Using explicitly set format '%s'\n", format);
+		}
 
 		// Audio setup
 		m_ffmpeg->has_audio = m_machine.sound().outputs_count() > 0;
