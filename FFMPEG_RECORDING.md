@@ -61,21 +61,28 @@ MAME now supports compressed video recording using FFmpeg libraries (H.264/AAC e
 
 **Primary Recording Option:**
 - **`-aviwrite <filename>`** - Start video recording to the specified file
-  - **Default behavior: Uses FFmpeg compressed video (H.264/MP4)**
-  - Example: `-aviwrite gameplay.mp4`
+  - **The format is AUTO-DETECTED from the file extension!** 🎯
+  - `.mp4` → MP4 container with H.264/AAC (recommended)
+  - `.mkv` → Matroska container with H.264/AAC
+  - `.avi` → AVI container with H.264/AAC
+  - `.mov` → QuickTime container
+  - `.webm` → WebM container
+  - Example: `-aviwrite gameplay.mp4` (creates compressed MP4)
+  - Example: `-aviwrite gameplay.mkv` (creates compressed MKV)
   - Use "auto" to auto-generate filename based on game name
-  - This is the RECOMMENDED way to record video!
+  - **This is the RECOMMENDED way to record video!**
 
 **Format Control:**
-- **`-aviwrite_format <format>`** - Choose video format (default: compressed)
+- **`-aviwrite_format <format>`** - Override video encoding method (default: compressed)
   - `compressed` (default) - Uses FFmpeg H.264 encoding (RECOMMENDED)
   - `raw` - Uses uncompressed AVI (huge files, for compatibility only)
-  - Example: `-aviwrite video.avi -aviwrite_format raw`
+  - Example: `-aviwrite video.avi -aviwrite_format raw` (forces raw AVI)
 
 **FFmpeg Quality Options:**
-- **`-ffmpeg_format <format>`** - Set container format when using compressed mode (default: mp4)
-  - Supported: mp4, mkv, avi, webm, etc.
-  - Example: `-ffmpeg_format mkv`
+- **`-ffmpeg_format <format>`** - Override container format (normally auto-detected from extension)
+  - Supported: mp4, matroska (for .mkv), avi, mov, webm
+  - Only needed if you want to force a different format than the extension suggests
+  - Example: `-aviwrite video.foo -ffmpeg_format mkv` (uses MKV despite .foo extension)
 
 - **`-ffmpeg_preset <preset>`** - Set encoding speed/quality preset (default: medium)
   - Options: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
@@ -91,31 +98,38 @@ MAME now supports compressed video recording using FFmpeg libraries (H.264/AAC e
 
 ### Examples
 
-1. **Record gameplay with default settings** (compressed H.264 MP4, medium quality):
+1. **Record gameplay to MP4** (easiest - just add the extension!):
    ```bash
-   mame pacman -aviwrite auto
+   mame pacman -aviwrite gameplay.mp4
    ```
-   ✨ **This is now the default!** No more huge raw AVI files!
+   ✨ **That's it!** The `.mp4` extension automatically selects H.264/AAC compression!
 
-2. **High-quality recording** for archival:
+2. **Record to MKV** (just change the extension!):
+   ```bash
+   mame galaga -aviwrite gameplay.mkv
+   ```
+   🎯 **Auto-detected!** No need to specify `-ffmpeg_format mkv`
+
+3. **High-quality recording** for archival:
    ```bash
    mame galaga -aviwrite galaga_hq.mp4 -ffmpeg_preset veryslow -ffmpeg_crf 18
    ```
 
-3. **Fast recording** for streaming/quick capture:
+4. **Fast recording** for streaming/quick capture:
    ```bash
    mame sf2 -aviwrite sf2_fast.mp4 -ffmpeg_preset ultrafast -ffmpeg_crf 24
    ```
 
-4. **MKV container with custom quality**:
+5. **WebM for web sharing**:
    ```bash
-   mame dkong -aviwrite dkong.mkv -ffmpeg_format mkv -ffmpeg_preset slow -ffmpeg_crf 20
+   mame dkong -aviwrite dkong.webm
    ```
 
-5. **Old-style raw AVI** (if you really need it - HUGE files!):
+6. **Old-style raw AVI** (if you really need it - HUGE files!):
    ```bash
    mame pacman -aviwrite raw_video.avi -aviwrite_format raw
    ```
+   ⚠️ Note: Even with `.avi` extension, it uses compressed H.264 by default. Use `-aviwrite_format raw` to force uncompressed.
 
 ## Quality vs File Size Guide
 
