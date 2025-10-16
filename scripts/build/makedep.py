@@ -742,6 +742,11 @@ def parse_command_line():
     subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
     subparser.add_argument('sources', metavar='<srcfile>', nargs='+', help='source files to include')
 
+    subparser = subparsers.add_parser('driversproject', help='generate project directives for driver names')
+    subparser.add_argument('-t', '--target', metavar='<target>', required=True, help='generated emulator target name')
+    subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
+    subparser.add_argument('drivers', metavar='<driver>', nargs='+', help='driver names to include')
+
     subparser = subparsers.add_parser('filterproject', help='generate project directives using filter file')
     subparser.add_argument('-t', '--target', metavar='<target>', required=True, help='generated emulator target name')
     subparser.add_argument('-f', '--filter', metavar='<fltfile>', required=True, help='input filter file')
@@ -750,6 +755,10 @@ def parse_command_line():
     subparser = subparsers.add_parser('sourcesfilter', help='generate driver filter for source files')
     subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
     subparser.add_argument('sources', metavar='<srcfile>', nargs='+', help='source files to include')
+
+    subparser = subparsers.add_parser('driversfilter', help='generate driver filter for driver names')
+    subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
+    subparser.add_argument('drivers', metavar='<driver>', nargs='+', help='driver names to include')
 
     subparser = subparsers.add_parser('driverlist', help='generate driver list source')
     subparser.add_argument('-f', '--filter', metavar='<fltfile>', help='input filter file')
@@ -823,7 +832,7 @@ def build_device_map(root):
 
     return device_map
 
-def scan_source_dependencies(root, sources, smart=True, depth_limit=4):
+def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     """
     Scan source dependencies with optional smart mode.
 
@@ -1217,6 +1226,67 @@ def collect_sources(root, sources):
     return result
 
 
+def map_drivers_to_sources(listfile, drivers):
+    """
+    Map driver names to their source files by parsing mame.lst.
+    Returns a list of source file paths (e.g., ['atari/starwars.cpp']).
+    """
+    driver_to_source = {}
+    current_source = None
+
+    try:
+        with io.open(listfile, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Lines starting with @source: define the current source file
+                if line.startswith('@source:'):
+                    current_source = line.split(':', 1)[1].strip()
+                # Non-empty lines without @ are driver names
+                elif line and not line.startswith('@') and not line.startswith('#'):
+                    if current_source:
+                        driver_to_source[line] = current_source
+    except IOError:
+        sys.stderr.write('Error reading driver list file "%s"\n' % listfile)
+        sys.exit(1)
+
+    # Map requested drivers to sources
+    sources = []
+    missing_drivers = []
+    for driver in drivers:
+        if driver in driver_to_source:
+            source = driver_to_source[driver]
+            if source not in sources:
+                sources.append(source)
+        else:
+            missing_drivers.append(driver)
+
+    if missing_drivers:
+        sys.stderr.write('Error: Driver(s) not found in %s: %s\n' % (listfile, ', '.join(missing_drivers)))
+        sys.stderr.write('Available drivers can be listed with: grep -v "^@" %s | grep -v "^#" | sort\n' % listfile)
+        sys.exit(1)
+
+    return sources
+
+
+def write_drivers_project(options, projectfile):
+    """Generate project for driver names (convenience wrapper)."""
+    # Map driver names to source files
+    sources = map_drivers_to_sources(options.list, options.drivers)
+
+    # Convert to full paths
+    full_sources = []
+    for source in sources:
+        full_path = os.path.join('src', 'mame', source)
+        full_sources.append(full_path)
+
+    sys.stderr.write("Drivers: %s\n" % ', '.join(options.drivers))
+    sys.stderr.write("Sources: %s\n" % ', '.join(sources))
+
+    # Reuse sourcesproject logic
+    options.sources = full_sources
+    write_sources_project(options, projectfile)
+
+
 def write_sources_project(options, projectfile):
     def sourcefile(filename):
         if tuple(filename.split('/')) in splitsources:
@@ -1244,6 +1314,12 @@ def write_filter_project(options, projectfile):
     write_project(options, projectfile, header_to_optional, source_dependencies, False)
 
 
+def write_drivers_filter(options, filterfile):
+    """Generate driver filter from driver names."""
+    for driver in options.drivers:
+        filterfile.write(driver + '\n')
+
+
 def write_sources_filter(options, filterfile):
     sources = set()
     DriverFilter().parse_list(options.list, lambda n: sources.add(n), lambda n: None)
@@ -1264,10 +1340,14 @@ if __name__ == '__main__':
     options = parse_command_line()
     if options.command == 'sourcesproject':
         write_sources_project(options, sys.stdout)
+    elif options.command == 'driversproject':
+        write_drivers_project(options, sys.stdout)
     elif options.command == 'filterproject':
         write_filter_project(options, sys.stdout)
     elif options.command == 'sourcesfilter':
         write_sources_filter(options, sys.stdout)
+    elif options.command == 'driversfilter':
+        write_drivers_filter(options, sys.stdout)
     elif options.command == 'driverlist':
         DriverLister(options).write_source(sys.stdout)
     elif options.command == 'reconcilelist':
