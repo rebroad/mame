@@ -1287,6 +1287,35 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS) --gcc=linux-gcc --gcc_version=$(GCC_VERSION) $(MAKETYPE)
 
 # Auto-clean if filter file is newer than project
+# Auto-detect parameter changes and trigger rebuild
+.PHONY: check_params
+check_params:
+ifdef SUBTARGET
+	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
+	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
+	NEED_REBUILD=0; \
+	if [ -f "$$PARAM_FILE" ]; then \
+		PREV_PARAMS=$$(cat "$$PARAM_FILE" 2>/dev/null || echo ""); \
+		if [ "$$PREV_PARAMS" != "$$CURRENT_PARAMS" ]; then \
+			echo "Build parameters changed - regenerating..."; \
+			echo "  Previous: $$PREV_PARAMS"; \
+			echo "  Current:  $$CURRENT_PARAMS"; \
+			NEED_REBUILD=1; \
+		fi; \
+	elif [ -d "$(PROJECTDIR)" ]; then \
+		echo "No previous build params found - regenerating..."; \
+		NEED_REBUILD=1; \
+	fi; \
+	if [ $$NEED_REBUILD -eq 1 ]; then \
+		rm -rf "$(PROJECTDIR)"; \
+		rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/bin/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+		rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/obj/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+		$(MAKE) REGENIE=1 SUBTARGET=$(SUBTARGET) DRIVERS=$(DRIVERS) SOURCES=$(SOURCES) generate; \
+	fi; \
+	mkdir -p "$$(dirname "$$PARAM_FILE")" 2>/dev/null || true; \
+	echo "$$CURRENT_PARAMS" > "$$PARAM_FILE"
+endif
+
 .PHONY: check_filter
 check_filter:
 ifdef SUBTARGET
@@ -1301,17 +1330,17 @@ ifdef SUBTARGET
 endif
 
 .PHONY: linux_x64
-linux_x64: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x64: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64
 
 .PHONY: linux_x86
-linux_x86: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x86: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32
 
 .PHONY: linux
-linux: check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG) precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)
 
