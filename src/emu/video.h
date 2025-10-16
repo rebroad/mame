@@ -181,6 +181,7 @@ private:
 	bool                m_snap_native;              // are we using native per-screen layouts?
 	s32                 m_snap_width;               // width of snapshots (0 == auto)
 	s32                 m_snap_height;              // height of snapshots (0 == auto)
+	s8                  m_snap_bilinear_override;   // override bilinear filtering (-1=default, 0=off, 1=on)
 
 	// movie recordings
 	std::vector<movie_recording::ptr> m_movie_recordings;
