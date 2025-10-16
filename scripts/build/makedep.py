@@ -1131,22 +1131,34 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                         if device_class in device_map:
                             device_file = device_map[device_class]
                             # Scan the device file itself for option_add calls BEFORE following inheritance
-                            try:
-                                full_device_path = os.path.join(root, device_file)
-                                with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
-                                    device_file_content = df.read()
-                                    for type_match in device_type_re.finditer(device_file_content):
-                                        device_type_constant = type_match.group(1)
-                                        if device_type_constant in device_type_map:
-                                            type_device_class = device_type_map[device_type_constant]
-                                            if type_device_class in device_map:
-                                                type_device_file = device_map[type_device_class]
-                                                if type_device_file not in seen:
-                                                    seen.add(type_device_file)
-                                                    remaining.append((type_device_file, 0))
-                                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
-                            except:
-                                pass
+                            # BUT skip bus controller files (same heuristic as below)
+                            skip_device_option_scan = False
+                            if device_file.startswith('src/devices/bus/'):
+                                parts_dev = device_file.split('/')
+                                if len(parts_dev) >= 4:
+                                    bus_name_dev = parts_dev[3]
+                                    filename_dev = os.path.splitext(parts_dev[-1])[0]
+                                    controller_names_dev = [bus_name_dev, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                                    if filename_dev in controller_names_dev:
+                                        skip_device_option_scan = True
+
+                            if not skip_device_option_scan:
+                                try:
+                                    full_device_path = os.path.join(root, device_file)
+                                    with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
+                                        device_file_content = df.read()
+                                        for type_match in device_type_re.finditer(device_file_content):
+                                            device_type_constant = type_match.group(1)
+                                            if device_type_constant in device_type_map:
+                                                type_device_class = device_type_map[device_type_constant]
+                                                if type_device_class in device_map:
+                                                    type_device_file = device_map[type_device_class]
+                                                    if type_device_file not in seen:
+                                                        seen.add(type_device_file)
+                                                        remaining.append((type_device_file, 0))
+                                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
+                                except:
+                                    pass
 
                             # Follow inheritance chain to include parent classes
                             inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
@@ -1161,17 +1173,31 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                                         sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
 
                     # Scan for device type references in option_add calls
-                    for match in device_type_re.finditer(file_content):
-                        device_type_constant = match.group(1)
-                        # Look up the class name from the constant
-                        if device_type_constant in device_type_map:
-                            device_class = device_type_map[device_type_constant]
-                            if device_class in device_map:
-                                device_file = device_map[device_class]
-                                if device_file not in seen:
-                                    seen.add(device_file)
-                                    remaining.append((device_file, 0))
-                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
+                    # SKIP bus controller files (they define ALL possible options, creating bloat)
+                    # Heuristic: If file is in devices/bus/BUSNAME/ and filename matches BUSNAME or is a known controller name
+                    skip_option_scan = False
+                    if source.startswith('src/devices/bus/'):
+                        parts = source.split('/')
+                        if len(parts) >= 4:  # src/devices/bus/BUSNAME/file.cpp
+                            bus_name = parts[3]
+                            filename = os.path.splitext(parts[-1])[0]
+                            # Skip if filename matches bus name OR is a known controller file
+                            controller_names = [bus_name, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                            if filename in controller_names:
+                                skip_option_scan = True
+
+                    if not skip_option_scan:
+                        for match in device_type_re.finditer(file_content):
+                            device_type_constant = match.group(1)
+                            # Look up the class name from the constant
+                            if device_type_constant in device_type_map:
+                                device_class = device_type_map[device_type_constant]
+                                if device_class in device_map:
+                                    device_file = device_map[device_class]
+                                    if device_file not in seen:
+                                        seen.add(device_file)
+                                        remaining.append((device_file, 0))
+                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
 
                     # Also scan the header file for device patterns
                     if header_content:
