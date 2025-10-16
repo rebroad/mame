@@ -530,7 +530,7 @@ class DriverLister(DriverFilter):
         excludes = set()
         if options.filter is not None:
             self.parse_filter(options.root, options.filter, includesource, includedriver, excludedriver)
-            sys.stderr.write('%d source file(s) found\n' % (len(sources), ))
+            sys.stderr.write('%d source file(s) found: %s\n' % (len(sources), ', '.join(sorted(sources))))
         self.sources = frozenset(sources)
         self.includes = frozenset(includes)
         self.excludes = frozenset(excludes)
@@ -541,7 +541,7 @@ class DriverLister(DriverFilter):
 
         for driver in self.includes:
             drivers.add(driver)
-        sys.stderr.write('%d driver(s) found\n' % (len(drivers), ))
+        sys.stderr.write('%d driver(s) found: %s\n' % (len(drivers), ', '.join(sorted(drivers))))
         drivers.add('___empty')
         self.drivers = sorted(drivers)
 
@@ -842,6 +842,10 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     elif os.getenv('SMART_DEPS') == '1':
         smart = True
 
+    # Convert sources to list if it's a generator (to allow multiple iterations)
+    if not isinstance(sources, list):
+        sources = list(sources)
+
     if not smart:
         # Fall back to original recursive behavior
         depth_limit = 999
@@ -855,9 +859,17 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
         relevant_bus_systems = set()
         for source in sources:
             parts = source.split('/')
-            if len(parts) >= 2:
+            # Source paths are like: src/mame/acorn/bbcb.cpp or acorn/bbcb.cpp
+            # Find the manufacturer directory (after src/mame prefix if present)
+            start_idx = 0
+            if len(parts) > 0 and parts[0] == 'src':
+                start_idx = 1
+                if len(parts) > 1 and parts[1] == 'mame':
+                    start_idx = 2
+
+            if len(parts) > start_idx:
                 # Add the manufacturer/system directory (e.g., 'acorn', 'midway', 'atari')
-                relevant_bus_systems.add(parts[0])
+                relevant_bus_systems.add(parts[start_idx])
                 # Add any explicit bus references (e.g., 'bus/bbc')
                 for i, part in enumerate(parts):
                     if part == 'bus' and i + 1 < len(parts):
