@@ -1131,22 +1131,34 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
                         if device_class in device_map:
                             device_file = device_map[device_class]
                             # Scan the device file itself for option_add calls BEFORE following inheritance
-                            try:
-                                full_device_path = os.path.join(root, device_file)
-                                with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
-                                    device_file_content = df.read()
-                                    for type_match in device_type_re.finditer(device_file_content):
-                                        device_type_constant = type_match.group(1)
-                                        if device_type_constant in device_type_map:
-                                            type_device_class = device_type_map[device_type_constant]
-                                            if type_device_class in device_map:
-                                                type_device_file = device_map[type_device_class]
-                                                if type_device_file not in seen:
-                                                    seen.add(type_device_file)
-                                                    remaining.append((type_device_file, 0))
-                                                    sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
-                            except:
-                                pass
+                            # BUT skip bus controller files (same heuristic as below)
+                            skip_device_option_scan = False
+                            if device_file.startswith('src/devices/bus/'):
+                                parts_dev = device_file.split('/')
+                                if len(parts_dev) >= 4:
+                                    bus_name_dev = parts_dev[3]
+                                    filename_dev = os.path.splitext(parts_dev[-1])[0]
+                                    controller_names_dev = [bus_name_dev, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                                    if filename_dev in controller_names_dev:
+                                        skip_device_option_scan = True
+
+                            if not skip_device_option_scan:
+                                try:
+                                    full_device_path = os.path.join(root, device_file)
+                                    with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
+                                        device_file_content = df.read()
+                                        for type_match in device_type_re.finditer(device_file_content):
+                                            device_type_constant = type_match.group(1)
+                                            if device_type_constant in device_type_map:
+                                                type_device_class = device_type_map[device_type_constant]
+                                                if type_device_class in device_map:
+                                                    type_device_file = device_map[type_device_class]
+                                                    if type_device_file not in seen:
+                                                        seen.add(type_device_file)
+                                                        remaining.append((type_device_file, 0))
+                                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
+                                except:
+                                    pass
 
                             # Follow inheritance chain to include parent classes
                             inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
