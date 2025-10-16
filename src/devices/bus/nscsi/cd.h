@@ -28,9 +28,12 @@ protected:
 	nscsi_cdrom_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, const char *mfr, const char *product, const char *rev, uint8_t inq_data, uint8_t compliance)
 		: nscsi_cdrom_device(mconfig, type, tag, owner, 0)
 	{
-		strncpy(manufacturer, mfr, 8);
-		strncpy(this->product, product, 16);
-		strncpy(revision, rev, 4);
+		strncpy(manufacturer, mfr, sizeof(manufacturer) - 1);
+		manufacturer[sizeof(manufacturer) - 1] = '\0';
+		strncpy(this->product, product, sizeof(this->product) - 1);
+		this->product[sizeof(this->product) - 1] = '\0';
+		strncpy(revision, rev, sizeof(revision) - 1);
+		revision[sizeof(revision) - 1] = '\0';
 		inquiry_data = inq_data;
 		this->compliance = compliance;
 	}
