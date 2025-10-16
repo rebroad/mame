@@ -756,6 +756,10 @@ def parse_command_line():
     subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
     subparser.add_argument('sources', metavar='<srcfile>', nargs='+', help='source files to include')
 
+    subparser = subparsers.add_parser('driversfilter', help='generate driver filter from driver names')
+    subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
+    subparser.add_argument('drivers', metavar='<drivername>', nargs='+', help='driver names to include')
+
     subparser = subparsers.add_parser('driverlist', help='generate driver list source')
     subparser.add_argument('-f', '--filter', metavar='<fltfile>', help='input filter file')
     subparser.add_argument('list', metavar='<lstfile>', help='input list file')
@@ -1357,6 +1361,16 @@ def write_sources_filter(options, filterfile):
         filterfile.write(driver + '\n')
 
 
+def write_drivers_filter(options, filterfile):
+    """
+    Generate a driver filter (.flt) file from driver names.
+    Maps driver names to their source files and outputs them.
+    """
+    sources = map_drivers_to_sources(options.list, options.drivers)
+    for source in sorted(sources):
+        filterfile.write(source + '\n')
+
+
 if __name__ == '__main__':
     options = parse_command_line()
     if options.command == 'sourcesproject':
@@ -1367,6 +1381,8 @@ if __name__ == '__main__':
         write_filter_project(options, sys.stdout)
     elif options.command == 'sourcesfilter':
         write_sources_filter(options, sys.stdout)
+    elif options.command == 'driversfilter':
+        write_drivers_filter(options, sys.stdout)
     elif options.command == 'driverlist':
         DriverLister(options).write_source(sys.stdout)
     elif options.command == 'reconcilelist':
