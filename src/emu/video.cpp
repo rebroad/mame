@@ -1330,7 +1330,7 @@ void video_manager::toggle_record_movie(movie_recording::format format)
 	{
 		// begin_recording() will automatically choose FFmpeg vs raw based on format and options
 		begin_recording(nullptr, format);
-		
+
 		// Show appropriate message
 #ifdef MAME_FFMPEG
 		if (format == movie_recording::format::AVI)
@@ -1360,7 +1360,7 @@ void video_manager::end_recording()
 {
 	// Stop raw AVI/MNG recordings
 	m_movie_recordings.clear();
-	
+
 #ifdef MAME_FFMPEG
 	// Stop FFmpeg recording if active
 	if (m_ffmpeg_writer)
@@ -1386,40 +1386,118 @@ void video_manager::begin_ffmpeg_recording(std::string_view name)
 		m_ffmpeg_writer.reset();
 	}
 
-	// Use the snapshot system's dimensions (which handles aspect ratio and resolution correctly)
-	// Create a snapshot to determine the actual render dimensions
-	create_snapshot_bitmap(nullptr);
-	s32 width = m_snap_bitmap.width();
-	s32 height = m_snap_bitmap.height();
+	// Get video recording options
+	int scale = machine().options().aviwrite_scale();
+	const char *res_str = machine().options().aviwrite_res();
+	bool use_bgfx = machine().options().aviwrite_bgfx();
 
-	if (width == 0 || height == 0)
+	// Save original snap settings to restore later
+	s32 saved_snap_width = m_snap_width;
+	s32 saved_snap_height = m_snap_height;
+
+	// Determine recording resolution based on options (priority: scale > res > auto)
+	s32 width = 0, height = 0;
+
+	if (scale > 1)
 	{
-		// Fallback to defaults if snapshot failed
-		width = 640;
-		height = 480;
+		// Option 1: Integer pixel scaling (crisp pixels)
+		// Get native resolution first
+		create_snapshot_bitmap(nullptr);
+		s32 native_width = m_snap_bitmap.width();
+		s32 native_height = m_snap_bitmap.height();
+
+		// Apply integer scaling
+		width = native_width * scale;
+		height = native_height * scale;
+
+		// Set target resolution and re-render
+		m_snap_width = width;
+		m_snap_height = height;
+		create_snapshot_bitmap(nullptr);
+
+		// Read back actual dimensions (may differ due to constraints)
+		width = m_snap_bitmap.width();
+		height = m_snap_bitmap.height();
+
+		osd_printf_info("Recording at %dx native resolution (%dx%d -> %dx%d) with crisp pixels\n",
+			scale, native_width, native_height, width, height);
+	}
+	else if (res_str && strcmp(res_str, "auto") != 0)
+	{
+		// Option 2: Specific resolution with filtering
+		if (sscanf(res_str, "%dx%d", &width, &height) == 2 && width > 0 && height > 0)
+		{
+			// Set target resolution and render with filtering
+			m_snap_width = width;
+			m_snap_height = height;
+			create_snapshot_bitmap(nullptr);
+
+			// Read back actual dimensions
+			width = m_snap_bitmap.width();
+			height = m_snap_bitmap.height();
+
+			osd_printf_info("Recording at target resolution %dx%d with bilinear filtering\n", width, height);
+		}
+		else
+		{
+			// Invalid format, fall back to auto
+			osd_printf_warning("Invalid -aviwrite_res format '%s', using auto\n", res_str);
+			create_snapshot_bitmap(nullptr);
+			width = m_snap_bitmap.width();
+			height = m_snap_bitmap.height();
+		}
+	}
+	else
+	{
+		// Option 3: Auto mode - use default snapshot dimensions
+		create_snapshot_bitmap(nullptr);
+		width = m_snap_bitmap.width();
+		height = m_snap_bitmap.height();
+
+		if (width == 0 || height == 0)
+		{
+			// Fallback to defaults if snapshot failed
+			width = 640;
+			height = 480;
+		}
+
+		// Cap resolution to avoid performance issues (max 1920x1440)
+		// Maintain aspect ratio when scaling down
+		if (width > 1920 || height > 1440)
+		{
+			float aspect = float(width) / float(height);
+			s32 old_width = width, old_height = height;
+
+			if (width > 1920)
+			{
+				width = 1920;
+				height = s32(width / aspect);
+			}
+			if (height > 1440)
+			{
+				height = 1440;
+				width = s32(height * aspect);
+			}
+
+			osd_printf_info("Auto: Capping video resolution %dx%d -> %dx%d\n",
+				old_width, old_height, width, height);
+		}
+		else
+		{
+			osd_printf_info("Recording at auto resolution %dx%d\n", width, height);
+		}
 	}
 
-	// Cap resolution to avoid performance issues (max 1920x1440)
-	// Maintain aspect ratio when scaling down
-	if (width > 1920 || height > 1440)
+	// TODO: Implement BGFX rendering for Option 3
+	if (use_bgfx)
 	{
-		float aspect = float(width) / float(height);
-		s32 old_width = width, old_height = height;
-
-		if (width > 1920)
-		{
-			width = 1920;
-			height = s32(width / aspect);
-		}
-		if (height > 1440)
-		{
-			height = 1440;
-			width = s32(height * aspect);
-		}
-
-		osd_printf_verbose("FFmpeg: Capping video resolution %dx%d -> %dx%d\n",
-			old_width, old_height, width, height);
+		osd_printf_warning("BGFX video recording is not yet implemented - using standard rendering\n");
+		// In the future, this would capture from the BGFX output instead of m_snap_target
 	}
+
+	// Restore original snap settings for normal snapshots
+	m_snap_width = saved_snap_width;
+	m_snap_height = saved_snap_height;
 
 	// Create the FFmpeg writer with the snapshot dimensions
 	m_ffmpeg_writer = std::make_unique<ffmpeg_write>(machine(), width, height);

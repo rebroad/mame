@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    emuopts.h
+	emuopts.h
 
-    Options file and command line management.
+	Options file and command line management.
 
 ***************************************************************************/
 
@@ -61,6 +61,9 @@
 #define OPTION_AVIWRITE             "aviwrite"
 #define OPTION_WAVWRITE             "wavwrite"
 #define OPTION_AVIWRITE_FORMAT      "aviwrite_format"
+#define OPTION_AVIWRITE_SCALE       "aviwrite_scale"
+#define OPTION_AVIWRITE_RES         "aviwrite_res"
+#define OPTION_AVIWRITE_BGFX        "aviwrite_bgfx"
 #define OPTION_FFMPEG_FORMAT        "ffmpeg_format"
 #define OPTION_FFMPEG_PRESET        "ffmpeg_preset"
 #define OPTION_FFMPEG_CRF           "ffmpeg_crf"
@@ -356,6 +359,9 @@ public:
 	const char *avi_write() const { return value(OPTION_AVIWRITE); }
 	const char *wav_write() const { return value(OPTION_WAVWRITE); }
 	const char *aviwrite_format() const { return value(OPTION_AVIWRITE_FORMAT); }
+	int aviwrite_scale() const { return int_value(OPTION_AVIWRITE_SCALE); }
+	const char *aviwrite_res() const { return value(OPTION_AVIWRITE_RES); }
+	bool aviwrite_bgfx() const { return bool_value(OPTION_AVIWRITE_BGFX); }
 	const char *ffmpeg_format() const { return value(OPTION_FFMPEG_FORMAT); }
 	const char *ffmpeg_preset() const { return value(OPTION_FFMPEG_PRESET); }
 	const char *ffmpeg_crf() const { return value(OPTION_FFMPEG_CRF); }
