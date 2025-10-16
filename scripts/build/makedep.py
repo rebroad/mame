@@ -1077,8 +1077,8 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
     # Device usage pattern (for smart mode)
     if smart:
         import re
-        # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE>
-        device_finder_re = re.compile(r'(?:required_device|optional_device|device_finder)\s*<\s*(\w+)\s*>')
+        # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE> (including _array variants)
+        device_finder_re = re.compile(r'(?:required_device(?:_array)?|optional_device(?:_array)?|device_finder)\s*<\s*(\w+)\s*[,>]')
 
     while remaining:
         source, depth = remaining.pop()
