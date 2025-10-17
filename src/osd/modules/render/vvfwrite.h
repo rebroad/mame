@@ -138,6 +138,7 @@ private:
 	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	bool m_scale_optimized; // Flag to ensure scale optimization runs only once
+	bool m_frame_started;   // Flag to track if begin_frame() was called
 
 	// Frame data buffer (for current frame)
 	std::vector<uint8_t> m_frame_buffer;
