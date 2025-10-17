@@ -78,6 +78,13 @@ private:
 	// Zero-copy bitmap pool
 	std::vector<std::unique_ptr<bitmap_rgb32>> m_bitmap_pool;  // Pool of bitmaps for MAME to render into
 	bitmap_rgb32                *m_current_render_bitmap;      // Current bitmap being rendered (not queued yet)
+
+	// Performance monitoring
+	bool                        m_debug_enabled;
+	std::chrono::steady_clock::time_point m_last_stats_print;
+	uint64_t                    m_encode_time_us;     // Total time spent encoding
+	uint64_t                    m_wait_time_us;       // Total time waiting for frames
+	uint32_t                    m_frames_encoded;     // Frames encoded since last stats print
 };
 
 #endif // MAME_FFMPEG

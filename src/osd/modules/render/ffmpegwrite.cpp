@@ -228,6 +228,10 @@ ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t he
 	, m_thread_running(false)
 	, m_thread_stop(false)
 	, m_current_render_bitmap(nullptr)
+	, m_debug_enabled(false)
+	, m_encode_time_us(0)
+	, m_wait_time_us(0)
+	, m_frames_encoded(0)
 {
 	// Pre-allocate bitmap pool for zero-copy rendering (5 bitmaps)
 	for (int i = 0; i < 5; i++)
@@ -496,11 +500,20 @@ void ffmpeg_write::begin_ffmpeg_recording(std::string_view name)
 
 		m_recording = true;
 
+		// Initialize performance monitoring
+		m_debug_enabled = m_machine.options().ffmpeg_debug();
+		m_last_stats_print = std::chrono::steady_clock::now();
+		m_encode_time_us = 0;
+		m_wait_time_us = 0;
+		m_frames_encoded = 0;
+
 		// Start background encoder thread
 		m_thread_stop = false;
 		m_thread_running = true;
 		m_encoder_thread = std::make_unique<std::thread>(&ffmpeg_write::encoder_thread, this);
 		osd_printf_info("Started FFmpeg recording to %s (async background encoding)\n", m_ffmpeg->outfile.c_str());
+		if (m_debug_enabled)
+			osd_printf_info("FFmpeg debug: Performance stats enabled (will print once per second)\n");
 	}
 	catch (int err)
 	{
@@ -619,6 +632,7 @@ void ffmpeg_write::encoder_thread()
 	while (true)
 	{
 		std::unique_ptr<encode_job> job;
+		auto wait_start = std::chrono::steady_clock::now();
 
 		{
 			std::unique_lock<std::mutex> lock(m_queue_mutex);
@@ -634,9 +648,17 @@ void ffmpeg_write::encoder_thread()
 			}
 		}
 
+		auto wait_end = std::chrono::steady_clock::now();
+		if (m_debug_enabled && job)
+		{
+			auto wait_us = std::chrono::duration_cast<std::chrono::microseconds>(wait_end - wait_start).count();
+			m_wait_time_us += wait_us;
+		}
+
 		if (!job)
 			continue;
 
+		auto encode_start = std::chrono::steady_clock::now();
 		try
 		{
 			if (job->job_type == encode_job::type::VIDEO)
@@ -720,6 +742,40 @@ void ffmpeg_write::encoder_thread()
 		catch (...)
 		{
 			osd_printf_error("FFmpeg encoder thread error\n");
+		}
+
+		auto encode_end = std::chrono::steady_clock::now();
+		if (m_debug_enabled)
+		{
+			auto encode_us = std::chrono::duration_cast<std::chrono::microseconds>(encode_end - encode_start).count();
+			m_encode_time_us += encode_us;
+			if (job->job_type == encode_job::type::VIDEO)
+				m_frames_encoded++;
+
+			// Print stats once per second
+			auto now = std::chrono::steady_clock::now();
+			auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_last_stats_print).count();
+			if (elapsed >= 1000)
+			{
+				uint64_t total_time_us = m_encode_time_us + m_wait_time_us;
+				double cpu_usage = total_time_us > 0 ? (100.0 * m_encode_time_us) / total_time_us : 0.0;
+				double avg_encode_ms = m_frames_encoded > 0 ? (m_encode_time_us / 1000.0) / m_frames_encoded : 0.0;
+
+				size_t queue_depth;
+				{
+					std::lock_guard<std::mutex> lock(m_queue_mutex);
+					queue_depth = m_encode_queue.size();
+				}
+
+				osd_printf_info("FFmpeg stats: CPU=%.1f%% busy (%.1f%% idle), avg_encode=%.2fms/frame, frames=%u/s, queue=%zu\n",
+					cpu_usage, 100.0 - cpu_usage, avg_encode_ms, m_frames_encoded, queue_depth);
+
+				// Reset stats
+				m_last_stats_print = now;
+				m_encode_time_us = 0;
+				m_wait_time_us = 0;
+				m_frames_encoded = 0;
+			}
 		}
 
 		// Return bitmaps and jobs to pools for reuse
