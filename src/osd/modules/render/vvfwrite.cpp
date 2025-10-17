@@ -176,15 +176,25 @@ void vvf_write::begin_frame()
 		return;
 
 	// Debug: Print first 5 frames with stats from previous frame
-	if (m_frame_count < 5 && m_frame_count > 0)
+	if (m_stats.debug_line_count < 20 && m_frame_count > 0)
 	{
-		osd_printf_info("VVF DEBUG Frame #%u stats: %u draw_line calls, %u line_to calls, %zu bytes written\n",
-			m_frame_count - 1, s_frame_draw_calls, s_frame_line_to_calls, m_frame_buffer.size());
+		attotime elapsed = m_machine.time() - m_start_time;
+		double elapsed_sec = elapsed.as_double();
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		osd_printf_info("%u.%03u VVF Frame #%u stats: %u draw_line calls, %u line_to calls, %zu bytes written\n",
+			seconds, milliseconds, m_frame_count - 1, s_frame_draw_calls, s_frame_line_to_calls, m_frame_buffer.size());
 	}
 
-	if (m_frame_count < 5)
+	if (m_stats.debug_line_count < 20)
 	{
-		osd_printf_info("VVF DEBUG begin_frame #%u\n", m_frame_count);
+		attotime elapsed = m_machine.time() - m_start_time;
+		double elapsed_sec = elapsed.as_double();
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		osd_printf_info("[%u.%03u] VVF begin_frame #%u\n", seconds, milliseconds, m_frame_count);
 	}
 
 	// Reset per-frame counters
@@ -244,12 +254,17 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 		}
 	}
 
-	// Debug: Print first 10 draw_line calls
+	// Debug: Print draw_line calls until line_to limit
 	static uint32_t debug_draw_count = 0;
-	if (debug_draw_count < 10)
+	if (m_stats.debug_line_count < 20)
 	{
-		osd_printf_info("VVF DEBUG draw_line #%u: RAW (%d,%d)->(%d,%d) SCALED (%d,%d)->(%d,%d) RGB(%u,%u,%u) i=%u\n",
-			debug_draw_count, x1, y1, x2, y2, scaled_x1, scaled_y1, scaled_x2, scaled_y2,
+		attotime elapsed = m_machine.time() - m_start_time;
+		double elapsed_sec = elapsed.as_double();
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		osd_printf_info("%u.%03u VVF draw_line #%u: RAW (%d,%d)->(%d,%d) SCALED (%d,%d)->(%d,%d) RGB(%u,%u,%u) i=%u\n",
+			seconds, milliseconds, debug_draw_count, x1, y1, x2, y2, scaled_x1, scaled_y1, scaled_x2, scaled_y2,
 			color.r(), color.g(), color.b(), intensity);
 		debug_draw_count++;
 	}
@@ -269,18 +284,23 @@ void vvf_write::end_frame()
 	if (!m_recording)
 		return;
 
-	// Debug: Print first 5 frames
-	if (m_frame_count < 5)
+	attotime current_time = m_machine.time();
+	attotime elapsed = current_time - m_start_time;
+	double elapsed_sec = elapsed.as_double();
+
+	if (m_stats.debug_line_count < 20)
 	{
-		osd_printf_info("VVF DEBUG end_frame #%u (wrote %zu bytes this frame)\n",
-			m_frame_count, m_frame_buffer.size());
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		osd_printf_info("%u.%03u VVF end_frame #%u (wrote %zu bytes this frame)\n",
+			seconds, milliseconds, m_frame_count, m_frame_buffer.size());
 	}
 
 	// Per-second stats output (for live monitoring)
-	attotime current_time = m_machine.time();
 	if ((current_time - m_last_stats_print).as_double() >= 1.0)
 	{
-		osd_printf_info("VVF [%.1fs]: ", current_time.as_double());
+		osd_printf_info("%.1fs VVF: ", elapsed_sec);
 		print_color_stats();
 		osd_printf_info("| %u frames, %.2f KB\n", m_frame_count, m_stats.total_bytes / 1024.0);
 		m_last_stats_print = current_time;
@@ -337,8 +357,14 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	// Debug: Print first 20 line_to calls to understand coordinate system
 	if (m_stats.debug_line_count < 20)
 	{
-		osd_printf_info("VVF DEBUG line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
-			m_stats.debug_line_count, m_last_x, m_last_y, x, y,
+		// Get timestamp since recording started
+		attotime elapsed = m_machine.time() - m_start_time;
+		double elapsed_sec = elapsed.as_double();
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
+			seconds, milliseconds, m_stats.debug_line_count, m_last_x, m_last_y, x, y,
 			color.r(), color.g(), color.b(), intensity);
 		m_stats.debug_line_count++;
 	}
@@ -755,6 +781,13 @@ void vvf_write::finalize()
 
 uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 {
+	// Intensity 0 means invisible (beam move) - always use palette entry 0
+	// Don't waste palette slots on invisible colors
+	if (intensity == 0)
+	{
+		return 0;
+	}
+
 	// Look for existing palette entry (color + intensity pair)
 	for (size_t i = 0; i < m_palette.size(); i++)
 	{
