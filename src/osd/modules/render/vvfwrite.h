@@ -34,14 +34,13 @@ constexpr uint32_t VVF_VERSION = 1;
 enum class vvf_command : uint8_t
 {
 	END_FRAME = 0x00,
-	PALETTE_COLOR = 0x50,  // Change color/intensity: palette_index (4-bit) + intensity (4-bit)
-	DELTA_LINE = 0x60,     // Small line: 2 bytes of 4-bit deltas, uses current color
-	LINE_TO = 0x61,        // Large line: x,y (int16) + intensity (1 byte), uses current color
-	LINE_TO_RGB = 0x62,    // Large line with new color: x,y (int16) + RGB (3 bytes) + intensity (1 byte)
-	POINT = 0x20,          // Deprecated, kept for compatibility
-	RGB_COLOR = 0x30,      // Deprecated
-	INTENSITY = 0x40,      // Deprecated
-	DELTA_POINT = 0x70     // Deprecated
+	NEW_COLOR = 0x50,      // Add new color+intensity to palette: R,G,B,intensity (5 bytes total)
+	LINE_TO4 = 0x60,       // ±7 pixels: 2 bytes [cmd][dx:4,dy:4]
+	LINE_TO4_PAL = 0x61,   // ±7 pixels with palette: 3 bytes [cmd][dx:4,dy:4][pal:4,spare:4]
+	LINE_TO8 = 0x62,       // ±127 pixels: 3 bytes [cmd][dx:8][dy:8]
+	LINE_TO8_PAL = 0x63,   // ±127 pixels with palette: 4 bytes [cmd][dx:8][dy:8][pal:4,spare:4]
+	LINE_TO12 = 0x64,      // ±2047 pixels: 4 bytes [cmd][dx:12,dy:12 packed]
+	LINE_TO12_PAL = 0x65   // ±2047 pixels with palette: 5 bytes [cmd][dx:12,dy:12][pal:4,spare:4]
 };
 
 // Audio codec types
@@ -146,19 +145,29 @@ private:
 	uint8_t m_current_intensity;
 	s32 m_last_x, m_last_y;  // Last coordinates for delta encoding
 
-	// Palette optimization (stores RGB colors only, intensity is separate)
+	// Palette (stores color+intensity pairs)
 	struct palette_entry
 	{
 		rgb_t color;
-		uint8_t usage_count;
+		uint8_t intensity;
 	};
 	std::vector<palette_entry> m_palette;
 	uint8_t m_current_palette_index;
 
-	// Delta encoding helpers
-	bool should_use_delta(s32 x1, s32 y1, s32 x2, s32 y2) const;
-	bool should_use_palette(rgb_t color) const;
-	uint8_t find_or_add_palette_color(rgb_t color);
+	// Stats tracking
+	struct {
+		uint32_t line_to4_count;
+		uint32_t line_to4_pal_count;
+		uint32_t line_to8_count;
+		uint32_t line_to8_pal_count;
+		uint32_t line_to12_count;
+		uint32_t line_to12_pal_count;
+		uint32_t new_color_count;
+		uint64_t total_bytes;
+	} m_stats;
+
+	// Helper functions
+	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);
 };
 
 #endif // MAME_OSD_VVFWRITE_H

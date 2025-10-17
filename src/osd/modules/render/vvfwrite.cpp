@@ -46,6 +46,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
+	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
 {
 	// Get actual frame rate from first screen if available
 	screen_device_enumerator screens(machine.root_device());
@@ -179,61 +180,103 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 	// If line doesn't start at our current position, move beam there (intensity=0)
 	if (x1 != m_last_x || y1 != m_last_y)
 	{
-		// Move beam without drawing
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO));
-		int16_t coord = static_cast<int16_t>(x1);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		coord = static_cast<int16_t>(y1);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		m_frame_buffer.push_back(0); // intensity = 0 (invisible)
-		m_last_x = x1;
-		m_last_y = y1;
+		// Recursive call with intensity=0 to move beam without drawing
+		write_line_command(m_last_x, m_last_y, x1, y1, m_current_color, 0);
 	}
 
-	// Now draw from current position to (x2, y2)
+	// Calculate deltas from current position
 	int dx = x2 - m_last_x;
 	int dy = y2 - m_last_y;
-	bool small_delta = (abs(dx) <= 7 && abs(dy) <= 7);
-	bool color_changed = (color != m_current_color);
+	int abs_dx = abs(dx);
+	int abs_dy = abs(dy);
 
-	if (small_delta && !color_changed)
+	// Check if we need to add color+intensity to palette
+	uint8_t palette_index = find_or_add_palette_entry(color, intensity);
+	bool needs_palette_switch = (palette_index != m_current_palette_index);
+
+	// Choose command based on distance
+	if (abs_dx <= 7 && abs_dy <= 7)
 	{
-		// DELTA_LINE: 3 bytes (command + 2 delta bytes)
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::DELTA_LINE));
-
-		// Pack 4-bit deltas
-		int8_t dx_4bit = static_cast<int8_t>(dx) & 0x0F;
-		int8_t dy_4bit = static_cast<int8_t>(dy) & 0x0F;
-		m_frame_buffer.push_back(static_cast<uint8_t>(dx_4bit | (dy_4bit << 4)));
-
-		// Pack intensity (4-bit) - we keep using current color
-		m_frame_buffer.push_back(intensity >> 4); // Scale 0-255 to 0-15
+		// LINE_TO4 or LINE_TO4_PAL
+		if (needs_palette_switch)
+		{
+			// LINE_TO4_PAL: 3 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4_PAL));
+			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
+			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F)); // spare bits available
+			m_stats.line_to4_pal_count++;
+			m_stats.total_bytes += 3;
+		}
+		else
+		{
+			// LINE_TO4: 2 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4));
+			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
+			m_stats.line_to4_count++;
+			m_stats.total_bytes += 2;
+		}
 	}
-	else if (!color_changed)
+	else if (abs_dx <= 127 && abs_dy <= 127)
 	{
-		// LINE_TO: 5 bytes (command + x,y + intensity)
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO));
-		int16_t coord = static_cast<int16_t>(x2);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		coord = static_cast<int16_t>(y2);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		m_frame_buffer.push_back(intensity);
+		// LINE_TO8 or LINE_TO8_PAL
+		if (needs_palette_switch)
+		{
+			// LINE_TO8_PAL: 4 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8_PAL));
+			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F));
+			m_stats.line_to8_pal_count++;
+			m_stats.total_bytes += 4;
+		}
+		else
+		{
+			// LINE_TO8: 3 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8));
+			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
+			m_stats.line_to8_count++;
+			m_stats.total_bytes += 3;
+		}
+	}
+	else if (abs_dx <= 2047 && abs_dy <= 2047)
+	{
+		// LINE_TO12 or LINE_TO12_PAL
+		// Pack 12-bit values: dx (bits 0-11), dy (bits 12-23)
+		uint32_t packed = ((dx & 0x0FFF) | ((dy & 0x0FFF) << 12));
+
+		if (needs_palette_switch)
+		{
+			// LINE_TO12_PAL: 5 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO12_PAL));
+			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F));
+			m_stats.line_to12_pal_count++;
+			m_stats.total_bytes += 5;
+		}
+		else
+		{
+			// LINE_TO12: 4 bytes
+			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO12));
+			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
+			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
+			m_stats.line_to12_count++;
+			m_stats.total_bytes += 4;
+		}
 	}
 	else
 	{
-		// LINE_TO_RGB: 9 bytes (command + x,y + RGB + intensity)
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO_RGB));
-		int16_t coord = static_cast<int16_t>(x2);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		coord = static_cast<int16_t>(y2);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		m_frame_buffer.push_back(color.r());
-		m_frame_buffer.push_back(color.g());
-		m_frame_buffer.push_back(color.b());
-		m_frame_buffer.push_back(intensity);
-
-		// Add to palette for future reference
-		find_or_add_palette_color(color);
+		// Distance too large for delta encoding - this shouldn't happen for vector games
+		// Fall back to absolute positioning with NEW_COLOR
+		osd_printf_warning("VVF: Line too long for delta encoding: dx=%d, dy=%d\n", dx, dy);
+		// We'll clamp to LINE_TO12 range
+		dx = std::max(-2047, std::min(2047, dx));
+		dy = std::max(-2047, std::min(2047, dy));
+		write_line_command(m_last_x, m_last_y, m_last_x + dx, m_last_y + dy, color, intensity);
+		return;
 	}
 
 	// Update state
@@ -241,6 +284,7 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 	m_last_y = y2;
 	m_current_color = color;
 	m_current_intensity = intensity;
+	m_current_palette_index = palette_index;
 }
 
 void vvf_write::write_point_command(s32 x, s32 y, uint8_t intensity)
@@ -354,45 +398,43 @@ void vvf_write::finalize()
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
+	// Print statistics
+	uint32_t total_commands = m_stats.line_to4_count + m_stats.line_to4_pal_count +
+							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
+							  m_stats.line_to12_count + m_stats.line_to12_pal_count;
+
 	osd_printf_info("VVF: Finalized %u frames, duration: %.2f seconds\n",
 		m_frame_count, duration_us / 1000000.0);
+	osd_printf_info("VVF: Total size: %.2f KB (%.2f KB/frame avg)\n",
+		m_stats.total_bytes / 1024.0, (m_stats.total_bytes / 1024.0) / m_frame_count);
+	osd_printf_info("VVF: Command statistics:\n");
+	osd_printf_info("  LINE_TO4:     %6u (%5.1f%%) - 2 bytes each\n",
+		m_stats.line_to4_count, 100.0 * m_stats.line_to4_count / total_commands);
+	osd_printf_info("  LINE_TO4_PAL: %6u (%5.1f%%) - 3 bytes each\n",
+		m_stats.line_to4_pal_count, 100.0 * m_stats.line_to4_pal_count / total_commands);
+	osd_printf_info("  LINE_TO8:     %6u (%5.1f%%) - 3 bytes each\n",
+		m_stats.line_to8_count, 100.0 * m_stats.line_to8_count / total_commands);
+	osd_printf_info("  LINE_TO8_PAL: %6u (%5.1f%%) - 4 bytes each\n",
+		m_stats.line_to8_pal_count, 100.0 * m_stats.line_to8_pal_count / total_commands);
+	osd_printf_info("  LINE_TO12:    %6u (%5.1f%%) - 4 bytes each\n",
+		m_stats.line_to12_count, 100.0 * m_stats.line_to12_count / total_commands);
+	osd_printf_info("  LINE_TO12_PAL:%6u (%5.1f%%) - 5 bytes each\n",
+		m_stats.line_to12_pal_count, 100.0 * m_stats.line_to12_pal_count / total_commands);
+	osd_printf_info("  NEW_COLOR:    %6u - palette entries created\n",
+		m_stats.new_color_count);
 }
 
 //**************************************************************************
-//  DELTA ENCODING AND PALETTE HELPERS
+//  PALETTE HELPER
 //**************************************************************************
 
-bool vvf_write::should_use_delta(s32 x1, s32 y1, s32 x2, s32 y2) const
+uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 {
-	// Use delta encoding if coordinate changes are small (±7 pixels)
-	int dx1 = x1 - m_last_x;
-	int dy1 = y1 - m_last_y;
-	int dx2 = x2 - x1;
-	int dy2 = y2 - y1;
-
-	return (abs(dx1) <= 7 && abs(dy1) <= 7 && abs(dx2) <= 7 && abs(dy2) <= 7);
-}
-
-bool vvf_write::should_use_palette(rgb_t color) const
-{
-	// Use palette if this color is already in the palette
-	// or if we have room to add it
+	// Look for existing palette entry (color + intensity pair)
 	for (size_t i = 0; i < m_palette.size(); i++)
 	{
-		if (m_palette[i].color == color)
-			return true;
-	}
-	return (m_palette.size() < 16);
-}
-
-uint8_t vvf_write::find_or_add_palette_color(rgb_t color)
-{
-	// Look for existing palette entry
-	for (size_t i = 0; i < m_palette.size(); i++)
-	{
-		if (m_palette[i].color == color)
+		if (m_palette[i].color == color && m_palette[i].intensity == intensity)
 		{
-			m_palette[i].usage_count++;
 			return static_cast<uint8_t>(i);
 		}
 	}
@@ -400,14 +442,29 @@ uint8_t vvf_write::find_or_add_palette_color(rgb_t color)
 	// Add new palette entry if we have room
 	if (m_palette.size() < 16)
 	{
+		// Emit NEW_COLOR command
+		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::NEW_COLOR));
+		m_frame_buffer.push_back(color.r());
+		m_frame_buffer.push_back(color.g());
+		m_frame_buffer.push_back(color.b());
+		m_frame_buffer.push_back(intensity);
+		m_stats.new_color_count++;
+		m_stats.total_bytes += 5;
+
 		palette_entry entry;
 		entry.color = color;
-		entry.usage_count = 1;
+		entry.intensity = intensity;
 		m_palette.push_back(entry);
+
+		osd_printf_verbose("VVF: Added palette entry %d: RGB(%d,%d,%d) intensity=%d\n",
+			(int)m_palette.size() - 1, color.r(), color.g(), color.b(), intensity);
+
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
 
-	// Fallback to current palette index if full
-	return m_current_palette_index;
+	// Palette full - find closest match
+	// For now, just use palette entry 0
+	osd_printf_warning("VVF: Palette full (16 entries), reusing entry 0\n");
+	return 0;
 }
 
