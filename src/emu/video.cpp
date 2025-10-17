@@ -1599,11 +1599,11 @@ void video_manager::begin_vector_frame()
 	}
 }
 
-void video_manager::record_vector_line(int x1, int y1, int x2, int y2, rgb_t color, int intensity)
+void video_manager::record_vector_line(int x, int y, rgb_t color, int intensity)
 {
 	if (m_vvf_writer && m_vvf_writer->recording())
 	{
-		m_vvf_writer->draw_line(x1, y1, x2, y2, color, (uint8_t)intensity);
+		m_vvf_writer->line_to(x, y, color, (uint8_t)intensity);
 	}
 }
 
