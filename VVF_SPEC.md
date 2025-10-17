@@ -177,7 +177,7 @@ Byte 3:    palette_index (uint8, 0-255)
 
 ```
 Byte 0:    Command (0x64)
-Byte 1-3:  dx:12, dy:12 (24-bit packed, ±2047 range)
+Byte 1-3:  dx:12, dy:12 (24-bit packed, ±2047 signed range)
 ```
 
 **Behavior:**
