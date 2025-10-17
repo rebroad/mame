@@ -105,7 +105,7 @@ public:
 
 	// Vector drawing interface
 	void begin_frame();
-	void draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity);
+	void draw_line(s32 x, s32 y, rgb_t color, uint8_t intensity);
 	void end_frame();
 
 	// Audio interface
@@ -137,8 +137,8 @@ private:
 	attotime m_start_time;
 	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
-	s32 m_min_offset_x; // Minimum X coordinate offset (to map min..max to 0..2047)
-	s32 m_min_offset_y; // Minimum Y coordinate offset (to map min..max to 0..2047)
+	s32 m_min_x, m_max_x; // MAME coordinate range (for offset and scaling)
+	s32 m_min_y, m_max_y;
 	bool m_scale_optimized; // Flag to ensure scale optimization runs only once
 	bool m_frame_started;   // Flag to track if begin_frame() was called
 
@@ -214,8 +214,6 @@ private:
 		// Coordinates for max distances (to understand what's happening)
 		s32 max_draw_x1, max_draw_y1, max_draw_x2, max_draw_y2;
 		s32 max_move_x1, max_move_y1, max_move_x2, max_move_y2;
-		// Coordinate range tracking
-		s32 min_x, max_x, min_y, max_y;
 		uint32_t debug_line_count;  // For debug output
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
