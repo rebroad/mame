@@ -215,6 +215,7 @@ private:
 		uint32_t debug_line_count;  // For debug output
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
+		uint32_t palette_full_count; // Number of times palette was full
 	} m_stats;
 
 	// Per-second stats (rolling window)
