@@ -49,6 +49,12 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_current_palette_index(0)
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
 	, m_last_stats_print(attotime::zero)
+#ifdef MAME_FFMPEG
+	, m_opus_context(nullptr)
+	, m_opus_frame(nullptr)
+	, m_swr_context(nullptr)
+	, m_opus_frame_size(0)
+#endif
 {
 	// Get actual frame rate from first screen if available
 	screen_device_enumerator screens(machine.root_device());
@@ -69,6 +75,10 @@ vvf_write::~vvf_write()
 {
 	if (m_recording)
 		stop();
+
+#ifdef MAME_FFMPEG
+	cleanup_opus_encoder();
+#endif
 }
 
 void vvf_write::record(std::string_view filename)
@@ -92,6 +102,16 @@ void vvf_write::record(std::string_view filename)
 	m_start_time = m_machine.time();
 	m_frame_index.clear();
 	m_audio_buffer.clear();
+
+#ifdef MAME_FFMPEG
+	// Initialize Opus encoder
+	if (!init_opus_encoder())
+	{
+		osd_printf_warning("VVF: Failed to initialize Opus encoder, audio will not be recorded\n");
+	}
+#else
+	osd_printf_warning("VVF: Compiled without FFmpeg support, audio will not be recorded\n");
+#endif
 
 	osd_printf_info("VVF: Started recording to '%s'\n", std::string(filename).c_str());
 }
@@ -368,8 +388,16 @@ void vvf_write::audio_frame(const s16 *samples, int num_samples)
 	if (!m_recording)
 		return;
 
-	// TODO: For now, we'll skip audio to simplify initial implementation
-	// Will add PCM or Opus encoding in next iteration
+#ifdef MAME_FFMPEG
+	if (m_opus_context)
+	{
+		encode_opus_frame(samples, num_samples);
+	}
+#else
+	// No audio encoding available
+	(void)samples;
+	(void)num_samples;
+#endif
 }
 
 void vvf_write::write_frame_index()
@@ -391,11 +419,43 @@ void vvf_write::finalize()
 	if (!m_file.is_open())
 		return;
 
+#ifdef MAME_FFMPEG
+	// Flush Opus encoder
+	if (m_opus_context)
+	{
+		avcodec_send_frame(m_opus_context, nullptr); // Flush
+		AVPacket *pkt = av_packet_alloc();
+		while (avcodec_receive_packet(m_opus_context, pkt) == 0)
+		{
+			uint32_t size = pkt->size;
+			m_opus_buffer.insert(m_opus_buffer.end(),
+				reinterpret_cast<uint8_t*>(&size),
+				reinterpret_cast<uint8_t*>(&size) + 4);
+			m_opus_buffer.insert(m_opus_buffer.end(),
+				pkt->data,
+				pkt->data + pkt->size);
+			av_packet_unref(pkt);
+		}
+		av_packet_free(&pkt);
+	}
+#endif
+
 	// Save current position (end of frame data)
 	uint64_t frame_index_offset = m_file.tellp();
 
 	// Write frame index
 	write_frame_index();
+
+	// Write Opus audio data
+	uint64_t audio_data_offset = 0;
+#ifdef MAME_FFMPEG
+	if (!m_opus_buffer.empty())
+	{
+		audio_data_offset = m_file.tellp();
+		m_file.write(reinterpret_cast<const char*>(m_opus_buffer.data()), m_opus_buffer.size());
+		osd_printf_info("VVF: Wrote %zu bytes of Opus audio data\n", m_opus_buffer.size());
+	}
+#endif
 
 	// Calculate total duration
 	attotime elapsed = m_machine.time() - m_start_time;
@@ -412,9 +472,13 @@ void vvf_write::finalize()
 	header.total_frames = m_frame_count;
 	header.audio_sample_rate = m_audio_sample_rate;
 	header.audio_channels = m_audio_channels;
-	header.audio_codec = static_cast<uint16_t>(vvf_audio_codec::PCM);
+#ifdef MAME_FFMPEG
+	header.audio_codec = static_cast<uint16_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::NONE);
+#else
+	header.audio_codec = static_cast<uint16_t>(vvf_audio_codec::NONE);
+#endif
 	header.frame_index_offset = frame_index_offset;
-	header.audio_data_offset = 0;
+	header.audio_data_offset = audio_data_offset;
 	header.duration_us = duration_us;
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
@@ -488,4 +552,171 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	osd_printf_warning("VVF: Palette full (256 entries), reusing entry 0\n");
 	return 0;
 }
+
+//**************************************************************************
+//  OPUS AUDIO ENCODING (FFmpeg)
+//**************************************************************************
+
+#ifdef MAME_FFMPEG
+
+bool vvf_write::init_opus_encoder()
+{
+	// Find Opus encoder
+	const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_OPUS);
+	if (!codec)
+	{
+		osd_printf_error("VVF: Opus encoder not found (libopus not available)\n");
+		return false;
+	}
+
+	// Allocate encoder context
+	m_opus_context = avcodec_alloc_context3(codec);
+	if (!m_opus_context)
+	{
+		osd_printf_error("VVF: Failed to allocate Opus encoder context\n");
+		return false;
+	}
+
+	// Configure encoder
+	m_opus_context->sample_rate = m_audio_sample_rate;
+	m_opus_context->ch_layout = (m_audio_channels == 2) ? AV_CHANNEL_LAYOUT_STEREO : AV_CHANNEL_LAYOUT_MONO;
+	m_opus_context->sample_fmt = AV_SAMPLE_FMT_FLT; // Opus uses float samples
+	m_opus_context->bit_rate = 64000; // 64 kbps - good quality for game audio
+
+	// Open encoder
+	if (avcodec_open2(m_opus_context, codec, nullptr) < 0)
+	{
+		osd_printf_error("VVF: Failed to open Opus encoder\n");
+		avcodec_free_context(&m_opus_context);
+		return false;
+	}
+
+	m_opus_frame_size = m_opus_context->frame_size; // Typically 960 samples @ 48kHz
+
+	// Allocate frame
+	m_opus_frame = av_frame_alloc();
+	if (!m_opus_frame)
+	{
+		osd_printf_error("VVF: Failed to allocate Opus frame\n");
+		avcodec_free_context(&m_opus_context);
+		return false;
+	}
+
+	m_opus_frame->nb_samples = m_opus_frame_size;
+	m_opus_frame->format = m_opus_context->sample_fmt;
+	m_opus_frame->ch_layout = m_opus_context->ch_layout;
+
+	if (av_frame_get_buffer(m_opus_frame, 0) < 0)
+	{
+		osd_printf_error("VVF: Failed to allocate Opus frame buffer\n");
+		av_frame_free(&m_opus_frame);
+		avcodec_free_context(&m_opus_context);
+		return false;
+	}
+
+	// Initialize resampler (s16 -> float)
+	if (swr_alloc_set_opts2(&m_swr_context,
+		&m_opus_context->ch_layout, m_opus_context->sample_fmt, m_audio_sample_rate,
+		&m_opus_context->ch_layout, AV_SAMPLE_FMT_S16, m_audio_sample_rate,
+		0, nullptr) < 0)
+	{
+		osd_printf_error("VVF: Failed to allocate resampler\n");
+		av_frame_free(&m_opus_frame);
+		avcodec_free_context(&m_opus_context);
+		return false;
+	}
+
+	if (swr_init(m_swr_context) < 0)
+	{
+		osd_printf_error("VVF: Failed to initialize resampler\n");
+		swr_free(&m_swr_context);
+		av_frame_free(&m_opus_frame);
+		avcodec_free_context(&m_opus_context);
+		return false;
+	}
+
+	osd_printf_info("VVF: Opus encoder initialized: %d Hz, %d ch, frame size: %d samples\n",
+		m_audio_sample_rate, m_audio_channels, m_opus_frame_size);
+
+	return true;
+}
+
+void vvf_write::cleanup_opus_encoder()
+{
+	if (m_swr_context)
+	{
+		swr_free(&m_swr_context);
+		m_swr_context = nullptr;
+	}
+
+	if (m_opus_frame)
+	{
+		av_frame_free(&m_opus_frame);
+		m_opus_frame = nullptr;
+	}
+
+	if (m_opus_context)
+	{
+		avcodec_free_context(&m_opus_context);
+		m_opus_context = nullptr;
+	}
+}
+
+void vvf_write::encode_opus_frame(const s16 *samples, int num_samples)
+{
+	// Buffer incoming samples until we have enough for an Opus frame
+	for (int i = 0; i < num_samples * m_audio_channels; i++)
+	{
+		m_audio_buffer.push_back(samples[i]);
+	}
+
+	// Encode complete Opus frames
+	while (m_audio_buffer.size() >= size_t(m_opus_frame_size * m_audio_channels))
+	{
+		// Convert s16 samples to float using resampler
+		const uint8_t *in_data[1] = { reinterpret_cast<const uint8_t*>(m_audio_buffer.data()) };
+		int in_samples = m_opus_frame_size;
+
+		if (swr_convert(m_swr_context,
+			m_opus_frame->data, m_opus_frame_size,
+			in_data, in_samples) < 0)
+		{
+			osd_printf_error("VVF: Audio resampling failed\n");
+			return;
+		}
+
+		m_opus_frame->pts = m_opus_context->frame_num;
+
+		// Send frame to encoder
+		if (avcodec_send_frame(m_opus_context, m_opus_frame) < 0)
+		{
+			osd_printf_error("VVF: Failed to send frame to Opus encoder\n");
+			return;
+		}
+
+		// Receive encoded packets
+		AVPacket *pkt = av_packet_alloc();
+		while (avcodec_receive_packet(m_opus_context, pkt) == 0)
+		{
+			// Write Opus packet to buffer
+			// Format: [size:4][data:size]
+			uint32_t size = pkt->size;
+			m_opus_buffer.insert(m_opus_buffer.end(),
+				reinterpret_cast<uint8_t*>(&size),
+				reinterpret_cast<uint8_t*>(&size) + 4);
+			m_opus_buffer.insert(m_opus_buffer.end(),
+				pkt->data,
+				pkt->data + pkt->size);
+
+			av_packet_unref(pkt);
+		}
+		av_packet_free(&pkt);
+
+		// Remove processed samples from buffer
+		m_audio_buffer.erase(m_audio_buffer.begin(),
+			m_audio_buffer.begin() + m_opus_frame_size * m_audio_channels);
+	}
+}
+
+#endif // MAME_FFMPEG
 

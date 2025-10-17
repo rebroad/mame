@@ -21,6 +21,14 @@
 #include <fstream>
 #include <map>
 
+#ifdef MAME_FFMPEG
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+}
+#endif
+
 // Forward declarations
 class running_machine;
 
@@ -141,6 +149,15 @@ private:
 	uint16_t m_audio_channels;
 	std::vector<s16> m_audio_buffer;
 
+#ifdef MAME_FFMPEG
+	// Opus encoder (FFmpeg)
+	AVCodecContext *m_opus_context;
+	AVFrame *m_opus_frame;
+	SwrContext *m_swr_context;
+	int m_opus_frame_size; // Samples per Opus frame
+	std::vector<uint8_t> m_opus_buffer; // Compressed Opus packets
+#endif
+
 	// Current state (for delta encoding)
 	rgb_t m_current_color;
 	uint8_t m_current_intensity;
@@ -184,6 +201,13 @@ private:
 
 	// Helper functions
 	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);
+
+#ifdef MAME_FFMPEG
+	// Audio encoding helpers
+	bool init_opus_encoder();
+	void cleanup_opus_encoder();
+	void encode_opus_frame(const s16 *samples, int num_samples);
+#endif
 };
 
 #endif // MAME_OSD_VVFWRITE_H
