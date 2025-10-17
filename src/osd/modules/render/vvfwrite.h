@@ -101,7 +101,6 @@ public:
 	// Vector drawing interface
 	void begin_frame();
 	void draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity);
-	void draw_point(s32 x, s32 y, uint8_t intensity);
 	void end_frame();
 
 	// Audio interface
@@ -113,9 +112,8 @@ private:
 	void write_frame_index();
 	void finalize();
 
-	// Command writing
-	void write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity);
-	void write_point_command(s32 x, s32 y, uint8_t intensity);
+	// Command writing (private helpers)
+	void line_to(s32 x, s32 y, rgb_t color, uint8_t intensity);
 	void write_end_frame_command();
 
 	// Audio encoding

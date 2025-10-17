@@ -253,19 +253,9 @@ void running_machine::start()
 	if (filename[0] != 0)
 	{
 		osd_printf_info("VVF: Starting recording...\n");
-		// Get native vector resolution (for Star Wars, typically 640x480)
-		// We'll use screen resolution as a proxy for vector coordinate system
-		screen_device_enumerator screens(root_device());
-		screen_device *screen = screens.first();
+		// Use standard vector resolution (Star Wars uses 640x480 coordinate system)
 		int width = 640;
 		int height = 480;
-
-		if (screen)
-		{
-			const rectangle &visarea = screen->visible_area();
-			width = visarea.width();
-			height = visarea.height();
-		}
 
 		m_video->begin_vvf_recording(filename, width, height);
 	}

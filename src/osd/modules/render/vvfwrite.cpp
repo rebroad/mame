@@ -47,8 +47,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
-	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
 	, m_last_stats_print(attotime::zero)
+	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
 #ifdef MAME_FFMPEG
 	, m_opus_context(nullptr)
 	, m_opus_frame(nullptr)
@@ -163,15 +163,14 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	if (!m_recording)
 		return;
 
-	write_line_command(x1, y1, x2, y2, color, intensity);
-}
+	// If line doesn't start at our current position, move beam there (intensity=0)
+	if (x1 != m_last_x || y1 != m_last_y)
+	{
+		line_to(x1, y1, m_current_color, 0);
+	}
 
-void vvf_write::draw_point(s32 x, s32 y, uint8_t intensity)
-{
-	if (!m_recording)
-		return;
-
-	write_point_command(x, y, intensity);
+	// Now draw to the endpoint
+	line_to(x2, y2, color, intensity);
 }
 
 void vvf_write::end_frame()
@@ -197,18 +196,11 @@ void vvf_write::end_frame()
 	m_frame_count++;
 }
 
-void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity)
+void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
-	// If line doesn't start at our current position, move beam there (intensity=0)
-	if (x1 != m_last_x || y1 != m_last_y)
-	{
-		// Recursive call with intensity=0 to move beam without drawing
-		write_line_command(m_last_x, m_last_y, x1, y1, m_current_color, 0);
-	}
-
-	// Calculate deltas from current position
-	int dx = x2 - m_last_x;
-	int dy = y2 - m_last_y;
+	// Calculate deltas from current position to target (x, y)
+	int dx = x - m_last_x;
+	int dy = y - m_last_y;
 	int abs_dx = abs(dx);
 	int abs_dy = abs(dy);
 
@@ -310,64 +302,22 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 			// Last segment gets any remainder
 			if (i == num_segments - 1)
 			{
-				target_x = x2;
-				target_y = y2;
+				target_x = x;
+				target_y = y;
 			}
 
 			// Recursive call for each segment (will use LINE_TO12 or smaller)
-			write_line_command(m_last_x, m_last_y, target_x, target_y, color, intensity);
+			line_to(target_x, target_y, color, intensity);
 		}
 		return;
 	}
 
 	// Update state
-	m_last_x = x2;
-	m_last_y = y2;
+	m_last_x = x;
+	m_last_y = y;
 	m_current_color = color;
 	m_current_intensity = intensity;
 	m_current_palette_index = palette_index;
-}
-
-void vvf_write::write_point_command(s32 x, s32 y, uint8_t intensity)
-{
-	// Check if we should use delta encoding
-	bool use_delta = (abs(x - m_last_x) <= 7 && abs(y - m_last_y) <= 7);
-	bool use_palette = should_use_palette(m_current_color);
-
-	if (use_delta && use_palette)
-	{
-		// DELTA_POINT with palette: 2 bytes total
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::DELTA_POINT));
-
-		// Delta coordinates (4-bit signed each)
-		int8_t dx = static_cast<int8_t>(x - m_last_x);
-		int8_t dy = static_cast<int8_t>(y - m_last_y);
-
-		// Pack two 4-bit deltas into one byte
-		m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
-
-		// Update last coordinates
-		m_last_x = x;
-		m_last_y = y;
-	}
-	else
-	{
-		// Full POINT command: 7 bytes total (original format)
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::POINT));
-
-		// Coordinates (signed 16-bit)
-		int16_t coord;
-		coord = static_cast<int16_t>(x);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-		coord = static_cast<int16_t>(y);
-		m_frame_buffer.insert(m_frame_buffer.end(), reinterpret_cast<uint8_t*>(&coord), reinterpret_cast<uint8_t*>(&coord) + 2);
-
-		// Reserved (1 byte)
-		m_frame_buffer.push_back(0);
-
-		// Intensity (1 byte)
-		m_frame_buffer.push_back(intensity);
-	}
 }
 
 void vvf_write::write_end_frame_command()
@@ -579,7 +529,10 @@ bool vvf_write::init_opus_encoder()
 
 	// Configure encoder
 	m_opus_context->sample_rate = m_audio_sample_rate;
-	m_opus_context->ch_layout = (m_audio_channels == 2) ? AV_CHANNEL_LAYOUT_STEREO : AV_CHANNEL_LAYOUT_MONO;
+	if (m_audio_channels == 2)
+		av_channel_layout_default(&m_opus_context->ch_layout, AV_CHANNEL_LAYOUT_STEREO);
+	else
+		av_channel_layout_default(&m_opus_context->ch_layout, AV_CHANNEL_LAYOUT_MONO);
 	m_opus_context->sample_fmt = AV_SAMPLE_FMT_FLT; // Opus uses float samples
 	m_opus_context->bit_rate = 64000; // 64 kbps - good quality for game audio
 
@@ -615,9 +568,11 @@ bool vvf_write::init_opus_encoder()
 	}
 
 	// Initialize resampler (s16 -> float)
+	AVChannelLayout out_ch_layout = m_opus_context->ch_layout;
+	AVChannelLayout in_ch_layout = m_opus_context->ch_layout;
 	if (swr_alloc_set_opts2(&m_swr_context,
-		&m_opus_context->ch_layout, m_opus_context->sample_fmt, m_audio_sample_rate,
-		&m_opus_context->ch_layout, AV_SAMPLE_FMT_S16, m_audio_sample_rate,
+		&out_ch_layout, m_opus_context->sample_fmt, m_audio_sample_rate,
+		&in_ch_layout, AV_SAMPLE_FMT_S16, m_audio_sample_rate,
 		0, nullptr) < 0)
 	{
 		osd_printf_error("VVF: Failed to allocate resampler\n");
