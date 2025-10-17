@@ -163,26 +163,42 @@ void vvf_write::begin_frame()
 	if (!m_recording)
 		return;
 
-	// Debug: Print first 5 frames
+	// Debug: Print first 5 frames with stats from previous frame
+	if (m_frame_count < 5 && m_frame_count > 0)
+	{
+		osd_printf_info("VVF DEBUG Frame #%u stats: %u draw_line calls, %u line_to calls, %zu bytes written\n",
+			m_frame_count - 1, s_frame_draw_calls, s_frame_line_to_calls, m_frame_buffer.size());
+	}
+
 	if (m_frame_count < 5)
 	{
-		osd_printf_verbose("VVF DEBUG begin_frame #%u\n", m_frame_count);
+		osd_printf_info("VVF DEBUG begin_frame #%u\n", m_frame_count);
 	}
+
+	// Reset per-frame counters
+	s_frame_draw_calls = 0;
+	s_frame_line_to_calls = 0;
 
 	// Clear frame buffer for new frame
 	m_frame_buffer.clear();
 }
+
+// Static counters for frame-level debug tracking
+static uint32_t s_frame_draw_calls = 0;
+static uint32_t s_frame_line_to_calls = 0;
 
 void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity)
 {
 	if (!m_recording)
 		return;
 
+	s_frame_draw_calls++;
+
 	// Debug: Print first 10 draw_line calls
 	static uint32_t debug_draw_count = 0;
 	if (debug_draw_count < 10)
 	{
-		osd_printf_verbose("VVF DEBUG draw_line #%u: (%d,%d) -> (%d,%d) RGB(%u,%u,%u) intensity=%u | current_pos=(%d,%d)\n",
+		osd_printf_info("VVF DEBUG draw_line #%u: (%d,%d) -> (%d,%d) RGB(%u,%u,%u) intensity=%u | current_pos=(%d,%d)\n",
 			debug_draw_count, x1, y1, x2, y2, color.r(), color.g(), color.b(), intensity,
 			m_last_x, m_last_y);
 		debug_draw_count++;
@@ -206,7 +222,7 @@ void vvf_write::end_frame()
 	// Debug: Print first 5 frames
 	if (m_frame_count < 5)
 	{
-		osd_printf_verbose("VVF DEBUG end_frame #%u (wrote %zu bytes this frame)\n",
+		osd_printf_info("VVF DEBUG end_frame #%u (wrote %zu bytes this frame)\n",
 			m_frame_count, m_frame_buffer.size());
 	}
 
@@ -230,6 +246,8 @@ void vvf_write::end_frame()
 
 void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
+	s_frame_line_to_calls++;
+
 	// Track coordinate ranges
 	if (x < m_stats.min_x) m_stats.min_x = x;
 	if (x > m_stats.max_x) m_stats.max_x = x;
@@ -239,7 +257,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	// Debug: Print first 20 line_to calls to understand coordinate system
 	if (m_stats.debug_line_count < 20)
 	{
-		osd_printf_verbose("VVF DEBUG line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
+		osd_printf_info("VVF DEBUG line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
 			m_stats.debug_line_count, m_last_x, m_last_y, x, y,
 			color.r(), color.g(), color.b(), intensity);
 		m_stats.debug_line_count++;
@@ -548,9 +566,13 @@ void vvf_write::finalize()
 							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
 							  m_stats.line_to12_count + m_stats.line_to12_pal_count;
 
-	osd_printf_info("VVF: %u frames, %.2fs, %.2f KB (%.2f KB/frame), %u palette entries\n",
-		m_frame_count, duration_us / 1000000.0, m_stats.total_bytes / 1024.0,
-		(m_stats.total_bytes / 1024.0) / m_frame_count, m_stats.new_color_count);
+	// Get actual file size
+	uint64_t actual_file_size = m_file.tellp();
+
+	osd_printf_info("VVF: %u frames, %.2fs duration\n", m_frame_count, duration_us / 1000000.0);
+	osd_printf_info("VVF: File size: %.2f MB (%.2f KB/frame) | Commands: %.2f MB | Palette: %u entries\n",
+		actual_file_size / 1048576.0, actual_file_size / 1024.0 / m_frame_count,
+		m_stats.total_bytes / 1048576.0, m_stats.new_color_count);
 
 	// Coordinate system info
 	if (m_stats.min_x != INT32_MAX)
@@ -560,7 +582,8 @@ void vvf_write::finalize()
 			m_stats.min_y, m_stats.max_y, m_stats.max_y - m_stats.min_y);
 	}
 
-	// Commands (compact single line)
+	// Commands summary
+	osd_printf_info("VVF: Total commands: %u (%.0f/frame avg)\n", total_commands, (double)total_commands / m_frame_count);
 	osd_printf_info("VVF: Commands: LINE_TO4=%u(%.1f%%) LINE_TO4_PAL=%u(%.1f%%) LINE_TO8=%u(%.1f%%) LINE_TO8_PAL=%u(%.1f%%) LINE_TO12=%u(%.1f%%) LINE_TO12_PAL=%u(%.1f%%)\n",
 		m_stats.line_to4_count, 100.0 * m_stats.line_to4_count / total_commands,
 		m_stats.line_to4_pal_count, 100.0 * m_stats.line_to4_pal_count / total_commands,
