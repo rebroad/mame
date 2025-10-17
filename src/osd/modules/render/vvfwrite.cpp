@@ -43,14 +43,14 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_audio_sample_rate(48000)
 	, m_audio_channels(2)
-	, m_current_color(rgb_t::white())
-	, m_current_intensity(255)
 #ifdef MAME_FFMPEG
 	, m_opus_context(nullptr)
 	, m_opus_frame(nullptr)
 	, m_swr_context(nullptr)
 	, m_opus_frame_size(0)
 #endif
+	, m_current_color(rgb_t::white())
+	, m_current_intensity(255)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
@@ -58,7 +58,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
 		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
 		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
-		0}  // draws_other_colors
+		0,  // draws_other_colors
+		0, 0, 0, 0,  // max_draw coords
+		0, 0, 0, 0}  // max_move coords
 	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
@@ -221,7 +223,13 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			if (distance < m_stats.min_move_distance)
 				m_stats.min_move_distance = distance;
 			if (distance > m_stats.max_move_distance)
+			{
 				m_stats.max_move_distance = distance;
+				m_stats.max_move_x1 = m_last_x;
+				m_stats.max_move_y1 = m_last_y;
+				m_stats.max_move_x2 = x;
+				m_stats.max_move_y2 = y;
+			}
 		}
 		else
 		{
@@ -230,7 +238,13 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			if (distance < m_stats.min_draw_distance)
 				m_stats.min_draw_distance = distance;
 			if (distance > m_stats.max_draw_distance)
+			{
 				m_stats.max_draw_distance = distance;
+				m_stats.max_draw_x1 = m_last_x;
+				m_stats.max_draw_y1 = m_last_y;
+				m_stats.max_draw_x2 = x;
+				m_stats.max_draw_y2 = y;
+			}
 
 			// Track draws per color (ignoring intensity) - classify into basic colors
 			uint8_t r = color.r();
@@ -494,64 +508,53 @@ void vvf_write::finalize()
 							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
 							  m_stats.line_to12_count + m_stats.line_to12_pal_count;
 
-	osd_printf_info("VVF: Finalized %u frames, duration: %.2f seconds\n",
-		m_frame_count, duration_us / 1000000.0);
-	osd_printf_info("VVF: Total size: %.2f KB (%.2f KB/frame avg)\n",
-		m_stats.total_bytes / 1024.0, (m_stats.total_bytes / 1024.0) / m_frame_count);
-	osd_printf_info("VVF: Command statistics:\n");
-	osd_printf_info("  LINE_TO4:     %6u (%5.1f%%) - 2 bytes each\n",
-		m_stats.line_to4_count, 100.0 * m_stats.line_to4_count / total_commands);
-	osd_printf_info("  LINE_TO4_PAL: %6u (%5.1f%%) - 3 bytes each\n",
-		m_stats.line_to4_pal_count, 100.0 * m_stats.line_to4_pal_count / total_commands);
-	osd_printf_info("  LINE_TO8:     %6u (%5.1f%%) - 3 bytes each\n",
-		m_stats.line_to8_count, 100.0 * m_stats.line_to8_count / total_commands);
-	osd_printf_info("  LINE_TO8_PAL: %6u (%5.1f%%) - 4 bytes each\n",
-		m_stats.line_to8_pal_count, 100.0 * m_stats.line_to8_pal_count / total_commands);
-	osd_printf_info("  LINE_TO12:    %6u (%5.1f%%) - 4 bytes each\n",
-		m_stats.line_to12_count, 100.0 * m_stats.line_to12_count / total_commands);
-	osd_printf_info("  LINE_TO12_PAL:%6u (%5.1f%%) - 5 bytes each\n",
+	osd_printf_info("VVF: %u frames, %.2fs, %.2f KB (%.2f KB/frame), %u palette entries\n",
+		m_frame_count, duration_us / 1000000.0, m_stats.total_bytes / 1024.0,
+		(m_stats.total_bytes / 1024.0) / m_frame_count, m_stats.new_color_count);
+
+	// Commands (compact single line)
+	osd_printf_info("VVF: Commands: LINE_TO4=%u(%.1f%%) LINE_TO4_PAL=%u(%.1f%%) LINE_TO8=%u(%.1f%%) LINE_TO8_PAL=%u(%.1f%%) LINE_TO12=%u(%.1f%%) LINE_TO12_PAL=%u(%.1f%%)\n",
+		m_stats.line_to4_count, 100.0 * m_stats.line_to4_count / total_commands,
+		m_stats.line_to4_pal_count, 100.0 * m_stats.line_to4_pal_count / total_commands,
+		m_stats.line_to8_count, 100.0 * m_stats.line_to8_count / total_commands,
+		m_stats.line_to8_pal_count, 100.0 * m_stats.line_to8_pal_count / total_commands,
+		m_stats.line_to12_count, 100.0 * m_stats.line_to12_count / total_commands,
 		m_stats.line_to12_pal_count, 100.0 * m_stats.line_to12_pal_count / total_commands);
-	osd_printf_info("  NEW_COLOR:    %6u - palette entries created\n",
-		m_stats.new_color_count);
-	osd_printf_info("VVF: Movement statistics:\n");
+
+	// Movement stats
 	uint32_t total_line_to_calls = m_stats.beam_moves_count + m_stats.beam_draws_count;
-	osd_printf_info("  Beam moves:   %6u (%5.1f%% of all line_to calls)\n",
-		m_stats.beam_moves_count, 100.0 * m_stats.beam_moves_count / total_line_to_calls);
-	osd_printf_info("  Beam draws:   %6u (%5.1f%% of all line_to calls)\n",
+	osd_printf_info("VVF: Moves=%u(%.1f%%) Draws=%u(%.1f%%)\n",
+		m_stats.beam_moves_count, 100.0 * m_stats.beam_moves_count / total_line_to_calls,
 		m_stats.beam_draws_count, 100.0 * m_stats.beam_draws_count / total_line_to_calls);
+
+	// Distance stats with coordinates
 	if (m_stats.min_draw_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("  Draw distance: %8.2f - %8.2f pixels (visible lines)\n",
-			m_stats.min_draw_distance, m_stats.max_draw_distance);
+		osd_printf_info("VVF: Draw distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d)\n",
+			m_stats.min_draw_distance, m_stats.max_draw_distance,
+			m_stats.max_draw_x1, m_stats.max_draw_y1, m_stats.max_draw_x2, m_stats.max_draw_y2);
 	}
 	if (m_stats.min_move_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("  Move distance: %8.2f - %8.2f pixels (beam moves)\n",
-			m_stats.min_move_distance, m_stats.max_move_distance);
+		osd_printf_info("VVF: Move distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d)\n",
+			m_stats.min_move_distance, m_stats.max_move_distance,
+			m_stats.max_move_x1, m_stats.max_move_y1, m_stats.max_move_x2, m_stats.max_move_y2);
 	}
 
-	// Print color usage
+	// Color usage (compact)
 	if (m_stats.beam_draws_count > 0)
 	{
-		osd_printf_info("VVF: Color usage (ignoring intensity):\n");
-		const char *color_names[COLOR_COUNT] = {"Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "White"};
-
+		const char *color_names[COLOR_COUNT] = {"R", "G", "B", "Y", "C", "M", "W"};
+		osd_printf_info("VVF: Colors: ");
 		for (int i = 0; i < COLOR_COUNT; i++)
 		{
 			if (m_stats.draws_per_color[i] > 0)
-			{
-				osd_printf_info("  %-8s: %6u draws (%5.1f%%)\n",
-					color_names[i], m_stats.draws_per_color[i],
+				osd_printf_info("%s=%.1f%% ", color_names[i],
 					100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
-			}
 		}
-
 		if (m_stats.draws_other_colors > 0)
-		{
-			osd_printf_info("  Other   : %6u draws (%5.1f%%)\n",
-				m_stats.draws_other_colors,
-				100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
-		}
+			osd_printf_info("Other=%.1f%%", 100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
+		osd_printf_info("\n");
 	}
 }
 

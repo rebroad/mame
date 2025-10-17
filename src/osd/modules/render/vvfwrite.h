@@ -200,6 +200,9 @@ private:
 		double max_move_distance;       // Maximum distance for beam moves (intensity = 0)
 		uint32_t draws_per_color[COLOR_COUNT]; // [red, green, blue, yellow, cyan, magenta, white]
 		uint32_t draws_other_colors;    // Count of non-basic colors
+		// Coordinates for max distances (to understand what's happening)
+		s32 max_draw_x1, max_draw_y1, max_draw_x2, max_draw_y2;
+		s32 max_move_x1, max_move_y1, max_move_x2, max_move_y2;
 	} m_stats;
 
 	// Per-second stats (rolling window)
