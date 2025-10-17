@@ -220,7 +220,7 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	s_frame_draw_calls++;
 
 	// MAME's vector coordinates use 16.16 fixed-point (65536 units per logical pixel)
-	// Scale using independent X/Y factors to maximize 12-bit precision (0-4095 unsigned)
+	// Scale using independent X/Y factors to maximize 12-bit precision (±2047 for deltas)
 	s32 scaled_x1 = x1 / m_x_scale;
 	s32 scaled_y1 = y1 / m_y_scale;
 	s32 scaled_x2 = x2 / m_x_scale;
@@ -247,8 +247,8 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	if (error_y2 > m_stats.max_error_y) m_stats.max_error_y = error_y2;
 
 	// Check for overflow and rescale if needed
-	// Coordinates are never negative in vector games, so use full 12-bit unsigned range (0-4095)
-	const s32 MAX_COORD = 4095;
+	// Use ±2047 range for 12-bit signed deltas (deltas can be negative!)
+	const s32 MAX_COORD = 2047;
 	if (scaled_x1 > MAX_COORD || scaled_x1 < 0 ||
 		scaled_x2 > MAX_COORD || scaled_x2 < 0 ||
 		scaled_y1 > MAX_COORD || scaled_y1 < 0 ||
@@ -343,8 +343,8 @@ void vvf_write::end_frame()
 		m_stats.max_x > 0 &&
 		m_stats.max_y > 0)
 	{
-		// Target: use 100% of 12-bit unsigned range (0-4095) for maximum precision
-		const s32 TARGET_RANGE = 4095;
+		// Target: use 100% of ±2047 range for maximum delta precision
+		const s32 TARGET_RANGE = 2047;
 
 		m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
 		osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
@@ -518,9 +518,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_stats.total_bytes += 3;
 		}
 	}
-	else if (abs_dx <= 4095 && abs_dy <= 4095)
+	else if (abs_dx <= 2047 && abs_dy <= 2047)
 	{
-		// LINE_TO12 or LINE_TO12_PAL (12-bit unsigned: 0-4095)
+		// LINE_TO12 or LINE_TO12_PAL (12-bit signed: ±2047)
 		// Pack 12-bit values: dx (bits 0-11), dy (bits 12-23)
 		uint32_t packed = ((dx & 0x0FFF) | ((dy & 0x0FFF) << 12));
 
@@ -551,7 +551,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		// Distance too large for LINE_TO12 - split into multiple segments
 		// Calculate number of segments needed (Pythagoras)
 		double distance = sqrt(double(dx) * dx + double(dy) * dy);
-		int num_segments = int(ceil(distance / 4095.0));
+		int num_segments = int(ceil(distance / 2047.0));
 
 		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d, dist=%.1f) into %d segments\n",
 			dx, dy, distance, num_segments);
@@ -758,7 +758,7 @@ void vvf_write::finalize()
 		osd_printf_info("VVF: Native: %d×%d (aspect %.2f) | VVF coords: %d×%d | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
 			native_w, native_h, (double)native_w / native_h,
 			vvf_w, vvf_h, m_x_scale, m_y_scale,
-			100.0 * std::max(vvf_w, vvf_h) / 4095.0);
+			100.0 * std::max(vvf_w, vvf_h) / 2047.0);
 
 		if (m_stats.x_rescale_count > 0 || m_stats.y_rescale_count > 0)
 		{
