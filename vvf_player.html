@@ -317,7 +317,7 @@
             let currentColor = {r: 255, g: 255, b: 255};
             let currentIntensity = 255;
             let lastX = 0, lastY = 0;
-            const palette = []; // Array of {r, g, b, intensity} - up to 16 entries
+            const palette = []; // Array of {r, g, b, intensity} - up to 256 entries
             let currentPaletteIndex = 0;
 
             for (let f = 0; f < header.totalFrames && offset < header.frameIndexOffset; f++) {
@@ -356,7 +356,7 @@
                                 cmd === 0x63 || // LINE_TO8_PAL
                                 cmd === 0x65    // LINE_TO12_PAL
                             ) {
-                                paletteIndex = view.getUint8(offset) & 0x0F;
+                                paletteIndex = view.getUint8(offset); // 8-bit palette index (256 entries)
                                 offset++;
                                 if (paletteIndex < palette.length) {
                                     currentPaletteIndex = paletteIndex;

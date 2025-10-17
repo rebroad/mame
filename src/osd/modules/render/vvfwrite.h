@@ -37,11 +37,11 @@ enum class vvf_command : uint8_t
 	END_FRAME = 0x00,
 	NEW_COLOR = 0x50,      // Add new color+intensity to palette: R,G,B,intensity (5 bytes total)
 	LINE_TO4 = 0x60,       // ±7 pixels: 2 bytes [cmd][dx:4,dy:4]
-	LINE_TO4_PAL = 0x61,   // ±7 pixels with palette: 3 bytes [cmd][dx:4,dy:4][pal:4,spare:4]
+	LINE_TO4_PAL = 0x61,   // ±7 pixels with palette: 3 bytes [cmd][dx:4,dy:4][pal:8]
 	LINE_TO8 = 0x62,       // ±127 pixels: 3 bytes [cmd][dx:8][dy:8]
-	LINE_TO8_PAL = 0x63,   // ±127 pixels with palette: 4 bytes [cmd][dx:8][dy:8][pal:4,spare:4]
+	LINE_TO8_PAL = 0x63,   // ±127 pixels with palette: 4 bytes [cmd][dx:8][dy:8][pal:8]
 	LINE_TO12 = 0x64,      // ±2047 pixels: 4 bytes [cmd][dx:12,dy:12 packed]
-	LINE_TO12_PAL = 0x65   // ±2047 pixels with palette: 5 bytes [cmd][dx:12,dy:12][pal:4,spare:4]
+	LINE_TO12_PAL = 0x65   // ±2047 pixels with palette: 5 bytes [cmd][dx:12,dy:12][pal:8]
 };
 
 // Audio codec types
