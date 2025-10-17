@@ -60,7 +60,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
 		0,  // draws_other_colors
 		0, 0, 0, 0,  // max_draw coords
-		0, 0, 0, 0}  // max_move coords
+		0, 0, 0, 0,  // max_move coords
+		INT32_MAX, INT32_MIN, INT32_MAX, INT32_MIN,  // min_x, max_x, min_y, max_y
+		0}  // debug_line_count
 	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
@@ -161,6 +163,12 @@ void vvf_write::begin_frame()
 	if (!m_recording)
 		return;
 
+	// Debug: Print first 5 frames
+	if (m_frame_count < 5)
+	{
+		osd_printf_verbose("VVF DEBUG begin_frame #%u\n", m_frame_count);
+	}
+
 	// Clear frame buffer for new frame
 	m_frame_buffer.clear();
 }
@@ -169,6 +177,16 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 {
 	if (!m_recording)
 		return;
+
+	// Debug: Print first 10 draw_line calls
+	static uint32_t debug_draw_count = 0;
+	if (debug_draw_count < 10)
+	{
+		osd_printf_verbose("VVF DEBUG draw_line #%u: (%d,%d) -> (%d,%d) RGB(%u,%u,%u) intensity=%u | current_pos=(%d,%d)\n",
+			debug_draw_count, x1, y1, x2, y2, color.r(), color.g(), color.b(), intensity,
+			m_last_x, m_last_y);
+		debug_draw_count++;
+	}
 
 	// If line doesn't start at our current position, move beam there (intensity=0)
 	if (x1 != m_last_x || y1 != m_last_y)
@@ -184,6 +202,13 @@ void vvf_write::end_frame()
 {
 	if (!m_recording)
 		return;
+
+	// Debug: Print first 5 frames
+	if (m_frame_count < 5)
+	{
+		osd_printf_verbose("VVF DEBUG end_frame #%u (wrote %zu bytes this frame)\n",
+			m_frame_count, m_frame_buffer.size());
+	}
 
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
@@ -205,6 +230,21 @@ void vvf_write::end_frame()
 
 void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
+	// Track coordinate ranges
+	if (x < m_stats.min_x) m_stats.min_x = x;
+	if (x > m_stats.max_x) m_stats.max_x = x;
+	if (y < m_stats.min_y) m_stats.min_y = y;
+	if (y > m_stats.max_y) m_stats.max_y = y;
+
+	// Debug: Print first 20 line_to calls to understand coordinate system
+	if (m_stats.debug_line_count < 20)
+	{
+		osd_printf_verbose("VVF DEBUG line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
+			m_stats.debug_line_count, m_last_x, m_last_y, x, y,
+			color.r(), color.g(), color.b(), intensity);
+		m_stats.debug_line_count++;
+	}
+
 	// Calculate deltas from current position to target (x, y)
 	int dx = x - m_last_x;
 	int dy = y - m_last_y;
@@ -511,6 +551,14 @@ void vvf_write::finalize()
 	osd_printf_info("VVF: %u frames, %.2fs, %.2f KB (%.2f KB/frame), %u palette entries\n",
 		m_frame_count, duration_us / 1000000.0, m_stats.total_bytes / 1024.0,
 		(m_stats.total_bytes / 1024.0) / m_frame_count, m_stats.new_color_count);
+
+	// Coordinate system info
+	if (m_stats.min_x != INT32_MAX)
+	{
+		osd_printf_info("VVF: Coordinate range: X=[%d..%d] (span=%d) Y=[%d..%d] (span=%d)\n",
+			m_stats.min_x, m_stats.max_x, m_stats.max_x - m_stats.min_x,
+			m_stats.min_y, m_stats.max_y, m_stats.max_y - m_stats.min_y);
+	}
 
 	// Commands (compact single line)
 	osd_printf_info("VVF: Commands: LINE_TO4=%u(%.1f%%) LINE_TO4_PAL=%u(%.1f%%) LINE_TO8=%u(%.1f%%) LINE_TO8_PAL=%u(%.1f%%) LINE_TO12=%u(%.1f%%) LINE_TO12_PAL=%u(%.1f%%)\n",

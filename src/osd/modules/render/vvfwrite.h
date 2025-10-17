@@ -203,6 +203,9 @@ private:
 		// Coordinates for max distances (to understand what's happening)
 		s32 max_draw_x1, max_draw_y1, max_draw_x2, max_draw_y2;
 		s32 max_move_x1, max_move_y1, max_move_x2, max_move_y2;
+		// Coordinate range tracking
+		s32 min_x, max_x, min_y, max_y;
+		uint32_t debug_line_count;  // For debug output
 	} m_stats;
 
 	// Per-second stats (rolling window)
