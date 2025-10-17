@@ -45,21 +45,21 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_audio_channels(2)
 	, m_current_color(rgb_t::white())
 	, m_current_intensity(255)
-	, m_last_x(0)
-	, m_last_y(0)
-	, m_current_palette_index(0)
-	, m_last_stats_print(attotime::zero)
-	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
-		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
-		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
-		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
-		0}  // draws_other_colors
 #ifdef MAME_FFMPEG
 	, m_opus_context(nullptr)
 	, m_opus_frame(nullptr)
 	, m_swr_context(nullptr)
 	, m_opus_frame_size(0)
 #endif
+	, m_last_x(0)
+	, m_last_y(0)
+	, m_current_palette_index(0)
+	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
+		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
+		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
+		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
+		0}  // draws_other_colors
+	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
 	screen_device_enumerator screens(machine.root_device());
@@ -625,10 +625,8 @@ bool vvf_write::init_opus_encoder()
 
 	// Configure encoder
 	m_opus_context->sample_rate = m_audio_sample_rate;
-	if (m_audio_channels == 2)
-		av_channel_layout_default(&m_opus_context->ch_layout, AV_CHANNEL_LAYOUT_STEREO);
-	else
-		av_channel_layout_default(&m_opus_context->ch_layout, AV_CHANNEL_LAYOUT_MONO);
+	// Set channel layout: 2 for stereo, 1 for mono
+	av_channel_layout_default(&m_opus_context->ch_layout, m_audio_channels);
 	m_opus_context->sample_fmt = AV_SAMPLE_FMT_FLT; // Opus uses float samples
 	m_opus_context->bit_rate = 64000; // 64 kbps - good quality for game audio
 
