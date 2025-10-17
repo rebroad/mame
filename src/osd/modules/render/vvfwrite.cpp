@@ -42,8 +42,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_frame_rate(60000)  // Default 60 Hz
 	, m_frame_count(0)
 	, m_start_time(attotime::zero)
-	, m_x_scale(8192)  // Start with 8192, will optimize after first frame
+	, m_x_scale(8192)  // Start with 8192, will optimize after first frame with data
 	, m_y_scale(8192)
+	, m_scale_optimized(false)
 	, m_audio_sample_rate(48000)
 	, m_audio_channels(2)
 #ifdef MAME_FFMPEG
@@ -306,27 +307,39 @@ void vvf_write::end_frame()
 		m_last_stats_print = current_time;
 	}
 
+	// Skip empty frames (no drawing happened yet)
+	// Check if we've had any drawing by seeing if we have data beyond just END_FRAME markers
+	size_t frame_start_size = m_frame_count * 5; // Each previous frame's END_FRAME = 5 bytes
+	bool frame_has_content = (m_frame_buffer.size() > frame_start_size);
+
+	if (!frame_has_content && m_frame_count > 0)
+	{
+		// Empty frame - don't write END_FRAME, don't increment count
+		return;
+	}
+
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
 
-	// After first frame, compute optimal X/Y scales to maximize 12-bit precision
-	if (m_frame_count == 0 && m_stats.min_x != INT32_MAX)
+	// Optimize X/Y scales after first frame with actual drawing data
+	// Do this once to maximize 12-bit coordinate precision
+	if (!m_scale_optimized &&
+		m_stats.min_x != INT32_MAX &&
+		m_stats.max_x > 0 &&
+		m_stats.max_y > 0)
 	{
 		// Target: use 100% of ±2047 range for maximum precision
 		const s32 TARGET_RANGE = 2047;
 
-		if (m_stats.max_x > 0)
-		{
-			m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
-			osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
-				m_x_scale, m_stats.max_x, m_stats.max_x / m_x_scale);
-		}
-		if (m_stats.max_y > 0)
-		{
-			m_y_scale = (m_stats.max_y + TARGET_RANGE) / TARGET_RANGE;
-			osd_printf_info("VVF: Optimized Y scale: %d (max Y %d -> %d)\n",
-				m_y_scale, m_stats.max_y, m_stats.max_y / m_y_scale);
-		}
+		m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
+		osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
+			m_x_scale, m_stats.max_x, m_stats.max_x / m_x_scale);
+
+		m_y_scale = (m_stats.max_y + TARGET_RANGE) / TARGET_RANGE;
+		osd_printf_info("VVF: Optimized Y scale: %d (max Y %d -> %d)\n",
+			m_y_scale, m_stats.max_y, m_stats.max_y / m_y_scale);
+
+		m_scale_optimized = true;  // Only optimize once
 	}
 
 	// Record frame index entry (every 30th frame for seeking)
