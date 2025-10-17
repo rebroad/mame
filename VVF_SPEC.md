@@ -11,35 +11,54 @@ VVF is a highly optimized binary format for recording vector graphics from arcad
 ## File Structure
 
 ```
-[Header: 64 bytes]
+[Header: 56 bytes]
 [Frame Data: variable size]
 [Frame Index: variable size]
+[Audio Data: variable size, Opus compressed]
 ```
 
 ---
 
-## Header (64 bytes)
+## Header (56 bytes)
 
 ```c
 struct vvf_header {
     uint32 magic;                 // 0x31465656 ("VVF1")
     uint32 version;               // 1
-    uint32 width;                 // Native width (e.g., 640 for Star Wars)
-    uint32 height;                // Native height (e.g., 480 for Star Wars)
+    uint16 native_width;          // Original game width in pixels (e.g., 252 for Star Wars)
+    uint16 native_height;         // Original game height in pixels (e.g., 292 for Star Wars)
+    uint16 vvf_width;             // VVF coordinate range used (e.g., 2047)
+    uint16 vvf_height;            // VVF coordinate range used (e.g., 2047)
     uint32 frame_rate;            // Frame rate × 1000 (e.g., 60000 = 60 Hz)
-    uint32 total_frames;          // Total frame count
+    uint32 total_frames;          // Total frames (max: 4.3B = 828 days @ 60fps)
     uint32 audio_sample_rate;     // Audio sample rate (e.g., 48000)
-    uint16 audio_channels;        // Audio channels (1 or 2)
-    uint16 audio_codec;           // Audio codec: 0=NONE, 1=OPUS, 2=PCM
+    uint8  audio_channels;        // Audio channels (1 or 2)
+    uint8  audio_codec;           // Audio codec: 0=NONE, 1=OPUS
+    uint16 reserved1;             // Reserved
     uint64 frame_index_offset;    // File offset to frame index
-    uint64 audio_data_offset;     // Reserved (0 for interleaved audio)
+    uint64 audio_data_offset;     // File offset to audio data (0 if none)
     uint64 duration_us;           // Total duration in microseconds
-    uint8  reserved[6];           // Padding to 64 bytes
+    uint32 reserved2;             // Reserved
 };
 ```
 
-**Native Resolution:**
-The coordinate system used by the vector game hardware (not display pixels). For Star Wars, this is 1024×1024 (10-bit coordinates), though the visible area is typically 640×480. The player scales this to any display resolution.
+**Coordinate System & Aspect Ratio:**
+
+VVF uses **adaptive precision scaling** to maximize the 12-bit coordinate range (±2047):
+- **native_width/native_height:** Original game dimensions in logical pixels (defines aspect ratio)
+- **vvf_width/vvf_height:** Coordinate range used in VVF file (maximizes 12-bit precision)
+- **Display aspect ratio:** `native_width / native_height`
+
+**Example (Star Wars):**
+- MAME internal coords: X=0..16,515,200, Y=0..19,179,200 (16.16 fixed-point)
+- Native dimensions: 252×292 pixels (aspect 0.86)
+- VVF coords: 2047×2340 (fills ~50-57% of ±2047 range)
+- Player: Maps VVF 2047×2340 → native 252×292 → display, maintaining 0.86 aspect
+
+**Why two dimensions?**
+- **native_width/height:** Preserves aspect ratio (252/292 = 0.86)
+- **vvf_width/height:** Shows actual coordinate range used in file
+- Player scales: `displayX = (vvfX / vvf_width) × native_width × displayScale`
 
 ---
 
