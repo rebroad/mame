@@ -621,6 +621,9 @@ void vvf_write::finalize()
 	attotime elapsed = m_machine.time() - m_start_time;
 	uint64_t duration_us = uint64_t(elapsed.as_double() * 1000000.0);
 
+	// Get file size BEFORE seeking back to write header
+	uint64_t actual_file_size = m_file.tellp();
+
 	// Update header with final values
 	m_file.seekp(0);
 	vvf_header header{};
@@ -631,13 +634,14 @@ void vvf_write::finalize()
 	header.vvf_width = (m_stats.min_x != INT32_MAX) ? (m_stats.max_x - m_stats.min_x) : m_width;
 	header.vvf_height = (m_stats.min_y != INT32_MAX) ? (m_stats.max_y - m_stats.min_y) : m_height;
 
-	// Store original game dimensions (VVF coords divided by MAME's 65536 fixed-point scale)
-	// This preserves aspect ratio: native_width / native_height = display aspect
+	// Store original game dimensions in logical pixels
+	// VVF coords are scaled from MAME's 16.16 fixed-point coordinates
+	// To get native: (vvf_coord * scale_factor) / 65536
 	const s32 MAME_FIXED_POINT = 65536;
 	if (m_stats.min_x != INT32_MAX)
 	{
-		header.native_width = (m_stats.max_x * MAME_FIXED_POINT / m_x_scale) / MAME_FIXED_POINT;
-		header.native_height = (m_stats.max_y * MAME_FIXED_POINT / m_y_scale) / MAME_FIXED_POINT;
+		header.native_width = (m_stats.max_x * m_x_scale) / MAME_FIXED_POINT;
+		header.native_height = (m_stats.max_y * m_y_scale) / MAME_FIXED_POINT;
 	}
 	else
 	{
@@ -667,8 +671,7 @@ void vvf_write::finalize()
 							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
 							  m_stats.line_to12_count + m_stats.line_to12_pal_count;
 
-	// Get actual file size
-	uint64_t actual_file_size = m_file.tellp();
+	// Calculate file statistics
 	double duration_sec = duration_us / 1000000.0;
 	double kb_per_sec = (actual_file_size / 1024.0) / duration_sec;
 
@@ -689,10 +692,11 @@ void vvf_write::finalize()
 	{
 		s32 vvf_w = m_stats.max_x - m_stats.min_x;
 		s32 vvf_h = m_stats.max_y - m_stats.min_y;
-		// Calculate native dimensions (logical pixels after ÷65536 MAME scale)
+		// Calculate native dimensions (logical pixels)
+		// VVF coords * scale = MAME coords, then / 65536 = logical pixels
 		const s32 MAME_FP = 65536;
-		s32 native_w = (m_stats.max_x * MAME_FP / m_x_scale) / MAME_FP;
-		s32 native_h = (m_stats.max_y * MAME_FP / m_y_scale) / MAME_FP;
+		s32 native_w = (m_stats.max_x * m_x_scale) / MAME_FP;
+		s32 native_h = (m_stats.max_y * m_y_scale) / MAME_FP;
 
 		osd_printf_info("VVF: Native: %d×%d (aspect %.2f) | VVF coords: %d×%d | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
 			native_w, native_h, (double)native_w / native_h,
