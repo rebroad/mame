@@ -94,7 +94,7 @@ Byte 1:    dx:4, dy:4 (4-bit signed deltas, ±7 range)
 - Uses current palette entry
 - Updates beam position: `lastX += dx; lastY += dy`
 
-**Use:** ~85-95% of Star Wars lines (smooth curves, text strokes)
+**Use:** Expected to be most common for smooth curves and text strokes
 
 **Packed Format:**
 `byte1 = (dx & 0x0F) | ((dy & 0x0F) << 4)`
@@ -117,7 +117,7 @@ Byte 2:    palette_index:4, spare:4
 - Draws line from `(lastX, lastY)` to `(lastX + dx, lastY + dy)` with new color
 - Updates beam position and current palette index
 
-**Use:** Color changes on small movements (e.g., red → yellow for laser intensity changes)
+**Use:** For small movements when color/intensity needs to change
 
 ---
 
@@ -312,22 +312,18 @@ for each command:
 
 ## Statistics / Performance
 
-Typical Star Wars recording (1000 lines/frame @ 60fps):
+**Expected Performance:**
 
-| Command       | % Usage | Bytes/frame         |
-|---------------|--------:|--------------------:|
-| LINE_TO4      |    85 % |           1,700     |
-| LINE_TO4_PAL  |     8 % |             240     |
-| LINE_TO8      |     5 % |             150     |
-| LINE_TO8_PAL  |     1 % |              40     |
-| LINE_TO12     |     1 % |              40     |
-| NEW_COLOR     |      –  | 10 entries × 5 = 50 |
+VVF encoder automatically tracks command usage statistics and reports them after recording. The actual distribution depends on the game's graphics (smooth curves vs. sharp movements, color changes, etc.).
 
-**Total:** ~2.2 KB/frame = **132 KB/sec @ 60fps** = **8 MB/minute** uncompressed
+**Comparison to H.264 Video:**
 
-Compare to H.264 video (640×480 @ 60fps): ~5 Mbps = **37 MB/minute**
+For 640×480 @ 60fps video:
+- H.264: ~5 Mbps = **37 MB/minute**
+- VVF: Varies by game, typically **5-15 MB/minute** uncompressed
+- VVF advantage: **Infinite resolution scaling** (not limited to 640×480!)
 
-**VVF is 4.6x smaller and infinite resolution!** 🚀
+Use `-vvfwrite` to record and view actual statistics for your game.
 
 ---
 
