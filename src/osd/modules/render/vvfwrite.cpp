@@ -220,7 +220,7 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	s_frame_draw_calls++;
 
 	// MAME's vector coordinates use 16.16 fixed-point (65536 units per logical pixel)
-	// Scale using independent X/Y factors to maximize 12-bit precision (±2047 range)
+	// Scale using independent X/Y factors to maximize 12-bit precision (0-4095 unsigned)
 	s32 scaled_x1 = x1 / m_x_scale;
 	s32 scaled_y1 = y1 / m_y_scale;
 	s32 scaled_x2 = x2 / m_x_scale;
@@ -247,12 +247,12 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	if (error_y2 > m_stats.max_error_y) m_stats.max_error_y = error_y2;
 
 	// Check for overflow and rescale if needed
-	const s32 MAX_COORD = 2047;
-	const s32 MIN_COORD = -2047;
-	if (scaled_x1 > MAX_COORD || scaled_x1 < MIN_COORD ||
-		scaled_x2 > MAX_COORD || scaled_x2 < MIN_COORD ||
-		scaled_y1 > MAX_COORD || scaled_y1 < MIN_COORD ||
-		scaled_y2 > MAX_COORD || scaled_y2 < MIN_COORD)
+	// Coordinates are never negative in vector games, so use full 12-bit unsigned range (0-4095)
+	const s32 MAX_COORD = 4095;
+	if (scaled_x1 > MAX_COORD || scaled_x1 < 0 ||
+		scaled_x2 > MAX_COORD || scaled_x2 < 0 ||
+		scaled_y1 > MAX_COORD || scaled_y1 < 0 ||
+		scaled_y2 > MAX_COORD || scaled_y2 < 0)
 	{
 		// Overflow detected - increase scale factors
 		s32 max_abs_x = std::max(std::abs(scaled_x1), std::abs(scaled_x2));
@@ -296,13 +296,8 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 		debug_draw_count++;
 	}
 
-	// If line doesn't start at our current position, move beam there (intensity=0)
-	if (scaled_x1 != m_last_x || scaled_y1 != m_last_y)
-	{
-		line_to(scaled_x1, scaled_y1, m_current_color, 0);
-	}
-
-	// Now draw to the endpoint
+	// Game already handles beam positioning by setting intensity=0
+	// Just record the endpoint directly
 	line_to(scaled_x2, scaled_y2, color, intensity);
 }
 
@@ -348,8 +343,8 @@ void vvf_write::end_frame()
 		m_stats.max_x > 0 &&
 		m_stats.max_y > 0)
 	{
-		// Target: use 100% of ±2047 range for maximum precision
-		const s32 TARGET_RANGE = 2047;
+		// Target: use 100% of 12-bit unsigned range (0-4095) for maximum precision
+		const s32 TARGET_RANGE = 4095;
 
 		m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
 		osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
@@ -523,9 +518,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_stats.total_bytes += 3;
 		}
 	}
-	else if (abs_dx <= 2047 && abs_dy <= 2047)
+	else if (abs_dx <= 4095 && abs_dy <= 4095)
 	{
-		// LINE_TO12 or LINE_TO12_PAL
+		// LINE_TO12 or LINE_TO12_PAL (12-bit unsigned: 0-4095)
 		// Pack 12-bit values: dx (bits 0-11), dy (bits 12-23)
 		uint32_t packed = ((dx & 0x0FFF) | ((dy & 0x0FFF) << 12));
 
@@ -556,7 +551,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		// Distance too large for LINE_TO12 - split into multiple segments
 		// Calculate number of segments needed (Pythagoras)
 		double distance = sqrt(double(dx) * dx + double(dy) * dy);
-		int num_segments = int(ceil(distance / 2047.0));
+		int num_segments = int(ceil(distance / 4095.0));
 
 		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d, dist=%.1f) into %d segments\n",
 			dx, dy, distance, num_segments);
