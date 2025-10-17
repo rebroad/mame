@@ -158,6 +158,10 @@ void vvf_write::write_header()
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 }
 
+// Static counters for frame-level debug tracking
+static uint32_t s_frame_draw_calls = 0;
+static uint32_t s_frame_line_to_calls = 0;
+
 void vvf_write::begin_frame()
 {
 	if (!m_recording)
@@ -183,10 +187,6 @@ void vvf_write::begin_frame()
 	m_frame_buffer.clear();
 }
 
-// Static counters for frame-level debug tracking
-static uint32_t s_frame_draw_calls = 0;
-static uint32_t s_frame_line_to_calls = 0;
-
 void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t intensity)
 {
 	if (!m_recording)
@@ -194,24 +194,32 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 
 	s_frame_draw_calls++;
 
+	// MAME's vector coordinates are in fixed-point with 65536 units per logical pixel
+	// Scale them down to match our expected 640x480 coordinate system
+	const s32 VECTOR_SCALE = 65536;
+	s32 scaled_x1 = x1 / VECTOR_SCALE;
+	s32 scaled_y1 = y1 / VECTOR_SCALE;
+	s32 scaled_x2 = x2 / VECTOR_SCALE;
+	s32 scaled_y2 = y2 / VECTOR_SCALE;
+
 	// Debug: Print first 10 draw_line calls
 	static uint32_t debug_draw_count = 0;
 	if (debug_draw_count < 10)
 	{
-		osd_printf_info("VVF DEBUG draw_line #%u: (%d,%d) -> (%d,%d) RGB(%u,%u,%u) intensity=%u | current_pos=(%d,%d)\n",
-			debug_draw_count, x1, y1, x2, y2, color.r(), color.g(), color.b(), intensity,
-			m_last_x, m_last_y);
+		osd_printf_info("VVF DEBUG draw_line #%u: RAW (%d,%d)->(%d,%d) SCALED (%d,%d)->(%d,%d) RGB(%u,%u,%u) i=%u\n",
+			debug_draw_count, x1, y1, x2, y2, scaled_x1, scaled_y1, scaled_x2, scaled_y2,
+			color.r(), color.g(), color.b(), intensity);
 		debug_draw_count++;
 	}
 
 	// If line doesn't start at our current position, move beam there (intensity=0)
-	if (x1 != m_last_x || y1 != m_last_y)
+	if (scaled_x1 != m_last_x || scaled_y1 != m_last_y)
 	{
-		line_to(x1, y1, m_current_color, 0);
+		line_to(scaled_x1, scaled_y1, m_current_color, 0);
 	}
 
 	// Now draw to the endpoint
-	line_to(x2, y2, color, intensity);
+	line_to(scaled_x2, scaled_y2, color, intensity);
 }
 
 void vvf_write::end_frame()
