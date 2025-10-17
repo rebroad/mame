@@ -262,11 +262,49 @@ Entries are written every Nth frame (typically every 30th frame) to enable fast 
 
 ## Audio Data
 
-**Status:** Not yet implemented (reserved for future)
+**Status:** ✅ **Implemented** (Opus codec via FFmpeg)
 
-Planned:
-- **Opus codec** (web-native, high quality, low bitrate)
-- Interleaved with video frames (or separate section via `audio_data_offset`)
+### Audio Format
+
+VVF uses **Opus audio compression** for high-quality, compact audio:
+- **Codec:** Opus (via FFmpeg libopus)
+- **Bitrate:** 64 kbps (excellent quality for game audio)
+- **Sample format:** Float32 (internally)
+- **Frame size:** 960 samples @ 48kHz (~20ms per frame)
+
+### Audio Storage
+
+Audio is stored in a **separate section** at the end of the file:
+1. Video frames (from byte 64 to `frame_index_offset`)
+2. Frame index (from `frame_index_offset` to `audio_data_offset`)
+3. **Opus audio data** (from `audio_data_offset` to EOF)
+
+### Opus Packet Format
+
+```
+[Packet 1 Size: 4 bytes][Packet 1 Data: N bytes]
+[Packet 2 Size: 4 bytes][Packet 2 Data: N bytes]
+...
+```
+
+Each Opus packet is prefixed with its size (uint32_t, little-endian) followed by the raw Opus data.
+
+### HTML5 Playback
+
+Opus is **natively supported** by the Web Audio API:
+```javascript
+const audioContext = new AudioContext();
+audioContext.decodeAudioData(opusBuffer).then(audioBuffer => {
+    // Play decoded audio
+});
+```
+
+### Fallback (No FFmpeg)
+
+If MAME is compiled without FFmpeg support:
+- VVF files are created **without audio**
+- `audio_codec` field in header = `0` (NONE)
+- `audio_data_offset` field = `0`
 
 ---
 
