@@ -52,12 +52,12 @@ All commands draw from the **current beam position** `(lastX, lastY)` to a new p
 | Command           | Opcode | Size     | Range         | Purpose                             |
 |-------------------|--------|----------|---------------|-------------------------------------|
 | **NEW_COLOR**     | 0x50   | 5 bytes  | N/A           | Add new color+intensity to palette  |
-| **LINE_TO4**      | 0x60   | 2 bytes  | ±7 pixels     | Tiny movement (very common)         |
-| **LINE_TO4_PAL**  | 0x61   | 3 bytes  | ±7 pixels     | Tiny move, switch palette entry     |
+| **LINE_TO4**      | 0x60   | 2 bytes  | ±7 pixels     | Tiny movement                       |
+| **LINE_TO4_PAL**  | 0x61   | 3 bytes  | ±7 pixels     | Tiny move, switch palette (8-bit)   |
 | **LINE_TO8**      | 0x62   | 3 bytes  | ±127 pixels   | Medium movement                     |
-| **LINE_TO8_PAL**  | 0x63   | 4 bytes  | ±127 pixels   | Medium move, switch palette entry   |
+| **LINE_TO8_PAL**  | 0x63   | 4 bytes  | ±127 pixels   | Medium move, switch palette (8-bit) |
 | **LINE_TO12**     | 0x64   | 4 bytes  | ±2047 pixels  | Large movement                      |
-| **LINE_TO12_PAL** | 0x65   | 5 bytes  | ±2047 pixels  | Large move, switch palette entry    |
+| **LINE_TO12_PAL** | 0x65   | 5 bytes  | ±2047 pixels  | Large move, switch palette (8-bit)  |
 | **END_FRAME**     | 0x00   | 5 bytes  | N/A           | Marks end of frame                  |
 
 ---
@@ -109,7 +109,7 @@ Move 3 pixels right, 5 pixels up: `0x60 0x53` (dx=3, dy=5)
 ```
 Byte 0:    Command (0x61)
 Byte 1:    dx:4, dy:4 (4-bit signed deltas)
-Byte 2:    palette_index:4, spare:4
+Byte 2:    palette_index (uint8, 0-255)
 ```
 
 **Behavior:**
@@ -144,7 +144,7 @@ Byte 2:    dy (int8, ±127 range)
 Byte 0:    Command (0x63)
 Byte 1:    dx (int8)
 Byte 2:    dy (int8)
-Byte 3:    palette_index:4, spare:4
+Byte 3:    palette_index (uint8, 0-255)
 ```
 
 **Behavior:**
@@ -181,7 +181,7 @@ Byte 1-3:  dx:12, dy:12 (24-bit packed, ±2047 range)
 ```
 Byte 0:    Command (0x65)
 Byte 1-3:  dx:12, dy:12 (24-bit packed)
-Byte 4:    palette_index:4, spare:4
+Byte 4:    palette_index (uint8, 0-255)
 ```
 
 **Behavior:**
@@ -221,20 +221,26 @@ LINE_TO4(5, 3)             // Draw yellow line
 
 ## Palette System
 
-- **Max 16 entries** (4-bit index)
-- Each entry stores: `(R, G, B, intensity)`
+- **Max 256 entries** (8-bit index)
+- Each entry stores: `(R, G, B, intensity)` - complete color+intensity pair
 - Auto-populated by encoder via `NEW_COLOR` commands
 - `LINE_TO*_PAL` commands switch between palette entries
 - `LINE_TO*` commands use current palette entry
 
-**Star Wars Typical Palette:**
+**Example Star Wars Palette:**
 ```
-0: Red laser (255, 0, 0, 200)
-1: Blue laser (0, 0, 255, 200)
-2: Yellow text (255, 255, 0, 180)
-3: White outline (255, 255, 255, 150)
-... (up to 16 total)
+0: Red laser high (255, 0, 0, 200)
+1: Red laser med (255, 0, 0, 150)
+2: Red laser low (255, 0, 0, 100)
+3: Blue laser high (0, 0, 255, 200)
+4: Blue laser med (0, 0, 255, 150)
+5: Yellow text (255, 255, 0, 180)
+6: White outline (255, 255, 255, 150)
+... (up to 256 total combinations)
 ```
+
+**Why 256 entries?**
+Vector games can use many color+intensity combinations. Star Wars uses 3-bit color (8 colors) × 3-bit intensity (8 levels) = 64 possible combinations. Having 256 slots ensures no game runs out of palette space.
 
 ---
 

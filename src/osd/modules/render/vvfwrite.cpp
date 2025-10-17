@@ -205,7 +205,7 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 			// LINE_TO4_PAL: 3 bytes
 			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4_PAL));
 			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
-			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F)); // spare bits available
+			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
 			m_stats.line_to4_pal_count++;
 			m_stats.total_bytes += 3;
 		}
@@ -227,7 +227,7 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8_PAL));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F));
+			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
 			m_stats.line_to8_pal_count++;
 			m_stats.total_bytes += 4;
 		}
@@ -254,7 +254,7 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>(palette_index & 0x0F));
+			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
 			m_stats.line_to12_pal_count++;
 			m_stats.total_bytes += 5;
 		}
@@ -461,7 +461,7 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	}
 
 	// Add new palette entry if we have room
-	if (m_palette.size() < 16)
+	if (m_palette.size() < 256)
 	{
 		// Emit NEW_COLOR command
 		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::NEW_COLOR));
@@ -483,9 +483,9 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
 
-	// Palette full - find closest match
+	// Palette full (256 entries) - find closest match
 	// For now, just use palette entry 0
-	osd_printf_warning("VVF: Palette full (16 entries), reusing entry 0\n");
+	osd_printf_warning("VVF: Palette full (256 entries), reusing entry 0\n");
 	return 0;
 }
 
