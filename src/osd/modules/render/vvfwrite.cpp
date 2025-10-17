@@ -56,7 +56,6 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_y_scale(8192)
 	, m_min_x(INT32_MAX), m_max_x(INT32_MIN)  // Track actual coordinate range
 	, m_min_y(INT32_MAX), m_max_y(INT32_MIN)
-	, m_scale_optimized(false)
 	, m_frame_started(false)
 	, m_audio_sample_rate(48000)
 	, m_audio_channels(2)
@@ -193,8 +192,8 @@ void vvf_write::begin_frame()
 	// Mark that this frame has started (for end_frame() to know it should process)
 	m_frame_started = true;
 
-	// Debug: Print first 5 frames with stats from previous frame
-	if (m_stats.debug_line_count < 20 && m_frame_count > 0)
+	// Debug: Print frame stats (stop at 40 line_to or end of frame 0)
+	if (m_stats.debug_line_count < 40)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
@@ -203,16 +202,6 @@ void vvf_write::begin_frame()
 
 		osd_printf_info("%u.%03u VVF Frame #%u stats: %u draw_line calls, %u line_to calls, %zu bytes written\n",
 			seconds, milliseconds, m_frame_count - 1, s_frame_draw_calls, s_frame_line_to_calls, m_frame_buffer.size());
-	}
-
-	if (m_stats.debug_line_count < 20)
-	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
-		osd_printf_info("%u.%03u VVF begin_frame #%u\n", seconds, milliseconds, m_frame_count);
 	}
 
 	// Reset per-frame counters
@@ -230,33 +219,46 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 
 	s_frame_draw_calls++;
 
+	// Track coordinate ranges (always, for every coordinate)
+	if (x < m_min_x) m_min_x = x;
+	if (x > m_max_x) m_max_x = x;
+	if (y < m_min_y) m_min_y = y;
+	if (y > m_max_y) m_max_y = y;
+
 	// Map coordinate to VVF range: (mame_coord - min) / scale
 	s32 scaled_x = (x - m_min_x) / m_x_scale;
 	s32 scaled_y = (y - m_min_y) / m_y_scale;
 
-	// Track precision loss: scale back and compare to original
-	s32 recovered_x = (scaled_x * m_x_scale) + m_min_x;
-	s32 recovered_y = (scaled_y * m_y_scale) + m_min_y;
-
-	s32 error_x = std::abs(x - recovered_x);
-	s32 error_y = std::abs(y - recovered_y);
-
-	m_stats.total_coord_error_x += error_x;
-	m_stats.total_coord_error_y += error_y;
-	m_stats.coord_samples++;
-
-	if (error_x > m_stats.max_error_x) m_stats.max_error_x = error_x;
-	if (error_y > m_stats.max_error_y) m_stats.max_error_y = error_y;
-
-	// Check for overflow/rescale only during first frame (before optimization)
-	if (!m_scale_optimized)
+	// Check for overflow/rescale during first frame (before range optimization)
+	if (m_frame_count == 0)
 	{
-		check_and_rescale_if_needed(x, y, scaled_x, scaled_y);
+		// Inline overflow check for first frame
+		if (scaled_x > COORD_MAX || scaled_x < 0)
+		{
+			s32 new_range_x = max_x - min_x;
+			s32 old_scale = m_x_scale;
+			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
+			m_stats.x_rescale_count++;
+			osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
+				min_x, max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale);
+			scaled_x = (x - m_min_x) / m_x_scale;
+		}
+
+		if (scaled_y > COORD_MAX || scaled_y < 0)
+		{
+			s32 new_range_y = max_y - min_y;
+			s32 old_scale = m_y_scale;
+			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
+			m_stats.y_rescale_count++;
+			osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
+				min_y, max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale);
+			scaled_y = (y - m_min_y) / m_y_scale;
+		}
 	}
 
-	// Debug output
+	// Debug output (stop at 40 or end of frame 0)
 	static uint32_t debug_draw_count = 0;
-	if (m_stats.debug_line_count < 20)
+	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
@@ -287,7 +289,7 @@ void vvf_write::end_frame()
 	attotime elapsed = current_time - m_start_time;
 	double elapsed_sec = elapsed.as_double();
 
-	if (m_stats.debug_line_count < 20)
+	if (m_stats.debug_line_count < 40)
 	{
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
@@ -308,53 +310,31 @@ void vvf_write::end_frame()
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
 
-	// Optimize X/Y scales after first frame with actual drawing data
-	// Do this once to maximize 12-bit coordinate precision
-	if (!m_scale_optimized && m_min_x != INT32_MAX)
+	// After first frame, optimize scale and check for overflow
+	if (m_frame_count > 0)
 	{
-		// Calculate actual coordinate ranges
-		s32 range_x = m_max_x - m_min_x;
-		s32 range_y = m_max_y - m_min_y;
-
-		// Scale to fit range into 0..2047
-		m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
-		m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
-
-		osd_printf_info("VVF: Optimized X: range [%d..%d] = %d units → scale ÷%d → VVF [0..%d]\n",
-			m_min_x, m_max_x, range_x, m_x_scale, range_x / m_x_scale);
-		osd_printf_info("VVF: Optimized Y: range [%d..%d] = %d units → scale ÷%d → VVF [0..%d]\n",
-			m_min_y, m_max_y, range_y, m_y_scale, range_y / m_y_scale);
-
-		m_scale_optimized = true;  // Only optimize once
-	}
-	else if (m_scale_optimized)
-	{
-		// After optimization, check if current frame's coordinates exceed range
-		// If so, rescale to accommodate
+		// Subsequent frames: check if range expanded and rescale if needed
 		s32 range_x = m_max_x - m_min_x;
 		s32 range_y = m_max_y - m_min_y;
 		s32 vvf_max_x = range_x / m_x_scale;
 		s32 vvf_max_y = range_y / m_y_scale;
 
-		if (vvf_max_x > COORD_MAX || vvf_max_y > COORD_MAX)
+		if (vvf_max_x > COORD_MAX)
 		{
-			if (vvf_max_x > COORD_MAX)
-			{
-				s32 old_scale = m_x_scale;
-				m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
-				m_stats.x_rescale_count++;
-				osd_printf_warning("VVF: X overflow in end_frame! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-					m_min_x, m_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
-			}
+			s32 old_scale = m_x_scale;
+			m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
+			m_stats.x_rescale_count++;
+			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				m_min_x, m_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+		}
 
-			if (vvf_max_y > COORD_MAX)
-			{
-				s32 old_scale = m_y_scale;
-				m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
-				m_stats.y_rescale_count++;
-				osd_printf_warning("VVF: Y overflow in end_frame! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-					m_min_y, m_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
-			}
+		if (vvf_max_y > COORD_MAX)
+		{
+			s32 old_scale = m_y_scale;
+			m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
+			m_stats.y_rescale_count++;
+			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				m_min_y, m_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
 		}
 	}
 
@@ -376,58 +356,12 @@ void vvf_write::end_frame()
 	m_frame_started = false;
 }
 
-void vvf_write::check_and_rescale_if_needed(s32 mame_x, s32 mame_y, s32 &vvf_x, s32 &vvf_y)
-{
-	// Check for overflow/underflow and rescale if needed
-	if (vvf_x > COORD_MAX || vvf_x < 0 || vvf_y > COORD_MAX || vvf_y < 0)
-	{
-		// Coordinate outside current range - expand range and rescale
-		s32 new_min_x = std::min(m_min_x, mame_x);
-		s32 new_max_x = std::max(m_max_x, mame_x);
-		s32 new_min_y = std::min(m_min_y, mame_y);
-		s32 new_max_y = std::max(m_max_y, mame_y);
-
-		s32 new_range_x = new_max_x - new_min_x;
-		s32 new_range_y = new_max_y - new_min_y;
-
-		if (new_range_x > (COORD_MAX * m_x_scale))
-		{
-			s32 old_scale = m_x_scale;
-			m_min_x = new_min_x;
-			m_max_x = new_max_x;
-			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				new_min_x, new_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
-			vvf_x = (mame_x - m_min_x) / m_x_scale;
-		}
-
-		if (new_range_y > (COORD_MAX * m_y_scale))
-		{
-			s32 old_scale = m_y_scale;
-			m_min_y = new_min_y;
-			m_max_y = new_max_y;
-			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				new_min_y, new_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
-			vvf_y = (mame_y - m_min_y) / m_y_scale;
-		}
-	}
-}
-
 void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
 	s_frame_line_to_calls++;
 
-	// Track coordinate ranges (for scale optimization)
-	if (x < m_min_x) m_min_x = x;
-	if (x > m_max_x) m_max_x = x;
-	if (y < m_min_y) m_min_y = y;
-	if (y > m_max_y) m_max_y = y;
-
-	// Debug: Print first 20 line_to calls to understand coordinate system
-	if (m_stats.debug_line_count < 20)
+	// Debug: Print line_to calls (stop at 40 or end of frame 0)
+	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
 	{
 		// Get timestamp since recording started
 		attotime elapsed = m_machine.time() - m_start_time;

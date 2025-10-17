@@ -105,7 +105,7 @@ public:
 
 	// VVF vector recording (called by vector_device)
 	void begin_vector_frame();
-	void record_vector_line(int x1, int y1, int x2, int y2, rgb_t color, int intensity);
+	void record_vector_line(int x, int y, rgb_t color, int intensity);
 	void end_vector_frame();
 	bool is_vvf_recording() const { return m_vvf_writer != nullptr; }
 	void begin_vvf_recording(const char *name, s32 width, s32 height);
