@@ -13,6 +13,7 @@
 #include "screen.h"
 #include "emuopts.h"
 #include <cmath>
+#include <limits>
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -48,7 +49,11 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_y(0)
 	, m_current_palette_index(0)
 	, m_last_stats_print(attotime::zero)
-	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
+	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
+		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
+		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
+		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
+		0}  // draws_other_colors
 #ifdef MAME_FFMPEG
 	, m_opus_context(nullptr)
 	, m_opus_frame(nullptr)
@@ -203,6 +208,57 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	int dy = y - m_last_y;
 	int abs_dx = abs(dx);
 	int abs_dy = abs(dy);
+
+	// Calculate distance for statistics
+	double distance = sqrt(double(dx) * dx + double(dy) * dy);
+
+	if (distance > 0.0)
+	{
+		if (intensity == 0)
+		{
+			// Beam move (invisible line)
+			m_stats.beam_moves_count++;
+			if (distance < m_stats.min_move_distance)
+				m_stats.min_move_distance = distance;
+			if (distance > m_stats.max_move_distance)
+				m_stats.max_move_distance = distance;
+		}
+		else
+		{
+			// Visible line (drawing)
+			m_stats.beam_draws_count++;
+			if (distance < m_stats.min_draw_distance)
+				m_stats.min_draw_distance = distance;
+			if (distance > m_stats.max_draw_distance)
+				m_stats.max_draw_distance = distance;
+
+			// Track draws per color (ignoring intensity) - classify into basic colors
+			uint8_t r = color.r();
+			uint8_t g = color.g();
+			uint8_t b = color.b();
+
+			// Check for basic colors (using threshold for "close enough")
+			const uint8_t threshold = 32;
+			const uint8_t min_rgb = threshold;
+			const uint8_t max_rgb = 255 - threshold;
+			if (r >= max_rgb && g < min_rgb && b < min_rgb)
+				m_stats.draws_per_color[COLOR_RED]++;
+			else if (r < min_rgb && g >= max_rgb && b < min_rgb)
+				m_stats.draws_per_color[COLOR_GREEN]++;
+			else if (r < min_rgb && g < min_rgb && b >= max_rgb)
+				m_stats.draws_per_color[COLOR_BLUE]++;
+			else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
+				m_stats.draws_per_color[COLOR_YELLOW]++;
+			else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
+				m_stats.draws_per_color[COLOR_CYAN]++;
+			else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
+				m_stats.draws_per_color[COLOR_MAGENTA]++;
+			else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
+				m_stats.draws_per_color[COLOR_WHITE]++;
+			else
+				m_stats.draws_other_colors++;
+		}
+	}
 
 	// Check if we need to add color+intensity to palette
 	uint8_t palette_index = find_or_add_palette_entry(color, intensity);
@@ -457,6 +513,46 @@ void vvf_write::finalize()
 		m_stats.line_to12_pal_count, 100.0 * m_stats.line_to12_pal_count / total_commands);
 	osd_printf_info("  NEW_COLOR:    %6u - palette entries created\n",
 		m_stats.new_color_count);
+	osd_printf_info("VVF: Movement statistics:\n");
+	uint32_t total_line_to_calls = m_stats.beam_moves_count + m_stats.beam_draws_count;
+	osd_printf_info("  Beam moves:   %6u (%5.1f%% of all line_to calls)\n",
+		m_stats.beam_moves_count, 100.0 * m_stats.beam_moves_count / total_line_to_calls);
+	osd_printf_info("  Beam draws:   %6u (%5.1f%% of all line_to calls)\n",
+		m_stats.beam_draws_count, 100.0 * m_stats.beam_draws_count / total_line_to_calls);
+	if (m_stats.min_draw_distance < std::numeric_limits<double>::max())
+	{
+		osd_printf_info("  Draw distance: %8.2f - %8.2f pixels (visible lines)\n",
+			m_stats.min_draw_distance, m_stats.max_draw_distance);
+	}
+	if (m_stats.min_move_distance < std::numeric_limits<double>::max())
+	{
+		osd_printf_info("  Move distance: %8.2f - %8.2f pixels (beam moves)\n",
+			m_stats.min_move_distance, m_stats.max_move_distance);
+	}
+
+	// Print color usage
+	if (m_stats.beam_draws_count > 0)
+	{
+		osd_printf_info("VVF: Color usage (ignoring intensity):\n");
+		const char *color_names[COLOR_COUNT] = {"Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "White"};
+
+		for (int i = 0; i < COLOR_COUNT; i++)
+		{
+			if (m_stats.draws_per_color[i] > 0)
+			{
+				osd_printf_info("  %-8s: %6u draws (%5.1f%%)\n",
+					color_names[i], m_stats.draws_per_color[i],
+					100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
+			}
+		}
+
+		if (m_stats.draws_other_colors > 0)
+		{
+			osd_printf_info("  Other   : %6u draws (%5.1f%%)\n",
+				m_stats.draws_other_colors,
+				100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
+		}
+	}
 }
 
 //**************************************************************************

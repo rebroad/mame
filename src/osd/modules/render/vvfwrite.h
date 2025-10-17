@@ -170,6 +170,18 @@ private:
 	std::vector<palette_entry> m_palette;
 	uint8_t m_current_palette_index;
 
+	// Color indices for stats
+	enum color_index {
+		COLOR_RED = 0,
+		COLOR_GREEN = 1,
+		COLOR_BLUE = 2,
+		COLOR_YELLOW = 3,
+		COLOR_CYAN = 4,
+		COLOR_MAGENTA = 5,
+		COLOR_WHITE = 6,
+		COLOR_COUNT = 7
+	};
+
 	// Stats tracking
 	struct {
 		uint32_t line_to4_count;
@@ -180,6 +192,14 @@ private:
 		uint32_t line_to12_pal_count;
 		uint32_t new_color_count;
 		uint64_t total_bytes;
+		uint32_t beam_moves_count;     // line_to with intensity=0
+		uint32_t beam_draws_count;     // line_to with intensity>0
+		double min_draw_distance;       // Minimum distance for visible lines (intensity > 0)
+		double max_draw_distance;       // Maximum distance for visible lines (intensity > 0)
+		double min_move_distance;       // Minimum distance for beam moves (intensity = 0)
+		double max_move_distance;       // Maximum distance for beam moves (intensity = 0)
+		uint32_t draws_per_color[COLOR_COUNT]; // [red, green, blue, yellow, cyan, magenta, white]
+		uint32_t draws_other_colors;    // Count of non-basic colors
 	} m_stats;
 
 	// Per-second stats (rolling window)
