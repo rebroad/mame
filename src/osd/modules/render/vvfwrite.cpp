@@ -194,7 +194,7 @@ void vvf_write::begin_frame()
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("[%u.%03u] VVF begin_frame #%u\n", seconds, milliseconds, m_frame_count);
+		osd_printf_info("%u.%03u VVF begin_frame #%u\n", seconds, milliseconds, m_frame_count);
 	}
 
 	// Reset per-frame counters
