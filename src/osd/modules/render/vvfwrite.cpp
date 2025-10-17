@@ -17,6 +17,16 @@
 #include <algorithm>
 
 //**************************************************************************
+//  CONSTANTS
+//**************************************************************************
+
+// VVF coordinate limits (12-bit signed deltas for LINE_TO commands)
+static const s32 LINE_TO4_MAX = 7;
+static const s32 LINE_TO8_MAX = 127;
+static const s32 LINE_TO12_MAX = 2047;
+static const s32 COORD_MAX = 2047;     // Maximum coordinate value
+
+//**************************************************************************
 //  HELPER FUNCTIONS
 //**************************************************************************
 
@@ -44,6 +54,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_x_scale(8192)  // Start with 8192, will optimize after first frame with data
 	, m_y_scale(8192)
+	, m_min_offset_x(0)  // Will be set from min_x after first frame
+	, m_min_offset_y(0)  // Will be set from min_y after first frame
 	, m_scale_optimized(false)
 	, m_frame_started(false)
 	, m_audio_sample_rate(48000)
@@ -220,17 +232,18 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	s_frame_draw_calls++;
 
 	// MAME's vector coordinates use 16.16 fixed-point (65536 units per logical pixel)
-	// Scale using independent X/Y factors to maximize 12-bit precision (±2047 for deltas)
-	s32 scaled_x1 = x1 / m_x_scale;
-	s32 scaled_y1 = y1 / m_y_scale;
-	s32 scaled_x2 = x2 / m_x_scale;
-	s32 scaled_y2 = y2 / m_y_scale;
+	// Map coordinate range (min..max) to VVF range (0..2047) for maximum precision
+	// Formula: vvf_coord = (mame_coord - min_offset) / scale
+	s32 scaled_x1 = (x1 - m_min_offset_x) / m_x_scale;
+	s32 scaled_y1 = (y1 - m_min_offset_y) / m_y_scale;
+	s32 scaled_x2 = (x2 - m_min_offset_x) / m_x_scale;
+	s32 scaled_y2 = (y2 - m_min_offset_y) / m_y_scale;
 
 	// Track precision loss: scale back and compare to original
-	s32 recovered_x1 = scaled_x1 * m_x_scale;
-	s32 recovered_y1 = scaled_y1 * m_y_scale;
-	s32 recovered_x2 = scaled_x2 * m_x_scale;
-	s32 recovered_y2 = scaled_y2 * m_y_scale;
+	s32 recovered_x1 = (scaled_x1 * m_x_scale) + m_min_offset_x;
+	s32 recovered_y1 = (scaled_y1 * m_y_scale) + m_min_offset_y;
+	s32 recovered_x2 = (scaled_x2 * m_x_scale) + m_min_offset_x;
+	s32 recovered_y2 = (scaled_y2 * m_y_scale) + m_min_offset_y;
 
 	s32 error_x1 = std::abs(x1 - recovered_x1);
 	s32 error_y1 = std::abs(y1 - recovered_y1);
@@ -246,38 +259,43 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	if (error_y1 > m_stats.max_error_y) m_stats.max_error_y = error_y1;
 	if (error_y2 > m_stats.max_error_y) m_stats.max_error_y = error_y2;
 
-	// Check for overflow and rescale if needed
-	// Use ±2047 range for 12-bit signed deltas (deltas can be negative!)
-	const s32 MAX_COORD = 2047;
-	if (scaled_x1 > MAX_COORD || scaled_x1 < 0 ||
-		scaled_x2 > MAX_COORD || scaled_x2 < 0 ||
-		scaled_y1 > MAX_COORD || scaled_y1 < 0 ||
-		scaled_y2 > MAX_COORD || scaled_y2 < 0)
+	// Check for overflow/underflow and rescale if needed
+	if (scaled_x1 > COORD_MAX || scaled_x1 < 0 ||
+		scaled_x2 > COORD_MAX || scaled_x2 < 0 ||
+		scaled_y1 > COORD_MAX || scaled_y1 < 0 ||
+		scaled_y2 > COORD_MAX || scaled_y2 < 0)
 	{
-		// Overflow detected - increase scale factors
-		s32 max_abs_x = std::max(std::abs(scaled_x1), std::abs(scaled_x2));
-		s32 max_abs_y = std::max(std::abs(scaled_y1), std::abs(scaled_y2));
+		// Update min/max ranges and rescale
+		s32 new_min_x = std::min({m_min_offset_x, x1, x2});
+		s32 new_max_x = std::max({(s32)(m_min_offset_x + COORD_MAX * m_x_scale), x1, x2});
+		s32 new_min_y = std::min({m_min_offset_y, y1, y2});
+		s32 new_max_y = std::max({(s32)(m_min_offset_y + COORD_MAX * m_y_scale), y1, y2});
 
-		if (max_abs_x > MAX_COORD)
+		s32 new_range_x = new_max_x - new_min_x;
+		s32 new_range_y = new_max_y - new_min_y;
+
+		if (new_range_x > (COORD_MAX * m_x_scale))
 		{
 			s32 old_scale = m_x_scale;
-			m_x_scale = (m_x_scale * max_abs_x) / MAX_COORD + 1;
+			m_min_offset_x = new_min_x;
+			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
 			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: X overflow! Rescaling %d -> %d (%.1fx loss) at frame %u\n",
-				old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
-			scaled_x1 = x1 / m_x_scale;
-			scaled_x2 = x2 / m_x_scale;
+			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				new_min_x, new_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+			scaled_x1 = (x1 - m_min_offset_x) / m_x_scale;
+			scaled_x2 = (x2 - m_min_offset_x) / m_x_scale;
 		}
 
-		if (max_abs_y > MAX_COORD)
+		if (new_range_y > (COORD_MAX * m_y_scale))
 		{
 			s32 old_scale = m_y_scale;
-			m_y_scale = (m_y_scale * max_abs_y) / MAX_COORD + 1;
+			m_min_offset_y = new_min_y;
+			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
 			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Y overflow! Rescaling %d -> %d (%.1fx loss) at frame %u\n",
-				old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
-			scaled_y1 = y1 / m_y_scale;
-			scaled_y2 = y2 / m_y_scale;
+			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				new_min_y, new_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
+			scaled_y1 = (y1 - m_min_offset_y) / m_y_scale;
+			scaled_y2 = (y2 - m_min_offset_y) / m_y_scale;
 		}
 	}
 
@@ -339,20 +357,24 @@ void vvf_write::end_frame()
 	// Optimize X/Y scales after first frame with actual drawing data
 	// Do this once to maximize 12-bit coordinate precision
 	if (!m_scale_optimized &&
-		m_stats.min_x != INT32_MAX &&
-		m_stats.max_x > 0 &&
-		m_stats.max_y > 0)
+		m_stats.min_x != INT32_MAX)
 	{
-		// Target: use 100% of ±2047 range for maximum delta precision
-		const s32 TARGET_RANGE = 2047;
+		// Calculate actual coordinate ranges
+		s32 range_x = m_stats.max_x - m_stats.min_x;
+		s32 range_y = m_stats.max_y - m_stats.min_y;
 
-		m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
-		osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
-			m_x_scale, m_stats.max_x, m_stats.max_x / m_x_scale);
+		// Set offsets to minimum coordinates
+		m_min_offset_x = m_stats.min_x;
+		m_min_offset_y = m_stats.min_y;
 
-		m_y_scale = (m_stats.max_y + TARGET_RANGE) / TARGET_RANGE;
-		osd_printf_info("VVF: Optimized Y scale: %d (max Y %d -> %d)\n",
-			m_y_scale, m_stats.max_y, m_stats.max_y / m_y_scale);
+		// Scale to fit range into 0..2047 (using full 11 bits for each axis)
+		m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
+		m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
+
+		osd_printf_info("VVF: Optimized X: range [%d..%d] = %d units → scale ÷%d → VVF [0..%d]\n",
+			m_stats.min_x, m_stats.max_x, range_x, m_x_scale, range_x / m_x_scale);
+		osd_printf_info("VVF: Optimized Y: range [%d..%d] = %d units → scale ÷%d → VVF [0..%d]\n",
+			m_stats.min_y, m_stats.max_y, range_y, m_y_scale, range_y / m_y_scale);
 
 		m_scale_optimized = true;  // Only optimize once
 	}
@@ -473,8 +495,8 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	uint8_t palette_index = find_or_add_palette_entry(color, intensity);
 	bool needs_palette_switch = (palette_index != m_current_palette_index);
 
-	// Choose command based on distance
-	if (abs_dx <= 7 && abs_dy <= 7)
+	// Choose command based on delta magnitude
+	if (abs_dx <= LINE_TO4_MAX && abs_dy <= LINE_TO4_MAX)
 	{
 		// LINE_TO4 or LINE_TO4_PAL
 		if (needs_palette_switch)
@@ -495,7 +517,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_stats.total_bytes += 2;
 		}
 	}
-	else if (abs_dx <= 127 && abs_dy <= 127)
+	else if (abs_dx <= LINE_TO8_MAX && abs_dy <= LINE_TO8_MAX)
 	{
 		// LINE_TO8 or LINE_TO8_PAL
 		if (needs_palette_switch)
@@ -518,9 +540,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_stats.total_bytes += 3;
 		}
 	}
-	else if (abs_dx <= 2047 && abs_dy <= 2047)
+	else if (abs_dx <= LINE_TO12_MAX && abs_dy <= LINE_TO12_MAX)
 	{
-		// LINE_TO12 or LINE_TO12_PAL (12-bit signed: ±2047)
+		// LINE_TO12 or LINE_TO12_PAL
 		// Pack 12-bit values: dx (bits 0-11), dy (bits 12-23)
 		uint32_t packed = ((dx & 0x0FFF) | ((dy & 0x0FFF) << 12));
 
@@ -548,27 +570,31 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 	else
 	{
-		// Distance too large for LINE_TO12 - split into multiple segments
-		// Calculate number of segments needed (Pythagoras)
-		double distance = sqrt(double(dx) * dx + double(dy) * dy);
-		int num_segments = int(ceil(distance / 2047.0));
+		// Delta too large for LINE_TO12 - split into multiple segments
+		// Calculate segments needed based on max(dx, dy), not diagonal
+		int num_segments_x = (abs_dx + LINE_TO12_MAX - 1) / LINE_TO12_MAX;  // Round up
+		int num_segments_y = (abs_dy + LINE_TO12_MAX - 1) / LINE_TO12_MAX;
+		int num_segments = std::max(num_segments_x, num_segments_y);
 
-		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d, dist=%.1f) into %d segments\n",
-			dx, dy, distance, num_segments);
+		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d) into %d segments\n",
+			dx, dy, num_segments);
 
-		// Split the line into equal segments
+		// Split the line into equal segments by dividing dx and dy directly
 		for (int i = 0; i < num_segments; i++)
 		{
-			s32 seg_dx = dx / num_segments;
-			s32 seg_dy = dy / num_segments;
-			s32 target_x = m_last_x + seg_dx;
-			s32 target_y = m_last_y + seg_dy;
+			s32 target_x, target_y;
 
-			// Last segment gets any remainder
+			// Last segment gets exact endpoint to avoid rounding errors
 			if (i == num_segments - 1)
 			{
 				target_x = x;
 				target_y = y;
+			}
+			else
+			{
+				// Intermediate segment
+				target_x = m_last_x + (dx / num_segments);
+				target_y = m_last_y + (dy / num_segments);
 			}
 
 			// Recursive call for each segment (will use LINE_TO12 or smaller)
@@ -687,21 +713,25 @@ void vvf_write::finalize()
 	header.magic = VVF_MAGIC;
 	header.version = VVF_VERSION;
 
-	// Store VVF coordinate range (what we actually use in the file)
-	header.vvf_width = (m_stats.min_x != INT32_MAX) ? (m_stats.max_x - m_stats.min_x) : m_width;
-	header.vvf_height = (m_stats.min_y != INT32_MAX) ? (m_stats.max_y - m_stats.min_y) : m_height;
-
-	// Store original game dimensions in logical pixels
-	// VVF coords are scaled from MAME's 16.16 fixed-point coordinates
-	// To get native: (vvf_coord * scale_factor) / 65536
+	// Store VVF coordinate range (what we actually use in the file after scaling)
 	const s32 MAME_FIXED_POINT = 65536;
 	if (m_stats.min_x != INT32_MAX)
 	{
-		header.native_width = (m_stats.max_x * m_x_scale) / MAME_FIXED_POINT;
-		header.native_height = (m_stats.max_y * m_y_scale) / MAME_FIXED_POINT;
+		s32 mame_range_x = m_stats.max_x - m_stats.min_x;
+		s32 mame_range_y = m_stats.max_y - m_stats.min_y;
+
+		// VVF range (scaled from MAME range)
+		header.vvf_width = mame_range_x / m_x_scale;
+		header.vvf_height = mame_range_y / m_y_scale;
+
+		// Native dimensions (logical pixels): range / 65536
+		header.native_width = mame_range_x / MAME_FIXED_POINT;
+		header.native_height = mame_range_y / MAME_FIXED_POINT;
 	}
 	else
 	{
+		header.vvf_width = m_width;
+		header.vvf_height = m_height;
 		header.native_width = m_width;
 		header.native_height = m_height;
 	}
@@ -747,18 +777,26 @@ void vvf_write::finalize()
 	// Coordinate system info
 	if (m_stats.min_x != INT32_MAX)
 	{
-		s32 vvf_w = m_stats.max_x - m_stats.min_x;
-		s32 vvf_h = m_stats.max_y - m_stats.min_y;
-		// Calculate native dimensions (logical pixels)
-		// VVF coords * scale = MAME coords, then / 65536 = logical pixels
-		const s32 MAME_FP = 65536;
-		s32 native_w = (m_stats.max_x * m_x_scale) / MAME_FP;
-		s32 native_h = (m_stats.max_y * m_y_scale) / MAME_FP;
+		// MAME coordinate range
+		s32 mame_range_x = m_stats.max_x - m_stats.min_x;
+		s32 mame_range_y = m_stats.max_y - m_stats.min_y;
 
-		osd_printf_info("VVF: Native: %d×%d (aspect %.2f) | VVF coords: %d×%d | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
-			native_w, native_h, (double)native_w / native_h,
+		// VVF coordinate range (after offset and scaling)
+		s32 vvf_w = mame_range_x / m_x_scale;
+		s32 vvf_h = mame_range_y / m_y_scale;
+
+		// Calculate native dimensions (logical pixels)
+		// MAME range in 16.16 fixed-point / 65536 = logical pixels
+		const s32 MAME_FP = 65536;
+		s32 native_w = mame_range_x / MAME_FP;
+		s32 native_h = mame_range_y / MAME_FP;
+
+		osd_printf_info("VVF: MAME range: X=[%d..%d] Y=[%d..%d] → VVF [0..%d]×[0..%d] | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
+			m_stats.min_x, m_stats.max_x, m_stats.min_y, m_stats.max_y,
 			vvf_w, vvf_h, m_x_scale, m_y_scale,
-			100.0 * std::max(vvf_w, vvf_h) / 2047.0);
+			100.0 * std::max(vvf_w, vvf_h) / COORD_MAX);
+		osd_printf_info("VVF: Native: %d×%d (aspect %.2f)\n",
+			native_w, native_h, (double)native_w / native_h);
 
 		if (m_stats.x_rescale_count > 0 || m_stats.y_rescale_count > 0)
 		{
