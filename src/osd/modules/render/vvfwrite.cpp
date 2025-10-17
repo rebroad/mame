@@ -223,7 +223,7 @@ void vvf_write::begin_frame()
 	m_frame_buffer.clear();
 }
 
-void vvf_write::draw_line(s32 x, s32 y, rgb_t color, uint8_t intensity)
+void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
 	if (!m_recording)
 		return;
@@ -248,44 +248,13 @@ void vvf_write::draw_line(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	if (error_x > m_stats.max_error_x) m_stats.max_error_x = error_x;
 	if (error_y > m_stats.max_error_y) m_stats.max_error_y = error_y;
 
-	// Check for overflow/underflow and rescale if needed
-	if (scaled_x > COORD_MAX || scaled_x < 0 || scaled_y > COORD_MAX || scaled_y < 0)
+	// Check for overflow/rescale only during first frame (before optimization)
+	if (!m_scale_optimized)
 	{
-		// Coordinate outside current range - expand range and rescale
-		s32 new_min_x = std::min(m_min_x, x);
-		s32 new_max_x = std::max(m_max_x, x);
-		s32 new_min_y = std::min(m_min_y, y);
-		s32 new_max_y = std::max(m_max_y, y);
-
-		s32 new_range_x = new_max_x - new_min_x;
-		s32 new_range_y = new_max_y - new_min_y;
-
-		if (new_range_x > (COORD_MAX * m_x_scale))
-		{
-			s32 old_scale = m_x_scale;
-			m_min_x = new_min_x;
-			m_max_x = new_max_x;
-			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				new_min_x, new_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
-			scaled_x = (x - m_min_x) / m_x_scale;
-		}
-
-		if (new_range_y > (COORD_MAX * m_y_scale))
-		{
-			s32 old_scale = m_y_scale;
-			m_min_y = new_min_y;
-			m_max_y = new_max_y;
-			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				new_min_y, new_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
-			scaled_y = (y - m_min_y) / m_y_scale;
-		}
+		check_and_rescale_if_needed(x, y, scaled_x, scaled_y);
 	}
 
-	// Debug: Print draw_line calls until line_to limit
+	// Debug output
 	static uint32_t debug_draw_count = 0;
 	if (m_stats.debug_line_count < 20)
 	{
@@ -294,15 +263,14 @@ void vvf_write::draw_line(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF draw_line #%u: RAW (%d,%d) SCALED (%d,%d) RGB(%u,%u,%u) i=%u\n",
+		osd_printf_info("%u.%03u VVF line_to #%u: RAW (%d,%d) SCALED (%d,%d) RGB(%u,%u,%u) i=%u\n",
 			seconds, milliseconds, debug_draw_count, x, y, scaled_x, scaled_y,
 			color.r(), color.g(), color.b(), intensity);
 		debug_draw_count++;
 	}
 
-	// Game already handles beam positioning by setting intensity=0
-	// Just record the destination
-	line_to(scaled_x, scaled_y, color, intensity);
+	// Write VVF command
+	write_line_command(scaled_x, scaled_y, color, intensity);
 }
 
 void vvf_write::end_frame()
@@ -359,6 +327,36 @@ void vvf_write::end_frame()
 
 		m_scale_optimized = true;  // Only optimize once
 	}
+	else if (m_scale_optimized)
+	{
+		// After optimization, check if current frame's coordinates exceed range
+		// If so, rescale to accommodate
+		s32 range_x = m_max_x - m_min_x;
+		s32 range_y = m_max_y - m_min_y;
+		s32 vvf_max_x = range_x / m_x_scale;
+		s32 vvf_max_y = range_y / m_y_scale;
+
+		if (vvf_max_x > COORD_MAX || vvf_max_y > COORD_MAX)
+		{
+			if (vvf_max_x > COORD_MAX)
+			{
+				s32 old_scale = m_x_scale;
+				m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
+				m_stats.x_rescale_count++;
+				osd_printf_warning("VVF: X overflow in end_frame! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+					m_min_x, m_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+			}
+
+			if (vvf_max_y > COORD_MAX)
+			{
+				s32 old_scale = m_y_scale;
+				m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
+				m_stats.y_rescale_count++;
+				osd_printf_warning("VVF: Y overflow in end_frame! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+					m_min_y, m_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
+			}
+		}
+	}
 
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
@@ -378,7 +376,47 @@ void vvf_write::end_frame()
 	m_frame_started = false;
 }
 
-void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
+void vvf_write::check_and_rescale_if_needed(s32 mame_x, s32 mame_y, s32 &vvf_x, s32 &vvf_y)
+{
+	// Check for overflow/underflow and rescale if needed
+	if (vvf_x > COORD_MAX || vvf_x < 0 || vvf_y > COORD_MAX || vvf_y < 0)
+	{
+		// Coordinate outside current range - expand range and rescale
+		s32 new_min_x = std::min(m_min_x, mame_x);
+		s32 new_max_x = std::max(m_max_x, mame_x);
+		s32 new_min_y = std::min(m_min_y, mame_y);
+		s32 new_max_y = std::max(m_max_y, mame_y);
+
+		s32 new_range_x = new_max_x - new_min_x;
+		s32 new_range_y = new_max_y - new_min_y;
+
+		if (new_range_x > (COORD_MAX * m_x_scale))
+		{
+			s32 old_scale = m_x_scale;
+			m_min_x = new_min_x;
+			m_max_x = new_max_x;
+			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
+			m_stats.x_rescale_count++;
+			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				new_min_x, new_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+			vvf_x = (mame_x - m_min_x) / m_x_scale;
+		}
+
+		if (new_range_y > (COORD_MAX * m_y_scale))
+		{
+			s32 old_scale = m_y_scale;
+			m_min_y = new_min_y;
+			m_max_y = new_max_y;
+			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
+			m_stats.y_rescale_count++;
+			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
+				new_min_y, new_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
+			vvf_y = (mame_y - m_min_y) / m_y_scale;
+		}
+	}
+}
+
+void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
 	s_frame_line_to_calls++;
 
@@ -579,7 +617,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			}
 
 			// Recursive call for each segment (will use LINE_TO12 or smaller)
-			line_to(target_x, target_y, color, intensity);
+			write_line_command(target_x, target_y, color, intensity);
 		}
 		return;
 	}

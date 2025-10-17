@@ -1588,7 +1588,7 @@ void video_manager::record_vector_line(int x1, int y1, int x2, int y2, rgb_t col
 	if (m_vvf_writer && m_vvf_writer->recording())
 	{
 		// Only pass destination (x2, y2) - VVF tracks current position internally
-		m_vvf_writer->draw_line(x2, y2, color, (uint8_t)intensity);
+		m_vvf_writer->line_to(x2, y2, color, (uint8_t)intensity);
 	}
 }
 
