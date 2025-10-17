@@ -45,6 +45,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_x_scale(8192)  // Start with 8192, will optimize after first frame with data
 	, m_y_scale(8192)
 	, m_scale_optimized(false)
+	, m_frame_started(false)
 	, m_audio_sample_rate(48000)
 	, m_audio_channels(2)
 #ifdef MAME_FFMPEG
@@ -176,6 +177,9 @@ void vvf_write::begin_frame()
 	if (!m_recording)
 		return;
 
+	// Mark that this frame has started (for end_frame() to know it should process)
+	m_frame_started = true;
+
 	// Debug: Print first 5 frames with stats from previous frame
 	if (m_stats.debug_line_count < 20 && m_frame_count > 0)
 	{
@@ -285,6 +289,11 @@ void vvf_write::end_frame()
 	if (!m_recording)
 		return;
 
+	// Skip frames where begin_frame() was never called
+	// (happens during initialization before vector rendering starts)
+	if (!m_frame_started)
+		return;
+
 	attotime current_time = m_machine.time();
 	attotime elapsed = current_time - m_start_time;
 	double elapsed_sec = elapsed.as_double();
@@ -305,17 +314,6 @@ void vvf_write::end_frame()
 		print_color_stats();
 		osd_printf_info("| %u frames, %.2f KB\n", m_frame_count, m_stats.total_bytes / 1024.0);
 		m_last_stats_print = current_time;
-	}
-
-	// Skip empty frames (no drawing happened yet)
-	// Check if we've had any drawing by seeing if we have data beyond just END_FRAME markers
-	size_t frame_start_size = m_frame_count * 5; // Each previous frame's END_FRAME = 5 bytes
-	bool frame_has_content = (m_frame_buffer.size() > frame_start_size);
-
-	if (!frame_has_content && m_frame_count > 0)
-	{
-		// Empty frame - don't write END_FRAME, don't increment count
-		return;
 	}
 
 	// Write end-of-frame marker with timestamp
@@ -355,6 +353,9 @@ void vvf_write::end_frame()
 	m_file.write(reinterpret_cast<const char *>(m_frame_buffer.data()), m_frame_buffer.size());
 
 	m_frame_count++;
+
+	// Reset flag for next frame
+	m_frame_started = false;
 }
 
 void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
