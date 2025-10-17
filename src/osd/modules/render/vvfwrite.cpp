@@ -781,8 +781,8 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 		entry.intensity = intensity;
 		m_palette.push_back(entry);
 
-		osd_printf_info("VVF: Added palette entry %d: RGB(%d,%d,%d) intensity=%d\n",
-			(int)m_palette.size() - 1, color.r(), color.g(), color.b(), intensity);
+		osd_printf_info("VVF: Added palette entry %u: RGB(%u,%u,%u) intensity=%u\n",
+			(unsigned)m_palette.size() - 1, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
 
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
@@ -790,8 +790,8 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	// Palette full (256 entries)
 	m_stats.palette_full_count++;
 
-	osd_printf_warning("VVF: Palette full (%d/5 attempts) - tried to add RGB(%d,%d,%d) intensity=%d, reusing entry 0\n",
-		m_stats.palette_full_count, color.r(), color.g(), color.b(), intensity);
+	osd_printf_warning("VVF: Palette full (%u/5 attempts) - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
+		m_stats.palette_full_count, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
 
 	// Stop recording after 5 failed attempts
 	if (m_stats.palette_full_count >= 5)
