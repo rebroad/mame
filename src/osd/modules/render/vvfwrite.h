@@ -218,6 +218,13 @@ private:
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
 		uint32_t palette_full_count; // Number of times palette was full
+
+		// Precision tracking
+		uint64_t total_coord_error_x; // Accumulated X coordinate precision loss
+		uint64_t total_coord_error_y; // Accumulated Y coordinate precision loss
+		uint32_t coord_samples;       // Number of coordinate samples for average
+		s32 max_error_x;              // Maximum X error observed
+		s32 max_error_y;              // Maximum Y error observed
 	} m_stats;
 
 	// Per-second stats (rolling window)
