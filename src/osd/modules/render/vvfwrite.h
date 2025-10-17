@@ -137,6 +137,8 @@ private:
 	attotime m_start_time;
 	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
+	s32 m_min_offset_x; // Minimum X coordinate offset (to map min..max to 0..2047)
+	s32 m_min_offset_y; // Minimum Y coordinate offset (to map min..max to 0..2047)
 	bool m_scale_optimized; // Flag to ensure scale optimization runs only once
 	bool m_frame_started;   // Flag to track if begin_frame() was called
 
