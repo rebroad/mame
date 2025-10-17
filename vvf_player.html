@@ -313,6 +313,12 @@
             const frames = [];
             offset = 64; // Skip header
 
+            // State for delta encoding and palette
+            let currentColor = {r: 255, g: 255, b: 255};
+            let currentIntensity = 255;
+            let lastX = 0, lastY = 0;
+            const palette = []; // Array of {r, g, b, intensity}
+
             for (let f = 0; f < header.totalFrames && offset < header.frameIndexOffset; f++) {
                 const frame = {vectors: [], timestamp: 0};
 
@@ -324,9 +330,24 @@
                         frame.timestamp = view.getUint32(offset, true);
                         offset += 4;
                         break;
-                    } else if (cmd === 0x10) { // LINE
-                        const x1 = view.getInt16(offset, true); offset += 2;
-                        const y1 = view.getInt16(offset, true); offset += 2;
+                    } else if (cmd === 0x61) { // LINE_TO (5 bytes)
+                        const x2 = view.getInt16(offset, true); offset += 2;
+                        const y2 = view.getInt16(offset, true); offset += 2;
+                        const intensity = view.getUint8(offset); offset++;
+
+                        frame.vectors.push({
+                            type: 'line',
+                            x1: lastX, y1: lastY,
+                            x2, y2,
+                            r: currentColor.r,
+                            g: currentColor.g,
+                            b: currentColor.b,
+                            intensity
+                        });
+                        currentIntensity = intensity;
+                        lastX = x2;
+                        lastY = y2;
+                    } else if (cmd === 0x62) { // LINE_TO_RGB (9 bytes)
                         const x2 = view.getInt16(offset, true); offset += 2;
                         const y2 = view.getInt16(offset, true); offset += 2;
                         const r = view.getUint8(offset); offset++;
@@ -334,7 +355,18 @@
                         const b = view.getUint8(offset); offset++;
                         const intensity = view.getUint8(offset); offset++;
 
-                        frame.vectors.push({type: 'line', x1, y1, x2, y2, r, g, b, intensity});
+                        frame.vectors.push({type: 'line', x1: lastX, y1: lastY, x2, y2, r, g, b, intensity});
+                        currentColor = {r, g, b};
+                        currentIntensity = intensity;
+                        lastX = x2;
+                        lastY = y2;
+
+                        // Add to palette if not already there (RGB only, intensity is separate)
+                        if (!palette.find(p => p.r === r && p.g === g && p.b === b)) {
+                            if (palette.length < 16) {
+                                palette.push({r, g, b});
+                            }
+                        }
                     } else if (cmd === 0x20) { // POINT
                         const x = view.getInt16(offset, true); offset += 2;
                         const y = view.getInt16(offset, true); offset += 2;
@@ -342,6 +374,56 @@
                         const intensity = view.getUint8(offset); offset++;
 
                         frame.vectors.push({type: 'point', x, y, intensity});
+                        lastX = x;
+                        lastY = y;
+                    } else if (cmd === 0x50) { // PALETTE_COLOR
+                        const packed = view.getUint8(offset); offset++;
+                        const paletteIndex = packed & 0x0F;
+                        const intensity = (packed >> 4) * 17; // Scale 0-15 to 0-255
+
+                        if (paletteIndex < palette.length) {
+                            currentColor = palette[paletteIndex];
+                            currentIntensity = intensity;
+                        }
+                    } else if (cmd === 0x60) { // DELTA_LINE (3 bytes)
+                        const deltaPacked = view.getUint8(offset); offset++;
+                        const intensityPacked = view.getUint8(offset); offset++;
+
+                        // Unpack 4-bit signed deltas
+                        const dx = (deltaPacked & 0x0F) > 7 ? (deltaPacked & 0x0F) - 16 : (deltaPacked & 0x0F);
+                        const dy = ((deltaPacked >> 4) & 0x0F) > 7 ? ((deltaPacked >> 4) & 0x0F) - 16 : ((deltaPacked >> 4) & 0x0F);
+
+                        // Unpack intensity (scale 0-15 to 0-255)
+                        const intensity = intensityPacked * 17;
+
+                        const x2 = lastX + dx;
+                        const y2 = lastY + dy;
+
+                        frame.vectors.push({
+                            type: 'line',
+                            x1: lastX, y1: lastY,
+                            x2, y2,
+                            r: currentColor.r,
+                            g: currentColor.g,
+                            b: currentColor.b,
+                            intensity
+                        });
+                        currentIntensity = intensity;
+                        lastX = x2;
+                        lastY = y2;
+                    } else if (cmd === 0x70) { // DELTA_POINT
+                        const delta = view.getUint8(offset); offset++;
+
+                        // Unpack 4-bit signed deltas
+                        const dx = (delta & 0x0F) > 7 ? (delta & 0x0F) - 16 : (delta & 0x0F);
+                        const dy = ((delta >> 4) & 0x0F) > 7 ? ((delta >> 4) & 0x0F) - 16 : ((delta >> 4) & 0x0F);
+
+                        const x = lastX + dx;
+                        const y = lastY + dy;
+
+                        frame.vectors.push({type: 'point', x, y, intensity: currentIntensity});
+                        lastX = x;
+                        lastY = y;
                     }
                 }
 
