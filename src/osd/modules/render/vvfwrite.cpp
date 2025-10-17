@@ -551,11 +551,13 @@ void vvf_write::audio_frame(const s16 *samples, int num_samples)
 	{
 		encode_opus_frame(samples, num_samples);
 	}
-#else
-	// No audio encoding available
-	(void)samples;
-	(void)num_samples;
+	else
 #endif
+	{
+		// Fallback: Write raw PCM samples directly to file
+		// This creates uncompressed audio but works without FFmpeg
+		m_file.write(reinterpret_cast<const char *>(samples), num_samples * sizeof(s16));
+	}
 }
 
 void vvf_write::write_frame_index()
@@ -648,9 +650,9 @@ void vvf_write::finalize()
 	header.audio_sample_rate = m_audio_sample_rate;
 	header.audio_channels = static_cast<uint8_t>(m_audio_channels);
 #ifdef MAME_FFMPEG
-	header.audio_codec = static_cast<uint8_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::NONE);
+	header.audio_codec = static_cast<uint8_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::PCM);
 #else
-	header.audio_codec = static_cast<uint8_t>(vvf_audio_codec::NONE);
+	header.audio_codec = static_cast<uint8_t>(vvf_audio_codec::PCM);  // Fallback to PCM
 #endif
 	header.frame_index_offset = frame_index_offset;
 	header.audio_data_offset = audio_data_offset;
