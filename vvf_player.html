@@ -314,6 +314,7 @@
             console.log('VVF Header:', header);
             console.log('Aspect ratio:', header.nativeWidth / header.nativeHeight);
             console.log('VVF coords:', header.vvfWidth, 'x', header.vvfHeight);
+            console.log('Audio:', header.audioCodec === 1 ? 'Opus' : header.audioCodec === 2 ? 'PCM' : 'None');
 
             // Parse frames
             const frames = [];
