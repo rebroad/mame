@@ -817,8 +817,6 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 	// Loop until we hit the right time
 	while (m_next_frame_time <= curtime)
 	{
-		auto start = std::chrono::high_resolution_clock::now();
-
 		// Get a frame from the pool (or create new if pool empty)
 		std::unique_ptr<encode_job> job;
 		{
@@ -837,8 +835,6 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 		job->video_width = snap.width();
 		job->video_height = snap.height();
 		job->video_rowpixels = snap.rowpixels();
-
-		auto alloc_time = std::chrono::high_resolution_clock::now();
 
 		// Copy visible pixels (async encoding requires data copy)
 		int actual_pixels = job->video_width * job->video_height;
@@ -860,29 +856,12 @@ void ffmpeg_write::video_frame(bitmap_rgb32& snap)
 			}
 		}
 
-		auto copy_time = std::chrono::high_resolution_clock::now();
-
 		// Queue the job for background encoding
 		{
 			std::lock_guard<std::mutex> lock(m_queue_mutex);
 			m_encode_queue.push(std::move(job));
 		}
 		m_queue_cv.notify_one();
-
-		auto end = std::chrono::high_resolution_clock::now();
-
-		// Log timing every 100 frames
-		if (m_frame % 100 == 0 && m_frame > 0)
-		{
-			auto alloc_us = std::chrono::duration_cast<std::chrono::microseconds>(alloc_time - start).count();
-			auto copy_us = std::chrono::duration_cast<std::chrono::microseconds>(copy_time - alloc_time).count();
-			auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - copy_time).count();
-			auto total_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-
-			osd_printf_info("FFmpeg frame %d: alloc=%ldµs, copy=%ldµs, queue=%ldµs, total=%ldµs (%.1fMB/s)\n",
-				m_frame, alloc_us, copy_us, queue_us, total_us,
-				(actual_pixels * 4.0 / 1024.0 / 1024.0) / (copy_us / 1000000.0));
-		}
 
 		m_next_frame_time += m_frame_period;
 		m_frame++;
@@ -954,8 +933,6 @@ void ffmpeg_write::queue_rendered_bitmap(bitmap_rgb32* bmp)
 	if (m_next_frame_time > curtime)
 		return;  // Skip this frame
 
-	auto start = std::chrono::high_resolution_clock::now();
-
 	// Create a job that OWNS the bitmap (zero copy!)
 	auto job = std::make_unique<encode_job>();
 	job->job_type = encode_job::type::VIDEO;
@@ -972,15 +949,6 @@ void ffmpeg_write::queue_rendered_bitmap(bitmap_rgb32* bmp)
 		m_encode_queue.push(std::move(job));
 	}
 	m_queue_cv.notify_one();
-
-	auto end = std::chrono::high_resolution_clock::now();
-
-	// Log timing every 100 frames
-	if (m_frame % 100 == 0 && m_frame > 0)
-	{
-		auto queue_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-		osd_printf_info("FFmpeg frame %d: ZERO-COPY queue=%ldµs\n", m_frame, queue_us);
-	}
 
 	m_next_frame_time += m_frame_period;
 	m_frame++;
