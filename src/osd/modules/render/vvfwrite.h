@@ -19,6 +19,7 @@
 #include <vector>
 #include <memory>
 #include <fstream>
+#include <map>
 
 // Forward declarations
 class running_machine;
@@ -165,6 +166,21 @@ private:
 		uint32_t new_color_count;
 		uint64_t total_bytes;
 	} m_stats;
+
+	// Per-second stats (rolling window)
+	struct frame_stats {
+		uint32_t line_to4;
+		uint32_t line_to4_pal;
+		uint32_t line_to8;
+		uint32_t line_to8_pal;
+		uint32_t line_to12;
+		uint32_t line_to12_pal;
+		uint32_t new_color;
+		uint64_t bytes;
+		std::map<uint32_t, uint32_t> color_usage; // packed RGB -> count
+	};
+	std::vector<frame_stats> m_recent_frames; // Last second of frames
+	attotime m_last_stats_print;
 
 	// Helper functions
 	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);

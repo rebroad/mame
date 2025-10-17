@@ -12,6 +12,7 @@
 #include "vvfwrite.h"
 #include "screen.h"
 #include "emuopts.h"
+#include <cmath>
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -47,6 +48,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_y(0)
 	, m_current_palette_index(0)
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0}
+	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
 	screen_device_enumerator screens(machine.root_device());
@@ -269,13 +271,32 @@ void vvf_write::write_line_command(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, 
 	}
 	else
 	{
-		// Distance too large for delta encoding - this shouldn't happen for vector games
-		// Fall back to absolute positioning with NEW_COLOR
-		osd_printf_warning("VVF: Line too long for delta encoding: dx=%d, dy=%d\n", dx, dy);
-		// We'll clamp to LINE_TO12 range
-		dx = std::max(-2047, std::min(2047, dx));
-		dy = std::max(-2047, std::min(2047, dy));
-		write_line_command(m_last_x, m_last_y, m_last_x + dx, m_last_y + dy, color, intensity);
+		// Distance too large for LINE_TO12 - split into multiple segments
+		// Calculate number of segments needed (Pythagoras)
+		double distance = sqrt(double(dx) * dx + double(dy) * dy);
+		int num_segments = int(ceil(distance / 2047.0));
+
+		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d, dist=%.1f) into %d segments\n",
+			dx, dy, distance, num_segments);
+
+		// Split the line into equal segments
+		for (int i = 0; i < num_segments; i++)
+		{
+			s32 seg_dx = dx / num_segments;
+			s32 seg_dy = dy / num_segments;
+			s32 target_x = m_last_x + seg_dx;
+			s32 target_y = m_last_y + seg_dy;
+
+			// Last segment gets any remainder
+			if (i == num_segments - 1)
+			{
+				target_x = x2;
+				target_y = y2;
+			}
+
+			// Recursive call for each segment (will use LINE_TO12 or smaller)
+			write_line_command(m_last_x, m_last_y, target_x, target_y, color, intensity);
+		}
 		return;
 	}
 
