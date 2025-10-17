@@ -34,10 +34,14 @@ constexpr uint32_t VVF_VERSION = 1;
 enum class vvf_command : uint8_t
 {
 	END_FRAME = 0x00,
-	LINE = 0x10,
-	POINT = 0x20,
-	RGB_COLOR = 0x30,
-	INTENSITY = 0x40
+	PALETTE_COLOR = 0x50,  // Change color/intensity: palette_index (4-bit) + intensity (4-bit)
+	DELTA_LINE = 0x60,     // Small line: 2 bytes of 4-bit deltas, uses current color
+	LINE_TO = 0x61,        // Large line: x,y (int16) + intensity (1 byte), uses current color
+	LINE_TO_RGB = 0x62,    // Large line with new color: x,y (int16) + RGB (3 bytes) + intensity (1 byte)
+	POINT = 0x20,          // Deprecated, kept for compatibility
+	RGB_COLOR = 0x30,      // Deprecated
+	INTENSITY = 0x40,      // Deprecated
+	DELTA_POINT = 0x70     // Deprecated
 };
 
 // Audio codec types
@@ -140,6 +144,21 @@ private:
 	// Current state (for delta encoding)
 	rgb_t m_current_color;
 	uint8_t m_current_intensity;
+	s32 m_last_x, m_last_y;  // Last coordinates for delta encoding
+
+	// Palette optimization (stores RGB colors only, intensity is separate)
+	struct palette_entry
+	{
+		rgb_t color;
+		uint8_t usage_count;
+	};
+	std::vector<palette_entry> m_palette;
+	uint8_t m_current_palette_index;
+
+	// Delta encoding helpers
+	bool should_use_delta(s32 x1, s32 y1, s32 x2, s32 y2) const;
+	bool should_use_palette(rgb_t color) const;
+	uint8_t find_or_add_palette_color(rgb_t color);
 };
 
 #endif // MAME_OSD_VVFWRITE_H
