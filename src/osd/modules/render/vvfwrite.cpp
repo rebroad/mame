@@ -68,7 +68,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0, 0, 0, 0,  // max_move coords
 		INT32_MAX, INT32_MIN, INT32_MAX, INT32_MIN,  // min_x, max_x, min_y, max_y
 		0,  // debug_line_count
-		0, 0}  // x_rescale_count, y_rescale_count
+		0, 0, // x_rescale_count, y_rescale_count
+		0,    // palette_full_count
+		0, 0, 0, 0, 0}  // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
 	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
@@ -223,6 +225,26 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 	s32 scaled_y1 = y1 / m_y_scale;
 	s32 scaled_x2 = x2 / m_x_scale;
 	s32 scaled_y2 = y2 / m_y_scale;
+
+	// Track precision loss: scale back and compare to original
+	s32 recovered_x1 = scaled_x1 * m_x_scale;
+	s32 recovered_y1 = scaled_y1 * m_y_scale;
+	s32 recovered_x2 = scaled_x2 * m_x_scale;
+	s32 recovered_y2 = scaled_y2 * m_y_scale;
+
+	s32 error_x1 = std::abs(x1 - recovered_x1);
+	s32 error_y1 = std::abs(y1 - recovered_y1);
+	s32 error_x2 = std::abs(x2 - recovered_x2);
+	s32 error_y2 = std::abs(y2 - recovered_y2);
+
+	m_stats.total_coord_error_x += error_x1 + error_x2;
+	m_stats.total_coord_error_y += error_y1 + error_y2;
+	m_stats.coord_samples += 2;  // Two coordinates per line
+
+	if (error_x1 > m_stats.max_error_x) m_stats.max_error_x = error_x1;
+	if (error_x2 > m_stats.max_error_x) m_stats.max_error_x = error_x2;
+	if (error_y1 > m_stats.max_error_y) m_stats.max_error_y = error_y1;
+	if (error_y2 > m_stats.max_error_y) m_stats.max_error_y = error_y2;
 
 	// Check for overflow and rescale if needed
 	const s32 MAX_COORD = 2047;
@@ -747,6 +769,28 @@ void vvf_write::finalize()
 		{
 			osd_printf_info("VVF: Adaptive rescaling events: X=%u Y=%u\n",
 				m_stats.x_rescale_count, m_stats.y_rescale_count);
+		}
+
+		// Precision loss statistics
+		if (m_stats.coord_samples > 0)
+		{
+			double avg_error_x = (double)m_stats.total_coord_error_x / m_stats.coord_samples;
+			double avg_error_y = (double)m_stats.total_coord_error_y / m_stats.coord_samples;
+
+			// Convert MAME internal units to logical pixels (÷65536)
+			const s32 MAME_FP = 65536;
+			double avg_error_x_pixels = avg_error_x / MAME_FP;
+			double avg_error_y_pixels = avg_error_y / MAME_FP;
+			double max_error_x_pixels = (double)m_stats.max_error_x / MAME_FP;
+			double max_error_y_pixels = (double)m_stats.max_error_y / MAME_FP;
+
+			// Calculate bits of precision maintained
+			double bits_x = native_w > 0 ? log2((double)native_w / avg_error_x_pixels) : 0;
+			double bits_y = native_h > 0 ? log2((double)native_h / avg_error_y_pixels) : 0;
+
+			osd_printf_info("VVF: Precision loss: X avg=%.3f px (max=%.3f px, ~%.1f bits) | Y avg=%.3f px (max=%.3f px, ~%.1f bits)\n",
+				avg_error_x_pixels, max_error_x_pixels, bits_x,
+				avg_error_y_pixels, max_error_y_pixels, bits_y);
 		}
 	}
 
