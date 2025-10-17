@@ -67,20 +67,25 @@ enum class vvf_audio_codec : uint16_t
 #pragma pack(push, 1)
 struct vvf_header
 {
-	uint32_t magic;                 // "VVF1"
-	uint32_t version;               // Format version
-	uint32_t width;                 // Native width
-	uint32_t height;                // Native height
+	uint32_t magic;                 // "VVF1" (0x31465656)
+	uint32_t version;               // Format version (1)
+	uint16_t native_width;          // Original game width in logical pixels (e.g., 252 for Star Wars)
+	uint16_t native_height;         // Original game height in logical pixels (e.g., 292 for Star Wars)
+	uint16_t vvf_width;             // VVF coordinate width (max coord value, e.g., 2047)
+	uint16_t vvf_height;            // VVF coordinate height (max coord value, e.g., 2047)
 	uint32_t frame_rate;            // Frame rate * 1000 (e.g., 60000 = 60 Hz)
-	uint32_t total_frames;          // Total frame count
+	uint32_t total_frames;          // Total frame count (max: 4.3 billion = 828 days @ 60fps)
 	uint32_t audio_sample_rate;     // Audio sample rate (e.g., 48000)
-	uint16_t audio_channels;        // Audio channels (1 or 2)
-	uint16_t audio_codec;           // Audio codec (vvf_audio_codec)
+	uint8_t  audio_channels;        // Audio channels (1 or 2)
+	uint8_t  audio_codec;           // Audio codec (0=None, 1=Opus)
+	uint16_t reserved1;             // Padding
 	uint64_t frame_index_offset;    // File offset to frame index
 	uint64_t audio_data_offset;     // File offset to audio data
 	uint64_t duration_us;           // Total duration in microseconds
-	uint8_t  reserved[6];           // Padding to 64 bytes
+	uint32_t reserved2;             // Padding to 56 bytes
 };
+// Aspect ratio = native_width / native_height
+// Scale factors: x_scale = vvf_width / native_width, y_scale = vvf_height / native_height
 #pragma pack(pop)
 
 //**************************************************************************
@@ -130,6 +135,8 @@ private:
 	uint32_t m_frame_rate;
 	uint32_t m_frame_count;
 	attotime m_start_time;
+	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
+	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 
 	// Frame data buffer (for current frame)
 	std::vector<uint8_t> m_frame_buffer;
@@ -206,6 +213,8 @@ private:
 		// Coordinate range tracking
 		s32 min_x, max_x, min_y, max_y;
 		uint32_t debug_line_count;  // For debug output
+		uint32_t x_rescale_count;   // Number of times X scale was adjusted
+		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
 	} m_stats;
 
 	// Per-second stats (rolling window)
@@ -225,6 +234,7 @@ private:
 
 	// Helper functions
 	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);
+	void print_color_stats() const;
 
 #ifdef MAME_FFMPEG
 	// Audio encoding helpers

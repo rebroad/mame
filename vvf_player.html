@@ -295,23 +295,29 @@
 
             const header = {
                 version: view.getUint32(offset, true), offset += 4,
-                width: view.getUint32(offset, true), offset += 4,
-                height: view.getUint32(offset, true), offset += 4,
+                nativeWidth: view.getUint16(offset, true), offset += 2,
+                nativeHeight: view.getUint16(offset, true), offset += 2,
+                vvfWidth: view.getUint16(offset, true), offset += 2,
+                vvfHeight: view.getUint16(offset, true), offset += 2,
                 frameRate: view.getUint32(offset, true), offset += 4,
                 totalFrames: view.getUint32(offset, true), offset += 4,
                 audioSampleRate: view.getUint32(offset, true), offset += 4,
-                audioChannels: view.getUint16(offset, true), offset += 2,
-                audioCodec: view.getUint16(offset, true), offset += 2,
+                audioChannels: view.getUint8(offset, true), offset += 1,
+                audioCodec: view.getUint8(offset, true), offset += 1,
+                reserved1: view.getUint16(offset, true), offset += 2,
                 frameIndexOffset: Number(view.getBigUint64(offset, true)), offset += 8,
                 audioDataOffset: Number(view.getBigUint64(offset, true)), offset += 8,
                 durationUs: Number(view.getBigUint64(offset, true)), offset += 8,
+                reserved2: view.getUint32(offset, true), offset += 4,
             };
 
             console.log('VVF Header:', header);
+            console.log('Aspect ratio:', header.nativeWidth / header.nativeHeight);
+            console.log('VVF coords:', header.vvfWidth, 'x', header.vvfHeight);
 
             // Parse frames
             const frames = [];
-            offset = 64; // Skip header
+            offset = 56; // Skip header (56 bytes)
 
             // State for rendering
             let currentColor = {r: 255, g: 255, b: 255};
@@ -426,8 +432,24 @@
         // Canvas setup
         function setupCanvas() {
             const scale = parseInt(document.getElementById('resolutionSelect').value);
-            canvas.width = vvfData.header.width * scale;
-            canvas.height = vvfData.header.height * scale;
+
+            // Use native dimensions for aspect ratio
+            const aspectRatio = vvfData.header.nativeWidth / vvfData.header.nativeHeight;
+
+            // Size canvas based on VVF coordinate range, maintaining native aspect ratio
+            const baseSize = Math.max(vvfData.header.vvfWidth, vvfData.header.vvfHeight);
+
+            if (aspectRatio >= 1.0) {
+                // Wider than tall
+                canvas.width = baseSize * scale;
+                canvas.height = (baseSize / aspectRatio) * scale;
+            } else {
+                // Taller than wide
+                canvas.height = baseSize * scale;
+                canvas.width = baseSize * aspectRatio * scale;
+            }
+
+            console.log(`Canvas: ${canvas.width}×${canvas.height} (aspect: ${aspectRatio.toFixed(3)}, native: ${vvfData.header.nativeWidth}×${vvfData.header.nativeHeight})`);
         }
 
         // Rendering

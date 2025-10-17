@@ -14,6 +14,7 @@
 #include "emuopts.h"
 #include <cmath>
 #include <limits>
+#include <algorithm>
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -41,6 +42,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_frame_rate(60000)  // Default 60 Hz
 	, m_frame_count(0)
 	, m_start_time(attotime::zero)
+	, m_x_scale(8192)  // Start with 8192, will optimize after first frame
+	, m_y_scale(8192)
 	, m_audio_sample_rate(48000)
 	, m_audio_channels(2)
 #ifdef MAME_FFMPEG
@@ -62,7 +65,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0, 0, 0, 0,  // max_draw coords
 		0, 0, 0, 0,  // max_move coords
 		INT32_MAX, INT32_MIN, INT32_MAX, INT32_MIN,  // min_x, max_x, min_y, max_y
-		0}  // debug_line_count
+		0,  // debug_line_count
+		0, 0}  // x_rescale_count, y_rescale_count
 	, m_last_stats_print(attotime::zero)
 {
 	// Get actual frame rate from first screen if available
@@ -144,16 +148,20 @@ void vvf_write::write_header()
 	vvf_header header{};
 	header.magic = VVF_MAGIC;
 	header.version = VVF_VERSION;
-	header.width = m_width;
-	header.height = m_height;
+	header.native_width = m_width;   // Will be updated in finalize()
+	header.native_height = m_height;
+	header.vvf_width = 0;            // Will be updated in finalize()
+	header.vvf_height = 0;
 	header.frame_rate = m_frame_rate;
-	header.total_frames = m_frame_count;  // Will be updated in finalize()
+	header.total_frames = 0;         // Will be updated in finalize()
 	header.audio_sample_rate = m_audio_sample_rate;
-	header.audio_channels = m_audio_channels;
-	header.audio_codec = static_cast<uint16_t>(vvf_audio_codec::PCM);  // TODO: Opus support
+	header.audio_channels = static_cast<uint8_t>(m_audio_channels);
+	header.audio_codec = 0;          // Will be updated in finalize()
+	header.reserved1 = 0;
 	header.frame_index_offset = 0;  // Will be updated in finalize()
-	header.audio_data_offset = 0;   // Not used yet (audio interleaved with frames)
-	header.duration_us = 0;         // Will be updated in finalize()
+	header.audio_data_offset = 0;
+	header.duration_us = 0;
+	header.reserved2 = 0;
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 }
@@ -194,13 +202,47 @@ void vvf_write::draw_line(s32 x1, s32 y1, s32 x2, s32 y2, rgb_t color, uint8_t i
 
 	s_frame_draw_calls++;
 
-	// MAME's vector coordinates are in fixed-point with 65536 units per logical pixel
-	// Scale them down to match our expected 640x480 coordinate system
-	const s32 VECTOR_SCALE = 65536;
-	s32 scaled_x1 = x1 / VECTOR_SCALE;
-	s32 scaled_y1 = y1 / VECTOR_SCALE;
-	s32 scaled_x2 = x2 / VECTOR_SCALE;
-	s32 scaled_y2 = y2 / VECTOR_SCALE;
+	// MAME's vector coordinates use 16.16 fixed-point (65536 units per logical pixel)
+	// Scale using independent X/Y factors to maximize 12-bit precision (±2047 range)
+	s32 scaled_x1 = x1 / m_x_scale;
+	s32 scaled_y1 = y1 / m_y_scale;
+	s32 scaled_x2 = x2 / m_x_scale;
+	s32 scaled_y2 = y2 / m_y_scale;
+
+	// Check for overflow and rescale if needed
+	const s32 MAX_COORD = 2047;
+	const s32 MIN_COORD = -2047;
+	if (scaled_x1 > MAX_COORD || scaled_x1 < MIN_COORD ||
+		scaled_x2 > MAX_COORD || scaled_x2 < MIN_COORD ||
+		scaled_y1 > MAX_COORD || scaled_y1 < MIN_COORD ||
+		scaled_y2 > MAX_COORD || scaled_y2 < MIN_COORD)
+	{
+		// Overflow detected - increase scale factors
+		s32 max_abs_x = std::max(std::abs(scaled_x1), std::abs(scaled_x2));
+		s32 max_abs_y = std::max(std::abs(scaled_y1), std::abs(scaled_y2));
+
+		if (max_abs_x > MAX_COORD)
+		{
+			s32 old_scale = m_x_scale;
+			m_x_scale = (m_x_scale * max_abs_x) / MAX_COORD + 1;
+			m_stats.x_rescale_count++;
+			osd_printf_warning("VVF: X overflow! Rescaling %d -> %d (%.1fx loss) at frame %u\n",
+				old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+			scaled_x1 = x1 / m_x_scale;
+			scaled_x2 = x2 / m_x_scale;
+		}
+
+		if (max_abs_y > MAX_COORD)
+		{
+			s32 old_scale = m_y_scale;
+			m_y_scale = (m_y_scale * max_abs_y) / MAX_COORD + 1;
+			m_stats.y_rescale_count++;
+			osd_printf_warning("VVF: Y overflow! Rescaling %d -> %d (%.1fx loss) at frame %u\n",
+				old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
+			scaled_y1 = y1 / m_y_scale;
+			scaled_y2 = y2 / m_y_scale;
+		}
+	}
 
 	// Debug: Print first 10 draw_line calls
 	static uint32_t debug_draw_count = 0;
@@ -234,8 +276,38 @@ void vvf_write::end_frame()
 			m_frame_count, m_frame_buffer.size());
 	}
 
+	// Per-second stats output (for live monitoring)
+	attotime current_time = m_machine.time();
+	if ((current_time - m_last_stats_print).as_double() >= 1.0)
+	{
+		osd_printf_info("VVF [%.1fs]: ", current_time.as_double());
+		print_color_stats();
+		osd_printf_info("| %u frames, %.2f KB\n", m_frame_count, m_stats.total_bytes / 1024.0);
+		m_last_stats_print = current_time;
+	}
+
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
+
+	// After first frame, compute optimal X/Y scales to maximize 12-bit precision
+	if (m_frame_count == 0 && m_stats.min_x != INT32_MAX)
+	{
+		// Target: use 100% of ±2047 range for maximum precision
+		const s32 TARGET_RANGE = 2047;
+
+		if (m_stats.max_x > 0)
+		{
+			m_x_scale = (m_stats.max_x + TARGET_RANGE) / TARGET_RANGE;
+			osd_printf_info("VVF: Optimized X scale: %d (max X %d -> %d)\n",
+				m_x_scale, m_stats.max_x, m_stats.max_x / m_x_scale);
+		}
+		if (m_stats.max_y > 0)
+		{
+			m_y_scale = (m_stats.max_y + TARGET_RANGE) / TARGET_RANGE;
+			osd_printf_info("VVF: Optimized Y scale: %d (max Y %d -> %d)\n",
+				m_y_scale, m_stats.max_y, m_stats.max_y / m_y_scale);
+		}
+	}
 
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
@@ -552,20 +624,39 @@ void vvf_write::finalize()
 	vvf_header header{};
 	header.magic = VVF_MAGIC;
 	header.version = VVF_VERSION;
-	header.width = m_width;
-	header.height = m_height;
+
+	// Store VVF coordinate range (what we actually use in the file)
+	header.vvf_width = (m_stats.min_x != INT32_MAX) ? (m_stats.max_x - m_stats.min_x) : m_width;
+	header.vvf_height = (m_stats.min_y != INT32_MAX) ? (m_stats.max_y - m_stats.min_y) : m_height;
+
+	// Store original game dimensions (VVF coords divided by MAME's 65536 fixed-point scale)
+	// This preserves aspect ratio: native_width / native_height = display aspect
+	const s32 MAME_FIXED_POINT = 65536;
+	if (m_stats.min_x != INT32_MAX)
+	{
+		header.native_width = (m_stats.max_x * MAME_FIXED_POINT / m_x_scale) / MAME_FIXED_POINT;
+		header.native_height = (m_stats.max_y * MAME_FIXED_POINT / m_y_scale) / MAME_FIXED_POINT;
+	}
+	else
+	{
+		header.native_width = m_width;
+		header.native_height = m_height;
+	}
+
 	header.frame_rate = m_frame_rate;
 	header.total_frames = m_frame_count;
 	header.audio_sample_rate = m_audio_sample_rate;
-	header.audio_channels = m_audio_channels;
+	header.audio_channels = static_cast<uint8_t>(m_audio_channels);
 #ifdef MAME_FFMPEG
-	header.audio_codec = static_cast<uint16_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::NONE);
+	header.audio_codec = static_cast<uint8_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::NONE);
 #else
-	header.audio_codec = static_cast<uint16_t>(vvf_audio_codec::NONE);
+	header.audio_codec = static_cast<uint8_t>(vvf_audio_codec::NONE);
 #endif
 	header.frame_index_offset = frame_index_offset;
 	header.audio_data_offset = audio_data_offset;
 	header.duration_us = duration_us;
+	header.reserved1 = 0;
+	header.reserved2 = 0;
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
@@ -576,18 +667,39 @@ void vvf_write::finalize()
 
 	// Get actual file size
 	uint64_t actual_file_size = m_file.tellp();
+	double duration_sec = duration_us / 1000000.0;
+	double kb_per_sec = (actual_file_size / 1024.0) / duration_sec;
 
-	osd_printf_info("VVF: %u frames, %.2fs duration\n", m_frame_count, duration_us / 1000000.0);
-	osd_printf_info("VVF: File size: %.2f MB (%.2f KB/frame) | Commands: %.2f MB | Palette: %u entries\n",
-		actual_file_size / 1048576.0, actual_file_size / 1024.0 / m_frame_count,
-		m_stats.total_bytes / 1048576.0, m_stats.new_color_count);
+	osd_printf_info("VVF: %u frames, %.2fs, %.2f MB (%.2f KB/s)\n",
+		m_frame_count, duration_sec, actual_file_size / 1048576.0, kb_per_sec);
+
+	// H.264 comparison (typical 1920x1080 @ CRF 23 ≈ 3000-5000 KB/s)
+	double h264_estimate_kb_s = 4000.0; // Conservative estimate for 1080p H.264
+	double vs_h264_factor = h264_estimate_kb_s / kb_per_sec;
+	osd_printf_info("VVF: %.2f KB/frame | Commands: %.2f MB | Palette: %u entries | vs H.264(1080p): %.1fx smaller\n",
+		actual_file_size / 1024.0 / m_frame_count, m_stats.total_bytes / 1048576.0,
+		m_stats.new_color_count, vs_h264_factor);
 
 	// Coordinate system info
 	if (m_stats.min_x != INT32_MAX)
 	{
-		osd_printf_info("VVF: Coordinate range: X=[%d..%d] (span=%d) Y=[%d..%d] (span=%d)\n",
-			m_stats.min_x, m_stats.max_x, m_stats.max_x - m_stats.min_x,
-			m_stats.min_y, m_stats.max_y, m_stats.max_y - m_stats.min_y);
+		s32 vvf_w = m_stats.max_x - m_stats.min_x;
+		s32 vvf_h = m_stats.max_y - m_stats.min_y;
+		// Calculate native dimensions (logical pixels after ÷65536 MAME scale)
+		const s32 MAME_FP = 65536;
+		s32 native_w = (m_stats.max_x * MAME_FP / m_x_scale) / MAME_FP;
+		s32 native_h = (m_stats.max_y * MAME_FP / m_y_scale) / MAME_FP;
+
+		osd_printf_info("VVF: Native: %d×%d (aspect %.2f) | VVF coords: %d×%d | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
+			native_w, native_h, (double)native_w / native_h,
+			vvf_w, vvf_h, m_x_scale, m_y_scale,
+			100.0 * std::max(vvf_w, vvf_h) / 4095.0);
+
+		if (m_stats.x_rescale_count > 0 || m_stats.y_rescale_count > 0)
+		{
+			osd_printf_info("VVF: Adaptive rescaling events: X=%u Y=%u\n",
+				m_stats.x_rescale_count, m_stats.y_rescale_count);
+		}
 	}
 
 	// Commands summary
@@ -623,16 +735,8 @@ void vvf_write::finalize()
 	// Color usage (compact)
 	if (m_stats.beam_draws_count > 0)
 	{
-		const char *color_names[COLOR_COUNT] = {"R", "G", "B", "Y", "C", "M", "W"};
-		osd_printf_info("VVF: Colors: ");
-		for (int i = 0; i < COLOR_COUNT; i++)
-		{
-			if (m_stats.draws_per_color[i] > 0)
-				osd_printf_info("%s=%.1f%% ", color_names[i],
-					100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
-		}
-		if (m_stats.draws_other_colors > 0)
-			osd_printf_info("Other=%.1f%%", 100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
+		osd_printf_info("VVF: ");
+		print_color_stats();
 		osd_printf_info("\n");
 	}
 }
@@ -679,6 +783,23 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	// For now, just use palette entry 0
 	osd_printf_warning("VVF: Palette full (256 entries), reusing entry 0\n");
 	return 0;
+}
+
+void vvf_write::print_color_stats() const
+{
+	if (m_stats.beam_draws_count == 0)
+		return;
+
+	const char *color_names[COLOR_COUNT] = {"R", "G", "B", "Y", "C", "M", "W"};
+	osd_printf_info("Colors: ");
+	for (int i = 0; i < COLOR_COUNT; i++)
+	{
+		if (m_stats.draws_per_color[i] > 0)
+			osd_printf_info("%s=%.1f%% ", color_names[i],
+				100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
+	}
+	if (m_stats.draws_other_colors > 0)
+		osd_printf_info("Other=%.1f%% ", 100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
 }
 
 //**************************************************************************
