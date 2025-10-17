@@ -678,9 +678,11 @@ void vvf_write::finalize()
 	// H.264 comparison (typical 1920x1080 @ CRF 23 ≈ 3000-5000 KB/s)
 	double h264_estimate_kb_s = 4000.0; // Conservative estimate for 1080p H.264
 	double vs_h264_factor = h264_estimate_kb_s / kb_per_sec;
-	osd_printf_info("VVF: %.2f KB/frame | Commands: %.2f MB | Palette: %u entries | vs H.264(1080p): %.1fx smaller\n",
+	osd_printf_info("VVF: %.2f KB/frame | Commands: %.2f MB | Palette: %u entries%s | vs H.264(1080p): %.1fx smaller\n",
 		actual_file_size / 1024.0 / m_frame_count, m_stats.total_bytes / 1048576.0,
-		m_stats.new_color_count, vs_h264_factor);
+		m_stats.new_color_count,
+		m_stats.palette_full_count > 0 ? util::string_format(" (FULL! %u overflow attempts)", m_stats.palette_full_count).c_str() : "",
+		vs_h264_factor);
 
 	// Coordinate system info
 	if (m_stats.min_x != INT32_MAX)
@@ -775,15 +777,25 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 		entry.intensity = intensity;
 		m_palette.push_back(entry);
 
-		osd_printf_verbose("VVF: Added palette entry %d: RGB(%d,%d,%d) intensity=%d\n",
+		osd_printf_info("VVF: Added palette entry %d: RGB(%d,%d,%d) intensity=%d\n",
 			(int)m_palette.size() - 1, color.r(), color.g(), color.b(), intensity);
 
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
 
-	// Palette full (256 entries) - find closest match
-	// For now, just use palette entry 0
-	osd_printf_warning("VVF: Palette full (256 entries), reusing entry 0\n");
+	// Palette full (256 entries)
+	m_stats.palette_full_count++;
+
+	osd_printf_warning("VVF: Palette full (%d/5 attempts) - tried to add RGB(%d,%d,%d) intensity=%d, reusing entry 0\n",
+		m_stats.palette_full_count, color.r(), color.g(), color.b(), intensity);
+
+	// Stop recording after 5 failed attempts
+	if (m_stats.palette_full_count >= 5)
+	{
+		osd_printf_error("VVF: Palette full 5 times, stopping recording gracefully\n");
+		stop();
+	}
+
 	return 0;
 }
 
