@@ -190,6 +190,9 @@ float vector_device::normalized_sigmoid(float n, float k)
  */
 void vector_device::add_point(int x, int y, rgb_t color, int intensity)
 {
+	machine().video().record_vector_line(
+		x, y, color, intensity);
+
 	point *newpoint;
 
 	intensity = std::clamp(intensity, 0, 255);
@@ -211,17 +214,6 @@ void vector_device::add_point(int x, int y, rgb_t color, int intensity)
 	newpoint->y = y;
 	newpoint->col = color;
 	newpoint->intensity = intensity;
-
-	// Record line to VVF if recording
-	// Vector games draw lines as consecutive points, so draw line from previous point to current
-	if (m_vector_index > 0)
-	{
-		point *prevpoint = &m_vector_list[m_vector_index - 1];
-		machine().video().record_vector_line(
-			prevpoint->x, prevpoint->y,
-			newpoint->x, newpoint->y,
-			newpoint->col, newpoint->intensity);
-	}
 
 	m_vector_index++;
 	if (m_vector_index >= MAX_POINTS)
