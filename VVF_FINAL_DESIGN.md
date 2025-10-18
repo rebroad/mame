@@ -18,7 +18,7 @@ This eliminates 50% of coordinates compared to traditional LINE(x1,y1,x2,y2) for
 Automatically choose command size based on distance:
 - **LINE_TO4:** ±7 pixels (2-3 bytes) - **Most common (85%+)**
 - **LINE_TO8:** ±127 pixels (3-4 bytes) - Medium jumps
-- **LINE_TO12:** ±2047 pixels (4-5 bytes) - Large jumps
+- **LINE_TO12:** 0-4095 absolute (4-5 bytes) - Absolute positioning
 
 ### 3. **Integrated Palette System**
 - **16-entry palette** stores (color, intensity) pairs

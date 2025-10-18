@@ -142,7 +142,7 @@ private:
 	attotime m_start_time;
 	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
-	s32 m_min_x, m_max_x; // MAME coordinate range (for offset and scaling)
+	s32 m_min_x, m_max_x; // MAME coordinate range (for offset, scaling, and bit precision analysis)
 	s32 m_min_y, m_max_y;
 	bool m_frame_started;   // Flag to track if begin_frame() was called
 
@@ -184,6 +184,7 @@ private:
 	};
 	std::vector<palette_entry> m_palette;
 	uint8_t m_current_palette_index;
+	uint32_t m_palette_full_count; // Track palette overflow attempts (always enabled)
 
 	// Color indices for stats
 	enum color_index {
@@ -221,7 +222,6 @@ private:
 		uint32_t debug_line_count;  // For debug output
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
-		uint32_t palette_full_count; // Number of times palette was full
 
 		// Precision tracking
 		uint64_t total_coord_error_x; // Accumulated X coordinate precision loss
