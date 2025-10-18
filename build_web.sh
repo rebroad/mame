@@ -842,7 +842,7 @@ else
 		try {
 		  console.warn('[MAME-DEBUG]', message, data || '');
 		} catch(e) {}
-		// Also log to a global array for probe_mame_web to capture
+		// Also log to a global array for probe_web to capture
 		if (typeof window.mameDebugLog === 'undefined') {
 		  window.mameDebugLog = [];
 		}
@@ -1336,7 +1336,7 @@ start_server() {
 	echo "Starting local server on http://localhost:$port ..."
 	LAST_SERVER_PORT="$port"
 
-	# Write port number to file for probe_mame_web.js to read
+	# Write port number to file for probe_web.js to read
 	echo "$port" > "$REPO_ROOT/.mame_web_port"
 
 	pushd "$OUTDIR" >/dev/null
@@ -1376,14 +1376,14 @@ run_probe() {
 		fi
 	fi
 	# Use the comprehensive MAME probe tool (much better output)
-	if [[ -f "$REPO_ROOT/probe_mame_web.js" ]]; then
+	if [[ -f "$REPO_ROOT/probe_web.js" ]]; then
 		probe_args=("$USED_PORT")
 		if $NOTHROT; then
 			probe_args+=("-nothrot")
 		fi
-		node "$REPO_ROOT/probe_mame_web.js" "${probe_args[@]}" || true
+		node "$REPO_ROOT/probe_web.js" "${probe_args[@]}" || true
 	else
-		echo "probe_mame_web.js not found; skipping console capture."
+		echo "probe_web.js not found; skipping console capture."
 	fi
 	popd >/dev/null
 }
