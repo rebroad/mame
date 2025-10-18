@@ -120,7 +120,6 @@ public:
 	// Compression interface
 	void set_compression(bool enabled, uint32_t type = 1);
 	std::vector<uint8_t> compress_data(const std::vector<uint8_t>& data);
-	std::vector<uint8_t> decompress_data(const std::vector<uint8_t>& data);
 
 private:
 	// File I/O
