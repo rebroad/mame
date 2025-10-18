@@ -289,13 +289,13 @@ void vvf_write::end_frame()
 	attotime elapsed = current_time - m_start_time;
 	double elapsed_sec = elapsed.as_double();
 
-	if (m_stats.debug_line_count < 40)
+	if (m_stats.debug_line_count < 40 || m_frame_count < 10)
 	{
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF end_frame #%u (wrote %zu bytes this frame)\n",
-			seconds, milliseconds, m_frame_count, m_frame_buffer.size());
+		osd_printf_info("%u.%03u VVF end_frame #%u: %u lines this frame (%zu bytes)\n",
+			seconds, milliseconds, m_frame_count, s_frame_line_to_calls, m_frame_buffer.size());
 	}
 
 	// Per-second stats output (for live monitoring)
