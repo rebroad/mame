@@ -55,6 +55,9 @@
         #vectorCanvas {
             border: 1px solid #444;
             cursor: crosshair;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         .controls {
@@ -216,21 +219,16 @@
 
             <div class="control-group">
                 <h3>🎨 Display</h3>
-                <label>Resolution</label>
-                <select id="resolutionSelect">
-                    <option value="1">1x Native</option>
-                    <option value="2">2x Native</option>
-                    <option value="3">3x Native</option>
-                    <option value="4" selected>4x Native</option>
-                    <option value="6">6x Native</option>
-                    <option value="8">8x Native</option>
-                </select>
+                <label>Line Width: <span id="lineWidthValue">1.0</span></label>
+                <input type="range" id="lineWidthSlider" min="0.5" max="3" step="0.1" value="1">
                 <br><br>
                 <label>Glow Effect: <span id="glowValue">1.0</span></label>
                 <input type="range" id="glowSlider" min="0" max="3" step="0.1" value="1">
                 <br>
                 <label>Brightness: <span id="brightnessValue">1.0</span></label>
                 <input type="range" id="brightnessSlider" min="0.5" max="2" step="0.1" value="1">
+                <br><br>
+                <small style="color: #888;">Canvas auto-scales to fit window! 🚀</small>
             </div>
 
             <div class="control-group">
@@ -261,6 +259,7 @@
         let startTime = 0;
         let glowIntensity = 1.0;
         let brightness = 1.0;
+        let lineWidth = 1.0;
 
         // File loading
         document.getElementById('fileInput').addEventListener('change', async (e) => {
@@ -335,7 +334,7 @@
 
             // Parse frames
             const frames = [];
-            offset = 56; // Skip header (56 bytes)
+            offset = 60; // Skip header (60 bytes - struct padding makes it 60, not 56!)
 
             console.log(`📊 Starting frame parse: ${header.totalFrames} frames, frameIndexOffset=${header.frameIndexOffset}, starting at offset ${offset}`);
 
@@ -485,25 +484,32 @@
 
         // Canvas setup
         function setupCanvas() {
-            const scale = parseInt(document.getElementById('resolutionSelect').value);
+            // Get container dimensions
+            const container = document.querySelector('.canvas-container');
+            const containerWidth = container.clientWidth - 20; // Leave some margin
+            const containerHeight = container.clientHeight - 20;
 
             // Use native dimensions for aspect ratio
             const aspectRatio = vvfData.header.nativeWidth / vvfData.header.nativeHeight;
 
-            // Size canvas based on VVF coordinate range, maintaining native aspect ratio
-            const baseSize = Math.max(vvfData.header.vvfWidth, vvfData.header.vvfHeight);
+            // Calculate canvas size to fit container while maintaining aspect ratio
+            let canvasWidth, canvasHeight;
 
-            if (aspectRatio >= 1.0) {
-                // Wider than tall
-                canvas.width = baseSize * scale;
-                canvas.height = (baseSize / aspectRatio) * scale;
+            if (containerWidth / containerHeight > aspectRatio) {
+                // Container is wider than needed - limit by height
+                canvasHeight = containerHeight;
+                canvasWidth = containerHeight * aspectRatio;
             } else {
-                // Taller than wide
-                canvas.height = baseSize * scale;
-                canvas.width = baseSize * aspectRatio * scale;
+                // Container is taller than needed - limit by width
+                canvasWidth = containerWidth;
+                canvasHeight = containerWidth / aspectRatio;
             }
 
-            console.log(`Canvas: ${canvas.width}×${canvas.height} (aspect: ${aspectRatio.toFixed(3)}, native: ${vvfData.header.nativeWidth}×${vvfData.header.nativeHeight})`);
+            // Set canvas size (actual pixels)
+            canvas.width = Math.floor(canvasWidth);
+            canvas.height = Math.floor(canvasHeight);
+
+            console.log(`Canvas: ${canvas.width}×${canvas.height} (aspect: ${aspectRatio.toFixed(3)}, container: ${containerWidth}×${containerHeight})`);
         }
 
         // Rendering
@@ -514,12 +520,14 @@
                 return;
             }
 
-            const scale = parseInt(document.getElementById('resolutionSelect').value);
+            // Calculate scale based on canvas size vs VVF coordinate range
+            const scaleX = canvas.width / vvfData.header.vvfWidth;
+            const scaleY = canvas.height / vvfData.header.vvfHeight;
             const frame = vvfData.frames[frameIndex];
 
             // Debug first frame
             if (frameIndex === 0 || frameIndex === 1) {
-                console.log(`🎨 Rendering frame ${frameIndex}: ${frame.vectors.length} vectors`);
+                console.log(`🎨 Rendering frame ${frameIndex}: ${frame.vectors.length} vectors (scale: ${scaleX.toFixed(2)}x${scaleY.toFixed(2)})`);
             }
 
             // Clear with black background
@@ -528,7 +536,7 @@
 
             // Set up glow effect
             ctx.shadowBlur = glowIntensity * 5;
-            ctx.lineWidth = Math.max(1, scale * 0.5);
+            ctx.lineWidth = lineWidth;
             ctx.lineCap = 'round';
 
             // Render vectors
@@ -540,8 +548,8 @@
                     ctx.shadowColor = color;
 
                     ctx.beginPath();
-                    ctx.moveTo(vec.x1 * scale, vec.y1 * scale);
-                    ctx.lineTo(vec.x2 * scale, vec.y2 * scale);
+                    ctx.moveTo(vec.x1 * scaleX, vec.y1 * scaleY);
+                    ctx.lineTo(vec.x2 * scaleX, vec.y2 * scaleY);
                     ctx.stroke();
                 }
             });
@@ -585,9 +593,12 @@
         function stop() {
             pause();
             currentFrame = 0;
+            lastRenderedFrame = -1; // Reset so first frame renders
             renderFrame(0);
             updateTimeDisplay();
         }
+
+        let lastRenderedFrame = -1; // Track which frame we last rendered
 
         function playbackLoop() {
             if (!isPlaying) return;
@@ -598,7 +609,11 @@
 
             if (targetFrame < vvfData.frames.length) {
                 currentFrame = targetFrame;
-                renderFrame(currentFrame);
+                // Only render if frame actually changed (prevents re-rendering same frame at 60Hz)
+                if (currentFrame !== lastRenderedFrame) {
+                    renderFrame(currentFrame);
+                    lastRenderedFrame = currentFrame;
+                }
                 updateTimeDisplay();
                 animationFrameId = requestAnimationFrame(playbackLoop);
             } else {
@@ -651,8 +666,22 @@
         }
 
         // Controls
-        document.getElementById('resolutionSelect').addEventListener('change', () => {
-            setupCanvas();
+        // Window resize handler - makes canvas responsive!
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            if (!vvfData) return;
+
+            // Debounce resize events (wait 150ms after last resize)
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                setupCanvas();
+                renderFrame(currentFrame);
+            }, 150);
+        });
+
+        document.getElementById('lineWidthSlider').addEventListener('input', (e) => {
+            lineWidth = parseFloat(e.target.value);
+            document.getElementById('lineWidthValue').textContent = lineWidth.toFixed(1);
             renderFrame(currentFrame);
         });
 
@@ -674,6 +703,7 @@
             const x = e.clientX - rect.left;
             const percent = x / rect.width;
             currentFrame = Math.floor(percent * vvfData.frames.length);
+            lastRenderedFrame = -1; // Force re-render after seek
             renderFrame(currentFrame);
             updateTimeDisplay();
         });

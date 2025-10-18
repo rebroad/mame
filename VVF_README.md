@@ -76,13 +76,15 @@ chromium vvf_player.html
 ### File Structure
 
 ```
-[Header: 56 bytes]
+[Header: 60 bytes]
 [Frame Data: variable size]
 [Frame Index: variable size]
 [Audio Data: variable size, Opus compressed]
 ```
 
-### Header (56 bytes)
+### Header (60 bytes)
+
+**Note:** The header is 60 bytes due to struct padding, not 56 as initially documented!
 
 ```c
 struct vvf_header {
