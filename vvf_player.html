@@ -395,21 +395,21 @@
                             dy = view.getInt8(offset); offset++;
                             offset = maybeSetPalette(cmd, offset);
                         } else if (cmd === 0x64 || cmd === 0x65) {
-                            // 12-bit
+                            // 12-bit ABSOLUTE coordinates (not deltas!)
                             const byte0 = view.getUint8(offset); offset++;
                             const byte1 = view.getUint8(offset); offset++;
                             const byte2 = view.getUint8(offset); offset++;
                             offset = maybeSetPalette(cmd, offset);
                             const packed = byte0 | (byte1 << 8) | (byte2 << 16);
-                            dx = packed & 0x0FFF;          // 12-bit value
-                            dy = (packed >> 12) & 0x0FFF;  // 12-bit value
-                            // Convert 12-bit unsigned to signed (for deltas)
-                            if (dx > 2047) dx -= 4096;  // Handle negative deltas
-                            if (dy > 2047) dy -= 4096;
+                            // Extract absolute coordinates (0-4095 unsigned)
+                            dx = packed & 0x0FFF;          // X absolute position
+                            dy = (packed >> 12) & 0x0FFF;  // Y absolute position
+                            // Note: These are now absolute positions, not deltas!
                         }
 
-                        const x2 = lastX + dx;
-                        const y2 = lastY + dy;
+                        // LINE_TO4/8 use deltas, LINE_TO12 uses absolute coordinates
+                        const x2 = (cmd === 0x64 || cmd === 0x65) ? dx : (lastX + dx);
+                        const y2 = (cmd === 0x64 || cmd === 0x65) ? dy : (lastY + dy);
 
                         frame.vectors.push({
                             type: 'line',

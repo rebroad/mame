@@ -22,11 +22,13 @@
 //  CONSTANTS
 //**************************************************************************
 
-// VVF coordinate limits (12-bit signed deltas for LINE_TO commands)
-static const s32 LINE_TO4_MAX = 7;
-static const s32 LINE_TO8_MAX = 127;
-static const s32 LINE_TO12_MAX = 2047;
-static const s32 COORD_MAX = 2047;     // Maximum coordinate value
+// VVF coordinate limits
+// LINE_TO4 and LINE_TO8 use signed deltas (relative movement)
+// LINE_TO12 uses absolute coordinates (0-4095 unsigned)
+static const s32 LINE_TO4_MAX = 7;        // 4-bit signed delta: ±7
+static const s32 LINE_TO8_MAX = 127;      // 8-bit signed delta: ±127
+static const s32 LINE_TO12_MAX = 4095;    // 12-bit absolute: 0-4095
+static const s32 COORD_MAX = 4095;        // Maximum absolute coordinate value (4096 values: 0-4095)
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -56,7 +58,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_x_scale(8192)  // Start with 8192, will optimize after first frame with data
 	, m_y_scale(8192)
-	, m_min_x(INT32_MAX), m_max_x(INT32_MIN)  // Track actual coordinate range
+	, m_min_x(INT32_MAX), m_max_x(INT32_MIN)  // Track actual coordinate range (for scaling and bit analysis)
 	, m_min_y(INT32_MAX), m_max_y(INT32_MIN)
 	, m_frame_started(false)
 	, m_audio_sample_rate(48000)
@@ -72,6 +74,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
+	, m_palette_full_count(0)
 #if VVF_STATS
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
@@ -82,7 +85,6 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0, 0, 0, 0,  // max_move coords
 		0,  // debug_line_count
 		0, 0, // x_rescale_count, y_rescale_count
-		0,    // palette_full_count
 		0, 0, 0, 0, 0, // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
 		0}    // redundant_moves_skipped
 	, m_last_stats_print(attotime::zero)
@@ -224,7 +226,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 
 	s_frame_draw_calls++;
 
-	// Track coordinate ranges (always, for every coordinate)
+	// Track coordinate ranges (for scaling and bit precision analysis)
 	if (x < m_min_x) m_min_x = x;
 	if (x > m_max_x) m_max_x = x;
 	if (y < m_min_y) m_min_y = y;
@@ -532,11 +534,11 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 #endif
 		}
 	}
-	else if (abs_dx <= LINE_TO12_MAX && abs_dy <= LINE_TO12_MAX)
+	else if (x >= 0 && x <= LINE_TO12_MAX && y >= 0 && y <= LINE_TO12_MAX)
 	{
-		// LINE_TO12 or LINE_TO12_PAL
-		// Pack 12-bit values: dx (bits 0-11), dy (bits 12-23)
-		uint32_t packed = ((dx & 0x0FFF) | ((dy & 0x0FFF) << 12));
+		// LINE_TO12 or LINE_TO12_PAL (uses ABSOLUTE coordinates, not deltas!)
+		// Pack 12-bit unsigned absolute coordinates: x (bits 0-11), y (bits 12-23)
+		uint32_t packed = ((x & 0x0FFF) | ((y & 0x0FFF) << 12));
 
 		if (needs_palette_switch)
 		{
@@ -566,16 +568,17 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 	else
 	{
-		// Delta too large for LINE_TO12 - split into multiple segments
-		// Calculate segments needed based on max(dx, dy), not diagonal
-		int num_segments_x = (abs_dx + LINE_TO12_MAX - 1) / LINE_TO12_MAX;  // Round up
-		int num_segments_y = (abs_dy + LINE_TO12_MAX - 1) / LINE_TO12_MAX;
+		// Coordinates outside 0-4095 range - this should rarely happen if scaling is correct!
+		// Fall back to splitting the line into multiple segments using LINE_TO8 commands
+		osd_printf_warning("VVF: Coordinates out of range! target=(%d,%d) should be 0-4095. Delta from (%d,%d) is (%d,%d). Splitting.\n",
+			x, y, m_last_x, m_last_y, dx, dy);
+
+		// Use LINE_TO8 commands (±127 delta) to reach the target
+		int num_segments_x = abs_dx > 0 ? (abs_dx + LINE_TO8_MAX) / LINE_TO8_MAX : 1;
+		int num_segments_y = abs_dy > 0 ? (abs_dy + LINE_TO8_MAX) / LINE_TO8_MAX : 1;
 		int num_segments = std::max(num_segments_x, num_segments_y);
 
-		osd_printf_verbose("VVF: Splitting long line (dx=%d, dy=%d) into %d segments\n",
-			dx, dy, num_segments);
-
-		// Split the line into equal segments by dividing dx and dy directly
+		// Split the line into equal segments
 		for (int i = 0; i < num_segments; i++)
 		{
 			s32 target_x, target_y;
@@ -589,11 +592,11 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			else
 			{
 				// Intermediate segment
-				target_x = m_last_x + (dx / num_segments);
-				target_y = m_last_y + (dy / num_segments);
+				target_x = m_last_x + (dx * (i + 1)) / num_segments;
+				target_y = m_last_y + (dy * (i + 1)) / num_segments;
 			}
 
-			// Recursive call for each segment (will use LINE_TO12 or smaller)
+			// Recursive call for each segment
 			write_line_command(target_x, target_y, color, intensity);
 		}
 		return;
@@ -767,7 +770,7 @@ void vvf_write::finalize()
 	osd_printf_info("VVF: %.2f KB/frame | Commands: %.2f MB | Palette: %u entries%s | vs H.264(1080p): %.1fx smaller\n",
 		actual_file_size / 1024.0 / m_frame_count, m_stats.total_bytes / 1048576.0,
 		m_stats.new_color_count,
-		m_stats.palette_full_count > 0 ? util::string_format(" (FULL! %u overflow attempts)", m_stats.palette_full_count).c_str() : "",
+		m_palette_full_count > 0 ? util::string_format(" (FULL! %u overflow attempts)", m_palette_full_count).c_str() : "",
 		vs_h264_factor);
 
 	// Coordinate system info
@@ -791,6 +794,23 @@ void vvf_write::finalize()
 			100.0 * std::max(vvf_w, vvf_h) / COORD_MAX);
 		osd_printf_info("VVF: Native: %d×%d (aspect %.2f)\n",
 			native_w, native_h, (double)native_w / native_h);
+
+		// Bit precision analysis: Compare MAME's coordinate precision vs VVF
+		// Calculate bits needed for MAME coordinates (log2 of range)
+		int mame_bits_x = range_x > 0 ? (int)ceil(log2(range_x + 1)) : 0;
+		int mame_bits_y = range_y > 0 ? (int)ceil(log2(range_y + 1)) : 0;
+		int mame_bits_total = mame_bits_x + mame_bits_y;
+
+		// VVF uses 12 bits per axis (0-4095 range = 4096 values)
+		int vvf_bits_per_axis = 12;
+		int vvf_bits_total = vvf_bits_per_axis * 2;  // 24 bits total
+
+		osd_printf_info("VVF: MAME precision: X=%d bits (%d values) Y=%d bits (%d values) | Total: %d bits\n",
+			mame_bits_x, range_x + 1, mame_bits_y, range_y + 1, mame_bits_total);
+		osd_printf_info("VVF: VVF precision: %d bits/axis (%d bits total) → %s %d bits vs MAME\n",
+			vvf_bits_per_axis, vvf_bits_total,
+			vvf_bits_total >= mame_bits_total ? "GAIN" : "LOSE",
+			abs(vvf_bits_total - mame_bits_total));
 
 		if (m_stats.x_rescale_count > 0 || m_stats.y_rescale_count > 0)
 		{
@@ -919,27 +939,18 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	}
 
 	// Palette full (256 entries)
-#if VVF_STATS
-	m_stats.palette_full_count++;
+	m_palette_full_count++;
+
 	osd_printf_warning(
 		"VVF: Palette full (%u/5 attempts) - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
-		m_stats.palette_full_count, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
+		m_palette_full_count, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
 
-	if (m_stats.palette_full_count >= 5)
+	// Stop recording after 5 failed attempts to avoid endless issues
+	if (m_palette_full_count >= 5)
 	{
 		osd_printf_error("VVF: Palette full 5 times, stopping recording gracefully\n");
 		stop();
 	}
-#else
-	static bool palette_full_warned = false;
-	if (!palette_full_warned)
-	{
-		osd_printf_warning(
-			"VVF: Palette full - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
-			(unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
-		palette_full_warned = true;
-	}
-#endif
 
 	return 0;
 }
