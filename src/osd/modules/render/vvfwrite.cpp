@@ -229,10 +229,38 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 #endif
 
 	// Track coordinate ranges (for scaling and bit precision analysis)
-	if (x < m_min_x) m_min_x = x;
-	if (x > m_max_x) m_max_x = x;
-	if (y < m_min_y) m_min_y = y;
-	if (y > m_max_y) m_max_y = y;
+	if (x < m_min_x)
+	{
+#if VVF_STATS
+		if (m_stats.debug_line_count < 50)
+			osd_printf_info("    → X min updated: %d -> %d\n", m_min_x, x);
+#endif
+		m_min_x = x;
+	}
+	if (x > m_max_x)
+	{
+#if VVF_STATS
+		if (m_stats.debug_line_count < 50)
+			osd_printf_info("    → X max updated: %d -> %d\n", m_max_x, x);
+#endif
+		m_max_x = x;
+	}
+	if (y < m_min_y)
+	{
+#if VVF_STATS
+		if (m_stats.debug_line_count < 50)
+			osd_printf_info("    → Y min updated: %d -> %d\n", m_min_y, y);
+#endif
+		m_min_y = y;
+	}
+	if (y > m_max_y)
+	{
+#if VVF_STATS
+		if (m_stats.debug_line_count < 50)
+			osd_printf_info("    → Y max updated: %d -> %d\n", m_max_y, y);
+#endif
+		m_max_y = y;
+	}
 
 	// Map coordinate to VVF range: (mame_coord - min) / scale
 	s32 scaled_x = (x - m_min_x) / m_x_scale;
@@ -280,6 +308,12 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 
 
+#if VVF_STATS
+	// Calculate delta BEFORE write_line_command updates m_last_x/m_last_y
+	s32 dx = scaled_x - m_last_x;
+	s32 dy = scaled_y - m_last_y;
+#endif
+
 	// Write VVF command
 	bool is_new_palette_entry = false;
 	write_line_command(scaled_x, scaled_y, color, intensity, &is_new_palette_entry);
@@ -294,9 +328,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
 		// ANSI escape code for RGB color: \033[48;2;R;G;Bm for background
-		// Use Unicode block character ▓ or █ for the colored square
-		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=\033[48;2;%u;%u;%um  \033[0m intensity=%u",
-			seconds, milliseconds, m_stats.debug_line_count, m_last_x, m_last_y, scaled_x, scaled_y,
+		// Show: RAW (x,y) SCALED (x,y) delta RGB intensity
+		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) color=\033[48;2;%u;%u;%um  \033[0m i=%u",
+			seconds, milliseconds, m_stats.debug_line_count, x, y, scaled_x, scaled_y, dx, dy,
 			color.r(), color.g(), color.b(), intensity);
 
 		// Show palette entry information if this is a new entry
@@ -309,6 +343,10 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 	m_stats.debug_line_count++;
 #endif
+
+	// Update beam position (now done here in line_to, after write_line_command returns)
+	m_last_x = scaled_x;
+	m_last_y = scaled_y;
 }
 
 void vvf_write::end_frame()
@@ -402,6 +440,86 @@ void vvf_write::end_frame()
 
 	// Reset flag for next frame
 	m_frame_started = false;
+}
+
+// Cohen-Sutherland line clipping algorithm
+// Returns true if line is visible (possibly clipped), false if completely outside
+bool clip_line_to_rect(s32 &x0, s32 &y0, s32 &x1, s32 &y1, s32 xmin, s32 ymin, s32 xmax, s32 ymax)
+{
+	// Outcodes for Cohen-Sutherland
+	const int INSIDE = 0; // 0000
+	const int LEFT = 1;   // 0001
+	const int RIGHT = 2;  // 0010
+	const int BOTTOM = 4; // 0100
+	const int TOP = 8;    // 1000
+
+	auto compute_outcode = [&](s32 x, s32 y) -> int {
+		int code = INSIDE;
+		if (x < xmin) code |= LEFT;
+		else if (x > xmax) code |= RIGHT;
+		if (y < ymin) code |= BOTTOM;
+		else if (y > ymax) code |= TOP;
+		return code;
+	};
+
+	int outcode0 = compute_outcode(x0, y0);
+	int outcode1 = compute_outcode(x1, y1);
+
+	while (true)
+	{
+		if (!(outcode0 | outcode1))
+		{
+			// Both endpoints inside - accept
+			return true;
+		}
+		else if (outcode0 & outcode1)
+		{
+			// Both endpoints share an outside zone - reject
+			return false;
+		}
+		else
+		{
+			// Line crosses boundary - clip it
+			int outcode_out = outcode0 ? outcode0 : outcode1;
+			s32 x, y;
+
+			// Find intersection point using line equation
+			if (outcode_out & TOP)
+			{
+				x = x0 + (x1 - x0) * (ymax - y0) / (y1 - y0);
+				y = ymax;
+			}
+			else if (outcode_out & BOTTOM)
+			{
+				x = x0 + (x1 - x0) * (ymin - y0) / (y1 - y0);
+				y = ymin;
+			}
+			else if (outcode_out & RIGHT)
+			{
+				y = y0 + (y1 - y0) * (xmax - x0) / (x1 - x0);
+				x = xmax;
+			}
+			else // LEFT
+			{
+				y = y0 + (y1 - y0) * (xmin - x0) / (x1 - x0);
+				x = xmin;
+			}
+
+			// Update the point that was outside
+			if (outcode_out == outcode0)
+			{
+				x0 = x;
+				y0 = y;
+				outcode0 = compute_outcode(x0, y0);
+			}
+			else
+			{
+				x1 = x;
+				y1 = y;
+				outcode1 = compute_outcode(x1, y1);
+			}
+		}
+	}
 }
 
 void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity, bool *is_new_palette_entry)
@@ -540,10 +658,38 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 #endif
 		}
 	}
-	else if (x >= 0 && x <= LINE_TO12_MAX && y >= 0 && y <= LINE_TO12_MAX)
+	else
 	{
-		// LINE_TO12 or LINE_TO12_PAL (uses ABSOLUTE coordinates, not deltas!)
-		// Pack 12-bit unsigned absolute coordinates: x (bits 0-11), y (bits 12-23)
+		// LINE_TO12 or LINE_TO12_PAL (catch-all for large deltas)
+		// Uses ABSOLUTE coordinates, not deltas
+
+		// Check if endpoint is out of bounds and clip if needed
+		// (start point m_last_x/m_last_y is always valid from previous line)
+		if (x < 0 || x > COORD_MAX || y < 0 || y > COORD_MAX)
+		{
+			s32 x1 = x;
+			s32 y1 = y;
+
+			if (clip_line_to_rect(m_last_x, m_last_y, x1, y1, 0, 0, COORD_MAX, COORD_MAX))
+			{
+				// Line visible after clipping endpoint
+				osd_printf_warning("VVF: Endpoint clipped (%d,%d)->(%d,%d) to (%d,%d)->(%d,%d)\n",
+					m_last_x, m_last_y, x, y, m_last_x, m_last_y, x1, y1);
+
+				// Use clipped endpoint
+				x = x1;
+				y = y1;
+			}
+			else
+			{
+				// Line completely outside - skip
+				osd_printf_warning("VVF: Line (%d,%d)->(%d,%d) completely outside, skipped\n",
+					m_last_x, m_last_y, x, y);
+				return;
+			}
+		}
+
+		// Emit LINE_TO12 with absolute coordinates
 		uint32_t packed = ((x & 0x0FFF) | ((y & 0x0FFF) << 12));
 
 		if (needs_palette_switch)
@@ -553,7 +699,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
-			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+			m_frame_buffer.push_back(palette_index);
 #if VVF_STATS
 			m_stats.line_to12_pal_count++;
 			m_stats.total_bytes += 5;
@@ -572,48 +718,13 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 #endif
 		}
 	}
-	else
-	{
-		// Coordinates outside 0-4095 range - this should rarely happen if scaling is correct!
-		// Fall back to splitting the line into multiple segments using LINE_TO8 commands
-		osd_printf_warning("VVF: Coordinates out of range! target=(%d,%d) should be 0-4095. Delta from (%d,%d) is (%d,%d). Splitting.\n",
-			x, y, m_last_x, m_last_y, dx, dy);
 
-		// Use LINE_TO8 commands (±127 delta) to reach the target
-		int num_segments_x = abs_dx > 0 ? (abs_dx + LINE_TO8_MAX) / LINE_TO8_MAX : 1;
-		int num_segments_y = abs_dy > 0 ? (abs_dy + LINE_TO8_MAX) / LINE_TO8_MAX : 1;
-		int num_segments = std::max(num_segments_x, num_segments_y);
-
-		// Split the line into equal segments
-		for (int i = 0; i < num_segments; i++)
-		{
-			s32 target_x, target_y;
-
-			// Last segment gets exact endpoint to avoid rounding errors
-			if (i == num_segments - 1)
-			{
-				target_x = x;
-				target_y = y;
-			}
-			else
-			{
-				// Intermediate segment
-				target_x = m_last_x + (dx * (i + 1)) / num_segments;
-				target_y = m_last_y + (dy * (i + 1)) / num_segments;
-			}
-
-			// Recursive call for each segment
-			write_line_command(target_x, target_y, color, intensity);
-		}
-		return;
-	}
-
-	// Update state
-	m_last_x = x;
-	m_last_y = y;
+	// Update palette state (color and intensity tracked for optimization)
 	m_current_color = color;
 	m_current_intensity = intensity;
 	m_current_palette_index = palette_index;
+
+	// Note: m_last_x and m_last_y are now updated in line_to() after this call returns
 }
 
 void vvf_write::write_end_frame_command()
