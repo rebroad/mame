@@ -232,6 +232,10 @@ private:
 
 		// Optimization tracking
 		uint32_t redundant_moves_skipped; // Zero-length moves eliminated
+
+		// Per-frame debug counters (reset at begin_frame)
+		uint32_t frame_line_to_calls;      // Number of line_to() calls in current frame
+		uint32_t frame_write_commands;     // Number of write_line_command() calls in current frame
 	} m_stats;
 
 	// Per-second stats (rolling window)
