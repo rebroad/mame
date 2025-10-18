@@ -376,10 +376,10 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 
 #if VVF_STATS
-	// Show palette entry info if needed (calculated earlier)
+	// Show palette entry info if needed (only for visible draws)
 	if (m_stats.debug_line_count < 50)
 	{
-		if (palette_index_hint == -1)
+		if (intensity > 0 && palette_index_hint == -1)
 		{
 			if (m_palette.size() >= 256)
 			{
@@ -397,6 +397,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			}
 			else
 			{
+				// Palette starts at 0 for first visible color
 				osd_printf_info(" -> Adding palette entry %u", (unsigned)m_palette.size());
 			}
 		}
