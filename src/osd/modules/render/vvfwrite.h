@@ -228,6 +228,8 @@ private:
 		// Coordinates for max distances (to understand what's happening)
 		s32 max_draw_x1, max_draw_y1, max_draw_x2, max_draw_y2;
 		s32 max_move_x1, max_move_y1, max_move_x2, max_move_y2;
+		uint32_t max_draw_line_num;  // Line number of max draw distance
+		uint32_t max_move_line_num;  // Line number of max move distance
 		uint32_t debug_line_count;  // For debug output
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
