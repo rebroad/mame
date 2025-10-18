@@ -264,10 +264,9 @@ void running_machine::start()
 
 		if (primary_screen)
 		{
-			// Get the visible area dimensions (not the full screen)
-			const rectangle &visarea = primary_screen->visible_area();
-			width = visarea.width();
-			height = visarea.height();
+			// Get the logical screen dimensions (not the visible area)
+			width = primary_screen->width();
+			height = primary_screen->height();
 
 			osd_printf_info("VVF: Using screen dimensions %dx%d (aspect %.3f)\n",
 				width, height, (float)width / height);
