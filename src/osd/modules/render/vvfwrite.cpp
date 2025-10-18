@@ -245,6 +245,61 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 
 #if VVF_STATS
+	// Classify color for stats and emoji (only for draws, not moves)
+	const char* color_emoji = "🖤";  // Black heart for moves
+	if (intensity > 0)
+	{
+		uint8_t r = color.r();
+		uint8_t g = color.g();
+		uint8_t b = color.b();
+
+		// Check for basic colors (using threshold for "close enough")
+		const uint8_t threshold = 32;
+		const uint8_t min_rgb = threshold;
+		const uint8_t max_rgb = 255 - threshold;
+
+		if (r >= max_rgb && g < min_rgb && b < min_rgb)
+		{
+			m_stats.draws_per_color[COLOR_RED]++;
+			color_emoji = "❤️";  // Red heart
+		}
+		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
+		{
+			m_stats.draws_per_color[COLOR_GREEN]++;
+			color_emoji = "💚";  // Green heart
+		}
+		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
+		{
+			m_stats.draws_per_color[COLOR_BLUE]++;
+			color_emoji = "💙";  // Blue heart
+		}
+		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
+		{
+			m_stats.draws_per_color[COLOR_YELLOW]++;
+			color_emoji = "💛";  // Yellow heart
+		}
+		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
+		{
+			m_stats.draws_per_color[COLOR_CYAN]++;
+			color_emoji = "💎";  // Cyan: 💎diamond 🧊ice 💧droplet 🐬dolphin 🦋butterfly
+		}
+		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
+		{
+			m_stats.draws_per_color[COLOR_MAGENTA]++;
+			color_emoji = "💜";  // Purple heart for magenta
+		}
+		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
+		{
+			m_stats.draws_per_color[COLOR_WHITE]++;
+			color_emoji = "🤍";  // White heart
+		}
+		else
+		{
+			m_stats.draws_other_colors++;
+			color_emoji = "🌈";  // Mixed: 🌈rainbow 🎨palette 🦜parrot 🦚peacock 🎪circus
+		}
+	}
+
 	// Debug output FIRST (before updating ranges) - stop at 50 line_to calls
 	if (m_stats.debug_line_count < 50)
 	{
@@ -259,11 +314,10 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		// ANSI escape code for RGB color: \033[48;2;R;G;Bm for background
-		// Show: RAW (x,y) SCALED (x,y) delta RGB intensity
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) color=\033[48;2;%u;%u;%um  \033[0m i=%u",
+		// Show: RAW (x,y) SCALED (x,y) delta color-emoji intensity
+		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.debug_line_count, x, y, scaled_x, scaled_y, dx, dy,
-			color.r(), color.g(), color.b(), intensity);
+			color_emoji, intensity);
 	}
 #endif
 
@@ -627,31 +681,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 			m_stats.max_draw_line_num = m_stats.debug_line_count;
 		}
 
-		// Track draws per color (ignoring intensity) - classify into basic colors
-		uint8_t r = color.r();
-		uint8_t g = color.g();
-		uint8_t b = color.b();
-
-		// Check for basic colors (using threshold for "close enough")
-		const uint8_t threshold = 32;
-		const uint8_t min_rgb = threshold;
-		const uint8_t max_rgb = 255 - threshold;
-		if (r >= max_rgb && g < min_rgb && b < min_rgb)
-			m_stats.draws_per_color[COLOR_RED]++;
-		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
-			m_stats.draws_per_color[COLOR_GREEN]++;
-		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
-			m_stats.draws_per_color[COLOR_BLUE]++;
-		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
-			m_stats.draws_per_color[COLOR_YELLOW]++;
-		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
-			m_stats.draws_per_color[COLOR_CYAN]++;
-		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
-			m_stats.draws_per_color[COLOR_MAGENTA]++;
-		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
-			m_stats.draws_per_color[COLOR_WHITE]++;
-		else
-			m_stats.draws_other_colors++;
+		// Note: Color classification for stats is now done in line_to()
 	}
 #endif
 
