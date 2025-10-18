@@ -669,6 +669,11 @@
 
             frame.vectors.forEach(vec => {
                 if (vec.type === 'line') {
+                    // Skip invisible moves (intensity=0)
+                    if (vec.intensity === 0) {
+                        return; // Don't render invisible beam moves
+                    }
+
                     // Scale coordinates to canvas space
                     const x1 = vec.x1 * scaleX;
                     const y1 = vec.y1 * scaleY;
