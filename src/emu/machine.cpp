@@ -253,9 +253,28 @@ void running_machine::start()
 	if (filename[0] != 0)
 	{
 		osd_printf_info("VVF: Starting recording...\n");
-		// Use standard vector resolution (Star Wars uses 640x480 coordinate system)
-		int width = 640;
+
+		// Get actual screen dimensions from the primary screen device
+		screen_device_enumerator screens(root_device());
+		screen_device *primary_screen = screens.first();
+
+		int width = 640;  // Default fallback
 		int height = 480;
+
+		if (primary_screen)
+		{
+			// Get the visible area dimensions (not the full screen)
+			const rectangle &visarea = primary_screen->visible_area();
+			width = visarea.width();
+			height = visarea.height();
+
+			osd_printf_info("VVF: Using screen dimensions %dx%d (aspect %.3f)\n",
+				width, height, (float)width / height);
+		}
+		else
+		{
+			osd_printf_warning("VVF: No screen device found, using default 640x480\n");
+		}
 
 		m_video->begin_vvf_recording(filename, width, height);
 	}
