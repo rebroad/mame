@@ -14,6 +14,11 @@
 
 #pragma once
 
+// Enable detailed statistics tracking and reporting (can be disabled for release builds)
+#ifndef VVF_STATS
+#define VVF_STATS 1
+#endif
+
 #include "emu.h"
 #include <string>
 #include <vector>

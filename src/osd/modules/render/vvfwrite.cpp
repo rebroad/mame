@@ -16,10 +16,7 @@
 #include <limits>
 #include <algorithm>
 
-// Enable detailed statistics tracking and reporting (can be disabled for release builds)
-#ifndef VVF_STATS
-#define VVF_STATS 1
-#endif
+// Note: VVF_STATS is now defined in vvfwrite.h
 
 //**************************************************************************
 //  CONSTANTS
@@ -253,27 +250,32 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		// Inline overflow check for first frame
 		if (scaled_x > COORD_MAX || scaled_x < 0)
 		{
-			s32 new_range_x = max_x - min_x;
+			s32 new_range_x = m_max_x - m_min_x;
 			s32 old_scale = m_x_scale;
 			m_x_scale = (new_range_x + COORD_MAX) / COORD_MAX;
+#if VVF_STATS
 			m_stats.x_rescale_count++;
 			osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				min_x, max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale);
+				m_min_x, m_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale);
+#endif
 			scaled_x = (x - m_min_x) / m_x_scale;
 		}
 
 		if (scaled_y > COORD_MAX || scaled_y < 0)
 		{
-			s32 new_range_y = max_y - min_y;
+			s32 new_range_y = m_max_y - m_min_y;
 			s32 old_scale = m_y_scale;
 			m_y_scale = (new_range_y + COORD_MAX) / COORD_MAX;
+#if VVF_STATS
 			m_stats.y_rescale_count++;
 			osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				min_y, max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale);
+				m_min_y, m_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale);
+#endif
 			scaled_y = (y - m_min_y) / m_y_scale;
 		}
 	}
 
+#if VVF_STATS
 	// Debug output (stop at 40 or end of frame 0)
 	static uint32_t debug_draw_count = 0;
 	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
@@ -288,6 +290,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			color.r(), color.g(), color.b(), intensity);
 		debug_draw_count++;
 	}
+#endif
 
 	// Write VVF command
 	write_line_command(scaled_x, scaled_y, color, intensity);
@@ -307,6 +310,7 @@ void vvf_write::end_frame()
 	attotime elapsed = current_time - m_start_time;
 	double elapsed_sec = elapsed.as_double();
 
+#if VVF_STATS
 	if (m_stats.debug_line_count < 40 || m_frame_count < 10)
 	{
 		uint32_t seconds = (uint32_t)elapsed_sec;
@@ -316,7 +320,6 @@ void vvf_write::end_frame()
 			seconds, milliseconds, m_frame_count, s_frame_line_to_calls, m_frame_buffer.size());
 	}
 
-#if VVF_STATS
 	// Per-second stats output (for live monitoring)
 	if ((current_time - m_last_stats_print).as_double() >= 1.0)
 	{
@@ -343,18 +346,22 @@ void vvf_write::end_frame()
 		{
 			s32 old_scale = m_x_scale;
 			m_x_scale = (range_x + COORD_MAX) / COORD_MAX;
+#if VVF_STATS
 			m_stats.x_rescale_count++;
 			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
 				m_min_x, m_max_x, old_scale, m_x_scale, (double)m_x_scale / old_scale, m_frame_count);
+#endif
 		}
 
 		if (vvf_max_y > COORD_MAX)
 		{
 			s32 old_scale = m_y_scale;
 			m_y_scale = (range_y + COORD_MAX) / COORD_MAX;
+#if VVF_STATS
 			m_stats.y_rescale_count++;
 			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
 				m_min_y, m_max_y, old_scale, m_y_scale, (double)m_y_scale / old_scale, m_frame_count);
+#endif
 		}
 	}
 
@@ -380,6 +387,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
 	s_frame_line_to_calls++;
 
+#if VVF_STATS
 	// Debug: Print line_to calls (stop at 40 or end of frame 0)
 	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
 	{
@@ -394,6 +402,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			color.r(), color.g(), color.b(), intensity);
 		m_stats.debug_line_count++;
 	}
+#endif
 
 	// Calculate deltas from current position to target (x, y)
 	int dx = x - m_last_x;
@@ -401,6 +410,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	int abs_dx = abs(dx);
 	int abs_dy = abs(dy);
 
+#if VVF_STATS
 	// Calculate distance for statistics
 	double distance = sqrt(double(dx) * dx + double(dy) * dy);
 
@@ -463,6 +473,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 				m_stats.draws_other_colors++;
 		}
 	}
+#endif
 
 	// Check if we need to add color+intensity to palette
 	uint8_t palette_index = find_or_add_palette_entry(color, intensity);
@@ -478,16 +489,20 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4_PAL));
 			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
 			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+#if VVF_STATS
 			m_stats.line_to4_pal_count++;
 			m_stats.total_bytes += 3;
+#endif
 		}
 		else
 		{
 			// LINE_TO4: 2 bytes
 			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4));
 			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
+#if VVF_STATS
 			m_stats.line_to4_count++;
 			m_stats.total_bytes += 2;
+#endif
 		}
 	}
 	else if (abs_dx <= LINE_TO8_MAX && abs_dy <= LINE_TO8_MAX)
@@ -500,8 +515,10 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
 			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+#if VVF_STATS
 			m_stats.line_to8_pal_count++;
 			m_stats.total_bytes += 4;
+#endif
 		}
 		else
 		{
@@ -509,8 +526,10 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
+#if VVF_STATS
 			m_stats.line_to8_count++;
 			m_stats.total_bytes += 3;
+#endif
 		}
 	}
 	else if (abs_dx <= LINE_TO12_MAX && abs_dy <= LINE_TO12_MAX)
@@ -527,8 +546,10 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
 			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+#if VVF_STATS
 			m_stats.line_to12_pal_count++;
 			m_stats.total_bytes += 5;
+#endif
 		}
 		else
 		{
@@ -537,8 +558,10 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
+#if VVF_STATS
 			m_stats.line_to12_count++;
 			m_stats.total_bytes += 4;
+#endif
 		}
 	}
 	else
@@ -877,32 +900,46 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 		m_frame_buffer.push_back(color.g());
 		m_frame_buffer.push_back(color.b());
 		m_frame_buffer.push_back(intensity);
+#if VVF_STATS
 		m_stats.new_color_count++;
 		m_stats.total_bytes += 5;
+#endif
 
 		palette_entry entry;
 		entry.color = color;
 		entry.intensity = intensity;
 		m_palette.push_back(entry);
 
+#if VVF_STATS
 		osd_printf_info("VVF: Added palette entry %u: RGB(%u,%u,%u) intensity=%u\n",
 			(unsigned)m_palette.size() - 1, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
+#endif
 
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
 
 	// Palette full (256 entries)
+#if VVF_STATS
 	m_stats.palette_full_count++;
-
-	osd_printf_warning("VVF: Palette full (%u/5 attempts) - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
+	osd_printf_warning(
+		"VVF: Palette full (%u/5 attempts) - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
 		m_stats.palette_full_count, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
 
-	// Stop recording after 5 failed attempts
 	if (m_stats.palette_full_count >= 5)
 	{
 		osd_printf_error("VVF: Palette full 5 times, stopping recording gracefully\n");
 		stop();
 	}
+#else
+	static bool palette_full_warned = false;
+	if (!palette_full_warned)
+	{
+		osd_printf_warning(
+			"VVF: Palette full - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
+			(unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
+		palette_full_warned = true;
+	}
+#endif
 
 	return 0;
 }
