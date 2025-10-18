@@ -86,7 +86,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0,  // debug_line_count
 		0, 0, // x_rescale_count, y_rescale_count
 		0, 0, 0, 0, 0, // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
-		0}    // redundant_moves_skipped
+		0,    // redundant_moves_skipped
+		0, 0} // frame_line_to_calls, frame_write_commands
 	, m_last_stats_print(attotime::zero)
 #endif
 {
@@ -187,10 +188,6 @@ void vvf_write::write_header()
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 }
 
-// Static counters for frame-level debug tracking
-static uint32_t s_frame_draw_calls = 0;
-static uint32_t s_frame_line_to_calls = 0;
-
 void vvf_write::begin_frame()
 {
 	if (!m_recording)
@@ -199,21 +196,23 @@ void vvf_write::begin_frame()
 	// Mark that this frame has started (for end_frame() to know it should process)
 	m_frame_started = true;
 
+#if VVF_STATS
 	// Debug: Print frame stats (stop at 40 line_to or end of frame 0)
-	if (m_stats.debug_line_count < 40)
+	if (m_frame_count < 10 || m_stats.debug_line_count < 40)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF Frame #%u stats: %u draw_line calls, %u line_to calls, %zu bytes written\n",
-			seconds, milliseconds, m_frame_count - 1, s_frame_draw_calls, s_frame_line_to_calls, m_frame_buffer.size());
+		osd_printf_info("%u.%03u VVF frame_begin #%u: %u line_to calls, %u write commands, %zu bytes\n",
+			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
 	}
 
 	// Reset per-frame counters
-	s_frame_draw_calls = 0;
-	s_frame_line_to_calls = 0;
+	m_stats.frame_line_to_calls = 0;
+	m_stats.frame_write_commands = 0;
+#endif
 
 	// Clear frame buffer for new frame
 	m_frame_buffer.clear();
@@ -224,7 +223,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	if (!m_recording)
 		return;
 
-	s_frame_draw_calls++;
+#if VVF_STATS
+	m_stats.frame_line_to_calls++;
+#endif
 
 	// Track coordinate ranges (for scaling and bit precision analysis)
 	if (x < m_min_x) m_min_x = x;
@@ -318,8 +319,8 @@ void vvf_write::end_frame()
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF end_frame #%u: %u lines this frame (%zu bytes)\n",
-			seconds, milliseconds, m_frame_count, s_frame_line_to_calls, m_frame_buffer.size());
+		osd_printf_info("%u.%03u VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
+			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
 	}
 
 	// Per-second stats output (for live monitoring)
@@ -387,7 +388,9 @@ void vvf_write::end_frame()
 
 void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 {
-	s_frame_line_to_calls++;
+#if VVF_STATS
+	m_stats.frame_write_commands++;
+#endif
 
 #if VVF_STATS
 	// Debug: Print line_to calls (stop at 40 or end of frame 0)
