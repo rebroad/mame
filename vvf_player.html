@@ -337,6 +337,14 @@
             const frames = [];
             offset = 56; // Skip header (56 bytes)
 
+            console.log(`📊 Starting frame parse: ${header.totalFrames} frames, frameIndexOffset=${header.frameIndexOffset}, starting at offset ${offset}`);
+
+            // Check if frameIndexOffset is valid
+            if (header.frameIndexOffset === 0 || header.frameIndexOffset < offset) {
+                console.warn(`⚠️  frameIndexOffset=${header.frameIndexOffset} seems invalid (should be > ${offset})`);
+                console.warn(`   Will parse until audioDataOffset=${header.audioDataOffset} or buffer end`);
+            }
+
             // State for rendering
             let currentColor = {r: 255, g: 255, b: 255};
             let currentIntensity = 255;
@@ -344,11 +352,21 @@
             const palette = []; // Array of {r, g, b, intensity} - up to 256 entries
             let currentPaletteIndex = 0;
 
+            let debugCommandCount = 0;
+            const debugMaxCommands = 20; // Log first 20 commands
+
             for (let f = 0; f < header.totalFrames && offset < header.frameIndexOffset; f++) {
                 const frame = {vectors: [], timestamp: 0};
 
                 while (offset < arrayBuffer.byteLength) {
                     const cmd = view.getUint8(offset);
+
+                    // Debug first frame's commands
+                    if (f === 0 && debugCommandCount < debugMaxCommands) {
+                        console.log(`  Frame ${f}, cmd @ offset ${offset}: 0x${cmd.toString(16).padStart(2, '0')}`);
+                        debugCommandCount++;
+                    }
+
                     offset++;
 
                     if (cmd === 0x00) { // END_FRAME
@@ -439,11 +457,28 @@
                         });
                         lastX = x2;
                         lastY = y2;
+
+                        // Debug first few vectors
+                        if (f === 0 && frame.vectors.length <= 3) {
+                            console.log(`    Vector ${frame.vectors.length}: (${x2}, ${y2}) intensity=${currentIntensity}`);
+                        }
+                    } else {
+                        // Unknown command!
+                        console.error(`❌ Unknown command 0x${cmd.toString(16).padStart(2, '0')} at offset ${offset-1} in frame ${f}`);
+                        console.error(`   Stopping parse. Parsed ${f} frames so far.`);
+                        break; // Exit while loop
                     }
                 }
 
                 frames.push(frame);
+
+                // Debug frame summary
+                if (f < 3 || f === header.totalFrames - 1) {
+                    console.log(`📦 Frame ${f}: ${frame.vectors.length} vectors, timestamp=${frame.timestamp}ms`);
+                }
             }
+
+            console.log(`✅ Parse complete: ${frames.length} frames parsed`);
 
             return {header, frames};
         }
@@ -473,10 +508,19 @@
 
         // Rendering
         function renderFrame(frameIndex) {
-            if (!vvfData || frameIndex >= vvfData.frames.length) return;
+            if (!vvfData || frameIndex >= vvfData.frames.length) {
+                if (!vvfData) console.error('❌ renderFrame: vvfData is null');
+                if (frameIndex >= vvfData?.frames.length) console.error(`❌ renderFrame: frameIndex ${frameIndex} >= ${vvfData?.frames.length}`);
+                return;
+            }
 
             const scale = parseInt(document.getElementById('resolutionSelect').value);
             const frame = vvfData.frames[frameIndex];
+
+            // Debug first frame
+            if (frameIndex === 0 || frameIndex === 1) {
+                console.log(`🎨 Rendering frame ${frameIndex}: ${frame.vectors.length} vectors`);
+            }
 
             // Clear with black background
             ctx.fillStyle = '#000';
@@ -519,7 +563,11 @@
         document.getElementById('stopBtn').addEventListener('click', stop);
 
         function play() {
-            if (!vvfData) return;
+            if (!vvfData) {
+                console.error('❌ Cannot play: vvfData is null');
+                return;
+            }
+            console.log(`▶️  Starting playback: ${vvfData.frames.length} frames at ${vvfData.header.frameRate / 1000} Hz`);
             isPlaying = true;
             document.getElementById('playPauseBtn').textContent = '⏸ Pause';
             startTime = performance.now();
