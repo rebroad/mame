@@ -293,22 +293,39 @@
                 return null;
             }
 
+            // Read header fields
+            const version = view.getUint32(offset, true); offset += 4;
+            const nativeWidth = view.getUint16(offset, true); offset += 2;
+            const nativeHeight = view.getUint16(offset, true); offset += 2;
+            const vvfWidth = view.getUint16(offset, true); offset += 2;
+            const vvfHeight = view.getUint16(offset, true); offset += 2;
+            const frameRate = view.getUint32(offset, true); offset += 4;
+            const totalFrames = view.getUint32(offset, true); offset += 4;
+            const audioSampleRate = view.getUint32(offset, true); offset += 4;
+            const audioChannels = view.getUint8(offset); offset += 1;
+            const audioCodec = view.getUint8(offset); offset += 1;
+            const reserved1 = view.getUint16(offset, true); offset += 2;
+            const frameIndexOffset = Number(view.getBigUint64(offset, true)); offset += 8;
+            const audioDataOffset = Number(view.getBigUint64(offset, true)); offset += 8;
+            const durationUs = Number(view.getBigUint64(offset, true)); offset += 8;
+            const reserved2 = view.getUint32(offset, true); offset += 4;
+
             const header = {
-                version: view.getUint32(offset, true), offset += 4,
-                nativeWidth: view.getUint16(offset, true), offset += 2,
-                nativeHeight: view.getUint16(offset, true), offset += 2,
-                vvfWidth: view.getUint16(offset, true), offset += 2,
-                vvfHeight: view.getUint16(offset, true), offset += 2,
-                frameRate: view.getUint32(offset, true), offset += 4,
-                totalFrames: view.getUint32(offset, true), offset += 4,
-                audioSampleRate: view.getUint32(offset, true), offset += 4,
-                audioChannels: view.getUint8(offset, true), offset += 1,
-                audioCodec: view.getUint8(offset, true), offset += 1,
-                reserved1: view.getUint16(offset, true), offset += 2,
-                frameIndexOffset: Number(view.getBigUint64(offset, true)), offset += 8,
-                audioDataOffset: Number(view.getBigUint64(offset, true)), offset += 8,
-                durationUs: Number(view.getBigUint64(offset, true)), offset += 8,
-                reserved2: view.getUint32(offset, true), offset += 4,
+                version,
+                nativeWidth,
+                nativeHeight,
+                vvfWidth,
+                vvfHeight,
+                frameRate,
+                totalFrames,
+                audioSampleRate,
+                audioChannels,
+                audioCodec,
+                reserved1,
+                frameIndexOffset,
+                audioDataOffset,
+                durationUs,
+                reserved2
             };
 
             console.log('VVF Header:', header);

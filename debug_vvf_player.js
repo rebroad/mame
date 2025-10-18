@@ -71,14 +71,37 @@ const path = require('path');
     if (error.stack) {
       console.log('\n  Stack Trace:');
       const stackLines = error.stack.split('\n');
+
+      // Try to extract line numbers from various formats
+      let lineNumber = null;
+      let fileName = null;
+
       stackLines.forEach(line => {
         console.log(`    ${line}`);
+
+        // Try different patterns for line numbers
+        const patterns = [
+          /vvf_player\.html:(\d+):(\d+)/,           // vvf_player.html:297:29
+          /file:\/\/.*?vvf_player\.html:(\d+)/,     // file:///path/vvf_player.html:297
+          /:(\d+):(\d+)\)?$/,                       // :297:29) or :297:29
+          /\(.*?:(\d+):(\d+)\)/,                    // (file://path:297:29)
+        ];
+
+        for (const pattern of patterns) {
+          const match = line.match(pattern);
+          if (match && !lineNumber) {
+            lineNumber = match[1];
+            if (line.includes('vvf_player.html')) {
+              fileName = 'vvf_player.html';
+            }
+          }
+        }
       });
 
-      // Extract line number
-      const lineMatch = error.stack.match(/:(\d+):\d+/);
-      if (lineMatch) {
-        console.log(`\n  ⚡ Error at line: ${lineMatch[1]}`);
+      if (lineNumber) {
+        console.log(`\n  ⚡ Error at line: ${lineNumber}${fileName ? ` in ${fileName}` : ''}`);
+      } else {
+        console.log(`\n  ⚠️  Could not extract line number from stack trace`);
       }
     }
     console.log('');
