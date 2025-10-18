@@ -11,6 +11,7 @@
 #include "emu.h"
 
 #include "config.h"
+#include "screen.h"
 #include "crsshair.h"
 #include "debug/debugcpu.h"
 #include "debug/debugvw.h"

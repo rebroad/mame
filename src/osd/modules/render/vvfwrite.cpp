@@ -74,9 +74,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
-	, m_palette_full_count(0)
 	, m_compression_enabled(true)
 	, m_compression_type(1) // Default to zlib
+	, m_palette_full_count(0)
 #if VVF_STATS
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
@@ -751,8 +751,7 @@ void vvf_write::finalize()
 	header.frame_index_offset = frame_index_offset;
 	header.audio_data_offset = audio_data_offset;
 	header.duration_us = duration_us;
-	header.reserved1 = 0;
-	header.reserved2 = 0;
+	header.compression_type = m_compression_enabled ? m_compression_type : 0;
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 

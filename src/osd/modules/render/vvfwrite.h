@@ -180,6 +180,7 @@ private:
 	rgb_t m_current_color;
 	uint8_t m_current_intensity;
 	s32 m_last_x, m_last_y;  // Last coordinates for delta encoding
+	uint8_t m_current_palette_index;
 
 	// Compression settings
 	bool m_compression_enabled;
@@ -192,7 +193,6 @@ private:
 		uint8_t intensity;
 	};
 	std::vector<palette_entry> m_palette;
-	uint8_t m_current_palette_index;
 	uint32_t m_palette_full_count; // Track palette overflow attempts (always enabled)
 
 	// Color indices for stats
