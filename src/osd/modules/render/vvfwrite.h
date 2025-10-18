@@ -128,7 +128,7 @@ private:
 	void finalize();
 
 	// Command writing (private helpers)
-	void write_line_command(s32 vvf_x, s32 vvf_y, rgb_t color, uint8_t intensity);
+	void write_line_command(s32 vvf_x, s32 vvf_y, rgb_t color, uint8_t intensity, bool *is_new_palette_entry = nullptr);
 	void write_end_frame_command();
 
 	// Audio encoding
@@ -263,7 +263,7 @@ private:
 	attotime m_last_stats_print;
 
 	// Helper functions
-	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);
+	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity, bool *is_new = nullptr);
 #if VVF_STATS
 	void print_color_stats() const;
 #endif

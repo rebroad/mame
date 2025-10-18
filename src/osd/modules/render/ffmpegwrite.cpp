@@ -233,6 +233,10 @@ ffmpeg_write::ffmpeg_write(running_machine& machine, uint32_t width, uint32_t he
 	, m_wait_time_us(0)
 	, m_frames_encoded(0)
 {
+	// Set FFmpeg log level based on debug flag
+	// Suppress libx264 encoder statistics unless debug is enabled
+	bool debug = machine.options().ffmpeg_debug();
+	av_log_set_level(debug ? AV_LOG_INFO : AV_LOG_ERROR);
 	// Pre-allocate bitmap pool for zero-copy rendering (5 bitmaps)
 	for (int i = 0; i < 5; i++)
 	{
