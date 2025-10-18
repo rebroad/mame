@@ -164,6 +164,10 @@ const path = require('path');
             document.getElementById('playPauseBtn').disabled = false;
             document.getElementById('stopBtn').disabled = false;
             document.getElementById('statusText').textContent = 'Ready';
+
+            // Log button state
+            const playBtn = document.getElementById('playPauseBtn');
+            console.log(`▶️  Play button enabled: ${!playBtn.disabled}`);
           } else {
             console.error('❌ Failed to parse VVF file');
           }
@@ -172,6 +176,20 @@ const path = require('path');
           console.error('Stack:', error.stack);
         }
       }, absPath);
+
+      // Auto-click play button after a short delay
+      setTimeout(async () => {
+        console.log('🎬 Auto-clicking Play button...');
+        await page.evaluate(() => {
+          const playBtn = document.getElementById('playPauseBtn');
+          if (playBtn && !playBtn.disabled) {
+            console.log('▶️  Clicking play button');
+            playBtn.click();
+          } else {
+            console.error('❌ Play button not available or disabled');
+          }
+        });
+      }, 1000);
     }
 
     // Wait for user interaction or errors
