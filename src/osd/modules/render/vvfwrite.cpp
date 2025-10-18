@@ -85,6 +85,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0,  // draws_other_colors
 		0, 0, 0, 0,  // max_draw coords
 		0, 0, 0, 0,  // max_move coords
+		0, 0,  // max_draw_line_num, max_move_line_num
 		0,  // debug_line_count
 		0, 0, // x_rescale_count, y_rescale_count
 		0, 0, 0, 0, 0, // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
@@ -292,7 +293,9 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u",
+		// ANSI escape code for RGB color: \033[48;2;R;G;Bm for background
+		// Use Unicode block character ▓ or █ for the colored square
+		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=\033[48;2;%u;%u;%um  \033[0m intensity=%u",
 			seconds, milliseconds, m_stats.debug_line_count, m_last_x, m_last_y, scaled_x, scaled_y,
 			color.r(), color.g(), color.b(), intensity);
 
@@ -432,6 +435,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 				m_stats.max_move_y1 = m_last_y;
 				m_stats.max_move_x2 = x;
 				m_stats.max_move_y2 = y;
+				m_stats.max_move_line_num = m_stats.debug_line_count;
 			}
 		}
 		else
@@ -447,6 +451,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 				m_stats.max_draw_y1 = m_last_y;
 				m_stats.max_draw_x2 = x;
 				m_stats.max_draw_y2 = y;
+				m_stats.max_draw_line_num = m_stats.debug_line_count;
 			}
 
 			// Track draws per color (ignoring intensity) - classify into basic colors
@@ -875,15 +880,17 @@ void vvf_write::finalize()
 	// Distance stats with coordinates
 	if (m_stats.min_draw_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("VVF: Draw distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d)\n",
+		osd_printf_info("VVF: Draw distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d) [line #%u]\n",
 			m_stats.min_draw_distance, m_stats.max_draw_distance,
-			m_stats.max_draw_x1, m_stats.max_draw_y1, m_stats.max_draw_x2, m_stats.max_draw_y2);
+			m_stats.max_draw_x1, m_stats.max_draw_y1, m_stats.max_draw_x2, m_stats.max_draw_y2,
+			m_stats.max_draw_line_num);
 	}
 	if (m_stats.min_move_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("VVF: Move distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d)\n",
+		osd_printf_info("VVF: Move distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d) [line #%u]\n",
 			m_stats.min_move_distance, m_stats.max_move_distance,
-			m_stats.max_move_x1, m_stats.max_move_y1, m_stats.max_move_x2, m_stats.max_move_y2);
+			m_stats.max_move_x1, m_stats.max_move_y1, m_stats.max_move_x2, m_stats.max_move_y2,
+			m_stats.max_move_line_num);
 	}
 
 	// Color usage (compact)
