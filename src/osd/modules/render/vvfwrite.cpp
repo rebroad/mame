@@ -228,12 +228,56 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	m_stats.frame_line_to_calls++;
 #endif
 
+	// Check if palette entry exists (optimization to avoid duplicate search)
+	// Returns: -1 if not found (will need to add), otherwise the existing palette index
+	int palette_index_hint = -1;  // -1 = not found/new entry
+	if (intensity > 0)
+	{
+		// Search for existing entry
+		for (size_t i = 0; i < m_palette.size(); i++)
+		{
+			if (m_palette[i].color == color && m_palette[i].intensity == intensity)
+			{
+				palette_index_hint = static_cast<int>(i);
+				break;
+			}
+		}
+	}
+
+#if VVF_STATS
+	// Debug output FIRST (before updating ranges) - stop at 50 line_to calls
+	if (m_stats.debug_line_count < 50)
+	{
+		// Calculate delta BEFORE write_line_command updates m_last_x/m_last_y
+		s32 scaled_x = (x - m_min_x) / m_x_scale;
+		s32 scaled_y = (y - m_min_y) / m_y_scale;
+		s32 dx = scaled_x - m_last_x;
+		s32 dy = scaled_y - m_last_y;
+
+		attotime elapsed = m_machine.time() - m_start_time;
+		double elapsed_sec = elapsed.as_double();
+		uint32_t seconds = (uint32_t)elapsed_sec;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+
+		// ANSI escape code for RGB color: \033[48;2;R;G;Bm for background
+		// Show: RAW (x,y) SCALED (x,y) delta RGB intensity
+		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) color=\033[48;2;%u;%u;%um  \033[0m i=%u",
+			seconds, milliseconds, m_stats.debug_line_count, x, y, scaled_x, scaled_y, dx, dy,
+			color.r(), color.g(), color.b(), intensity);
+	}
+#endif
+
 	// Track coordinate ranges (for scaling and bit precision analysis)
 	if (x < m_min_x)
 	{
 #if VVF_STATS
 		if (m_stats.debug_line_count < 50)
-			osd_printf_info("    → X min updated: %d -> %d\n", m_min_x, x);
+		{
+			if (m_min_x == INT32_MAX)
+				osd_printf_info(" → X min: %d", x);
+			else
+				osd_printf_info(" → X min: %d->%d", m_min_x, x);
+		}
 #endif
 		m_min_x = x;
 	}
@@ -241,7 +285,12 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	{
 #if VVF_STATS
 		if (m_stats.debug_line_count < 50)
-			osd_printf_info("    → X max updated: %d -> %d\n", m_max_x, x);
+		{
+			if (m_max_x == INT32_MIN)
+				osd_printf_info(" → X max: %d", x);
+			else
+				osd_printf_info(" → X max: %d->%d", m_max_x, x);
+		}
 #endif
 		m_max_x = x;
 	}
@@ -249,7 +298,12 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	{
 #if VVF_STATS
 		if (m_stats.debug_line_count < 50)
-			osd_printf_info("    → Y min updated: %d -> %d\n", m_min_y, y);
+		{
+			if (m_min_y == INT32_MAX)
+				osd_printf_info(" → Y min: %d", y);
+			else
+				osd_printf_info(" → Y min: %d->%d", m_min_y, y);
+		}
 #endif
 		m_min_y = y;
 	}
@@ -257,10 +311,46 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	{
 #if VVF_STATS
 		if (m_stats.debug_line_count < 50)
-			osd_printf_info("    → Y max updated: %d -> %d\n", m_max_y, y);
+		{
+			if (m_max_y == INT32_MIN)
+				osd_printf_info(" → Y max: %d", y);
+			else
+				osd_printf_info(" → Y max: %d->%d", m_max_y, y);
+		}
 #endif
 		m_max_y = y;
 	}
+
+#if VVF_STATS
+	// Show palette entry info if needed (calculated earlier)
+	if (m_stats.debug_line_count < 50)
+	{
+		if (palette_index_hint == -1)
+		{
+			if (m_palette.size() >= 256)
+			{
+				m_palette_full_count++;
+				osd_printf_info(" -> PALETTE FULL! (attempt %u)", m_palette_full_count);
+
+				// Stop recording after 5 failed attempts
+				if (m_palette_full_count >= 5)
+				{
+					osd_printf_info("\n");
+					osd_printf_error("VVF: Palette full 5 times, stopping recording\n");
+					stop();
+					return;
+				}
+			}
+			else
+			{
+				osd_printf_info(" -> Adding palette entry %u", (unsigned)m_palette.size());
+			}
+		}
+
+		osd_printf_info("\n");
+	}
+	m_stats.debug_line_count++;
+#endif
 
 	// Map coordinate to VVF range: (mame_coord - min) / scale
 	s32 scaled_x = (x - m_min_x) / m_x_scale;
@@ -308,41 +398,8 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 
 
-#if VVF_STATS
-	// Calculate delta BEFORE write_line_command updates m_last_x/m_last_y
-	s32 dx = scaled_x - m_last_x;
-	s32 dy = scaled_y - m_last_y;
-#endif
-
-	// Write VVF command
-	bool is_new_palette_entry = false;
-	write_line_command(scaled_x, scaled_y, color, intensity, &is_new_palette_entry);
-
-#if VVF_STATS
-	// Debug output (stop at 50 line_to calls)
-	if (m_stats.debug_line_count < 50)
-	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
-		// ANSI escape code for RGB color: \033[48;2;R;G;Bm for background
-		// Show: RAW (x,y) SCALED (x,y) delta RGB intensity
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) color=\033[48;2;%u;%u;%um  \033[0m i=%u",
-			seconds, milliseconds, m_stats.debug_line_count, x, y, scaled_x, scaled_y, dx, dy,
-			color.r(), color.g(), color.b(), intensity);
-
-		// Show palette entry information if this is a new entry
-		if (is_new_palette_entry)
-		{
-			osd_printf_info(" -> Adding palette entry %u", (unsigned)m_palette.size());
-		}
-
-		osd_printf_info("\n");
-	}
-	m_stats.debug_line_count++;
-#endif
+	// Write VVF command (pass palette hint: -1=not found/new, else=existing index)
+	write_line_command(scaled_x, scaled_y, color, intensity, palette_index_hint);
 
 	// Update beam position (now done here in line_to, after write_line_command returns)
 	m_last_x = scaled_x;
@@ -522,7 +579,7 @@ bool clip_line_to_rect(s32 &x0, s32 &y0, s32 &x1, s32 &y1, s32 xmin, s32 ymin, s
 	}
 }
 
-void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity, bool *is_new_palette_entry)
+void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int palette_index_hint)
 {
 #if VVF_STATS
 	m_stats.frame_write_commands++;
@@ -538,71 +595,91 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 	// Calculate distance for statistics
 	double distance = sqrt(double(dx) * dx + double(dy) * dy);
 
-	if (distance > 0.0)
+	if (intensity == 0)
 	{
-		if (intensity == 0)
+		// Beam move (invisible line)
+		m_stats.beam_moves_count++;
+		if (distance < m_stats.min_move_distance)
+			m_stats.min_move_distance = distance;
+		if (distance > m_stats.max_move_distance)
 		{
-			// Beam move (invisible line)
-			m_stats.beam_moves_count++;
-			if (distance < m_stats.min_move_distance)
-				m_stats.min_move_distance = distance;
-			if (distance > m_stats.max_move_distance)
-			{
-				m_stats.max_move_distance = distance;
-				m_stats.max_move_x1 = m_last_x;
-				m_stats.max_move_y1 = m_last_y;
-				m_stats.max_move_x2 = x;
-				m_stats.max_move_y2 = y;
-				m_stats.max_move_line_num = m_stats.debug_line_count;
-			}
+			m_stats.max_move_distance = distance;
+			m_stats.max_move_x1 = m_last_x;
+			m_stats.max_move_y1 = m_last_y;
+			m_stats.max_move_x2 = x;
+			m_stats.max_move_y2 = y;
+			m_stats.max_move_line_num = m_stats.debug_line_count;
 		}
+	}
+	else
+	{
+		// Visible line (drawing)
+		m_stats.beam_draws_count++;
+		if (distance < m_stats.min_draw_distance)
+			m_stats.min_draw_distance = distance;
+		if (distance > m_stats.max_draw_distance)
+		{
+			m_stats.max_draw_distance = distance;
+			m_stats.max_draw_x1 = m_last_x;
+			m_stats.max_draw_y1 = m_last_y;
+			m_stats.max_draw_x2 = x;
+			m_stats.max_draw_y2 = y;
+			m_stats.max_draw_line_num = m_stats.debug_line_count;
+		}
+
+		// Track draws per color (ignoring intensity) - classify into basic colors
+		uint8_t r = color.r();
+		uint8_t g = color.g();
+		uint8_t b = color.b();
+
+		// Check for basic colors (using threshold for "close enough")
+		const uint8_t threshold = 32;
+		const uint8_t min_rgb = threshold;
+		const uint8_t max_rgb = 255 - threshold;
+		if (r >= max_rgb && g < min_rgb && b < min_rgb)
+			m_stats.draws_per_color[COLOR_RED]++;
+		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
+			m_stats.draws_per_color[COLOR_GREEN]++;
+		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
+			m_stats.draws_per_color[COLOR_BLUE]++;
+		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
+			m_stats.draws_per_color[COLOR_YELLOW]++;
+		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
+			m_stats.draws_per_color[COLOR_CYAN]++;
+		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
+			m_stats.draws_per_color[COLOR_MAGENTA]++;
+		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
+			m_stats.draws_per_color[COLOR_WHITE]++;
 		else
-		{
-			// Visible line (drawing)
-			m_stats.beam_draws_count++;
-			if (distance < m_stats.min_draw_distance)
-				m_stats.min_draw_distance = distance;
-			if (distance > m_stats.max_draw_distance)
-			{
-				m_stats.max_draw_distance = distance;
-				m_stats.max_draw_x1 = m_last_x;
-				m_stats.max_draw_y1 = m_last_y;
-				m_stats.max_draw_x2 = x;
-				m_stats.max_draw_y2 = y;
-				m_stats.max_draw_line_num = m_stats.debug_line_count;
-			}
-
-			// Track draws per color (ignoring intensity) - classify into basic colors
-			uint8_t r = color.r();
-			uint8_t g = color.g();
-			uint8_t b = color.b();
-
-			// Check for basic colors (using threshold for "close enough")
-			const uint8_t threshold = 32;
-			const uint8_t min_rgb = threshold;
-			const uint8_t max_rgb = 255 - threshold;
-			if (r >= max_rgb && g < min_rgb && b < min_rgb)
-				m_stats.draws_per_color[COLOR_RED]++;
-			else if (r < min_rgb && g >= max_rgb && b < min_rgb)
-				m_stats.draws_per_color[COLOR_GREEN]++;
-			else if (r < min_rgb && g < min_rgb && b >= max_rgb)
-				m_stats.draws_per_color[COLOR_BLUE]++;
-			else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
-				m_stats.draws_per_color[COLOR_YELLOW]++;
-			else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
-				m_stats.draws_per_color[COLOR_CYAN]++;
-			else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
-				m_stats.draws_per_color[COLOR_MAGENTA]++;
-			else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
-				m_stats.draws_per_color[COLOR_WHITE]++;
-			else
-				m_stats.draws_other_colors++;
-		}
+			m_stats.draws_other_colors++;
 	}
 #endif
 
-	// Check if we need to add color+intensity to palette
-	uint8_t palette_index = find_or_add_palette_entry(color, intensity, is_new_palette_entry);
+	// Get palette index (hint: -1=not found/add new, else=use existing)
+	uint8_t palette_index = 255;
+	if (intensity > 0 && palette_index_hint == -1 && m_palette.size() < 256)
+	{
+		// Emit NEW_COLOR command
+		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::NEW_COLOR));
+		m_frame_buffer.push_back(color.r());
+		m_frame_buffer.push_back(color.g());
+		m_frame_buffer.push_back(color.b());
+		m_frame_buffer.push_back(intensity);
+#if VVF_STATS
+		m_stats.new_color_count++;
+		m_stats.total_bytes += 5;
+#endif
+		palette_entry entry;
+		entry.color = color;
+		entry.intensity = intensity;
+		m_palette.push_back(entry);
+		palette_index = static_cast<uint8_t>(m_palette.size() - 1);
+	}
+	else if (palette_index_hint >= 0)
+	{
+		// Use existing palette entry from hint
+		palette_index = static_cast<uint8_t>(palette_index_hint);
+	}
 	bool needs_palette_switch = (palette_index != m_current_palette_index);
 
 	// Choose command based on delta magnitude
@@ -1015,71 +1092,6 @@ void vvf_write::finalize()
 	// Stats disabled - just print basic info
 	osd_printf_info("VVF: %u frames, %.2f MB\n", m_frame_count, actual_file_size / 1048576.0);
 #endif
-}
-
-//**************************************************************************
-//  PALETTE HELPER
-//**************************************************************************
-
-uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity, bool *is_new)
-{
-	// Intensity 0 means invisible (beam move) - always use palette entry 0
-	// Don't waste palette slots on invisible colors
-	if (intensity == 0)
-	{
-		if (is_new) *is_new = false;
-		return 0;
-	}
-
-	// Look for existing palette entry (color + intensity pair)
-	for (size_t i = 0; i < m_palette.size(); i++)
-	{
-		if (m_palette[i].color == color && m_palette[i].intensity == intensity)
-		{
-			if (is_new) *is_new = false;
-			return static_cast<uint8_t>(i);
-		}
-	}
-
-	// Add new palette entry if we have room
-	if (m_palette.size() < 256)
-	{
-		// Emit NEW_COLOR command
-		m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::NEW_COLOR));
-		m_frame_buffer.push_back(color.r());
-		m_frame_buffer.push_back(color.g());
-		m_frame_buffer.push_back(color.b());
-		m_frame_buffer.push_back(intensity);
-#if VVF_STATS
-		m_stats.new_color_count++;
-		m_stats.total_bytes += 5;
-#endif
-
-		palette_entry entry;
-		entry.color = color;
-		entry.intensity = intensity;
-		m_palette.push_back(entry);
-
-		// Palette entry added (debug output handled in line_to function)
-		if (is_new) *is_new = true;
-		return static_cast<uint8_t>(m_palette.size() - 1);
-	}
-
-	// Palette full (256 entries)
-	m_palette_full_count++;
-
-	osd_printf_warning(
-		"VVF: Palette full (%u/5 attempts) - tried to add RGB(%u,%u,%u) intensity=%u, reusing entry 0\n",
-		m_palette_full_count, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
-
-	// Stop recording after 5 failed attempts to avoid endless issues
-	if (m_palette_full_count >= 5)
-	{
-		osd_printf_error("VVF: Palette full 5 times, stopping recording gracefully\n");
-		stop();
-	}
-
-	return 0;
 }
 
 //**************************************************************************
