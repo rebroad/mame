@@ -11,7 +11,7 @@ VVF is a highly optimized binary format for recording vector graphics from arcad
 ## File Structure
 
 ```
-[Header: 56 bytes]
+[Header: 60 bytes]
 [Frame Data: variable size]
 [Frame Index: variable size]
 [Audio Data: variable size, Opus compressed]
@@ -19,7 +19,9 @@ VVF is a highly optimized binary format for recording vector graphics from arcad
 
 ---
 
-## Header (56 bytes)
+## Header (60 bytes)
+
+**Important:** The header is 60 bytes due to struct padding/alignment, not 56 bytes! Frame data starts at offset 60.
 
 ```c
 struct vvf_header {
