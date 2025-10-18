@@ -27,8 +27,8 @@ struct vvf_header {
     uint32 version;               // 1
     uint16 native_width;          // Original game width in pixels (e.g., 252 for Star Wars)
     uint16 native_height;         // Original game height in pixels (e.g., 292 for Star Wars)
-    uint16 vvf_width;             // VVF coordinate range used (e.g., 2047)
-    uint16 vvf_height;            // VVF coordinate range used (e.g., 2047)
+    uint16 vvf_width;             // VVF coordinate range used (e.g., 4095)
+    uint16 vvf_height;            // VVF coordinate range used (e.g., 4095)
     uint32 frame_rate;            // Frame rate × 1000 (e.g., 60000 = 60 Hz)
     uint32 total_frames;          // Total frames (max: 4.3B = 828 days @ 60fps)
     uint32 audio_sample_rate;     // Audio sample rate (e.g., 48000)
@@ -44,7 +44,7 @@ struct vvf_header {
 
 **Coordinate System & Aspect Ratio:**
 
-VVF uses **adaptive precision scaling** to maximize the 12-bit coordinate range (±2047):
+VVF uses **adaptive precision scaling** to maximize the 12-bit coordinate range (0-4095):
 - **native_width/native_height:** Original game dimensions in logical pixels (defines aspect ratio)
 - **vvf_width/vvf_height:** Coordinate range used in VVF file (maximizes 12-bit precision)
 - **Display aspect ratio:** `native_width / native_height`
@@ -52,12 +52,12 @@ VVF uses **adaptive precision scaling** to maximize the 12-bit coordinate range 
 **Example (Star Wars):**
 - MAME internal coords: X=0..16,515,200, Y=0..19,179,200 (16.16 fixed-point)
 - Native dimensions: 252×292 pixels (aspect 0.86)
-- VVF coords: 2047×2340 (fills ~50-57% of ±2047 range)
-- Player: Maps VVF 2047×2340 → native 252×292 → display, maintaining 0.86 aspect
+- VVF coords: 4095×4095 (uses full 12-bit range = 4096 values per axis)
+- Player: Maps VVF 4095×4095 → native 252×292 → display, maintaining 0.86 aspect
 
 **Why two dimensions?**
 - **native_width/height:** Preserves aspect ratio (252/292 = 0.86)
-- **vvf_width/height:** Shows actual coordinate range used in file
+- **vvf_width/vvf_height:** Shows actual coordinate range used in file (typically 4095×4095)
 - Player scales: `displayX = (vvfX / vvf_width) × native_width × displayScale`
 
 ---
@@ -75,8 +75,8 @@ All commands draw from the **current beam position** `(lastX, lastY)` to a new p
 | **LINE_TO4_PAL**  | 0x61   | 3 bytes  | ±7 pixels     | Tiny move, switch palette (8-bit)   |
 | **LINE_TO8**      | 0x62   | 3 bytes  | ±127 pixels   | Medium movement                     |
 | **LINE_TO8_PAL**  | 0x63   | 4 bytes  | ±127 pixels   | Medium move, switch palette (8-bit) |
-| **LINE_TO12**     | 0x64   | 4 bytes  | ±2047 pixels  | Large movement                      |
-| **LINE_TO12_PAL** | 0x65   | 5 bytes  | ±2047 pixels  | Large move, switch palette (8-bit)  |
+| **LINE_TO12**     | 0x64   | 4 bytes  | 0-4095 (abs)  | Absolute position (12-bit)          |
+| **LINE_TO12_PAL** | 0x65   | 5 bytes  | 0-4095 (abs)  | Absolute position + palette switch  |
 | **END_FRAME**     | 0x00   | 5 bytes  | N/A           | Marks end of frame                  |
 
 ---
@@ -177,21 +177,24 @@ Byte 3:    palette_index (uint8, 0-255)
 
 ```
 Byte 0:    Command (0x64)
-Byte 1-3:  dx:12, dy:12 (24-bit packed, ±2047 signed range)
+Byte 1-3:  x:12, y:12 (24-bit packed, ABSOLUTE coordinates 0-4095)
 ```
 
 **Behavior:**
-- Draws line from `(lastX, lastY)` to `(lastX + dx, lastY + dy)`
+- Draws line from `(lastX, lastY)` to `(x, y)` using **absolute coordinates**
 - Uses current palette entry
-- Updates beam position
+- Updates beam position to `(x, y)`
+- **Note:** Unlike LINE_TO4/8 which use deltas, LINE_TO12 uses absolute positions!
 
 **Packed Format:**
-`packed = (dx & 0x0FFF) | ((dy & 0x0FFF) << 12)`
+`packed = (x & 0x0FFF) | ((y & 0x0FFF) << 12)`
 `byte1 = packed & 0xFF`
 `byte2 = (packed >> 8) & 0xFF`
 `byte3 = (packed >> 16) & 0xFF`
 
-**Use:** Large jumps across the screen (rare)
+**Coordinate Range:** 0-4095 (12-bit unsigned = 4096 values per axis)
+
+**Use:** When target position fits in 0-4095 range (most common for high-precision mode)
 
 ---
 
@@ -199,14 +202,15 @@ Byte 1-3:  dx:12, dy:12 (24-bit packed, ±2047 signed range)
 
 ```
 Byte 0:    Command (0x65)
-Byte 1-3:  dx:12, dy:12 (24-bit packed)
+Byte 1-3:  x:12, y:12 (24-bit packed, ABSOLUTE coordinates 0-4095)
 Byte 4:    palette_index (uint8, 0-255)
 ```
 
 **Behavior:**
-- Same as LINE_TO12, but switches palette entry
+- Same as LINE_TO12, but switches palette entry before drawing
+- Uses **absolute coordinates** (not deltas)
 
-**Use:** Large jumps with color change (very rare)
+**Use:** High-precision movement with color change
 
 ---
 
@@ -344,8 +348,8 @@ if dx <= 7 and dy <= 7:
     emit LINE_TO4 or LINE_TO4_PAL
 elif dx <= 127 and dy <= 127:
     emit LINE_TO8 or LINE_TO8_PAL
-elif dx <= 2047 and dy <= 2047:
-    emit LINE_TO12 or LINE_TO12_PAL
+elif x >= 0 and x <= 4095 and y >= 0 and y <= 4095:
+    emit LINE_TO12 or LINE_TO12_PAL  # Uses absolute coordinates!
 ```
 
 ### Player/Decoder Strategy
