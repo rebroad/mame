@@ -16,6 +16,11 @@
 #include <limits>
 #include <algorithm>
 
+// Enable detailed statistics tracking and reporting (can be disabled for release builds)
+#ifndef VVF_STATS
+#define VVF_STATS 1
+#endif
+
 //**************************************************************************
 //  CONSTANTS
 //**************************************************************************
@@ -70,6 +75,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_x(0)
 	, m_last_y(0)
 	, m_current_palette_index(0)
+#if VVF_STATS
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
 		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
@@ -80,8 +86,10 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0,  // debug_line_count
 		0, 0, // x_rescale_count, y_rescale_count
 		0,    // palette_full_count
-		0, 0, 0, 0, 0}  // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
+		0, 0, 0, 0, 0, // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
+		0}    // redundant_moves_skipped
 	, m_last_stats_print(attotime::zero)
+#endif
 {
 	// Get actual frame rate from first screen if available
 	screen_device_enumerator screens(machine.root_device());
@@ -229,6 +237,16 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	s32 scaled_x = (x - m_min_x) / m_x_scale;
 	s32 scaled_y = (y - m_min_y) / m_y_scale;
 
+	// Optimization: Skip redundant zero-length moves (pen already at position)
+	if (intensity == 0 && scaled_x == m_last_x && scaled_y == m_last_y)
+	{
+		// Redundant "pen up" - beam already at this position, skip it
+#if VVF_STATS
+		m_stats.redundant_moves_skipped++;
+#endif
+		return;
+	}
+
 	// Check for overflow/rescale during first frame (before range optimization)
 	if (m_frame_count == 0)
 	{
@@ -298,6 +316,7 @@ void vvf_write::end_frame()
 			seconds, milliseconds, m_frame_count, s_frame_line_to_calls, m_frame_buffer.size());
 	}
 
+#if VVF_STATS
 	// Per-second stats output (for live monitoring)
 	if ((current_time - m_last_stats_print).as_double() >= 1.0)
 	{
@@ -306,6 +325,7 @@ void vvf_write::end_frame()
 		osd_printf_info("| %u frames, %.2f KB\n", m_frame_count, m_stats.total_bytes / 1024.0);
 		m_last_stats_print = current_time;
 	}
+#endif
 
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
@@ -705,6 +725,7 @@ void vvf_write::finalize()
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
+#if VVF_STATS
 	// Print statistics
 	uint32_t total_commands = m_stats.line_to4_count + m_stats.line_to4_pal_count +
 							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
@@ -788,9 +809,15 @@ void vvf_write::finalize()
 
 	// Movement stats
 	uint32_t total_line_to_calls = m_stats.beam_moves_count + m_stats.beam_draws_count;
-	osd_printf_info("VVF: Moves=%u(%.1f%%) Draws=%u(%.1f%%)\n",
+	uint32_t total_with_skipped = total_line_to_calls + m_stats.redundant_moves_skipped;
+	osd_printf_info("VVF: Moves=%u(%.1f%%) Draws=%u(%.1f%%)",
 		m_stats.beam_moves_count, 100.0 * m_stats.beam_moves_count / total_line_to_calls,
 		m_stats.beam_draws_count, 100.0 * m_stats.beam_draws_count / total_line_to_calls);
+	if (m_stats.redundant_moves_skipped > 0)
+		osd_printf_info(" | Skipped %u redundant moves (%.1f%% reduction)",
+			m_stats.redundant_moves_skipped,
+			100.0 * m_stats.redundant_moves_skipped / total_with_skipped);
+	osd_printf_info("\n");
 
 	// Distance stats with coordinates
 	if (m_stats.min_draw_distance < std::numeric_limits<double>::max())
@@ -813,6 +840,10 @@ void vvf_write::finalize()
 		print_color_stats();
 		osd_printf_info("\n");
 	}
+#else
+	// Stats disabled - just print basic info
+	osd_printf_info("VVF: %u frames, %.2f MB\n", m_frame_count, actual_file_size / 1048576.0);
+#endif
 }
 
 //**************************************************************************
@@ -876,6 +907,7 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	return 0;
 }
 
+#if VVF_STATS
 void vvf_write::print_color_stats() const
 {
 	if (m_stats.beam_draws_count == 0)
@@ -892,6 +924,7 @@ void vvf_write::print_color_stats() const
 	if (m_stats.draws_other_colors > 0)
 		osd_printf_info("Other=%.1f%% ", 100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
 }
+#endif // VVF_STATS
 
 //**************************************************************************
 //  OPUS AUDIO ENCODING (FFmpeg)

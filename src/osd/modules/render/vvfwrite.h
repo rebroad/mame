@@ -224,6 +224,9 @@ private:
 		uint32_t coord_samples;       // Number of coordinate samples for average
 		s32 max_error_x;              // Maximum X error observed
 		s32 max_error_y;              // Maximum Y error observed
+
+		// Optimization tracking
+		uint32_t redundant_moves_skipped; // Zero-length moves eliminated
 	} m_stats;
 
 	// Per-second stats (rolling window)
@@ -243,7 +246,9 @@ private:
 
 	// Helper functions
 	uint8_t find_or_add_palette_entry(rgb_t color, uint8_t intensity);
+#if VVF_STATS
 	void print_color_stats() const;
+#endif
 
 #ifdef MAME_FFMPEG
 	// Audio encoding helpers
