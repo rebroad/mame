@@ -528,6 +528,10 @@ void video_manager::add_sound_to_recording(const s16 *sound, int numsamples)
 	if (m_ffmpeg_writer && m_ffmpeg_writer->recording())
 		m_ffmpeg_writer->audio_frame(sound, numsamples);
 #endif
+
+	// Also add audio to VVF recording if active
+	if (m_vvf_writer && m_vvf_writer->recording())
+		m_vvf_writer->audio_frame(sound, numsamples);
 }
 
 
@@ -1613,8 +1617,7 @@ void video_manager::end_vector_frame()
 	{
 		m_vvf_writer->end_frame();
 
-		// Also record audio
-		// TODO: Get actual audio samples from sound system
-		// For now, VVF will record video only
+		// Audio is handled by add_sound_to_recording() which is called
+		// automatically by the sound system when audio samples are available
 	}
 }
