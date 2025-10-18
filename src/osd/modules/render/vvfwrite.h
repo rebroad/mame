@@ -147,8 +147,8 @@ private:
 	attotime m_start_time;
 	s32 m_x_scale;  // MAME internal units per VVF coordinate (computed dynamically)
 	s32 m_y_scale;  // MAME internal units per VVF coordinate (computed dynamically)
-	s32 m_min_x, m_max_x; // MAME coordinate range (for offset, scaling, and bit precision analysis)
-	s32 m_min_y, m_max_y;
+	s32 m_min_raw_x, m_max_raw_x; // MAME raw coordinate range (for offset, scaling, and bit precision analysis)
+	s32 m_min_raw_y, m_max_raw_y;
 	bool m_frame_started;   // Flag to track if begin_frame() was called
 
 	// Frame data buffer (for current frame)
