@@ -228,6 +228,10 @@
                 <label>Brightness: <span id="brightnessValue">1.0</span></label>
                 <input type="range" id="brightnessSlider" min="0.5" max="2" step="0.1" value="1">
                 <br><br>
+                <label>Max Size: <span id="maxSizeValue">2400px</span></label>
+                <input type="range" id="maxSizeSlider" min="0" max="4000" step="200" value="2400">
+                <br><small style="color: #666;">0 = unlimited, higher = better quality</small>
+                <br><br>
                 <small style="color: #888;">Canvas auto-scales to fit window! 🚀</small>
             </div>
 
@@ -260,6 +264,8 @@
         let glowIntensity = 1.0;
         let brightness = 1.0;
         let lineWidth = 1.0;
+        let maxCanvasSize = 2400; // Max canvas dimension for performance (0 = unlimited)
+        let performanceMode = false; // Auto-reduce quality for large canvases
 
         // File loading
         document.getElementById('fileInput').addEventListener('change', async (e) => {
@@ -505,11 +511,29 @@
                 canvasHeight = containerWidth / aspectRatio;
             }
 
+            // Apply performance limit if enabled
+            if (maxCanvasSize > 0) {
+                const maxDimension = Math.max(canvasWidth, canvasHeight);
+                if (maxDimension > maxCanvasSize) {
+                    const scale = maxCanvasSize / maxDimension;
+                    canvasWidth *= scale;
+                    canvasHeight *= scale;
+                    console.log(`⚡ Performance limit applied: scaled to ${scale.toFixed(2)}x`);
+                }
+            }
+
             // Set canvas size (actual pixels)
             canvas.width = Math.floor(canvasWidth);
             canvas.height = Math.floor(canvasHeight);
 
-            console.log(`Canvas: ${canvas.width}×${canvas.height} (aspect: ${aspectRatio.toFixed(3)}, container: ${containerWidth}×${containerHeight})`);
+            // Auto-enable performance mode for large canvases
+            const totalPixels = canvas.width * canvas.height;
+            performanceMode = totalPixels > 4000000; // > 4 megapixels
+            if (performanceMode) {
+                console.log(`🚀 Performance mode: ${(totalPixels / 1000000).toFixed(1)}MP canvas`);
+            }
+
+            console.log(`Canvas: ${canvas.width}×${canvas.height} (aspect: ${aspectRatio.toFixed(3)}, ${(totalPixels / 1000000).toFixed(1)}MP)`);
         }
 
         // Rendering
@@ -534,8 +558,9 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Set up glow effect
-            ctx.shadowBlur = glowIntensity * 5;
+            // Set up glow effect (reduce in performance mode)
+            const effectiveGlow = performanceMode ? glowIntensity * 0.5 : glowIntensity;
+            ctx.shadowBlur = effectiveGlow * 5;
             ctx.lineWidth = lineWidth;
             ctx.lineCap = 'round';
 
@@ -695,6 +720,16 @@
             brightness = parseFloat(e.target.value);
             document.getElementById('brightnessValue').textContent = brightness.toFixed(1);
             renderFrame(currentFrame);
+        });
+
+        document.getElementById('maxSizeSlider').addEventListener('input', (e) => {
+            maxCanvasSize = parseInt(e.target.value);
+            const displayValue = maxCanvasSize === 0 ? 'Unlimited' : `${maxCanvasSize}px`;
+            document.getElementById('maxSizeValue').textContent = displayValue;
+            if (vvfData) {
+                setupCanvas();
+                renderFrame(currentFrame);
+            }
         });
 
         document.getElementById('timeline').addEventListener('click', (e) => {
