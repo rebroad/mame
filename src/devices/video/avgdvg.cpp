@@ -3,13 +3,13 @@
 // thanks-to:Eric Smith, Brad Oliver, Bernd Wiebelt, Aaron Giles, Andrew Caldwell
 /*************************************************************************
 
-    avgdvg.c: Atari DVG and AVG
+	avgdvg.c: Atari DVG and AVG
 
-    Some parts of this code are based on the original version by Eric
-    Smith, Brad Oliver, Bernd Wiebelt, Aaron Giles, Andrew Caldwell
+	Some parts of this code are based on the original version by Eric
+	Smith, Brad Oliver, Bernd Wiebelt, Aaron Giles, Andrew Caldwell
 
-    The schematics and Jed Margolin's article on Vector Generators were
-    very helpful in understanding the hardware.
+	The schematics and Jed Margolin's article on Vector Generators were
+	very helpful in understanding the hardware.
 
 
 **************************************************************************/
@@ -62,6 +62,10 @@ void avgdvg_device_base::vg_flush()
 		i++;
 	int xs = m_vectbuf[i].x;
 	int ys = m_vectbuf[i].y;
+
+	// Track last emitted point to avoid redundant "pen up" moves
+	int last_emitted_x = -1;
+	int last_emitted_y = -1;
 
 	for (i = 0; i < m_nvect; i++)
 	{
@@ -122,11 +126,26 @@ void avgdvg_device_base::vg_flush()
 				y1 = cy1;
 			}
 
-			// TODO: Intensity distribution (deduced): rather than 0 at start and full at end for each segment,
-			// consider pushing a uniform intensity or a ramp across the segment to avoid additive hotspots
-			// at joins. This would better approximate analog beam integration.
-			m_vector->add_point(x0, y0, m_vectbuf[i].color, 0);
+			// Since avgdvg clips lines here (before sending to vector.cpp), we need to emit
+			// both endpoints explicitly. MAME's vector renderer draws lines BETWEEN consecutive
+			// points, where intensity on point N controls the line FROM point N-1 TO point N.
+			// The clipped line segment runs from (x0,y0) to (x1,y1), so we emit:
+			//   1. Point at (x0,y0) with intensity=0 - moves beam to clipped start ("pen up")
+			//   2. Point at (x1,y1) with full intensity - draws visible clipped segment ("pen down")
+			// Before 2016, vector.cpp handled clipping for all vector games, but avgdvg was the
+			// only user, so clipping was moved here to simplify the generic vector system (-68 lines).
+
+			// Optimization: Skip redundant "pen up" if beam is already at start position
+			if (x0 != last_emitted_x || y0 != last_emitted_y)
+			{
+				m_vector->add_point(x0, y0, m_vectbuf[i].color, 0);
+				last_emitted_x = x0;
+				last_emitted_y = y0;
+			}
+
 			m_vector->add_point(x1, y1, m_vectbuf[i].color, m_vectbuf[i].intensity);
+			last_emitted_x = x1;
+			last_emitted_y = y1;
 		}
 
 		if (m_vectbuf[i].status == VGCLIP)
