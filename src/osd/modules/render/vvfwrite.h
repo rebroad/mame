@@ -25,6 +25,7 @@
 #include <memory>
 #include <fstream>
 #include <map>
+#include <zlib.h>
 
 #ifdef MAME_FFMPEG
 extern "C" {
@@ -42,7 +43,7 @@ class running_machine;
 //**************************************************************************
 
 constexpr uint32_t VVF_MAGIC = 0x31465656; // "VVF1"
-constexpr uint32_t VVF_VERSION = 1;
+constexpr uint32_t VVF_VERSION = 2; // Version 2 adds compression support
 
 // Command types
 enum class vvf_command : uint8_t
@@ -87,7 +88,7 @@ struct vvf_header
 	uint64_t frame_index_offset;    // File offset to frame index
 	uint64_t audio_data_offset;     // File offset to audio data
 	uint64_t duration_us;           // Total duration in microseconds
-	uint32_t reserved2;             // Padding to 56 bytes
+	uint32_t compression_type;      // 0=None, 1=zlib, 2=gzip, 3=bzip2
 };
 // Aspect ratio = native_width / native_height
 // Scale factors: x_scale = vvf_width / native_width, y_scale = vvf_height / native_height
@@ -115,6 +116,11 @@ public:
 
 	// Audio interface
 	void audio_frame(const s16 *samples, int num_samples);
+
+	// Compression interface
+	void set_compression(bool enabled, uint32_t type = 1);
+	std::vector<uint8_t> compress_data(const std::vector<uint8_t>& data);
+	std::vector<uint8_t> decompress_data(const std::vector<uint8_t>& data);
 
 private:
 	// File I/O
@@ -175,6 +181,10 @@ private:
 	rgb_t m_current_color;
 	uint8_t m_current_intensity;
 	s32 m_last_x, m_last_y;  // Last coordinates for delta encoding
+
+	// Compression settings
+	bool m_compression_enabled;
+	uint32_t m_compression_type;
 
 	// Palette (stores color+intensity pairs)
 	struct palette_entry

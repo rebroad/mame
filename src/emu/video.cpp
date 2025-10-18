@@ -36,6 +36,7 @@
 #endif
 
 #include "modules/render/vvfwrite.h"
+#include "sound.h"
 
 
 //**************************************************************************
@@ -1597,8 +1598,23 @@ void video_manager::end_vector_frame()
 	{
 		m_vvf_writer->end_frame();
 
-		// Also record audio
-		// TODO: Get actual audio samples from sound system
-		// For now, VVF will record video only
+		// Record audio samples
+		// Get audio samples from MAME's sound system
+		if (machine().sound().outputs_count() > 0)
+		{
+			// Get the first audio output (mono or stereo)
+			sound_stream *stream = machine().sound().streams().first();
+			if (stream)
+			{
+				// Get audio samples from the stream
+				const s16 *audio_buffer = stream->output(0);
+				// Calculate samples per frame based on frame rate
+				int frame_rate_hz = 60; // Default, will be updated by VVF writer
+				int samples_per_frame = stream->sample_rate() / frame_rate_hz;
+
+				// Record audio frame
+				m_vvf_writer->audio_frame(audio_buffer, samples_per_frame);
+			}
+		}
 	}
 }

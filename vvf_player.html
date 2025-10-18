@@ -280,6 +280,15 @@
         let framebuffer = null;
         let glowTexture = null;
 
+        // Audio resources
+        let audioContext = null;
+        let audioBuffer = null;
+        let audioSource = null;
+        let isAudioReady = false;
+
+        // Compression support
+        let compressionType = 0; // 0=None, 1=zlib, 2=gzip, 3=bzip2
+
         // Initialize WebGL
         function initWebGL() {
             // Vertex shader - simple passthrough
@@ -361,6 +370,94 @@
             alert('Failed to initialize WebGL!');
         }
 
+        // Initialize Audio
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('✅ Audio context initialized');
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to initialize audio context:', error);
+                return false;
+            }
+        }
+
+        // Load and decode audio data
+        async function loadAudioData(vvfData) {
+            if (!audioContext || vvfData.header.audioDataOffset === 0) {
+                console.log('ℹ️  No audio data in VVF file');
+                return false;
+            }
+
+            try {
+                // Extract audio data from VVF file
+                const audioData = new Uint8Array(vvfData.arrayBuffer, vvfData.header.audioDataOffset);
+
+                if (vvfData.header.audioCodec === 1) { // Opus
+                    console.log('🎵 Loading Opus audio data...');
+                    // For now, we'll need to implement Opus decoding
+                    // This would require a WebAssembly Opus decoder
+                    console.warn('⚠️  Opus audio not yet supported in player');
+                    return false;
+                } else if (vvfData.header.audioCodec === 2) { // PCM
+                    console.log('🎵 Loading PCM audio data...');
+                    // Convert PCM data to AudioBuffer
+                    const sampleRate = vvfData.header.audioSampleRate;
+                    const channels = vvfData.header.audioChannels;
+                    const samples = audioData.length / (channels * 2); // 16-bit samples
+
+                    audioBuffer = audioContext.createBuffer(channels, samples, sampleRate);
+
+                    // Convert bytes to float samples
+                    const dataView = new DataView(audioData.buffer);
+                    for (let channel = 0; channel < channels; channel++) {
+                        const channelData = audioBuffer.getChannelData(channel);
+                        for (let i = 0; i < samples; i++) {
+                            const sampleIndex = i * channels + channel;
+                            const sample = dataView.getInt16(sampleIndex * 2, true); // Little-endian
+                            channelData[i] = sample / 32768.0; // Convert to float
+                        }
+                    }
+
+                    console.log(`✅ Audio loaded: ${samples} samples, ${channels} channels, ${sampleRate}Hz`);
+                    return true;
+                }
+            } catch (error) {
+                console.error('❌ Failed to load audio data:', error);
+                return false;
+            }
+
+            return false;
+        }
+
+        // Play audio
+        function playAudio() {
+            if (!audioContext || !audioBuffer) return;
+
+            try {
+                audioSource = audioContext.createBufferSource();
+                audioSource.buffer = audioBuffer;
+                audioSource.connect(audioContext.destination);
+                audioSource.start();
+                console.log('🎵 Audio playback started');
+            } catch (error) {
+                console.error('❌ Failed to play audio:', error);
+            }
+        }
+
+        // Stop audio
+        function stopAudio() {
+            if (audioSource) {
+                try {
+                    audioSource.stop();
+                    audioSource = null;
+                    console.log('🎵 Audio playback stopped');
+                } catch (error) {
+                    console.error('❌ Failed to stop audio:', error);
+                }
+            }
+        }
+
         // File loading
         document.getElementById('fileInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -373,6 +470,16 @@
                 setupCanvas();
                 updateFileInfo();
                 document.getElementById('playPauseBtn').disabled = false;
+
+                // Initialize audio and load audio data
+                if (initAudio()) {
+                    loadAudioData(vvfData).then(success => {
+                        isAudioReady = success;
+                        if (success) {
+                            console.log('🎵 Audio ready for playback');
+                        }
+                    });
+                }
                 document.getElementById('stopBtn').disabled = false;
                 document.getElementById('statusText').textContent = 'Ready';
             } else {
@@ -407,7 +514,7 @@
             const frameIndexOffset = Number(view.getBigUint64(offset, true)); offset += 8;
             const audioDataOffset = Number(view.getBigUint64(offset, true)); offset += 8;
             const durationUs = Number(view.getBigUint64(offset, true)); offset += 8;
-            const reserved2 = view.getUint32(offset, true); offset += 4;
+            const compressionType = view.getUint32(offset, true); offset += 4;
 
             const header = {
                 version,
@@ -424,13 +531,17 @@
                 frameIndexOffset,
                 audioDataOffset,
                 durationUs,
-                reserved2
+                compressionType
             };
 
             console.log('VVF Header:', header);
             console.log('Aspect ratio:', header.nativeWidth / header.nativeHeight);
             console.log('VVF coords:', header.vvfWidth, 'x', header.vvfHeight);
             console.log('Audio:', header.audioCodec === 1 ? 'Opus' : header.audioCodec === 2 ? 'PCM' : 'None');
+            console.log('Compression:', header.compressionType === 0 ? 'None' :
+                header.compressionType === 1 ? 'zlib' :
+                header.compressionType === 2 ? 'gzip' :
+                header.compressionType === 3 ? 'bzip2' : 'Unknown');
 
             // Parse frames
             const frames = [];
@@ -457,7 +568,7 @@
             for (let f = 0; f < header.totalFrames && offset < header.frameIndexOffset; f++) {
                 const frame = {vectors: [], timestamp: 0};
 
-                while (offset < arrayBuffer.byteLength) {
+                while (offset < arrayBuffer.byteLength && offset < header.frameIndexOffset) {
                     const cmd = view.getUint8(offset);
 
                     // Debug first frame's commands
@@ -565,6 +676,7 @@
                         // Unknown command!
                         console.error(`❌ Unknown command 0x${cmd.toString(16).padStart(2, '0')} at offset ${offset-1} in frame ${f}`);
                         console.error(`   Stopping parse. Parsed ${f} frames so far.`);
+                        console.error(`   This might be frame index data (frameIndexOffset=${header.frameIndexOffset})`);
                         break; // Exit while loop
                     }
                 }
@@ -752,6 +864,12 @@
             isPlaying = true;
             document.getElementById('playPauseBtn').textContent = '⏸ Pause';
             startTime = performance.now();
+
+            // Start audio playback if available
+            if (isAudioReady) {
+                playAudio();
+            }
+
             requestAnimationFrame(playbackLoop);
         }
 
@@ -769,6 +887,9 @@
             lastRenderedFrame = -1; // Reset so first frame renders
             renderFrame(0);
             updateTimeDisplay();
+
+            // Stop audio playback
+            stopAudio();
         }
 
         let lastRenderedFrame = -1; // Track which frame we last rendered

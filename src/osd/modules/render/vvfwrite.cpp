@@ -75,6 +75,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_last_y(0)
 	, m_current_palette_index(0)
 	, m_palette_full_count(0)
+	, m_compression_enabled(true)
+	, m_compression_type(1) // Default to zlib
 #if VVF_STATS
 	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
@@ -183,7 +185,7 @@ void vvf_write::write_header()
 	header.frame_index_offset = 0;  // Will be updated in finalize()
 	header.audio_data_offset = 0;
 	header.duration_us = 0;
-	header.reserved2 = 0;
+	header.compression_type = m_compression_enabled ? m_compression_type : 0;
 
 	m_file.write(reinterpret_cast<const char *>(&header), sizeof(header));
 }
@@ -956,6 +958,62 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	}
 
 	return 0;
+}
+
+//**************************************************************************
+//  COMPRESSION METHODS
+//**************************************************************************
+
+void vvf_write::set_compression(bool enabled, uint32_t type)
+{
+	m_compression_enabled = enabled;
+	m_compression_type = type;
+
+	if (enabled)
+	{
+		osd_printf_info("VVF: Compression enabled (type %u)\n", type);
+	}
+	else
+	{
+		osd_printf_info("VVF: Compression disabled\n");
+	}
+}
+
+std::vector<uint8_t> vvf_write::compress_data(const std::vector<uint8_t>& data)
+{
+	if (!m_compression_enabled)
+		return data;
+
+	std::vector<uint8_t> compressed;
+
+	switch (m_compression_type)
+	{
+		case 1: // zlib
+		{
+			uLongf compressed_size = compressBound(data.size());
+			compressed.resize(compressed_size);
+
+			int result = compress(compressed.data(), &compressed_size, data.data(), data.size());
+			if (result == Z_OK)
+			{
+				compressed.resize(compressed_size);
+				osd_printf_info("VVF: zlib compressed %zu -> %zu bytes (%.1f%%)\n",
+					data.size(), compressed_size, 100.0 * compressed_size / data.size());
+			}
+			else
+			{
+				osd_printf_error("VVF: zlib compression failed\n");
+				return data;
+			}
+			break;
+		}
+
+		default:
+			osd_printf_warning("VVF: Unknown compression type %u\n", m_compression_type);
+			return data;
+	}
+
+	return compressed;
 }
 
 #if VVF_STATS
