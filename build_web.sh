@@ -8,6 +8,14 @@ set -euo pipefail
 # Defaults
 DO_BUILD=true
 START_SERVER=true
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 SERVER_PORT=""
 VIDEO_MODE="soft"
 ENABLE_WORKERS=false # Enable WASM workers + AudioWorklet (requires full rebuild)
@@ -63,9 +71,18 @@ VERBOSE_FLAG=
 INCLUDE_ROMS=false
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-		-no-build) DO_BUILD=false; shift;;
-		-no-server) START_SERVER=false; shift;;
-		-includeroms) INCLUDE_ROMS=true; shift;;
+		-no-build)
+			DO_BUILD=false
+			shift
+			;;
+		-no-server)
+			START_SERVER=false
+			shift
+			;;
+		-includeroms)
+			INCLUDE_ROMS=true
+			shift
+			;;
 		-driver) DRIVER_SHORTNAME="${2:-}"; shift 2;;
 		-latency) AUDIO_LATENCY="${2:-}"; shift 2;;
 		-emsdk-version) EMSDK_VERSION="${2:-}"; shift 2;;
@@ -437,15 +454,15 @@ else
 fi
 
 # Use driver name directly (makedep.py will map to source file)
-echo "Building driver: $DRIVER_SHORTNAME"
+echo -e "${BLUE}🎮 Building driver: $DRIVER_SHORTNAME${NC}"
 
 # Create dynamic subtarget based on driver
 SUBTARGET="${DRIVER_SHORTNAME}wasm"
-echo "Using subtarget: $SUBTARGET"
+echo -e "${CYAN}📋 Using subtarget: $SUBTARGET${NC}"
 
 # Optional build
 if $DO_BUILD; then
-	echo "Building MAME ($DRIVER_SHORTNAME subset) for WebAssembly..."
+	echo -e "${YELLOW}📦 Building MAME ($DRIVER_SHORTNAME subset) for WebAssembly...${NC}"
 	# Maintain separate object trees for worker vs non-worker builds to avoid thrashing
 	BUILD_BASE="$REPO_ROOT/build"
 	ASMJS_LINK="$BUILD_BASE/asmjs"
@@ -1333,11 +1350,11 @@ start_server() {
 		echo "No free port found (8000-8005). Start your own server in $OUTDIR." >&2
 		return 1
 	fi
-	echo "Starting local server on http://localhost:$port ..."
+	echo -e "${YELLOW}🚀 Starting local server on http://localhost:$port ...${NC}"
 	LAST_SERVER_PORT="$port"
 
 	# Write port number to file for probe_web.js to read
-	echo "$port" > "$REPO_ROOT/.mame_web_port"
+	echo "$port" > "$REPO_ROOT/.web_port"
 
 	pushd "$OUTDIR" >/dev/null
 	# Prefer Node server with COOP/COEP if available
