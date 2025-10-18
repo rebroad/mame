@@ -195,8 +195,27 @@ const path = require('path');
     // Wait for user interaction or errors
     console.log('👁️  Monitoring player (press Ctrl+C to exit)...\n');
 
-    // Keep script running
-    await new Promise(() => {});
+    // Keep script running until interrupted
+    // Handle graceful shutdown on Ctrl+C
+    let isClosing = false;
+    process.on('SIGINT', async () => {
+      if (isClosing) return;
+      isClosing = true;
+      console.log('\n\n👋 Shutting down gracefully...');
+      await browser.close();
+      process.exit(0);
+    });
+
+    // Keep the process alive while browser is open
+    // This waits for browser closure or SIGINT
+    await new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (!browser.isConnected()) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 1000);
+    });
 
   } catch (error) {
     console.error(`\n❌ Fatal error: ${error.message}`);
