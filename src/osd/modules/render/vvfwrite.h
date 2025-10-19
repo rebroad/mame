@@ -204,7 +204,8 @@ private:
 		COLOR_CYAN = 4,
 		COLOR_MAGENTA = 5,
 		COLOR_WHITE = 6,
-		COLOR_COUNT = 7
+		COLOR_OTHER = 7,
+		COLOR_COUNT = 8
 	};
 
 	// Stats tracking
@@ -217,32 +218,14 @@ private:
 		uint32_t line_to12_pal_count;
 		uint32_t new_color_count;
 		uint64_t total_bytes;
-		uint32_t beam_moves_count;     // line_to with intensity=0
-		uint32_t beam_draws_count;     // line_to with intensity>0
-		double min_draw_distance;       // Minimum distance for visible lines (intensity > 0)
-		double max_draw_distance;       // Maximum distance for visible lines (intensity > 0)
-		double min_move_distance;       // Minimum distance for beam moves (intensity = 0)
-		double max_move_distance;       // Maximum distance for beam moves (intensity = 0)
-		uint32_t draws_per_color[COLOR_COUNT]; // [red, green, blue, yellow, cyan, magenta, white]
-		uint32_t draws_other_colors;    // Count of non-basic colors
-		// Coordinates for max distances (to understand what's happening)
-		s32 max_draw_x1, max_draw_y1, max_draw_x2, max_draw_y2;
-		s32 max_move_x1, max_move_y1, max_move_x2, max_move_y2;
-		uint32_t max_draw_line_num;  // Line number of max draw distance
-		uint32_t max_move_line_num;  // Line number of max move distance
-		uint32_t debug_line_count;  // For debug output
+		uint32_t raw_moves_count;     // line_to with intensity=0
+		uint32_t raw_draws_count;     // line_to with intensity>0
+		uint32_t draws_per_color[COLOR_COUNT]; // [red, green, blue, yellow, cyan, magenta, white, other]
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
 
-		// Precision tracking
-		uint64_t total_coord_error_x; // Accumulated X coordinate precision loss
-		uint64_t total_coord_error_y; // Accumulated Y coordinate precision loss
-		uint32_t coord_samples;       // Number of coordinate samples for average
-		s32 max_error_x;              // Maximum X error observed
-		s32 max_error_y;              // Maximum Y error observed
-
 		// Optimization tracking
-		uint32_t redundant_moves_skipped; // Zero-length moves eliminated
+		uint32_t moves_skipped; // Zero-length moves eliminated
 
 		// Per-frame debug counters (reset at begin_frame)
 		uint32_t frame_line_to_calls;      // Number of line_to() calls in current frame
@@ -257,7 +240,6 @@ private:
 		uint32_t line_to8_pal;
 		uint32_t line_to12;
 		uint32_t line_to12_pal;
-		uint32_t new_color;
 		uint64_t bytes;
 		std::map<uint32_t, uint32_t> color_usage; // packed RGB -> count
 	};
