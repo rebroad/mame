@@ -111,15 +111,15 @@ public:
 
 	// Vector drawing interface
 	void begin_frame();
-	void line_to(s32 x, s32 y, rgb_t color, uint8_t intensity);
+	void line_to(s32, s32, rgb_t, uint8_t);
 	void end_frame();
 
 	// Audio interface
-	void audio_frame(const s16 *samples, int num_samples);
+	void audio_frame(const s16 *, int);
 
 	// Compression interface
-	void set_compression(bool enabled, uint32_t type = 1);
-	std::vector<uint8_t> compress_data(const std::vector<uint8_t>& data);
+	void set_compression(bool, uint32_t = 1);
+	std::vector<uint8_t> compress_data(const std::vector<uint8_t>&);
 
 private:
 	// File I/O
@@ -128,11 +128,11 @@ private:
 	void finalize();
 
 	// Command writing (private helpers)
-	void write_line_command(s32 vvf_x, s32 vvf_y, rgb_t color, uint8_t intensity, int palette_index_hint);
+	void write_line_command(s32, s32, rgb_t, uint8_t, int);
 	void write_end_frame_command();
 
 	// Audio encoding
-	void encode_audio_frame(const s16 *samples, int num_samples);
+	void encode_audio_frame(const s16 *, int);
 
 	// Member variables
 	running_machine &m_machine;
@@ -232,23 +232,12 @@ private:
 		uint32_t frame_write_commands;     // Number of write_line_command() calls in current frame
 	} m_stats;
 
-	// Per-second stats (rolling window)
-	struct frame_stats {
-		uint32_t line_to4;
-		uint32_t line_to4_pal;
-		uint32_t line_to8;
-		uint32_t line_to8_pal;
-		uint32_t line_to12;
-		uint32_t line_to12_pal;
-		uint64_t bytes;
-		std::map<uint32_t, uint32_t> color_usage; // packed RGB -> count
-	};
 	std::vector<frame_stats> m_recent_frames; // Last second of frames
 	attotime m_last_stats_print;
 
 	// Helper functions
 #if VVF_STATS
-	void print_color_stats() const;
+	void print_color_stats(const uint32_t baseline[COLOR_COUNT] = nullptr) const;
 #endif
 
 #ifdef MAME_FFMPEG

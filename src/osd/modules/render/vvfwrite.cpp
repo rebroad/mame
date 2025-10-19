@@ -445,11 +445,22 @@ void vvf_write::end_frame()
 	{
 		// Calculate instantaneous FPS for this 1-second interval
 		static uint32_t last_frame_count = 0;
+		static uint32_t last_second_baseline[COLOR_COUNT] = {0};
 		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
 		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB\n",
+		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB | ",
 			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
+
+		// Print color stats for this second (delta from last second)
+		print_color_stats(last_second_baseline);
+		osd_printf_info("\n");
+
+		// Save baseline for next second
+		for (int i = 0; i < COLOR_COUNT; i++)
+		{
+			last_second_baseline[i] = m_stats.draws_per_color[i];
+		}
 
 		last_frame_count = m_frame_count + 1;
 		m_last_stats_print = current_time;
@@ -1144,18 +1155,78 @@ std::vector<uint8_t> vvf_write::compress_data(const std::vector<uint8_t>& data)
 }
 
 #if VVF_STATS
-void vvf_write::print_color_stats() const
+void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 {
 	if (m_stats.beam_draws_count == 0)
 		return;
 
+	// Calculate deltas if baseline provided
+	uint32_t color_counts[COLOR_COUNT];
+	uint32_t total_draws = m_stats.beam_draws_count;
+
+	if (baseline != nullptr)
+	{
+		// Subtract baseline from current counts
+		for (int i = 0; i < COLOR_COUNT; i++)
+		{
+			color_counts[i] = (m_stats.draws_per_color[i] > baseline[i]) ?
+							  (m_stats.draws_per_color[i] - baseline[i]) : 0;
+		}
+
+		// Calculate total draws for this period
+		total_draws = 0;
+		for (int i = 0; i < COLOR_COUNT; i++)
+		{
+			total_draws += color_counts[i];
+		}
+	}
+	else
+	{
+		// No baseline - use absolute counts
+		for (int i = 0; i < COLOR_COUNT; i++)
+		{
+			color_counts[i] = m_stats.draws_per_color[i];
+		}
+	}
+
+	// Exit early if no draws to report (don't print anything)
+	if (total_draws == 0)
+		return;
+
 	const char *color_names[COLOR_COUNT] = {"❤️", "💚", "💙", "💛", "💎", "💜", "🤍", "🌈"};
-	osd_printf_info("Colors: ");
+
+	// Create array of indices and sort by count (descending)
+	struct color_sort {
+		int index;
+		uint32_t count;
+	};
+	color_sort sorted[COLOR_COUNT];
 	for (int i = 0; i < COLOR_COUNT; i++)
 	{
-		if (m_stats.draws_per_color[i] > 0)
-			osd_printf_info("%s=%.1f%% ", color_names[i],
-				100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
+		sorted[i].index = i;
+		sorted[i].count = color_counts[i];
+	}
+
+	// Bubble sort (simple and sufficient for 8 items)
+	for (int i = 0; i < COLOR_COUNT - 1; i++)
+	{
+		for (int j = 0; j < COLOR_COUNT - i - 1; j++)
+		{
+			if (sorted[j].count < sorted[j + 1].count)
+			{
+				color_sort temp = sorted[j];
+				sorted[j] = sorted[j + 1];
+				sorted[j + 1] = temp;
+			}
+		}
+	}
+
+	for (int i = 0; i < COLOR_COUNT; i++)
+	{
+		int idx = sorted[i].index;
+		if (color_counts[idx] > 0)
+			osd_printf_info("%s=%.1f%% ", color_names[idx],
+				100.0 * color_counts[idx] / total_draws);
 	}
 }
 #endif // VVF_STATS
