@@ -432,6 +432,8 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x, scaled_y;
+	s32 center_x = (m_min_raw_x + m_max_raw_x) / 2;
+	s32 center_y = (m_min_raw_y + m_max_raw_y) / 2;
 
 	// Special case: First coordinate or no valid range yet
 	if (m_min_raw_x == INT32_MAX || m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y)
@@ -442,9 +444,7 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 	else
 	{
-		// Normal case: Center point = (min+max)/2, then scale around center
-		s32 center_x = (m_min_raw_x + m_max_raw_x) / 2;
-		s32 center_y = (m_min_raw_y + m_max_raw_y) / 2;
+		// Normal case: scale around center point
 		scaled_x = (x - center_x) / m_x_scale;
 		scaled_y = (y - center_y) / m_y_scale;
 	}
