@@ -56,8 +56,9 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_frame_rate(60000)  // Default 60 Hz
 	, m_frame_count(0)
 	, m_start_time(attotime::zero)
-	, m_scale_x(1)  // Start with 1, will optimize later
-	, m_scale_y(1)
+	, m_center_x(0), m_center_y(0)
+	, m_range_x(0), m_range_y(0)
+	, m_scale_x(1), m_scale_y(1)  // Start with 1, will optimize later
 	, m_min_raw_x(INT32_MAX), m_max_raw_x(INT32_MIN)  // Track actual raw coordinate range (for scaling and bit analysis)
 	, m_min_raw_y(INT32_MAX), m_max_raw_y(INT32_MIN)
 	, m_frame_started(false)
@@ -71,8 +72,8 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 #endif
 	, m_current_color(rgb_t::white())
 	, m_current_intensity(255)
-	, m_last_x(0)
-	, m_last_y(0)
+	, m_last_scaled_x(0)
+	, m_last_scaled_y(0)
 	, m_current_palette_index(0)
 	, m_compression_enabled(true)
 	, m_compression_type(1) // Default to zlib
@@ -219,7 +220,7 @@ void vvf_write::begin_frame()
 	m_frame_buffer.clear();
 }
 
-void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
+void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 {
 	if (!m_recording)
 		return;
@@ -245,10 +246,10 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	}
 
 	// Track coordinate ranges (for scaling and bit precision analysis)
-	if (x < m_min_raw_x) m_min_raw_x = x;
-	if (x > m_max_raw_x) m_max_raw_x = x;
-	if (y < m_min_raw_y) m_min_raw_y = y;
-	if (y > m_max_raw_y) m_max_raw_y = y;
+	if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
+	if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
+	if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
+	if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
 
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x = 0, scaled_y = 0;
@@ -266,8 +267,8 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		m_range_y = m_max_raw_y - m_min_raw_y;
 
 		// Calculate scale to fit range into signed coordinate space (-2047 to +2047)
-		m_scale_x = (m_range_x + 12BIT_MAX) / 12BIT_MAX;
-		m_scale_y = (m_range_y + 12BIT_MAX) / 12BIT_MAX;
+		m_scale_x = m_range_x / 12BIT_MAX;
+		m_scale_y = m_range_y / 12BIT_MAX;
 
 		if (m_scale_x < 1) m_scale_x = 1;
 		if (m_scale_y < 1) m_scale_y = 1;
@@ -335,12 +336,6 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 	// Debug output FIRST (before updating ranges) - stop at 50 line_to calls
 	if (m_stats.debug_line_count < 50)
 	{
-		// Calculate delta BEFORE write_line_command updates m_last_x/m_last_y
-		s32 scaled_x = (x - m_min_raw_x) / m_scale_x;
-		s32 scaled_y = (y - m_min_raw_y) / m_scale_y;
-		s32 dx = scaled_x - m_last_x;
-		s32 dy = scaled_y - m_last_y;
-
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
 		uint32_t seconds = (uint32_t)elapsed_sec;
@@ -348,8 +343,8 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 
 		// Show: RAW (x,y) SCALED (x,y) delta color-emoji intensity
 		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
-			seconds, milliseconds, m_stats.debug_line_count, x, y, scaled_x, scaled_y, dx, dy,
-			color_emoji, intensity);
+			seconds, milliseconds, m_stats.debug_line_count, raw_x, raw_y, scaled_x, scaled_y,
+			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
 	}
 
 	if (initial_scaling)
@@ -444,6 +439,21 @@ void vvf_write::end_frame()
 	if (!m_recording)
 		return;
 
+	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
+	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
+	{
+		// Calculate instantaneous FPS for this 1-second interval
+		static uint32_t last_frame_count = 0;
+		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
+		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
+
+		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB\n",
+			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
+
+		last_frame_count = m_frame_count + 1;
+		m_last_stats_print = current_time;
+	}
+
 	// Skip frames where begin_frame() was never called
 	// (happens during initialization before vector rendering starts)
 	if (!m_frame_started)
@@ -461,21 +471,6 @@ void vvf_write::end_frame()
 
 		osd_printf_info("%u.%03u VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
 			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
-	}
-
-	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
-	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
-	{
-		// Calculate instantaneous FPS for this 1-second interval
-		static uint32_t last_frame_count = 0;
-		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
-		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
-
-		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB\n",
-			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
-
-		last_frame_count = m_frame_count + 1;
-		m_last_stats_print = current_time;
 	}
 #endif
 
@@ -618,8 +613,8 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 #endif
 
 	// Calculate deltas from current position to target (x, y)
-	int dx = x - m_last_x;
-	int dy = y - m_last_y;
+	int dx = x - m_last_scaled_x;
+	int dy = y - m_last_scaled_y;
 	int abs_dx = abs(dx);
 	int abs_dy = abs(dy);
 
@@ -636,10 +631,6 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 		if (distance > m_stats.max_move_distance)
 		{
 			m_stats.max_move_distance = distance;
-			m_stats.max_move_x1 = m_last_x;
-			m_stats.max_move_y1 = m_last_y;
-			m_stats.max_move_x2 = x;
-			m_stats.max_move_y2 = y;
 			m_stats.max_move_line_num = m_stats.debug_line_count;
 		}
 	}
@@ -652,10 +643,6 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 		if (distance > m_stats.max_draw_distance)
 		{
 			m_stats.max_draw_distance = distance;
-			m_stats.max_draw_x1 = m_last_x;
-			m_stats.max_draw_y1 = m_last_y;
-			m_stats.max_draw_x2 = x;
-			m_stats.max_draw_y2 = y;
 			m_stats.max_draw_line_num = m_stats.debug_line_count;
 		}
 
@@ -749,18 +736,18 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 		// Uses ABSOLUTE coordinates, not deltas
 
 		// Check if endpoint is out of bounds and clip if needed
-		// (start point m_last_x/m_last_y is always valid from previous line)
+		// (start point m_last_scaled_x/m_last_scaled_y is always valid from previous line)
 		// Check if endpoint is out of signed coordinate bounds (-2047 to +2047)
 		if (x < -11BIT_MAX || x > 11BIT_MAX || y < -11BIT_MAX || y > 11BIT_MAX)
 		{
 			s32 x1 = x;
 			s32 y1 = y;
 
-			if (clip_line_to_rect(m_last_x, m_last_y, x1, y1, -11BIT_MAX, -11BIT_MAX, 11BIT_MAX, 11BIT_MAX))
+			if (clip_line_to_rect(m_last_scaled_x, m_last_scaled_y, x1, y1, -11BIT_MAX, -11BIT_MAX, 11BIT_MAX, 11BIT_MAX))
 			{
 				// Line visible after clipping endpoint
 				osd_printf_warning("VVF: Endpoint clipped (%d,%d)->(%d,%d) to (%d,%d)->(%d,%d)\n",
-					m_last_x, m_last_y, x, y, m_last_x, m_last_y, x1, y1);
+					m_last_scaled_x, m_last_scaled_y, x, y, m_last_scaled_x, m_last_scaled_y, x1, y1);
 
 				// Use clipped endpoint
 				x = x1;
@@ -770,7 +757,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 			{
 				// Line completely outside - skip
 				osd_printf_warning("VVF: Line (%d,%d)->(%d,%d) completely outside, skipped\n",
-					m_last_x, m_last_y, x, y);
+					m_last_scaled_x, m_last_scaled_y, x, y);
 				return;
 			}
 		}
@@ -813,8 +800,8 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 	m_current_intensity = intensity;
 	m_current_palette_index = palette_index;
 
-	// Note: m_last_x and m_last_y are now updated in line_to() after this call returns
-}
+	// Note: m_last_scaled_x and m_last_scaled_y are now updated in line_to() after this call returns
+} // vvf_write::write_line_command
 
 void vvf_write::write_end_frame_command()
 {
