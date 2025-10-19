@@ -343,7 +343,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 		else
 		{
-			m_stats.draws_other_colors++;
+			m_stats.draws_per_color[COLOR_OTHER]++;
 			color_emoji = "🌈";  // Mixed: 🌈rainbow 🎨palette 🦜parrot 🦚peacock 🎪circus
 		}
 	}
@@ -396,8 +396,8 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		osd_printf_info("\n");
 	}
-	m_stats.debug_line_count++;
 #endif
+
 
 	// Check for overflow/rescale only during first frame
 	if (m_frame_count == 0)
@@ -440,6 +440,8 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 #endif
 		return;
 	}
+
+	m_stats.debug_line_count++;
 
 	// Write VVF command (pass palette hint: -1=not found/new, else=existing index)
 	write_line_command(scaled_x, scaled_y, color, intensity, palette_index_hint);
@@ -1163,7 +1165,7 @@ void vvf_write::print_color_stats() const
 	if (m_stats.beam_draws_count == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"R", "G", "B", "Y", "C", "M", "W"};
+	const char *color_names[COLOR_COUNT] = {"❤️", "💚", "💙", "💛", "💎", "💜", "🤍", "🌈"};
 	osd_printf_info("Colors: ");
 	for (int i = 0; i < COLOR_COUNT; i++)
 	{
@@ -1171,8 +1173,6 @@ void vvf_write::print_color_stats() const
 			osd_printf_info("%s=%.1f%% ", color_names[i],
 				100.0 * m_stats.draws_per_color[i] / m_stats.beam_draws_count);
 	}
-	if (m_stats.draws_other_colors > 0)
-		osd_printf_info("Other=%.1f%% ", 100.0 * m_stats.draws_other_colors / m_stats.beam_draws_count);
 }
 #endif // VVF_STATS
 
