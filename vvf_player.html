@@ -583,7 +583,7 @@
                         frame.timestamp = view.getUint32(offset, true);
                         offset += 4;
                         break;
-                    } else if (cmd === 0x50) { // NEW_COLOR (5 bytes)
+                    } else if (cmd === 0x08) { // NEW_COLOR
                         const r = view.getUint8(offset); offset++;
                         const g = view.getUint8(offset); offset++;
                         const b = view.getUint8(offset); offset++;
@@ -594,21 +594,15 @@
                         currentPaletteIndex = palette.length - 1;
                         currentColor = {r, g, b};
                         currentIntensity = intensity;
-                    } else if (
-                        cmd === 0x60 || cmd === 0x61 || // LINE_TO4, LINE_TO4_PAL
-                        cmd === 0x62 || cmd === 0x63 || // LINE_TO8, LINE_TO8_PAL
-                        cmd === 0x64 || cmd === 0x65    // LINE_TO12, LINE_TO12_PAL
-                    ) {
+                    } else if ((cmd & 0xF8) >= 0x10 && (cmd & 0xF8) <= 0x38) {
+                        // LINE_TO6/10/14 commands (extract base opcode from 3-bit command)
+                        const cmdBase = cmd & 0xF8;
+                        const isPalette = (cmdBase === 0x18 || cmdBase === 0x28 || cmdBase === 0x38);
+
                         // Helper to maybe set palette and always returns new offset (DRY)
-                        function maybeSetPalette(cmd, offset) {
-                            // accepts offset (JS local variable 'offset'), returns updated offset
-                            let paletteIndex = null;
-                            if (
-                                cmd === 0x61 || // LINE_TO4_PAL
-                                cmd === 0x63 || // LINE_TO8_PAL
-                                cmd === 0x65    // LINE_TO12_PAL
-                            ) {
-                                paletteIndex = view.getUint8(offset); // 8-bit palette index (256 entries)
+                        function maybeSetPalette(offset) {
+                            if (isPalette) {
+                                const paletteIndex = view.getUint8(offset);
                                 offset++;
                                 if (paletteIndex < palette.length) {
                                     currentPaletteIndex = paletteIndex;
@@ -624,37 +618,49 @@
                         }
 
                         let dx = 0, dy = 0;
+                        let isAbsolute = false;
 
-                        if (cmd === 0x60 || cmd === 0x61) {
-                            // 4-bit
-                            const deltaPacked = view.getUint8(offset); offset++;
-                            offset = maybeSetPalette(cmd, offset);
-                            // Unpack 4-bit signed deltas
-                            dx = deltaPacked & 0x0F;
-                            dy = (deltaPacked >> 4) & 0x0F;
-                            if (dx > 7) dx -= 16;
-                            if (dy > 7) dy -= 16;
-                        } else if (cmd === 0x62 || cmd === 0x63) {
-                            // 8-bit
-                            dx = view.getInt8(offset); offset++;
-                            dy = view.getInt8(offset); offset++;
-                            offset = maybeSetPalette(cmd, offset);
-                        } else if (cmd === 0x64 || cmd === 0x65) {
-                            // 12-bit ABSOLUTE coordinates (not deltas!)
-                            const byte0 = view.getUint8(offset); offset++;
-                            const byte1 = view.getUint8(offset); offset++;
-                            const byte2 = view.getUint8(offset); offset++;
-                            offset = maybeSetPalette(cmd, offset);
-                            const packed = byte0 | (byte1 << 8) | (byte2 << 16);
-                            // Extract absolute coordinates (0-4095 unsigned)
-                            dx = packed & 0x0FFF;          // X absolute position
-                            dy = (packed >> 12) & 0x0FFF;  // Y absolute position
-                            // Note: These are now absolute positions, not deltas!
+                        if (cmdBase === 0x10 || cmdBase === 0x18) {
+                            // LINE_TO6: 6-bit deltas (±31)
+                            const dx_hi = (cmd >> 5) & 0x03;
+                            const dy_hi = (cmd >> 3) & 0x03;
+                            const delta_byte = view.getUint8(offset); offset++;
+                            offset = maybeSetPalette(offset);
+                            const dx_lo = delta_byte & 0x0F;
+                            const dy_lo = (delta_byte >> 4) & 0x0F;
+                            dx = (dx_hi << 4) | dx_lo;
+                            dy = (dy_hi << 4) | dy_lo;
+                            if (dx > 31) dx -= 64;
+                            if (dy > 31) dy -= 64;
+                        } else if (cmdBase === 0x20 || cmdBase === 0x28) {
+                            // LINE_TO10: 10-bit deltas (±511)
+                            const dx_hi = (cmd >> 5) & 0x03;
+                            const dy_hi = (cmd >> 3) & 0x03;
+                            const dx_lo = view.getUint8(offset); offset++;
+                            const dy_lo = view.getUint8(offset); offset++;
+                            offset = maybeSetPalette(offset);
+                            dx = (dx_hi << 8) | dx_lo;
+                            dy = (dy_hi << 8) | dy_lo;
+                            if (dx > 511) dx -= 1024;
+                            if (dy > 511) dy -= 1024;
+                        } else if (cmdBase === 0x30 || cmdBase === 0x38) {
+                            // LINE_TO14: 14-bit absolute (0-16383)
+                            const x_hi = (cmd >> 5) & 0x03;
+                            const y_hi = (cmd >> 3) & 0x03;
+                            const x_mid = view.getUint8(offset); offset++;
+                            const y_mid = view.getUint8(offset); offset++;
+                            const xy_lo = view.getUint8(offset); offset++;
+                            offset = maybeSetPalette(offset);
+                            const x_lo = xy_lo & 0x0F;
+                            const y_lo = (xy_lo >> 4) & 0x0F;
+                            dx = (x_hi << 12) | (x_mid << 4) | x_lo;
+                            dy = (y_hi << 12) | (y_mid << 4) | y_lo;
+                            isAbsolute = true;
                         }
 
-                        // LINE_TO4/8 use deltas, LINE_TO12 uses absolute coordinates
-                        const x2 = (cmd === 0x64 || cmd === 0x65) ? dx : (lastX + dx);
-                        const y2 = (cmd === 0x64 || cmd === 0x65) ? dy : (lastY + dy);
+                        // Deltas vs absolute coordinates
+                        const x2 = isAbsolute ? dx : (lastX + dx);
+                        const y2 = isAbsolute ? dy : (lastY + dy);
 
                         frame.vectors.push({
                             type: 'line',

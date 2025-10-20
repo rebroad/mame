@@ -23,12 +23,12 @@
 //**************************************************************************
 
 // VVF coordinate limits
-// LINE_TO4 and LINE_TO8 use signed deltas (relative movement)
-// LINE_TO12 uses absolute coordinates (0-4095 unsigned)
-static const s32 4BIT_MAX = 7;        // 4-bit signed delta: ±7
-static const s32 8BIT_MAX = 127;      // 8-bit signed delta: ±127
-static const s32 11BIT_MAX = 2047;    // Maximum coordinate value (signed: -2047 to +2047, 4095 values)
-static const s32 12BIT_MAX = 4095;    // 12-bit absolute: 0-4095
+// LINE_TO6 and LINE_TO10 use signed deltas (relative movement)
+// LINE_TO14 uses absolute coordinates (0-16383 unsigned)
+static const s32 6BIT_MAX = 31;       // 6-bit signed delta: ±31
+static const s32 10BIT_MAX = 511;     // 10-bit signed delta: ±511
+static const s32 13BIT_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
+static const s32 14BIT_MAX = 16383;   // 14-bit absolute: 0-16383
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -209,8 +209,8 @@ void vvf_write::begin_frame()
 
 		osd_printf_info("%u.%03u VVF frame_begin #%u: %u line_to calls, %u write commands, %zu bytes\n",
 			seconds, milliseconds, m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
-			m_stats.line_to4_count + m_stats.line_to4_pal_count + m_stats.line_to8_count + m_stats.line_to8_pal_count +
-			m_stats.line_to12_count + m_stats.line_to12_pal_count + m_stats.new_color_count, m_frame_buffer.size());
+			m_stats.line_to6_count + m_stats.line_to6_pal_count + m_stats.line_to10_count + m_stats.line_to10_pal_count +
+			m_stats.line_to14_count + m_stats.line_to14_pal_count + m_stats.new_color_count, m_frame_buffer.size());
 	}
 #endif
 
@@ -305,9 +305,9 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		m_range_x = m_max_raw_x - m_min_raw_x;
 		m_range_y = m_max_raw_y - m_min_raw_y;
 
-		// Calculate scale to fit range into signed coordinate space (-2047 to +2047)
-		m_scale_x = m_range_x / 12BIT_MAX;
-		m_scale_y = m_range_y / 12BIT_MAX;
+		// Calculate scale to fit range into signed coordinate space (-8191 to +8191)
+		m_scale_x = m_range_x / 14BIT_MAX;
+		m_scale_y = m_range_y / 14BIT_MAX;
 
 		if (m_scale_x < 1) m_scale_x = 1;
 		if (m_scale_y < 1) m_scale_y = 1;
@@ -694,72 +694,84 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 	bool needs_palette_switch = (palette_index != m_current_palette_index);
 
 	// Choose command based on delta magnitude
-	if (abs_dx <= 4BIT_MAX && abs_dy <= 4BIT_MAX)
+	if (abs_dx <= 6BIT_MAX && abs_dy <= 6BIT_MAX)
 	{
-		// LINE_TO4 or LINE_TO4_PAL
+		// LINE_TO6 or LINE_TO6_PAL (±31 pixels)
+		// Pack: [cmd:3][dx_hi:2][dy_hi:2][spare:1] [dx_lo:4][dy_lo:4]
+		uint8_t dx_hi = (dx >> 4) & 0x03;
+		uint8_t dy_hi = (dy >> 4) & 0x03;
+		uint8_t cmd_byte = static_cast<uint8_t>(needs_palette_switch ? vvf_command::LINE_TO6_PAL : vvf_command::LINE_TO6);
+		cmd_byte |= (dx_hi << 5) | (dy_hi << 3);
+
 		if (needs_palette_switch)
 		{
-			// LINE_TO4_PAL: 3 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4_PAL));
+			// LINE_TO6_PAL: 3 bytes
+			m_frame_buffer.push_back(cmd_byte);
 			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
-			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+			m_frame_buffer.push_back(palette_index);
 #if VVF_STATS
-			m_stats.line_to4_pal_count++;
+			m_stats.line_to6_pal_count++;
 			m_stats.total_bytes += 3;
 #endif
 		}
 		else
 		{
-			// LINE_TO4: 2 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO4));
+			// LINE_TO6: 2 bytes
+			m_frame_buffer.push_back(cmd_byte);
 			m_frame_buffer.push_back(static_cast<uint8_t>((dx & 0x0F) | ((dy & 0x0F) << 4)));
 #if VVF_STATS
-			m_stats.line_to4_count++;
+			m_stats.line_to6_count++;
 			m_stats.total_bytes += 2;
 #endif
 		}
 	}
-	else if (abs_dx <= 8BIT_MAX && abs_dy <= 8BIT_MAX)
+	else if (abs_dx <= 10BIT_MAX && abs_dy <= 10BIT_MAX)
 	{
-		// LINE_TO8 or LINE_TO8_PAL
+		// LINE_TO10 or LINE_TO10_PAL (±511 pixels)
+		// Pack: [cmd:3][dx_hi:2][dy_hi:2][spare:1] [dx_lo:8] [dy_lo:8]
+		uint8_t dx_hi = (dx >> 8) & 0x03;
+		uint8_t dy_hi = (dy >> 8) & 0x03;
+		uint8_t cmd_byte = static_cast<uint8_t>(needs_palette_switch ? vvf_command::LINE_TO10_PAL : vvf_command::LINE_TO10);
+		cmd_byte |= (dx_hi << 5) | (dy_hi << 3);
+
 		if (needs_palette_switch)
 		{
-			// LINE_TO8_PAL: 4 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8_PAL));
+			// LINE_TO10_PAL: 4 bytes
+			m_frame_buffer.push_back(cmd_byte);
 			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
-			m_frame_buffer.push_back(palette_index); // 8-bit palette index (256 entries)
+			m_frame_buffer.push_back(palette_index);
 #if VVF_STATS
-			m_stats.line_to8_pal_count++;
+			m_stats.line_to10_pal_count++;
 			m_stats.total_bytes += 4;
 #endif
 		}
 		else
 		{
-			// LINE_TO8: 3 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO8));
+			// LINE_TO10: 3 bytes
+			m_frame_buffer.push_back(cmd_byte);
 			m_frame_buffer.push_back(static_cast<uint8_t>(dx & 0xFF));
 			m_frame_buffer.push_back(static_cast<uint8_t>(dy & 0xFF));
 #if VVF_STATS
-			m_stats.line_to8_count++;
+			m_stats.line_to10_count++;
 			m_stats.total_bytes += 3;
 #endif
 		}
 	}
 	else
 	{
-		// LINE_TO12 or LINE_TO12_PAL (catch-all for large deltas)
+		// LINE_TO14 or LINE_TO14_PAL (catch-all for large deltas)
 		// Uses ABSOLUTE coordinates, not deltas
 
 		// Check if endpoint is out of bounds and clip if needed
 		// (start point m_last_scaled_x/m_last_scaled_y is always valid from previous line)
-		// Check if endpoint is out of signed coordinate bounds (-2047 to +2047)
-		if (x < -11BIT_MAX || x > 11BIT_MAX || y < -11BIT_MAX || y > 11BIT_MAX)
+		// Check if endpoint is out of signed coordinate bounds (-8191 to +8191)
+		if (x < -13BIT_MAX || x > 13BIT_MAX || y < -13BIT_MAX || y > 13BIT_MAX)
 		{
 			s32 x1 = x;
 			s32 y1 = y;
 
-			if (clip_line_to_rect(m_last_scaled_x, m_last_scaled_y, x1, y1, -11BIT_MAX, -11BIT_MAX, 11BIT_MAX, 11BIT_MAX))
+			if (clip_line_to_rect(m_last_scaled_x, m_last_scaled_y, x1, y1, -13BIT_MAX, -13BIT_MAX, 13BIT_MAX, 13BIT_MAX))
 			{
 				// Line visible after clipping endpoint
 				osd_printf_warning("VVF: Endpoint clipped (%d,%d)->(%d,%d) to (%d,%d)->(%d,%d)\n",
@@ -778,34 +790,44 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 			}
 		}
 
-		// Emit LINE_TO12 with absolute coordinates
-		// Convert from signed (-2047 to +2047) to unsigned (0 to 4095) for storage
-		uint32_t unsigned_x = x + 11BIT_MAX;
-		uint32_t unsigned_y = y + 11BIT_MAX;
-		uint32_t packed = ((unsigned_x & 0x0FFF) | ((unsigned_y & 0x0FFF) << 12));
+		// Emit LINE_TO14 with absolute coordinates
+		// Convert from signed (-8191 to +8191) to unsigned (0 to 16383) for storage
+		// Pack: [cmd:3][x_hi:2][y_hi:2][spare:1] [x_mid:8] [y_mid:8] [x_lo:4][y_lo:4]
+		uint32_t unsigned_x = x + 13BIT_MAX;
+		uint32_t unsigned_y = y + 13BIT_MAX;
+
+		uint8_t x_hi = (unsigned_x >> 12) & 0x03;
+		uint8_t y_hi = (unsigned_y >> 12) & 0x03;
+		uint8_t x_mid = (unsigned_x >> 4) & 0xFF;
+		uint8_t y_mid = (unsigned_y >> 4) & 0xFF;
+		uint8_t x_lo = unsigned_x & 0x0F;
+		uint8_t y_lo = unsigned_y & 0x0F;
+
+		uint8_t cmd_byte = static_cast<uint8_t>(needs_palette_switch ? vvf_command::LINE_TO14_PAL : vvf_command::LINE_TO14);
+		cmd_byte |= (x_hi << 5) | (y_hi << 3);
 
 		if (needs_palette_switch)
 		{
-			// LINE_TO12_PAL: 5 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO12_PAL));
-			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
+			// LINE_TO14_PAL: 5 bytes
+			m_frame_buffer.push_back(cmd_byte);
+			m_frame_buffer.push_back(x_mid);
+			m_frame_buffer.push_back(y_mid);
+			m_frame_buffer.push_back((x_lo | (y_lo << 4)));
 			m_frame_buffer.push_back(palette_index);
 #if VVF_STATS
-			m_stats.line_to12_pal_count++;
+			m_stats.line_to14_pal_count++;
 			m_stats.total_bytes += 5;
 #endif
 		}
 		else
 		{
-			// LINE_TO12: 4 bytes
-			m_frame_buffer.push_back(static_cast<uint8_t>(vvf_command::LINE_TO12));
-			m_frame_buffer.push_back(static_cast<uint8_t>(packed & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 8) & 0xFF));
-			m_frame_buffer.push_back(static_cast<uint8_t>((packed >> 16) & 0xFF));
+			// LINE_TO14: 4 bytes
+			m_frame_buffer.push_back(cmd_byte);
+			m_frame_buffer.push_back(x_mid);
+			m_frame_buffer.push_back(y_mid);
+			m_frame_buffer.push_back((x_lo | (y_lo << 4)));
 #if VVF_STATS
-			m_stats.line_to12_count++;
+			m_stats.line_to14_count++;
 			m_stats.total_bytes += 4;
 #endif
 		}
@@ -969,9 +991,9 @@ void vvf_write::finalize()
 
 #if VVF_STATS
 	// Print statistics
-	uint32_t total_commands = m_stats.line_to4_count + m_stats.line_to4_pal_count +
-							  m_stats.line_to8_count + m_stats.line_to8_pal_count +
-							  m_stats.line_to12_count + m_stats.line_to12_pal_count;
+	uint32_t total_commands = m_stats.line_to6_count + m_stats.line_to6_pal_count +
+							  m_stats.line_to10_count + m_stats.line_to10_pal_count +
+							  m_stats.line_to14_count + m_stats.line_to14_pal_count;
 
 	// Calculate file statistics
 	double duration_sec = duration_us / 1000000.0;
@@ -1054,13 +1076,13 @@ void vvf_write::finalize()
 
 	// Commands summary
 	osd_printf_info("VVF: Total commands: %u (%.0f/frame avg)\n", total_commands, (double)total_commands / m_frame_count);
-	osd_printf_info("VVF: Commands: LINE_TO4=%u(%.1f%%) LINE_TO4_PAL=%u(%.1f%%) LINE_TO8=%u(%.1f%%) LINE_TO8_PAL=%u(%.1f%%) LINE_TO12=%u(%.1f%%) LINE_TO12_PAL=%u(%.1f%%)\n",
-		m_stats.line_to4_count, 100.0 * m_stats.line_to4_count / total_commands,
-		m_stats.line_to4_pal_count, 100.0 * m_stats.line_to4_pal_count / total_commands,
-		m_stats.line_to8_count, 100.0 * m_stats.line_to8_count / total_commands,
-		m_stats.line_to8_pal_count, 100.0 * m_stats.line_to8_pal_count / total_commands,
-		m_stats.line_to12_count, 100.0 * m_stats.line_to12_count / total_commands,
-		m_stats.line_to12_pal_count, 100.0 * m_stats.line_to12_pal_count / total_commands);
+	osd_printf_info("VVF: Commands: LINE_TO6=%u(%.1f%%) LINE_TO6_PAL=%u(%.1f%%) LINE_TO10=%u(%.1f%%) LINE_TO10_PAL=%u(%.1f%%) LINE_TO14=%u(%.1f%%) LINE_TO14_PAL=%u(%.1f%%)\n",
+		m_stats.line_to6_count, 100.0 * m_stats.line_to6_count / total_commands,
+		m_stats.line_to6_pal_count, 100.0 * m_stats.line_to6_pal_count / total_commands,
+		m_stats.line_to10_count, 100.0 * m_stats.line_to10_count / total_commands,
+		m_stats.line_to10_pal_count, 100.0 * m_stats.line_to10_pal_count / total_commands,
+		m_stats.line_to14_count, 100.0 * m_stats.line_to14_count / total_commands,
+		m_stats.line_to14_pal_count, 100.0 * m_stats.line_to14_pal_count / total_commands);
 
 	// Movement stats
 	uint32_t total_line_to_calls = m_stats.raw_moves_count + m_stats.raw_draws_count;

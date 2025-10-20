@@ -43,19 +43,19 @@ class running_machine;
 //**************************************************************************
 
 constexpr uint32_t VVF_MAGIC = 0x31465656; // "VVF1"
-constexpr uint32_t VVF_VERSION = 2; // Version 2 adds compression support
+constexpr uint32_t VVF_VERSION = 1; // Version 1: 14-bit coordinates with optimized 3-bit command encoding
 
-// Command types
+// Command types (3-bit command + 4 bits for coordinate extensions + 1 spare)
 enum class vvf_command : uint8_t
 {
 	END_FRAME = 0x00,
-	NEW_COLOR = 0x50,      // Add new color+intensity to palette: R,G,B,intensity (5 bytes total)
-	LINE_TO4 = 0x60,       // ±7 pixels: 2 bytes [cmd][dx:4,dy:4]
-	LINE_TO4_PAL = 0x61,   // ±7 pixels with palette: 3 bytes [cmd][dx:4,dy:4][pal:8]
-	LINE_TO8 = 0x62,       // ±127 pixels: 3 bytes [cmd][dx:8][dy:8]
-	LINE_TO8_PAL = 0x63,   // ±127 pixels with palette: 4 bytes [cmd][dx:8][dy:8][pal:8]
-	LINE_TO12 = 0x64,      // ±2047 pixels: 4 bytes [cmd][dx:12,dy:12 packed]
-	LINE_TO12_PAL = 0x65   // ±2047 pixels with palette: 5 bytes [cmd][dx:12,dy:12][pal:8]
+	NEW_COLOR = 0x08,      // Add new color+intensity to palette: R,G,B,intensity (5 bytes total)
+	LINE_TO6 = 0x10,       // ±31 pixels: 2 bytes [cmd:3,dx_hi:2,dy_hi:2,_:1][dx_lo:4,dy_lo:4]
+	LINE_TO6_PAL = 0x18,   // ±31 pixels with palette: 3 bytes [cmd:3,dx_hi:2,dy_hi:2,_:1][dx_lo:4,dy_lo:4][pal:8]
+	LINE_TO10 = 0x20,      // ±511 pixels: 3 bytes [cmd:3,dx_hi:2,dy_hi:2,_:1][dx_lo:8][dy_lo:8]
+	LINE_TO10_PAL = 0x28,  // ±511 pixels with palette: 4 bytes [cmd:3,dx_hi:2,dy_hi:2,_:1][dx_lo:8][dy_lo:8][pal:8]
+	LINE_TO14 = 0x30,      // 0-16383 pixels: 4 bytes [cmd:3,x_hi:2,y_hi:2,_:1][x_mid:8][y_mid:8][x_lo:4,y_lo:4]
+	LINE_TO14_PAL = 0x38   // 0-16383 pixels with palette: 5 bytes [cmd:3,x_hi:2,y_hi:2,_:1][x_mid:8][y_mid:8][x_lo:4,y_lo:4][pal:8]
 };
 
 // Audio codec types
@@ -209,12 +209,12 @@ private:
 
 	// Stats tracking
 	struct {
-		uint32_t line_to4_count;
-		uint32_t line_to4_pal_count;
-		uint32_t line_to8_count;
-		uint32_t line_to8_pal_count;
-		uint32_t line_to12_count;
-		uint32_t line_to12_pal_count;
+		uint32_t line_to6_count;
+		uint32_t line_to6_pal_count;
+		uint32_t line_to10_count;
+		uint32_t line_to10_pal_count;
+		uint32_t line_to14_count;
+		uint32_t line_to14_pal_count;
 		uint32_t new_color_count;
 		uint64_t total_bytes;
 		uint32_t raw_moves_count;     // line_to with intensity=0

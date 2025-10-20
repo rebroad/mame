@@ -1,8 +1,10 @@
 # VVF (Vector Video Format) - Complete Guide
 
-**Version:** VVF v1 / Player v2.0 WebGL Edition
+**Version:** VVF v1
 **Magic Number:** `VVF1` (0x31465656)
 **Status:** ✅ Production Ready
+
+**Technical Details:** See [VVF_SPEC.md](VVF_SPEC.md) for complete specification
 
 ---
 
@@ -73,11 +75,9 @@ chromium vvf_player.html
 
 ---
 
-## WebGL Player (NEW!)
+## WebGL Player
 
-**v2.0 - GPU-Accelerated Edition** 🚀
-
-The VVF player now uses **WebGL** for GPU-accelerated rendering, providing:
+The VVF player uses **WebGL** for GPU-accelerated rendering, providing:
 
 - ✅ **3-5x faster** performance at high resolutions
 - ✅ **Smooth 4K/8K playback** - no more limits!
@@ -151,138 +151,24 @@ m_frame_rate = ATTOSECONDS_TO_HZ(screens.first()->frame_period().m_attoseconds) 
 
 ## Technical Specification
 
-### File Structure
+📄 **See [VVF_SPEC.md](VVF_SPEC.md) for complete technical documentation!**
 
-```
-[Header: 60 bytes]
-[Frame Data: variable size]
-[Frame Index: variable size]
-[Audio Data: variable size, Opus compressed]
-```
+The specification document contains complete details on:
+- File structure and header format
+- Vector command encoding (LINE_TO6/10/14) with bit packing
+- Coordinate system and scaling algorithms
+- Palette system (256 entries)
+- Audio encoding (Opus/PCM)
+- Frame indexing for seeking
 
-### Header (60 bytes)
+### Quick Summary
 
-**Note:** The header is 60 bytes due to struct padding, not 56 as initially documented!
-
-```c
-struct vvf_header {
-    uint32 magic;                 // 0x31465656 ("VVF1")
-    uint32 version;               // 1
-    uint16 native_width;          // Original game width in pixels (e.g., 252 for Star Wars)
-    uint16 native_height;         // Original game height in pixels (e.g., 292 for Star Wars)
-    uint16 vvf_width;             // VVF coordinate range used (e.g., 4095)
-    uint16 vvf_height;            // VVF coordinate range used (e.g., 4095)
-    uint32 frame_rate;            // Frame rate × 1000 (e.g., 60000 = 60 Hz)
-    uint32 total_frames;          // Total frames (max: 4.3B = 828 days @ 60fps)
-    uint32 audio_sample_rate;     // Audio sample rate (e.g., 48000)
-    uint8  audio_channels;        // Audio channels (1 or 2)
-    uint8  audio_codec;           // Audio codec: 0=NONE, 1=OPUS
-    uint16 reserved1;             // Reserved
-    uint64 frame_index_offset;    // File offset to frame index
-    uint64 audio_data_offset;     // File offset to audio data (0 if none)
-    uint64 duration_us;           // Total duration in microseconds
-    uint32 reserved2;             // Reserved
-};
-```
-
-### Coordinate System
-
-VVF uses **adaptive precision scaling** to maximize the 12-bit coordinate range (0-4095):
-
-- **native_width/native_height:** Original game dimensions (defines aspect ratio)
-- **vvf_width/vvf_height:** Coordinate range used in VVF file (maximizes 12-bit precision)
-- **Display aspect ratio:** `native_width / native_height`
-
-**Example (Star Wars):**
-- MAME internal coords: X=0..16,515,200, Y=0..19,179,200 (16.16 fixed-point)
-- Native dimensions: 252×292 pixels (aspect 0.86)
-- VVF coords: 4095×4095 (uses full 12-bit range)
-- Player: Maps VVF 4095×4095 → native 252×292 → display, maintaining 0.86 aspect
-
----
-
-## Vector Commands
-
-All commands draw from the **current beam position** `(lastX, lastY)` to a new position. The encoder automatically chooses the smallest command based on distance traveled.
-
-### Command Overview
-
-| Command           | Opcode | Size     | Range         | Purpose                             |
-|-------------------|--------|----------|---------------|-------------------------------------|
-| **NEW_COLOR**     | 0x50   | 5 bytes  | N/A           | Add new color+intensity to palette  |
-| **LINE_TO4**      | 0x60   | 2 bytes  | ±7 pixels     | Tiny movement                       |
-| **LINE_TO4_PAL**  | 0x61   | 3 bytes  | ±7 pixels     | Tiny move, switch palette (8-bit)   |
-| **LINE_TO8**      | 0x62   | 3 bytes  | ±127 pixels   | Medium movement                     |
-| **LINE_TO8_PAL**  | 0x63   | 4 bytes  | ±127 pixels   | Medium move, switch palette (8-bit) |
-| **LINE_TO12**     | 0x64   | 4 bytes  | 0-4095 (abs)  | Absolute position (12-bit)          |
-| **LINE_TO12_PAL** | 0x65   | 5 bytes  | 0-4095 (abs)  | Absolute position + palette switch  |
-| **END_FRAME**     | 0x00   | 5 bytes  | N/A           | Marks end of frame                  |
-
-### NEW_COLOR (0x50) - 5 bytes
-
-```
-Byte 0:    Command (0x50)
-Byte 1:    R (uint8, 0-255)
-Byte 2:    G (uint8, 0-255)
-Byte 3:    B (uint8, 0-255)
-Byte 4:    Intensity (uint8, 0-255)
-```
-
-Adds `(R,G,B,intensity)` pair to palette (max 256 entries).
-
-### LINE_TO4 (0x60) - 2 bytes ⭐ **MOST COMMON**
-
-```
-Byte 0:    Command (0x60)
-Byte 1:    dx:4, dy:4 (4-bit signed deltas, ±7 range)
-```
-
-Draws line from `(lastX, lastY)` to `(lastX + dx, lastY + dy)`.
-
-### LINE_TO8 (0x62) - 3 bytes
-
-```
-Byte 0:    Command (0x62)
-Byte 1:    dx (int8, ±127 range)
-Byte 2:    dy (int8, ±127 range)
-```
-
-Medium jumps between UI elements.
-
-### LINE_TO12 (0x64) - 4 bytes
-
-```
-Byte 0:    Command (0x64)
-Byte 1-3:  x:12, y:12 (24-bit packed, ABSOLUTE coordinates 0-4095)
-```
-
-**Important:** LINE_TO12 uses **absolute coordinates**, not deltas!
-
-**Packed Format:**
-```
-packed = (x & 0x0FFF) | ((y & 0x0FFF) << 12)
-byte1 = packed & 0xFF
-byte2 = (packed >> 8) & 0xFF
-byte3 = (packed >> 16) & 0xFF
-```
-
-### Beam Control (Invisible Movement)
-
-To move the beam **without drawing** (e.g., for disconnected line segments), use intensity=0:
-
-```
-NEW_COLOR(0, 0, 0, 0)      // Move beam invisibly
-LINE_TO8(100, 50)          // Beam moves without drawing
-NEW_COLOR(255, 255, 0, 200) // Switch to yellow
-LINE_TO4(5, 3)             // Draw yellow line
-```
-
-### Palette System
-
-- **Max 256 entries** (8-bit index)
-- Each entry stores: `(R, G, B, intensity)` - complete color+intensity pair
-- `LINE_TO*_PAL` commands switch between palette entries
-- `LINE_TO*` commands use current palette entry
+- **14-bit coordinate space** (±8191 range, 16384 values per axis)
+- **3-bit command encoding** with 4-bit coordinate extensions
+- **Commands:** LINE_TO6 (±31), LINE_TO10 (±511), LINE_TO14 (0-16383)
+- **256-entry palette** for color+intensity combinations
+- **Opus or PCM audio** with synchronized playback
+- **Optional compression** (zlib/gzip/bzip2)
 
 ---
 
@@ -347,27 +233,18 @@ VVF recording works with all vector games including:
 
 ### Expected Performance
 
-**Star Wars (1000 lines/frame @ 60fps):**
+VVF automatically chooses the most compact command for each line based on distance. Typical performance for vector games:
 
-```
-LINE_TO4:      850 lines × 2 bytes = 1,700 bytes
-LINE_TO4_PAL:   80 lines × 3 bytes = 240 bytes
-LINE_TO8:       50 lines × 3 bytes = 150 bytes
-LINE_TO8_PAL:   10 lines × 4 bytes = 40 bytes
-LINE_TO12:      10 lines × 4 bytes = 40 bytes
-NEW_COLOR:      10 entries × 5 bytes = 50 bytes
-────────────────────────────────────────────
-Total:                          ~2.2 KB/frame
-```
-
-**Per-Second:**
-- 2.2 KB/frame × 60 fps = **132 KB/sec**
-- **8 MB/minute** (uncompressed)
+**Star Wars (1000 lines/frame @ 41fps):**
+- Most lines use LINE_TO6 (2 bytes) for small movements
+- Some lines use LINE_TO10 (3 bytes) for medium movements
+- Few lines use LINE_TO14 (4 bytes) for large jumps
+- Average: **~2 KB/frame** = **~5 MB/minute** (uncompressed)
 
 **vs H.264 Video (640×480 @ 60fps):**
 - H.264: ~5 Mbps = **37 MB/minute**
-- VVF: **8 MB/minute**
-- **4.6x smaller + infinite resolution!** 🚀
+- VVF: **~5 MB/minute**
+- **7-8x smaller + infinite resolution!** 🚀
 
 ### Typical File Sizes
 
@@ -478,11 +355,14 @@ A: Unlimited! VVF files scale linearly with duration.
 
 ## Version History
 
-- **v1.0 (2025-10-17):** Initial release with LINE_TO4/8/12 commands and palette system
-  - Changed LINE_TO12 from delta encoding to absolute coordinates (0-4095)
-  - Doubled coordinate resolution to 4096×4096
-  - Added Opus audio support
-  - Complete HTML5 player
+- **v1.0 (2025-10-20):** Initial release
+  - 14-bit coordinate space (16384 values per axis)
+  - Optimized 3-bit command encoding
+  - LINE_TO6/10/14 commands with adaptive range selection
+  - 256-entry palette system
+  - Opus/PCM audio support
+  - WebGL-accelerated HTML5 player
+  - Optional compression support
 
 ---
 

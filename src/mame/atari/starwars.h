@@ -2,7 +2,7 @@
 // copyright-holders:Steve Baines, Frank Palazzolo
 /***************************************************************************
 
-    Atari Star Wars hardware
+	Atari Star Wars hardware
 
 ***************************************************************************/
 #ifndef MAME_ATARI_STARWARS_H
@@ -72,6 +72,12 @@ private:
 	int16_t m_B = 0;
 	int16_t m_C = 0;
 	int32_t m_ACC = 0;
+
+	// Frame divisor experimentation (affects screen refresh rate)
+	int m_frame_divisor = 72;  // Default: 12 * 6 = 72 (41.015625 Hz)
+	time_t m_divisor_file_mtime = 0;
+	emu_timer *m_divisor_check_timer = nullptr;
+
 	void irq_ack_w(uint8_t data);
 	void starwars_nstore_w(uint8_t data);
 	void recall_w(int state);
@@ -88,6 +94,7 @@ private:
 	void quad_pokeyn_w(offs_t offset, uint8_t data);
 	virtual void machine_reset() override ATTR_COLD;
 	TIMER_CALLBACK_MEMBER(math_run_clear);
+	TIMER_CALLBACK_MEMBER(check_divisor_file);
 
 	void starwars_mproc_init();
 	void starwars_mproc_reset();

@@ -2,25 +2,25 @@
 // copyright-holders:Steve Baines, Frank Palazzolo
 /***************************************************************************
 
-    Atari Star Wars hardware
+	Atari Star Wars hardware
 
-    driver by Steve Baines and Frank Palazzolo
+	driver by Steve Baines and Frank Palazzolo
 
-    This file is Copyright Steve Baines.
-    Modified by Frank Palazzolo for sound support
+	This file is Copyright Steve Baines.
+	Modified by Frank Palazzolo for sound support
 
-    Games supported:
-        * Star Wars
-        * The Empire Strikes Back
-        * TomCat prototype on Star Wars hardware
+	Games supported:
+		* Star Wars
+		* The Empire Strikes Back
+		* TomCat prototype on Star Wars hardware
 
-    Known bugs:
-        * the monitor "overdrive" effect is not simulated when you
-          get hit by enemy fire
+	Known bugs:
+		* the monitor "overdrive" effect is not simulated when you
+		  get hit by enemy fire
 
 ****************************************************************************
 
-    Memory map (TBA)
+	Memory map (TBA)
 
 ***************************************************************************/
 
@@ -35,6 +35,9 @@
 #include "video/vector.h"
 #include "screen.h"
 #include "speaker.h"
+
+#include <fstream>
+#include <sys/stat.h>
 
 
 #define MASTER_CLOCK (12.096_MHz_XTAL)
@@ -52,6 +55,87 @@ void starwars_state::machine_reset()
 {
 	/* reset the matrix processor */
 	starwars_mproc_reset();
+
+	/* create frame_divisor.txt if it doesn't exist */
+	const char *filename = "frame_divisor.txt";
+	struct stat file_stat;
+	if (stat(filename, &file_stat) != 0)
+	{
+		// File doesn't exist - create it with default value
+		std::ofstream file(filename);
+		if (file.is_open())
+		{
+			file << m_frame_divisor << "\n";
+			file.close();
+			osd_printf_info("Created %s with default value: %d (%.3f Hz)\n",
+				filename, m_frame_divisor, double(CLOCK_3KHZ.value()) / m_frame_divisor);
+		}
+		else
+		{
+			osd_printf_warning("Failed to create %s\n", filename);
+		}
+	}
+
+	/* initialize frame divisor file checking timer (check every 100ms) */
+	if (!m_divisor_check_timer)
+		m_divisor_check_timer = timer_alloc(FUNC(starwars_state::check_divisor_file), this);
+	m_divisor_check_timer->adjust(attotime::from_msec(100), 0, attotime::from_msec(100));
+}
+
+TIMER_CALLBACK_MEMBER(starwars_state::check_divisor_file)
+{
+	const char *filename = "frame_divisor.txt";
+	struct stat file_stat;
+
+	// Check if file exists and get modification time
+	if (stat(filename, &file_stat) == 0)
+	{
+		// Check if file was modified since last read
+		if (file_stat.st_mtime != m_divisor_file_mtime)
+		{
+			// Read the new divisor value
+			std::ifstream file(filename);
+			int new_divisor = 72;  // Default
+
+			if (file >> new_divisor)
+			{
+				// Sanity check: keep divisor in reasonable range
+				if (new_divisor >= 1 && new_divisor <= 1000)
+				{
+					if (new_divisor != m_frame_divisor)
+					{
+						int old_divisor = m_frame_divisor;
+						m_frame_divisor = new_divisor;
+
+						// Update screen refresh rate
+						screen_device_enumerator iter(machine().root_device());
+						screen_device *screen = iter.first();
+						if (screen)
+						{
+							double old_hz = double(CLOCK_3KHZ.value()) / old_divisor;
+							double new_hz = double(CLOCK_3KHZ.value()) / m_frame_divisor;
+							screen->set_refresh(HZ_TO_ATTOSECONDS(new_hz));
+
+							osd_printf_info("Frame divisor changed: %d → %d (%.3f Hz → %.3f Hz)\n",
+								old_divisor, new_divisor, old_hz, new_hz);
+						}
+					}
+					m_divisor_file_mtime = file_stat.st_mtime;
+				}
+				else
+				{
+					osd_printf_warning("Invalid divisor %d in file (must be 1-1000)\n", new_divisor);
+				}
+			}
+			file.close();
+		}
+	}
+	else if (m_divisor_file_mtime != 0)
+	{
+		// File was deleted - reset to default
+		m_divisor_file_mtime = 0;
+		osd_printf_info("Divisor file deleted, keeping current value: %d\n", m_frame_divisor);
+	}
 }
 
 
@@ -313,7 +397,7 @@ void starwars_state::starwars(machine_config &config)
 	/* video hardware */
 	VECTOR(config, "vector", 0);
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_VECTOR));
-	screen.set_refresh_hz(CLOCK_3KHZ / 12 / 6);
+	screen.set_refresh_hz(CLOCK_3KHZ / m_frame_divisor);  // Default: 72 (12*6) = 41.015625 Hz
 	screen.set_size(400, 300);
 	screen.set_visarea(0, 250, 0, 280);
 	screen.set_screen_update("vector", FUNC(vector_device::screen_update));
