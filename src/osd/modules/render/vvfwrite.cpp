@@ -297,7 +297,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		m_center_x = (m_min_raw_x + m_max_raw_x) / 2;
 		m_center_y = (m_min_raw_y + m_max_raw_y) / 2;
 
-		if (m_scale_x == 1) initial_scaling = true;
 		m_range_x = m_max_raw_x - m_min_raw_x;
 		m_range_y = m_max_raw_y - m_min_raw_y;
 
@@ -376,16 +375,9 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		// Show: RAW (x,y) SCALED (x,y) delta color-emoji intensity
 		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
-
-		if (initial_scaling)
-		{
-			osd_printf_info(" → INITIAL SCALING: X÷%d Y÷%d (range X=%d Y=%d)",
-			m_scale_x, m_scale_y, m_range_x, m_range_y);
-		}
 
 		// Show palette entry info if needed (only for visible draws)
 		if (intensity > 0 && palette_index_hint == -1)
@@ -571,7 +563,7 @@ void vvf_write::end_frame()
 
 	// Reset flag for next frame
 	m_frame_started = false;
-}
+} // vvf_write::end_frame()
 
 // Cohen-Sutherland line clipping algorithm
 // Returns true if line is visible (possibly clipped), false if completely outside
