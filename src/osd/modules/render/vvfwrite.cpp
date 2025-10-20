@@ -25,10 +25,10 @@
 // VVF coordinate limits
 // LINE_TO6 and LINE_TO10 use signed deltas (relative movement)
 // LINE_TO14 uses absolute coordinates (0-16383 unsigned)
-static const s32 6BIT_MAX = 31;       // 6-bit signed delta: ±31
-static const s32 10BIT_MAX = 511;     // 10-bit signed delta: ±511
-static const s32 13BIT_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
-static const s32 14BIT_MAX = 16383;   // 14-bit absolute: 0-16383
+static const s32 BIT6_MAX = 31;       // 6-bit signed delta: ±31
+static const s32 BIT10_MAX = 511;     // 10-bit signed delta: ±511
+static const s32 BIT13_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
+static const s32 BIT14_MAX = 16383;   // 14-bit absolute: 0-16383
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -302,8 +302,8 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		m_range_y = m_max_raw_y - m_min_raw_y;
 
 		// Calculate scale to fit range into signed coordinate space (-8191 to +8191)
-		m_scale_x = m_range_x / 14BIT_MAX;
-		m_scale_y = m_range_y / 14BIT_MAX;
+		m_scale_x = m_range_x / BIT14_MAX;
+		m_scale_y = m_range_y / BIT14_MAX;
 
 		if (m_scale_x < 1) m_scale_x = 1;
 		if (m_scale_y < 1) m_scale_y = 1;
@@ -419,11 +419,11 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	if (m_frame_count == 0)
 	{
 		// Inline overflow check for first frame (signed coordinates: -2047 to +2047)
-		if (scaled_x > 11BIT_MAX || scaled_x < -11BIT_MAX)
+		if (scaled_x > BIT13_MAX || scaled_x < -BIT13_MAX)
 		{
 			s32 old_scale = m_scale_x;
 			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_x = (m_range_x + 12BIT_MAX) / 12BIT_MAX;
+			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
 #if VVF_STATS
 			m_stats.x_rescale_count++;
 			osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
@@ -432,11 +432,11 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 			scaled_x = (raw_x - m_center_x) / m_scale_x;
 		}
 
-		if (scaled_y > 11BIT_MAX || scaled_y < -11BIT_MAX)
+		if (scaled_y > BIT13_MAX || scaled_y < -BIT13_MAX)
 		{
 			s32 old_scale = m_scale_y;
 			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_y = (m_range_y + 12BIT_MAX) / 12BIT_MAX;
+			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
 #if VVF_STATS
 			m_stats.y_rescale_count++;
 			osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
@@ -532,10 +532,10 @@ void vvf_write::end_frame()
 		s32 vvf_half_range_x = (m_range_x / 2) / m_scale_x;
 		s32 vvf_half_range_y = (m_range_y / 2) / m_scale_y;
 
-		if (vvf_half_range_x > 11BIT_MAX)
+		if (vvf_half_range_x > BIT13_MAX)
 		{
 			s32 old_scale = m_scale_x;
-			m_scale_x = (m_range_x + 12BIT_MAX) / 12BIT_MAX;
+			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
 #if VVF_STATS
 			m_stats.x_rescale_count++;
 			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
@@ -543,10 +543,10 @@ void vvf_write::end_frame()
 #endif
 		}
 
-		if (vvf_half_range_y > 11BIT_MAX)
+		if (vvf_half_range_y > BIT13_MAX)
 		{
 			s32 old_scale = m_scale_y;
-			m_scale_y = (m_range_y + 12BIT_MAX) / 12BIT_MAX;
+			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
 #if VVF_STATS
 			m_stats.y_rescale_count++;
 			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
@@ -690,7 +690,7 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 	bool needs_palette_switch = (palette_index != m_current_palette_index);
 
 	// Choose command based on delta magnitude
-	if (abs_dx <= 6BIT_MAX && abs_dy <= 6BIT_MAX)
+	if (abs_dx <= BIT6_MAX && abs_dy <= BIT6_MAX)
 	{
 		// LINE_TO6 or LINE_TO6_PAL (±31 pixels)
 		// Pack: [cmd:3][dx_hi:2][dy_hi:2][spare:1] [dx_lo:4][dy_lo:4]
@@ -721,7 +721,7 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 #endif
 		}
 	}
-	else if (abs_dx <= 10BIT_MAX && abs_dy <= 10BIT_MAX)
+	else if (abs_dx <= BIT10_MAX && abs_dy <= BIT10_MAX)
 	{
 		// LINE_TO10 or LINE_TO10_PAL (±511 pixels)
 		// Pack: [cmd:3][dx_hi:2][dy_hi:2][spare:1] [dx_lo:8] [dy_lo:8]
@@ -762,12 +762,12 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 		// Check if endpoint is out of bounds and clip if needed
 		// (start point m_last_scaled_x/m_last_scaled_y is always valid from previous line)
 		// Check if endpoint is out of signed coordinate bounds (-8191 to +8191)
-		if (x < -13BIT_MAX || x > 13BIT_MAX || y < -13BIT_MAX || y > 13BIT_MAX)
+		if (x < -BIT13_MAX || x > BIT13_MAX || y < -BIT13_MAX || y > BIT13_MAX)
 		{
 			s32 x1 = x;
 			s32 y1 = y;
 
-			if (clip_line_to_rect(m_last_scaled_x, m_last_scaled_y, x1, y1, -13BIT_MAX, -13BIT_MAX, 13BIT_MAX, 13BIT_MAX))
+			if (clip_line_to_rect(m_last_scaled_x, m_last_scaled_y, x1, y1, -BIT13_MAX, -BIT13_MAX, BIT13_MAX, BIT13_MAX))
 			{
 				// Line visible after clipping endpoint
 				osd_printf_warning("VVF: Endpoint clipped (%d,%d)->(%d,%d) to (%d,%d)->(%d,%d)\n",
@@ -789,8 +789,8 @@ void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int 
 		// Emit LINE_TO14 with absolute coordinates
 		// Convert from signed (-8191 to +8191) to unsigned (0 to 16383) for storage
 		// Pack: [cmd:3][x_hi:2][y_hi:2][spare:1] [x_mid:8] [y_mid:8] [x_lo:4][y_lo:4]
-		uint32_t unsigned_x = x + 13BIT_MAX;
-		uint32_t unsigned_y = y + 13BIT_MAX;
+		uint32_t unsigned_x = x + BIT13_MAX;
+		uint32_t unsigned_y = y + BIT13_MAX;
 
 		uint8_t x_hi = (unsigned_x >> 12) & 0x03;
 		uint8_t y_hi = (unsigned_y >> 12) & 0x03;
@@ -1019,7 +1019,7 @@ void vvf_write::finalize()
 		osd_printf_info("VVF: MAME range: X=[%d..%d] Y=[%d..%d] → VVF [-%d..+%d]×[-%d..+%d] | Scales: X÷%d Y÷%d | Precision: %.1f%%\n",
 			m_min_raw_x, m_max_raw_x, m_min_raw_y, m_max_raw_y,
 			vvf_w/2, vvf_w/2, vvf_h/2, vvf_h/2, m_scale_x, m_scale_y,
-			100.0 * std::max(vvf_w/2, vvf_h/2) / 11BIT_MAX);
+			100.0 * std::max(vvf_w/2, vvf_h/2) / BIT13_MAX);
 		osd_printf_info("VVF: Native: %d×%d (aspect %.2f)\n",
 			native_w, native_h, (double)native_w / native_h);
 
