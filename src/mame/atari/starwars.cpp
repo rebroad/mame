@@ -51,6 +51,12 @@
  *
  *************************************/
 
+void starwars_state::device_start()
+{
+	/* allocate frame divisor file checking timer (must be done during device_start) */
+	m_divisor_check_timer = timer_alloc(FUNC(starwars_state::check_divisor_file), this);
+}
+
 void starwars_state::machine_reset()
 {
 	/* reset the matrix processor */
@@ -76,9 +82,7 @@ void starwars_state::machine_reset()
 		}
 	}
 
-	/* initialize frame divisor file checking timer (check every 100ms) */
-	if (!m_divisor_check_timer)
-		m_divisor_check_timer = timer_alloc(FUNC(starwars_state::check_divisor_file), this);
+	/* start frame divisor file checking timer (check every 100ms) */
 	m_divisor_check_timer->adjust(attotime::from_msec(100), 0, attotime::from_msec(100));
 }
 

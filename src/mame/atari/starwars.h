@@ -92,6 +92,7 @@ private:
 	uint8_t starwars_main_ready_flag_r();
 	void starwars_soundrst_w(uint8_t data);
 	void quad_pokeyn_w(offs_t offset, uint8_t data);
+	virtual void device_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
 	TIMER_CALLBACK_MEMBER(math_run_clear);
 	TIMER_CALLBACK_MEMBER(check_divisor_file);
