@@ -238,14 +238,10 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	// Track coordinate ranges (for scaling and bit precision analysis) - only for draw lines
-	if (intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1.0 || m_scale_y == 1.0)
-	{
-		if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
-		if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
-		if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
-		if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
-	}
+	if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
+	if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
+	if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
+	if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
 
 #if VVF_STATS
 	// Track raw distance and min/max using RAW coordinates
@@ -290,8 +286,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	double old_scale_x = m_scale_x;
 	double old_scale_y = m_scale_y;
 
-	if ((intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1.0 || m_scale_y == 1.0)
-		&& !(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
+	if (!(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
 	{
 		// Normal case: scale around center point
 		m_center_x = (m_min_raw_x + m_max_raw_x) / 2;
@@ -316,7 +311,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 #if VVF_STATS
 	// Classify color for stats and emoji (only for draws, not moves)
-	const char* color_emoji = "🖤";  // Black heart for moves
+	const char* color_emoji = "⚫";  // Black circle for moves
 	if (intensity > 0)
 	{
 		uint8_t r = color.r();
@@ -331,22 +326,22 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		if (r >= max_rgb && g < min_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_RED]++;
-			color_emoji = "❤️";  // Red heart
+			color_emoji = "🔴";  // Red circle
 		}
 		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_GREEN]++;
-			color_emoji = "💚";  // Green heart
+			color_emoji = "🟢";  // Green circle
 		}
 		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_BLUE]++;
-			color_emoji = "💙";  // Blue heart
+			color_emoji = "🔵";  // Blue circle
 		}
 		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_YELLOW]++;
-			color_emoji = "💛";  // Yellow heart
+			color_emoji = "🟡";  // Yellow circle
 		}
 		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
 		{
@@ -356,28 +351,28 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_MAGENTA]++;
-			color_emoji = "💜";  // Purple heart for magenta
+			color_emoji = "🟣";  // Purple circle for magenta
 		}
 		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_WHITE]++;
-			color_emoji = "🤍";  // White heart
+			color_emoji = "⚪";  // White circle
 		}
 		else
 		{
 			m_stats.draws_per_color[COLOR_OTHER]++;
-			color_emoji = "🌈";  // Mixed: 🌈rainbow 🎨palette 🦜parrot 🦚peacock 🎪circus
+			color_emoji = "🌈";  // Mixed: rainbow (no better circle option)
 		}
 	}
 
-	if (m_stats.write_line_count < 50)
-	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+	attotime elapsed = m_machine.time() - m_start_time;
+	double elapsed_sec = elapsed.as_double();
+	uint32_t seconds = (uint32_t)elapsed_sec;
+	uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
+	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1))
+	{
+		osd_printf_info("%u.%03u line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
 
@@ -407,6 +402,25 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		osd_printf_info("\n");
 	}
+
+	// Check for overflow/rescale only during first frame
+	if (old_scale_x != m_scale_x)
+	{
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
+		m_stats.x_rescale_count++;
+		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
+			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
+	}
+
+	if (old_scale_y != m_scale_y)
+	{
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
+		m_stats.y_rescale_count++;
+		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
+			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
+	}
 #endif
 
 	// Optimization: Skip redundant zero-length moves (pen already at position)
@@ -418,28 +432,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 #endif
 		return;
 	}
-
-	// Check for overflow/rescale only during first frame
-	if (old_scale_x != m_scale_x)
-	{
-		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-#if VVF_STATS
-		m_stats.x_rescale_count++;
-		osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
-			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
-#endif
-	}
-
-	if (old_scale_y != m_scale_y)
-	{
-		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-#if VVF_STATS
-		m_stats.y_rescale_count++;
-		osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
-			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
-#endif
-	}
-
 
 	// Write VVF command (pass palette hint: -1=not found/new, else=existing index)
 	write_command(scaled_x, scaled_y, color, intensity, palette_index_hint);
@@ -465,13 +457,12 @@ void vvf_write::end_frame()
 	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
 	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
 	{
-		// Calculate instantaneous FPS for this 1-second interval
 		static uint32_t last_frame_count = 0;
 		static uint32_t last_second_baseline[COLOR_COUNT] = {0};
 		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
 		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB | ",
+		osd_printf_info("%.1fs VVF: %.2f FPS | %u frames total, %.2f KB | ",
 			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
 
 		// Print color stats for this second (delta from last second)
@@ -485,7 +476,7 @@ void vvf_write::end_frame()
 		}
 
 		last_frame_count = m_frame_count + 1;
-		m_last_stats_print = current_time;
+		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
 
 	// Skip frames where begin_frame() was never called
@@ -1165,7 +1156,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"❤️", "💚", "💙", "💛", "💎", "💜", "🤍", "🌈"};
+	const char *color_names[COLOR_COUNT] = {"🔴", "🟢", "🔵", "🟡", "💎", "🟣", "⚪", "🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
