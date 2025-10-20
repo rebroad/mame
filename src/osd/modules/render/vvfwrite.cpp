@@ -370,7 +370,8 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	uint32_t seconds = (uint32_t)elapsed_sec;
 	uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1))
+	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1)
+		|| old_scale_x != m_scale_x || old_scale_y != m_scale_y)
 	{
 		osd_printf_info("%u.%03u line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
