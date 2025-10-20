@@ -362,14 +362,15 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	if (m_stats.write_line_count < 50)
-	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+	attotime elapsed = m_machine.time() - m_start_time;
+	double elapsed_sec = elapsed.as_double();
+	uint32_t seconds = (uint32_t)elapsed_sec;
+	uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
+	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1)
+		|| old_scale_x != m_scale_x || old_scale_y != m_scale_y)
+	{
+		osd_printf_info("%u.%03u line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
 
@@ -399,28 +400,26 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		osd_printf_info("\n");
 	}
-#endif
 
 	// Check for overflow/rescale only during first frame
 	if (old_scale_x != m_scale_x)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-#if VVF_STATS
 		m_stats.x_rescale_count++;
-		osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
 			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
-#endif
 	}
 
 	if (old_scale_y != m_scale_y)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-#if VVF_STATS
 		m_stats.y_rescale_count++;
-		osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
 			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
-#endif
 	}
+#endif
 
 
 	// Optimization: Skip redundant zero-length moves (pen already at position)
