@@ -128,7 +128,7 @@ private:
 	void finalize();
 
 	// Command writing (private helpers)
-	void write_line_command(s32, s32, rgb_t, uint8_t, int);
+	void write_command(s32, s32, rgb_t, uint8_t, int);
 	void write_end_frame_command();
 
 	// Audio encoding
@@ -179,7 +179,6 @@ private:
 	// Current state (for delta encoding)
 	rgb_t m_current_color;
 	uint8_t m_current_intensity;
-	s32 m_last_x, m_last_y;  // Last coordinates for delta encoding
 	uint8_t m_current_palette_index;
 
 	// Compression settings
@@ -220,16 +219,19 @@ private:
 		uint64_t total_bytes;
 		uint32_t raw_moves_count;     // line_to with intensity=0
 		uint32_t raw_draws_count;     // line_to with intensity>0
+		double min_draw_distance;
+		double max_draw_distance;
+		double min_move_distance;
+		double max_move_distance;
 		uint32_t draws_per_color[COLOR_COUNT]; // [red, green, blue, yellow, cyan, magenta, white, other]
+		uint32_t max_draw_line_num, max_move_line_num;
+		uint32_t min_draw_line_num, min_move_line_num;
 		uint32_t x_rescale_count;   // Number of times X scale was adjusted
 		uint32_t y_rescale_count;   // Number of times Y scale was adjusted
-
-		// Optimization tracking
+		uint32_t total_coord_error_x, total_coord_error_y, coord_samples;
+		uint32_t max_error_x, max_error_y;
 		uint32_t moves_skipped; // Zero-length moves eliminated
-
-		// Per-frame debug counters (reset at begin_frame)
-		uint32_t frame_line_to_calls;      // Number of line_to() calls in current frame
-		uint32_t frame_write_commands;     // Number of write_line_command() calls in current frame
+		uint32_t write_line_count; // Number of LINE_TO commands written (moves + draws)
 	} m_stats;
 
 	std::vector<frame_stats> m_recent_frames; // Last second of frames

@@ -79,7 +79,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_compression_type(1) // Default to zlib
 	, m_palette_full_count(0)
 #if VVF_STATS
-	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including beam_moves_count and beam_draws_count
+	, m_stats{0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // counts including raw_moves_count and raw_draws_count
 		std::numeric_limits<double>::max(), 0.0,  // min_draw_distance, max_draw_distance
 		std::numeric_limits<double>::max(), 0.0,  // min_move_distance, max_move_distance
 		{0, 0, 0, 0, 0, 0, 0},  // draws_per_color[7] - all zeros
@@ -87,11 +87,11 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0, 0, 0, 0,  // max_draw coords
 		0, 0, 0, 0,  // max_move coords
 		0, 0,  // max_draw_line_num, max_move_line_num
-		0,  // debug_line_count
+		0, 0,  // min_draw_line_num, min_move_line_num
 		0, 0, // x_rescale_count, y_rescale_count
 		0, 0, 0, 0, 0, // Precision: total_error_x, total_error_y, samples, max_error_x, max_error_y
-		0,    // redundant_moves_skipped
-		0, 0} // frame_line_to_calls, frame_write_commands
+		0,    // moves_skipped
+		0}    // write_line_count
 	, m_last_stats_print(attotime::zero)
 #endif
 {
@@ -200,7 +200,7 @@ void vvf_write::begin_frame()
 
 #if VVF_STATS
 	// Debug: Print frame stats (stop at 50 line_to calls)
-	if (m_stats.debug_line_count < 50)
+	if (m_stats.write_line_count < 50)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
@@ -208,12 +208,10 @@ void vvf_write::begin_frame()
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
 		osd_printf_info("%u.%03u VVF frame_begin #%u: %u line_to calls, %u write commands, %zu bytes\n",
-			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
+			seconds, milliseconds, m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
+			m_stats.line_to4_count + m_stats.line_to4_pal_count + m_stats.line_to8_count + m_stats.line_to8_pal_count +
+			m_stats.line_to12_count + m_stats.line_to12_pal_count + m_stats.new_color_count, m_frame_buffer.size());
 	}
-
-	// Reset per-frame counters
-	m_stats.frame_line_to_calls = 0;
-	m_stats.frame_write_commands = 0;
 #endif
 
 	// Clear frame buffer for new frame
@@ -225,9 +223,9 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	if (!m_recording)
 		return;
 
-#if VVF_STATS
-	m_stats.frame_line_to_calls++;
-#endif
+	// Static variables for this function only
+	static s32 last_raw_x = 0, last_raw_y = 0;
+	static s32 last_scaled_x = 0, last_scaled_y = 0;
 
 	// Check if palette entry exists (optimization to avoid duplicate search)
 	// Returns: -1 if not found (will need to add), otherwise the existing palette index
@@ -245,18 +243,59 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	// Track coordinate ranges (for scaling and bit precision analysis)
-	if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
-	if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
-	if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
-	if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
+	// Track coordinate ranges (for scaling and bit precision analysis) - only for draw lines
+	if (intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
+	{
+		if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
+		if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
+		if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
+		if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
+	}
+
+#if VVF_STATS
+	// Track raw distance and min/max using RAW coordinates
+	double dx_raw = double(raw_x) - double(last_raw_x);
+	double dy_raw = double(raw_y) - double(last_raw_y);
+	double distance_raw = sqrt(dx_raw * dx_raw + dy_raw * dy_raw);
+
+	if (intensity == 0)
+	{
+		// Raw move
+		m_stats.raw_moves_count++;
+		if (distance_raw > 0 && distance_raw < m_stats.min_move_distance)
+		{
+			m_stats.min_move_distance = distance_raw;
+			m_stats.min_move_line_num = m_stats.write_line_count;
+		}
+		if (distance_raw > m_stats.max_move_distance)
+		{
+			m_stats.max_move_distance = distance_raw;
+			m_stats.max_move_line_num = m_stats.write_line_count;
+		}
+	}
+	else
+	{
+		// Raw draw
+		m_stats.raw_draws_count++;
+		if (distance_raw > 0 && distance_raw < m_stats.min_draw_distance)
+		{
+			m_stats.min_draw_distance = distance_raw;
+			m_stats.min_draw_line_num = m_stats.write_line_count;
+		}
+		if (distance_raw > m_stats.max_draw_distance)
+		{
+			m_stats.max_draw_distance = distance_raw;
+			m_stats.max_draw_line_num = m_stats.write_line_count;
+		}
+	}
+#endif
 
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x = 0, scaled_y = 0;
 	bool initial_scaling = false;
 
-	// Special case: First coordinate or no valid range yet
-	if (!(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
+	if ((intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
+		&& !(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
 	{
 		// Normal case: scale around center point
 		m_center_x = (m_min_raw_x + m_max_raw_x) / 2;
@@ -272,10 +311,11 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		if (m_scale_x < 1) m_scale_x = 1;
 		if (m_scale_y < 1) m_scale_y = 1;
-
-		scaled_x = (x - m_center_x) / m_scale_x;
-		scaled_y = (y - m_center_y) / m_scale_y;
 	}
+
+	scaled_x = (x - m_center_x) / m_scale_x;
+	scaled_y = (y - m_center_y) / m_scale_y;
+
 
 #if VVF_STATS
 	// Classify color for stats and emoji (only for draws, not moves)
@@ -333,8 +373,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	// Debug output FIRST (before updating ranges) - stop at 50 line_to calls
-	if (m_stats.debug_line_count < 50)
+	if (m_stats.write_line_count < 50)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
@@ -343,19 +382,16 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		// Show: RAW (x,y) SCALED (x,y) delta color-emoji intensity
 		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
-			seconds, milliseconds, m_stats.debug_line_count, raw_x, raw_y, scaled_x, scaled_y,
+			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
-	}
 
-	if (initial_scaling)
-	{
-		osd_printf_info(" → INITIAL SCALING: X÷%d Y÷%d (range X=%d Y=%d)",
-		m_scale_x, m_scale_y, m_range_x, m_range_y);
-	}
+		if (initial_scaling)
+		{
+			osd_printf_info(" → INITIAL SCALING: X÷%d Y÷%d (range X=%d Y=%d)",
+			m_scale_x, m_scale_y, m_range_x, m_range_y);
+		}
 
-	// Show palette entry info if needed (only for visible draws)
-	if (m_stats.debug_line_count < 50)
-	{
+		// Show palette entry info if needed (only for visible draws)
 		if (intensity > 0 && palette_index_hint == -1)
 		{
 			if (m_palette.size() >= 256)
@@ -384,16 +420,14 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 #endif
 
 	// Optimization: Skip redundant zero-length moves (pen already at position)
-	if (intensity == 0 && scaled_x == m_last_x && scaled_y == m_last_y)
+	if (intensity == 0 && scaled_x == last_scaled_x && scaled_y == last_scaled_y)
 	{
 		// Redundant "pen up" - beam already at this position, skip it
 #if VVF_STATS
-		m_stats.redundant_moves_skipped++;
+		m_stats.moves_skipped++;
 #endif
 		return;
 	}
-
-	m_stats.debug_line_count++;
 
 	// Check for overflow/rescale only during first frame
 	if (m_frame_count == 0)
@@ -428,12 +462,16 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 
 	// Write VVF command (pass palette hint: -1=not found/new, else=existing index)
-	write_line_command(scaled_x, scaled_y, color, intensity, palette_index_hint);
+	write_command(scaled_x, scaled_y, color, intensity, palette_index_hint);
 
-	// Update beam position (now done here in line_to, after write_line_command returns)
-	m_last_x = scaled_x;
-	m_last_y = scaled_y;
-}
+	// Update beam position (now done here in line_to, after write_command returns)
+	last_scaled_x = scaled_x;
+	last_scaled_y = scaled_y;
+#if VVF_STATS
+	last_raw_x = raw_x;
+	last_raw_y = raw_y;
+#endif
+} // vvf_write::line_to()
 
 void vvf_write::end_frame()
 {
@@ -476,13 +514,14 @@ void vvf_write::end_frame()
 	double elapsed_sec = elapsed.as_double();
 
 #if VVF_STATS
-	if (m_stats.debug_line_count < 50 || m_frame_count < 10)
+	if (m_stats.write_line_count < 50 || m_frame_count < 10)
 	{
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
 		osd_printf_info("%u.%03u VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
-			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
+			seconds, milliseconds, m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
+			m_stats.write_line_count + m_stats.new_color_count, m_frame_buffer.size());
 	}
 #endif
 
@@ -618,49 +657,14 @@ bool clip_line_to_rect(s32 &x0, s32 &y0, s32 &x1, s32 &y1, s32 xmin, s32 ymin, s
 	}
 }
 
-void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int palette_index_hint)
+void vvf_write::write_command(s32 x, s32 y, rgb_t color, uint8_t intensity, int palette_index_hint)
 {
-#if VVF_STATS
-	m_stats.frame_write_commands++;
-#endif
 
 	// Calculate deltas from current position to target (x, y)
 	int dx = x - m_last_scaled_x;
 	int dy = y - m_last_scaled_y;
 	int abs_dx = abs(dx);
 	int abs_dy = abs(dy);
-
-#if VVF_STATS
-	// Calculate distance for statistics
-	double distance = sqrt(double(dx) * dx + double(dy) * dy);
-
-	if (intensity == 0)
-	{
-		// Beam move (invisible line)
-		m_stats.beam_moves_count++;
-		if (distance < m_stats.min_move_distance)
-			m_stats.min_move_distance = distance;
-		if (distance > m_stats.max_move_distance)
-		{
-			m_stats.max_move_distance = distance;
-			m_stats.max_move_line_num = m_stats.debug_line_count;
-		}
-	}
-	else
-	{
-		// Visible line (drawing)
-		m_stats.beam_draws_count++;
-		if (distance < m_stats.min_draw_distance)
-			m_stats.min_draw_distance = distance;
-		if (distance > m_stats.max_draw_distance)
-		{
-			m_stats.max_draw_distance = distance;
-			m_stats.max_draw_line_num = m_stats.debug_line_count;
-		}
-
-		// Note: Color classification for stats is now done in line_to()
-	}
-#endif
 
 	// Get palette index (hint: -1=not found/add new, else=use existing)
 	uint8_t palette_index = 255;
@@ -806,6 +810,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity,
 #endif
 		}
 	}
+	m_stats.write_line_count++;
 
 	// Update palette state (color and intensity tracked for optimization)
 	m_current_color = color;
@@ -1058,35 +1063,33 @@ void vvf_write::finalize()
 		m_stats.line_to12_pal_count, 100.0 * m_stats.line_to12_pal_count / total_commands);
 
 	// Movement stats
-	uint32_t total_line_to_calls = m_stats.beam_moves_count + m_stats.beam_draws_count;
-	uint32_t total_with_skipped = total_line_to_calls + m_stats.redundant_moves_skipped;
+	uint32_t total_line_to_calls = m_stats.raw_moves_count + m_stats.raw_draws_count;
+	uint32_t total_with_skipped = total_line_to_calls + m_stats.moves_skipped;
 	osd_printf_info("VVF: Moves=%u(%.1f%%) Draws=%u(%.1f%%)",
-		m_stats.beam_moves_count, 100.0 * m_stats.beam_moves_count / total_line_to_calls,
-		m_stats.beam_draws_count, 100.0 * m_stats.beam_draws_count / total_line_to_calls);
-	if (m_stats.redundant_moves_skipped > 0)
+		m_stats.raw_moves_count, 100.0 * m_stats.raw_moves_count / total_line_to_calls,
+		m_stats.raw_draws_count, 100.0 * m_stats.raw_draws_count / total_line_to_calls);
+	if (m_stats.moves_skipped > 0)
 		osd_printf_info(" | Skipped %u redundant moves (%.1f%% reduction)",
-			m_stats.redundant_moves_skipped,
-			100.0 * m_stats.redundant_moves_skipped / total_with_skipped);
+			m_stats.moves_skipped,
+			100.0 * m_stats.moves_skipped / total_with_skipped);
 	osd_printf_info("\n");
 
 	// Distance stats with coordinates
 	if (m_stats.min_draw_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("VVF: Draw distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d) [line #%u]\n",
-			m_stats.min_draw_distance, m_stats.max_draw_distance,
-			m_stats.max_draw_x1, m_stats.max_draw_y1, m_stats.max_draw_x2, m_stats.max_draw_y2,
-			m_stats.max_draw_line_num);
+		osd_printf_info("VVF: Draw distance: min: %.1f [line #%u] max: %.1f [line #%u]\n",
+			m_stats.min_draw_distance, m_stats.min_draw_line_num,
+			m_stats.max_draw_distance, m_stats.max_draw_line_num);
 	}
 	if (m_stats.min_move_distance < std::numeric_limits<double>::max())
 	{
-		osd_printf_info("VVF: Move distance: %.1f - %.1f px | Max from (%d,%d) to (%d,%d) [line #%u]\n",
-			m_stats.min_move_distance, m_stats.max_move_distance,
-			m_stats.max_move_x1, m_stats.max_move_y1, m_stats.max_move_x2, m_stats.max_move_y2,
-			m_stats.max_move_line_num);
+		osd_printf_info("VVF: Move distance: min: %.1f [line #%u] max: %.1f [line #%u]\n",
+			m_stats.min_move_distance, m_stats.min_move_line_num,
+			m_stats.max_move_distance, m_stats.max_move_line_num);
 	}
 
 	// Color usage (compact)
-	if (m_stats.beam_draws_count > 0)
+	if (m_stats.raw_draws_count > 0)
 	{
 		osd_printf_info("VVF: ");
 		print_color_stats();
@@ -1157,12 +1160,12 @@ std::vector<uint8_t> vvf_write::compress_data(const std::vector<uint8_t>& data)
 #if VVF_STATS
 void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 {
-	if (m_stats.beam_draws_count == 0)
+	if (m_stats.raw_draws_count == 0)
 		return;
 
 	// Calculate deltas if baseline provided
 	uint32_t color_counts[COLOR_COUNT];
-	uint32_t total_draws = m_stats.beam_draws_count;
+	uint32_t total_draws = m_stats.raw_draws_count;
 
 	if (baseline != nullptr)
 	{
