@@ -234,7 +234,6 @@ private:
 		uint32_t write_line_count; // Number of LINE_TO commands written (moves + draws)
 	} m_stats;
 
-	std::vector<frame_stats> m_recent_frames; // Last second of frames
 	attotime m_last_stats_print;
 
 	// Helper functions
