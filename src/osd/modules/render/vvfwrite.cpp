@@ -28,7 +28,6 @@
 static const s32 BIT6_MAX = 31;       // 6-bit signed delta: ±31
 static const s32 BIT10_MAX = 511;     // 10-bit signed delta: ±511
 static const s32 BIT13_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
-static const s32 BIT14_MAX = 16383;   // 14-bit absolute: 0-16383
 
 //**************************************************************************
 //  HELPER FUNCTIONS
@@ -58,7 +57,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_center_x(0), m_center_y(0)
 	, m_range_x(0), m_range_y(0)
-	, m_scale_x(1), m_scale_y(1)  // Start with 1, will optimize later
+	, m_scale_x(1.0), m_scale_y(1.0)  // Start with 1.0, will optimize later
 	, m_min_raw_x(INT32_MAX), m_max_raw_x(INT32_MIN)  // Track actual raw coordinate range (for scaling and bit analysis)
 	, m_min_raw_y(INT32_MAX), m_max_raw_y(INT32_MIN)
 	, m_frame_started(false)
@@ -254,14 +253,10 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	// Track coordinate ranges (for scaling and bit precision analysis) - only for draw lines
-	if (intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
-	{
-		if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
-		if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
-		if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
-		if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
-	}
+	if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
+	if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
+	if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
+	if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
 
 #if VVF_STATS
 	// Track raw distance and min/max using RAW coordinates
@@ -303,27 +298,25 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x = 0, scaled_y = 0;
+	double old_scale_x = m_scale_x;
+	double old_scale_y = m_scale_y;
 
-	if ((intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
-		&& !(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
+	m_range_x = m_max_raw_x - m_min_raw_x;
+	m_range_y = m_max_raw_y - m_min_raw_y;
+	if (m_range_x > 0)
 	{
-		// Normal case: scale around center point
 		m_center_x = (m_min_raw_x + m_max_raw_x) / 2;
-		m_center_y = (m_min_raw_y + m_max_raw_y) / 2;
-
-		m_range_x = m_max_raw_x - m_min_raw_x;
-		m_range_y = m_max_raw_y - m_min_raw_y;
-
-		// Calculate scale to fit range into signed coordinate space (-8191 to +8191)
-		m_scale_x = m_range_x / BIT14_MAX;
-		m_scale_y = m_range_y / BIT14_MAX;
-
-		if (m_scale_x < 1) m_scale_x = 1;
-		if (m_scale_y < 1) m_scale_y = 1;
+		double const half_range_x = (m_range_x + 1) / 2.0;
+		m_scale_x = std::max(1.0, half_range_x / BIT13_MAX);
+		scaled_x = s32(std::round((raw_x - m_center_x) / m_scale_x));
 	}
-
-	scaled_x = (raw_x - m_center_x) / m_scale_x;
-	scaled_y = (raw_y - m_center_y) / m_scale_y;
+	if (m_range_y > 0)
+	{
+		m_center_y = (m_min_raw_y + m_max_raw_y) / 2;
+		double const half_range_y = (m_range_y + 1) / 2.0;
+		m_scale_y = std::max(1.0, half_range_y / BIT13_MAX);
+		scaled_y = s32(std::round((raw_y - m_center_y) / m_scale_y));
+	}
 
 
 #if VVF_STATS
@@ -382,14 +375,15 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	if (m_stats.write_line_count < 50)
-	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
+	attotime elapsed = m_machine.time() - m_start_time;
+	double elapsed_sec = elapsed.as_double();
+	uint32_t seconds = (uint32_t)elapsed_sec;
+	uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
+	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1)
+		|| old_scale_x != m_scale_x || old_scale_y != m_scale_y)
+	{
+		osd_printf_info("%u.%03u line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
 			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
 
@@ -419,38 +413,26 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 		osd_printf_info("\n");
 	}
-#endif
 
 	// Check for overflow/rescale only during first frame
-	if (m_frame_count == 0)
+	if (old_scale_x != m_scale_x)
 	{
-		// Inline overflow check for first frame (signed coordinates: -2047 to +2047)
-		if (scaled_x > BIT13_MAX || scaled_x < -BIT13_MAX)
-		{
-			s32 old_scale = m_scale_x;
-			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				m_min_raw_x, m_max_raw_x, old_scale, m_scale_x, (double)m_scale_x / old_scale);
-#endif
-			scaled_x = (raw_x - m_center_x) / m_scale_x;
-		}
-
-		if (scaled_y > BIT13_MAX || scaled_y < -BIT13_MAX)
-		{
-			s32 old_scale = m_scale_y;
-			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				m_min_raw_y, m_max_raw_y, old_scale, m_scale_y, (double)m_scale_y / old_scale);
-#endif
-			scaled_y = (raw_y - m_center_y) / m_scale_y;
-		}
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
+		m_stats.x_rescale_count++;
+		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
+			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
 	}
+
+	if (old_scale_y != m_scale_y)
+	{
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
+		m_stats.y_rescale_count++;
+		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			seconds, milliseconds,
+			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
+	}
+#endif
 
 
 	// Optimization: Skip redundant zero-length moves (pen already at position)
@@ -530,36 +512,6 @@ void vvf_write::end_frame()
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
 
-	// After first frame, optimize scale and check for overflow
-	if (m_frame_count > 0)
-	{
-		// Subsequent frames: check if range expanded and rescale if needed
-		// For signed coordinates, the max extent from center is half the range
-		s32 vvf_half_range_x = (m_range_x / 2) / m_scale_x;
-		s32 vvf_half_range_y = (m_range_y / 2) / m_scale_y;
-
-		if (vvf_half_range_x > BIT13_MAX)
-		{
-			s32 old_scale = m_scale_x;
-			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				m_min_raw_x, m_max_raw_x, old_scale, m_scale_x, (double)m_scale_x / old_scale, m_frame_count);
-#endif
-		}
-
-		if (vvf_half_range_y > BIT13_MAX)
-		{
-			s32 old_scale = m_scale_y;
-			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				m_min_raw_y, m_max_raw_y, old_scale, m_scale_y, (double)m_scale_y / old_scale, m_frame_count);
-#endif
-		}
-	}
 
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
