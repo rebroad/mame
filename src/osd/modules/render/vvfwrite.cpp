@@ -456,7 +456,7 @@ void vvf_write::end_frame()
 	double elapsed_sec = elapsed.as_double();
 
 	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
-	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
+	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 30.0)
 	{
 		static uint32_t last_frame_count = 0;
 		static uint32_t last_second_baseline[COLOR_COUNT] = {0};
