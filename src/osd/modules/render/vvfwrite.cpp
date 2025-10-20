@@ -58,7 +58,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_center_x(0), m_center_y(0)
 	, m_range_x(0), m_range_y(0)
-	, m_scale_x(1), m_scale_y(1)  // Start with 1, will optimize later
+	, m_scale_x(1.0), m_scale_y(1.0)  // Start with 1, will optimize later
 	, m_min_raw_x(INT32_MAX), m_max_raw_x(INT32_MIN)  // Track actual raw coordinate range (for scaling and bit analysis)
 	, m_min_raw_y(INT32_MAX), m_max_raw_y(INT32_MIN)
 	, m_frame_started(false)
@@ -239,14 +239,10 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		}
 	}
 
-	// Track coordinate ranges (for scaling and bit precision analysis) - only for draw lines
-	if (intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
-	{
-		if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
-		if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
-		if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
-		if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
-	}
+	if (raw_x < m_min_raw_x) m_min_raw_x = raw_x;
+	if (raw_x > m_max_raw_x) m_max_raw_x = raw_x;
+	if (raw_y < m_min_raw_y) m_min_raw_y = raw_y;
+	if (raw_y > m_max_raw_y) m_max_raw_y = raw_y;
 
 #if VVF_STATS
 	// Track raw distance and min/max using RAW coordinates
@@ -289,27 +285,25 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x = 0, scaled_y = 0;
 	bool initial_scaling = false;
+	double old_scale_x = m_scale_x;
+	double old_scale_y = m_scale_y;
 
-	if ((intensity > 0 || raw_x == INT32_MIN || m_scale_x == 1 || m_scale_y == 1)
-		&& !(m_min_raw_x == m_max_raw_x || m_min_raw_y == m_max_raw_y))
+	m_range_x = m_max_raw_x - m_min_raw_x;
+	m_range_y = m_max_raw_y - m_min_raw_y;
+	if (m_range_x > 0)
 	{
-		// Normal case: scale around center point
 		m_center_x = (m_min_raw_x + m_max_raw_x) / 2;
-		m_center_y = (m_min_raw_y + m_max_raw_y) / 2;
-
-		m_range_x = m_max_raw_x - m_min_raw_x;
-		m_range_y = m_max_raw_y - m_min_raw_y;
-
-		// Calculate scale to fit range into signed coordinate space (-8191 to +8191)
-		m_scale_x = m_range_x / BIT14_MAX;
-		m_scale_y = m_range_y / BIT14_MAX;
-
-		if (m_scale_x < 1) m_scale_x = 1;
-		if (m_scale_y < 1) m_scale_y = 1;
+		double const half_range_x = (m_range_x + 1) / 2.0;
+		m_scale_x = std::max(1.0, half_range_x / BIT13_MAX);
+		scaled_x = s32(std::round((raw_x - m_center_x) / m_scale_x));
 	}
-
-	scaled_x = (raw_x - m_center_x) / m_scale_x;
-	scaled_y = (raw_y - m_center_y) / m_scale_y;
+	if (m_range_y > 0)
+	{
+		m_center_y = (m_min_raw_y + m_max_raw_y) / 2;
+		double const half_range_y = (m_range_y + 1) / 2.0;
+		m_scale_y = std::max(1.0, half_range_y / BIT13_MAX);
+		scaled_y = s32(std::round((raw_y - m_center_y) / m_scale_y));
+	}
 
 
 #if VVF_STATS
@@ -408,34 +402,24 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 #endif
 
 	// Check for overflow/rescale only during first frame
-	if (m_frame_count == 0)
+	if (old_scale_x != m_scale_x)
 	{
-		// Inline overflow check for first frame (signed coordinates: -2047 to +2047)
-		if (scaled_x > BIT13_MAX || scaled_x < -BIT13_MAX)
-		{
-			s32 old_scale = m_scale_x;
-			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 #if VVF_STATS
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				m_min_raw_x, m_max_raw_x, old_scale, m_scale_x, (double)m_scale_x / old_scale);
+		m_stats.x_rescale_count++;
+		osd_printf_warning("VVF: Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
 #endif
-			scaled_x = (raw_x - m_center_x) / m_scale_x;
-		}
+	}
 
-		if (scaled_y > BIT13_MAX || scaled_y < -BIT13_MAX)
-		{
-			s32 old_scale = m_scale_y;
-			// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
-			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
+	if (old_scale_y != m_scale_y)
+	{
+		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 #if VVF_STATS
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %d -> %d (%.1fx loss)\n",
-				m_min_raw_y, m_max_raw_y, old_scale, m_scale_y, (double)m_scale_y / old_scale);
+		m_stats.y_rescale_count++;
+		osd_printf_warning("VVF: Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
 #endif
-			scaled_y = (raw_y - m_center_y) / m_scale_y;
-		}
 	}
 
 
@@ -516,36 +500,6 @@ void vvf_write::end_frame()
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
 
-	// After first frame, optimize scale and check for overflow
-	if (m_frame_count > 0)
-	{
-		// Subsequent frames: check if range expanded and rescale if needed
-		// For signed coordinates, the max extent from center is half the range
-		s32 vvf_half_range_x = (m_range_x / 2) / m_scale_x;
-		s32 vvf_half_range_y = (m_range_y / 2) / m_scale_y;
-
-		if (vvf_half_range_x > BIT13_MAX)
-		{
-			s32 old_scale = m_scale_x;
-			m_scale_x = (m_range_x + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.x_rescale_count++;
-			osd_printf_warning("VVF: X overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				m_min_raw_x, m_max_raw_x, old_scale, m_scale_x, (double)m_scale_x / old_scale, m_frame_count);
-#endif
-		}
-
-		if (vvf_half_range_y > BIT13_MAX)
-		{
-			s32 old_scale = m_scale_y;
-			m_scale_y = (m_range_y + BIT14_MAX) / BIT14_MAX;
-#if VVF_STATS
-			m_stats.y_rescale_count++;
-			osd_printf_warning("VVF: Y overflow! Range [%d..%d] → scale %d -> %d (%.1fx loss) at frame %u\n",
-				m_min_raw_y, m_max_raw_y, old_scale, m_scale_y, (double)m_scale_y / old_scale, m_frame_count);
-#endif
-		}
-	}
 
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
