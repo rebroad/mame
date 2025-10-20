@@ -53,6 +53,9 @@
 
 void starwars_state::device_start()
 {
+	/* call parent class device_start first - critical for memory banking and other initialization */
+	driver_device::device_start();
+
 	/* allocate frame divisor file checking timer (must be done during device_start) */
 	m_divisor_check_timer = timer_alloc(FUNC(starwars_state::check_divisor_file), this);
 }
