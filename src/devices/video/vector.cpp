@@ -230,7 +230,11 @@ void vector_device::add_point(int x, int y, rgb_t color, int intensity)
  */
 void vector_device::clear_list(void)
 {
-	// Start new VVF frame
+	// Mark that a new vector frame is starting
+	// This enables frame skip optimization: only present frames with new vector content
+	machine().video().set_vector_frame_started();
+
+	// Trigger VVF recording if active
 	machine().video().begin_vector_frame();
 
 	m_vector_index = 0;

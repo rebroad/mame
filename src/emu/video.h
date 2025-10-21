@@ -103,6 +103,9 @@ public:
 #endif
 	}
 
+	// Vector frame tracking (called by vector_device::clear_list())
+	void set_vector_frame_started() { m_vector_frame_started = true; }
+
 	// VVF vector recording (called by vector_device)
 	void begin_vector_frame();
 	void record_vector_line(int x, int y, rgb_t color, int intensity);
@@ -183,6 +186,7 @@ private:
 	u8                  m_frameskip_counter;        // counter that counts through the frameskip steps
 	s8                  m_frameskip_adjust;
 	bool                m_skipping_this_frame;      // flag: true if we are skipping the current frame
+	bool                m_vector_frame_started;     // flag: true if begin_vector_frame() was called this frame
 	osd_ticks_t         m_average_oversleep;        // average number of ticks the OSD oversleeps
 
 	// snapshot stuff
