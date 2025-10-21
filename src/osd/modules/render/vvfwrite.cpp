@@ -53,6 +53,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_width(width)
 	, m_height(height)
 	, m_frame_rate(60000)  // Default 60 Hz
+	, m_end_frame_count(0)
 	, m_frame_count(0)
 	, m_start_time(attotime::zero)
 	, m_center_x(0), m_center_y(0)
@@ -134,6 +135,7 @@ void vvf_write::record(std::string_view filename)
 
 	m_recording = true;
 	m_frame_count = 0;
+	m_end_frame_count = 0;
 	m_start_time = m_machine.time();
 	m_frame_index.clear();
 	m_audio_buffer.clear();
@@ -307,11 +309,9 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		scaled_y = s32(std::round((raw_y - m_center_y) / m_scale_y));
 	}
 
-
-
 #if VVF_STATS
 	// Classify color for stats and emoji (only for draws, not moves)
-	const char* color_emoji = "⚫";  // Black circle for moves
+	const char* color_emoji = "🖤";  // Black heart for moves
 	if (intensity > 0)
 	{
 		uint8_t r = color.r();
@@ -326,42 +326,42 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		if (r >= max_rgb && g < min_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_RED]++;
-			color_emoji = "🔴";  // Red circle
+			color_emoji = "❤️ ";  // Red heart (needs variation selector for color/size, kerning varies by terminal)
 		}
 		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_GREEN]++;
-			color_emoji = "🟢";  // Green circle
+			color_emoji = "💚";  // Green heart
 		}
 		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_BLUE]++;
-			color_emoji = "🔵";  // Blue circle
+			color_emoji = "💙";  // Blue heart
 		}
 		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_YELLOW]++;
-			color_emoji = "🟡";  // Yellow circle
+			color_emoji = "💛";  // Yellow heart
 		}
 		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_CYAN]++;
-			color_emoji = "💎";  // Cyan: 💎diamond 🧊ice 💧droplet 🐬dolphin 🦋butterfly
+			color_emoji = "🩵";  // Light blue heart (Unicode 15.0)
 		}
 		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_MAGENTA]++;
-			color_emoji = "🟣";  // Purple circle for magenta
+			color_emoji = "💜";  // Purple heart
 		}
 		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_WHITE]++;
-			color_emoji = "⚪";  // White circle
+			color_emoji = "🤍";  // White heart
 		}
 		else
 		{
 			m_stats.draws_per_color[COLOR_OTHER]++;
-			color_emoji = "🌈";  // Mixed: rainbow (no better circle option)
+			color_emoji = "🌈";  // Rainbow for mixed colors
 		}
 	}
 
@@ -459,26 +459,36 @@ void vvf_write::end_frame()
 	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 30.0)
 	{
 		static uint32_t last_frame_count = 0;
+		static uint32_t last_end_frame_count = 0;
 		static uint32_t last_second_baseline[COLOR_COUNT] = {0};
-		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
+		uint32_t frames_this_second = m_frame_count - last_frame_count;
+		uint32_t end_frames_this_second = m_end_frame_count - last_end_frame_count;
 		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
+		double end_fps = end_frames_this_second / (current_time - m_last_stats_print).as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f FPS | %u frames total, %.2f KB | ",
-			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
+		osd_printf_info("%.1fs VVF: %.2f eFPS %.2f FPS | %u frames total, %.2f KB | ",
+			elapsed_sec, end_fps, fps, m_frame_count, m_stats.total_bytes / 1024.0);
 
-		// Print color stats for this second (delta from last second)
-		print_color_stats(last_second_baseline);
-		osd_printf_info("\n");
+		if (m_frame_count > 0) {
+			// Print color stats for this second (delta from last second)
+			print_color_stats(last_second_baseline);
+			osd_printf_info("\n");
 
-		// Save baseline for next second
-		for (int i = 0; i < COLOR_COUNT; i++)
-		{
-			last_second_baseline[i] = m_stats.draws_per_color[i];
+			// Save baseline for next second
+			for (int i = 0; i < COLOR_COUNT; i++)
+			{
+				last_second_baseline[i] = m_stats.draws_per_color[i];
+			}
+
+			last_frame_count = m_frame_count;
+		} else {
+			osd_printf_info("No frames started\n");
 		}
-
-		last_frame_count = m_frame_count + 1;
+		last_end_frame_count = m_end_frame_count;
 		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
+
+	m_end_frame_count++;
 
 	// Skip frames where begin_frame() was never called
 	// (happens during initialization before vector rendering starts)
@@ -1157,7 +1167,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"🔴", "🟢", "🔵", "🟡", "💎", "🟣", "⚪", "🌈"};
+	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", "🩵", "💜", "🤍", "🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {

@@ -143,7 +143,8 @@ private:
 	s32 m_width;
 	s32 m_height;
 	uint32_t m_frame_rate;
-	uint32_t m_frame_count;
+	uint32_t m_end_frame_count;  // Count of end_frame() calls (for FPS tracking)
+	uint32_t m_frame_count;      // Count of actual frames written (excludes empty frames)
 	attotime m_start_time;
 	s32 m_center_x, m_center_y; // MAME center coordinate (for offset, scaling, and bit precision analysis)
 	s32 m_range_x, m_range_y; // MAME range coordinate (for offset, scaling, and bit precision analysis)
