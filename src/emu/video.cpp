@@ -1625,6 +1625,12 @@ void video_manager::record_vector_line(int x, int y, rgb_t color, int intensity)
 
 void video_manager::end_vector_frame()
 {
+	// Only process if a vector frame was actually started this VBLANK
+	// This prevents calling end_frame when the game doesn't generate new vectors
+	// Applies to both VVF recording and any future vector frame processing
+	if (!m_vector_frame_started)
+		return;
+
 	if (m_vvf_writer && m_vvf_writer->recording())
 	{
 		m_vvf_writer->end_frame();
