@@ -113,6 +113,7 @@ video_manager::video_manager(running_machine &machine)
 	, m_frameskip_counter(0)
 	, m_frameskip_adjust(0)
 	, m_skipping_this_frame(false)
+	, m_vector_frame_started(false)
 	, m_average_oversleep(0)
 	, m_snap_target(nullptr)
 	, m_snap_native(true)
@@ -246,12 +247,38 @@ void video_manager::frame_update(bool from_debugger)
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
 
+	// Check if this is a vector game frame without new content
+	bool vector_frame_empty = false;
+	bool has_vector_screen = false;
+	for (screen_device &screen : screen_device_enumerator(machine().root_device()))
+	{
+		if (screen.screen_type() == SCREEN_TYPE_VECTOR)
+		{
+			has_vector_screen = true;
+			break;
+		}
+	}
+
+	// For vector games, only consider frame non-empty if begin_vector_frame() was called
+	if (has_vector_screen && !m_vector_frame_started)
+	{
+		vector_frame_empty = true;
+		anything_changed = false;  // Force frame to be considered unchanged
+	}
+
+	// Reset vector frame started flag for next frame
+	m_vector_frame_started = false;
+
 	// if none of the screens changed and we haven't skipped too many frames in a row,
 	// mark this frame as skipped to prevent throttling; this helps for games that
 	// don't update their screen at the monitor refresh rate
-	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0) && (m_empty_skip_count++ < 3))
-		skipped_it = true;
-	else
+	// For vector games without new content, skip without limit
+	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0))
+	{
+		if (vector_frame_empty || m_empty_skip_count++ < 3)
+			skipped_it = true;
+	}
+	if (anything_changed || !vector_frame_empty)
 		m_empty_skip_count = 0;
 
 	// if we're throttling, synchronize before rendering
@@ -1581,6 +1608,7 @@ void video_manager::end_vvf_recording()
 
 void video_manager::begin_vector_frame()
 {
+	// VVF recording (if active)
 	if (m_vvf_writer && m_vvf_writer->recording())
 	{
 		m_vvf_writer->begin_frame();
