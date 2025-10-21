@@ -15,6 +15,8 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <cstdlib>  // for getenv
+#include <cstring>  // for strcmp
 
 // Note: VVF_STATS is now defined in vvfwrite.h
 
@@ -310,6 +312,10 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	}
 
 #if VVF_STATS
+	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
+	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr || 
+	                               (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
+
 	// Classify color for stats and emoji (only for draws, not moves)
 	const char* color_emoji = "🖤";  // Black heart for moves
 	if (intensity > 0)
@@ -346,7 +352,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_CYAN]++;
-			color_emoji = "🩵 ";  // Light blue heart (Unicode 15.0)
+			color_emoji = cursor_terminal ? "🩵 " : "🩵";  // Light blue heart needs space in Cursor
 		}
 		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
 		{
@@ -1167,7 +1173,12 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", "🩵 ", "💜", "🤍", "🌈"};
+	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
+	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr || 
+	                               (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
+
+	// Use space workaround for emojis with kerning issues in Cursor terminal
+	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", cursor_terminal ? "🩵 " : "🩵", "💜", "🤍", "🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
