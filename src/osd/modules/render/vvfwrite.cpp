@@ -313,8 +313,8 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 #if VVF_STATS
 	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
-	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr || 
-	                               (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
+	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr ||
+								   (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
 
 	// Classify color for stats and emoji (only for draws, not moves)
 	const char* color_emoji = "🖤";  // Black heart for moves
@@ -415,18 +415,18 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 		m_stats.x_rescale_count++;
-		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f\n",
 			seconds, milliseconds,
-			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
+			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x);
 	}
 
 	if (old_scale_y != m_scale_y)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 		m_stats.y_rescale_count++;
-		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
+		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f\n",
 			seconds, milliseconds,
-			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
+			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y);
 	}
 #endif
 
@@ -1174,8 +1174,8 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 		return;
 
 	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
-	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr || 
-	                               (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
+	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr ||
+								   (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
 
 	// Use space workaround for emojis with kerning issues in Cursor terminal
 	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", cursor_terminal ? "🩵 " : "🩵", "💜", "🤍", "🌈"};
