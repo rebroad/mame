@@ -346,7 +346,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_CYAN]++;
-			color_emoji = "🩵";  // Light blue heart (Unicode 15.0)
+			color_emoji = "🩵 ";  // Light blue heart (Unicode 15.0)
 		}
 		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
 		{
@@ -1167,7 +1167,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", "🩵", "💜", "🤍", "🌈"};
+	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", "🩵 ", "💜", "🤍", "🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
