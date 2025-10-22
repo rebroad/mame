@@ -311,27 +311,47 @@ This is why Star Wars can use 8 colors (3 bits) with 16 intensity levels (4 bits
 **SCAL controls DRAWING SPEED** - how long the beam takes to move from point A to point B:
 
 **The problem SCAL solves:**
-- Short vectors (small dx/dy) move quickly → less time exciting phosphor → DIM
-- Long vectors (large dx/dy) move slowly → more time exciting phosphor → BRIGHT
-- Without scaling, line brightness would vary wildly based on length!
 
-**How SCAL works:**
+On analog CRT, brightness = phosphor excitation time:
+- Slow beam → more time per spot → **BRIGHTER**
+- Fast beam → less time per spot → **DIMMER**
+
+**How SCAL normalizes this:**
 ```cpp
 drawing_time = (scale ^ 0xFF) * timer_value >> bin_scale_shifts
 
-Short vector + high scale (0xFF) = longer drawing time = brighter
-Long vector + low scale (0x00) = shorter drawing time = normalized brightness
+Short vector + high SCAL (0xFF) = SLOW beam = longer dwell = BRIGHTER ✅
+Long vector + low SCAL (0x00) = FAST beam = shorter dwell = NORMALIZED ✅
 ```
 
 **Example:**
 ```
-Short 10-pixel line: SCAL 0xFF (slow) → takes 50µs → bright enough to see
-Long 1000-pixel line: SCAL 0x10 (faster) → takes 50µs → same brightness!
+Short 100-pixel vector: SCAL 0xFF → beam moves SLOWLY → 100µs total → 1.0µs/pixel → BRIGHT
+Long 1000-pixel vector: SCAL 0x10 → beam moves QUICKLY → 100µs total → 0.1µs/pixel → DIM
+                                                                                     (normalized)
 ```
 
-The **normalization** code (lines 532-541 in avgdvg.cpp) further adjusts dx/dy and timing to keep drawing speeds consistent across different vector lengths.
+The **normalization** code (lines 532-541 in avgdvg.cpp) shifts dx/dy values to similar magnitudes before applying SCAL, ensuring consistent brightness across all vector lengths.
 
-**TL;DR**: SCAL is a **time/brightness** control, not a coordinate scale. It ensures all lines have consistent brightness regardless of length!
+**TL;DR**: SCAL controls **beam speed** (time to traverse the vector). Slower = brighter. Game adjusts SCAL based on vector length to maintain consistent brightness!
+
+### MAME Rendering Inaccuracy (Identified Issue)
+
+**Current MAME behavior:**
+- AVG emulation uses SCAL for timing calculations ✅
+- Final intensity passed to renderer = `m_intensity << 4` (just from STAT command)
+- **Scale information is DISCARDED** before rendering ❌
+
+**What SHOULD happen for accuracy:**
+```cpp
+effective_intensity = base_intensity * f(scale, vector_length, drawing_time)
+```
+
+Real hardware brightness depends on BOTH intensity AND dwell time (affected by SCAL). MAME currently only uses intensity, potentially causing brightness mismatches compared to real hardware.
+
+**Possible fix:** Modify `vg_add_point_buf()` to calculate effective intensity based on scale and normalized vector length, or pass scale info to renderer for accurate brightness emulation.
+
+**Impact**: Probably minor for most games (Star Wars looks fine), but could be noticeable in games that use SCAL creatively for brightness effects.
 
 **Example execution sequence:**
 ```
