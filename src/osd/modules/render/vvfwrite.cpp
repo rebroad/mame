@@ -94,6 +94,12 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 		0,    // moves_skipped
 		0}    // write_line_count
 	, m_last_stats_print(attotime::zero)
+	, m_last_end_frame_time(attotime::zero)
+	, m_min_end_frame_duration(std::numeric_limits<double>::max())
+	, m_max_end_frame_duration(0.0)
+	, m_last_begin_frame_time(attotime::zero)
+	, m_min_frame_duration(std::numeric_limits<double>::max())
+	, m_max_frame_duration(0.0)
 #endif
 {
 	// Get actual frame rate from first screen if available
@@ -146,6 +152,12 @@ void vvf_write::record(std::string_view filename)
 		count = 0;
 	m_start_time = m_machine.time();
 	m_last_stats_print = m_start_time;
+	m_last_end_frame_time = attotime::zero;
+	m_min_end_frame_duration = std::numeric_limits<double>::max();
+	m_max_end_frame_duration = 0.0;
+	m_last_begin_frame_time = attotime::zero;
+	m_min_frame_duration = std::numeric_limits<double>::max();
+	m_max_frame_duration = 0.0;
 	m_frame_index.clear();
 	m_audio_buffer.clear();
 
@@ -206,6 +218,16 @@ void vvf_write::begin_frame()
 	m_frame_started = true;
 
 #if VVF_STATS
+	// Track frame duration (time between begin_frame calls)
+	attotime current_time = m_machine.time();
+	if (m_last_begin_frame_time != attotime::zero)
+	{
+		double frame_duration = (current_time - m_last_begin_frame_time).as_double() * 1000.0;  // in milliseconds
+		if (frame_duration < m_min_frame_duration) m_min_frame_duration = frame_duration;
+		if (frame_duration > m_max_frame_duration) m_max_frame_duration = frame_duration;
+	}
+	m_last_begin_frame_time = current_time;
+
 	// Debug: Print frame stats (stop at 50 line_to calls)
 	if (m_stats.write_line_count < 50)
 	{
@@ -368,7 +390,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		else
 		{
 			m_stats.draws_per_color[COLOR_OTHER]++;
-			color_emoji = "🌈";  // Mixed: rainbow (no better circle option)
+			color_emoji = "🏳️‍🌈";  // Rainbow for mixed colors
 		}
 	}
 
@@ -463,6 +485,16 @@ void vvf_write::end_frame()
 	attotime elapsed = current_time - m_start_time;
 	double elapsed_sec = elapsed.as_double();
 
+	// Track end_frame duration (time between end_frame calls)
+	double end_frame_duration = 0.0;
+	if (m_last_end_frame_time != attotime::zero)
+	{
+		end_frame_duration = (current_time - m_last_end_frame_time).as_double() * 1000.0;  // in milliseconds
+		if (end_frame_duration < m_min_end_frame_duration) m_min_end_frame_duration = end_frame_duration;
+		if (end_frame_duration > m_max_end_frame_duration) m_max_end_frame_duration = end_frame_duration;
+	}
+	m_last_end_frame_time = current_time;
+
 	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
 	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 30.0)
 	{
@@ -471,8 +503,9 @@ void vvf_write::end_frame()
 		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
 		double end_fps = end_frames_this_second / (current_time - m_last_stats_print).as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f FPS | %u frames total, %.2f KB | ",
-			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
+		osd_printf_info("%.1fs VVF: %.2f eFPS (%.1f-%.1f ms) %.2f FPS (%.1f-%.1f ms) | %u frames total, %.2f KB | ",
+			elapsed_sec, end_fps, m_min_end_frame_duration, m_max_end_frame_duration,
+			fps, m_min_frame_duration, m_max_frame_duration, m_frame_count, m_stats.total_bytes / 1024.0);
 
 		if (m_frame_count > 0) {
 			// Print color stats for this second (delta from last second)
@@ -490,6 +523,12 @@ void vvf_write::end_frame()
 			osd_printf_info("No frames started\n");
 		}
 		m_last_end_frame_count = m_end_frame_count;
+
+		// Reset min/max for next second
+		m_min_end_frame_duration = std::numeric_limits<double>::max();
+		m_max_end_frame_duration = 0.0;
+		m_min_frame_duration = std::numeric_limits<double>::max();
+		m_max_frame_duration = 0.0;
 		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
 
@@ -1173,7 +1212,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"🔴", "🟢", "🔵", "🟡", "💎", "🟣", "⚪", "🌈"};
+	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", "🩵", "💜", "🤍", "🏳️‍🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
