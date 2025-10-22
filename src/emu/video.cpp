@@ -247,23 +247,27 @@ void video_manager::frame_update(bool from_debugger)
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
 
-	// Check if this is a vector game frame without new content
+	// Check if this is a vector game frame without new content (if optimization enabled)
 	bool vector_frame_empty = false;
 	bool has_vector_screen = false;
-	for (screen_device &screen : screen_device_enumerator(machine().root_device()))
-	{
-		if (screen.screen_type() == SCREEN_TYPE_VECTOR)
-		{
-			has_vector_screen = true;
-			break;
-		}
-	}
 
-	// For vector games, only consider frame non-empty if begin_vector_frame() was called
-	if (has_vector_screen && !m_vector_frame_started)
+	if (machine().options().vector_frame_skip())
 	{
-		vector_frame_empty = true;
-		anything_changed = false;  // Force frame to be considered unchanged
+		for (screen_device &screen : screen_device_enumerator(machine().root_device()))
+		{
+			if (screen.screen_type() == SCREEN_TYPE_VECTOR)
+			{
+				has_vector_screen = true;
+				break;
+			}
+		}
+
+		// For vector games, only consider frame non-empty if begin_vector_frame() was called
+		if (has_vector_screen && !m_vector_frame_started)
+		{
+			vector_frame_empty = true;
+			anything_changed = false;  // Force frame to be considered unchanged
+		}
 	}
 
 	// Reset vector frame started flag for next frame
@@ -1627,8 +1631,8 @@ void video_manager::end_vector_frame()
 {
 	// Only process if a vector frame was actually started this VBLANK
 	// This prevents calling end_frame when the game doesn't generate new vectors
-	// Applies to both VVF recording and any future vector frame processing
-	if (!m_vector_frame_started)
+	// Conditional on vector_frame_skip option (enabled by default, recommended for WASM/browser)
+	if (machine().options().vector_frame_skip() && !m_vector_frame_started)
 		return;
 
 	if (m_vvf_writer && m_vvf_writer->recording())

@@ -154,6 +154,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_VECTOR_DEFOCUS_MAXMUL,                      "2.0",       core_options::option_type::FLOAT,      "set vector defocus overdrive max multiplier" },
 	{ OPTION_VECTOR_GLOW_INTENSITY,                      "0.02",      core_options::option_type::FLOAT,      "set vector CRT glow intensity" },
 	{ OPTION_VECTOR_ANTIALIAS,                           "1",         core_options::option_type::BOOLEAN,    "enable vector antialiasing" },
+	{ OPTION_VECTOR_FRAME_SKIP,                          "1",         core_options::option_type::BOOLEAN,    "skip presenting frames when vector content unchanged (recommended for WASM/browser)" },
 
 	// sound options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE SOUND OPTIONS" },
