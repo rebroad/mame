@@ -237,6 +237,12 @@ private:
 	} m_stats;
 
 	attotime m_last_stats_print;
+	attotime m_last_end_frame_time;   // Time of last end_frame() call
+	double m_min_end_frame_duration;  // Minimum duration between end_frame calls (this second)
+	double m_max_end_frame_duration;  // Maximum duration between end_frame calls (this second)
+	attotime m_last_begin_frame_time; // Time of last begin_frame() call
+	double m_min_frame_duration;      // Minimum duration between begin_frame calls (this second)
+	double m_max_frame_duration;      // Maximum duration between begin_frame calls (this second)
 
 	// Helper functions
 #if VVF_STATS
