@@ -31,6 +31,23 @@ static const s32 BIT6_MAX = 31;       // 6-bit signed delta: ±31
 static const s32 BIT10_MAX = 511;     // 10-bit signed delta: ±511
 static const s32 BIT13_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
 
+#if VVF_STATS
+// Color emoji names (centralized for consistency between inline debug and stats)
+// Indices: 0=BLACK(moves), 1=RED, 2=GREEN, 3=YELLOW, 4=BLUE, 5=MAGENTA, 6=CYAN, 7=WHITE, 8=OTHER
+// Cursor/VSCode terminal has kerning bugs for red heart and light blue heart, requiring extra space
+static const char* get_color_emoji(int color_index)
+{
+	// Detect Cursor/VSCode terminal (only check once)
+	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr ||
+								   (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
+
+	static const char* emoji[vvf_write::COLOR_COUNT] = {"🖤", "❤️ ", "💚", "💛", "💙", "💜", "🩵", "🤍", "🌈"};
+	if (cursor_terminal && color_index == 6)
+		return "🩵 ";
+	return emoji[color_index];
+}
+#endif
+
 //**************************************************************************
 //  HELPER FUNCTIONS
 //**************************************************************************
@@ -328,12 +345,9 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	}
 
 #if VVF_STATS
-	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
-	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr ||
-								   (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
-
-	// Classify color for stats and emoji (only for draws, not moves)
-	const char* color_emoji = "🖤";  // Black heart for moves
+	// Classify color using bitwise RGB flags (RED=1, GREEN=2, BLUE=4)
+	// Results: 0=BLACK, 1=RED, 2=GREEN, 3=YELLOW, 4=BLUE, 5=MAGENTA, 6=CYAN, 7=WHITE, 8=OTHER
+	int color_index = 0;  // Default: 0=BLACK for moves
 	if (intensity > 0)
 	{
 		uint8_t r = color.r();
@@ -345,47 +359,22 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		const uint8_t min_rgb = threshold;
 		const uint8_t max_rgb = 255 - threshold;
 
-		if (r >= max_rgb && g < min_rgb && b < min_rgb)
-		{
-			m_stats.draws_per_color[COLOR_RED]++;
-			color_emoji = "❤️ ";  // Red heart (needs variation selector for color/size, kerning varies by terminal)
-		}
-		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
-		{
-			m_stats.draws_per_color[COLOR_GREEN]++;
-			color_emoji = "💚";  // Green heart
-		}
-		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
-		{
-			m_stats.draws_per_color[COLOR_BLUE]++;
-			color_emoji = "💙";  // Blue heart
-		}
-		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
-		{
-			m_stats.draws_per_color[COLOR_YELLOW]++;
-			color_emoji = "💛";  // Yellow heart
-		}
-		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
-		{
-			m_stats.draws_per_color[COLOR_CYAN]++;
-			color_emoji = cursor_terminal ? "🩵 " : "🩵";  // Light blue heart needs space in Cursor
-		}
-		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
-		{
-			m_stats.draws_per_color[COLOR_MAGENTA]++;
-			color_emoji = "💜";  // Purple heart
-		}
-		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
-		{
-			m_stats.draws_per_color[COLOR_WHITE]++;
-			color_emoji = "🤍";  // White heart
-		}
-		else
-		{
-			m_stats.draws_per_color[COLOR_OTHER]++;
-			color_emoji = "🏳️‍🌈";  // Rainbow for mixed colors
-		}
+		// Build color index using bitwise flags: RED=1, GREEN=2, BLUE=4
+		if (r > max_rgb) color_index |= 1;
+		else if (r > min_rgb) color_index |= 8;
+		if (g > max_rgb) color_index |= 2;
+		else if (g > min_rgb) color_index |= 8;
+		if (b > max_rgb) color_index |= 4;
+		else if (b > min_rgb) color_index |= 8;
+
+		if (color_index > 8)
+			color_index = 8;
 	}
+
+	// Increment color stats (single increment using color_index)
+	m_stats.draws_per_color[color_index]++;
+	// Get emoji directly using color_index (0=black, 1=red, ..., 8=other)
+	const char* color_emoji = get_color_emoji(color_index);
 
 	attotime elapsed = m_machine.time() - m_start_time;
 	double elapsed_sec = elapsed.as_double();
@@ -1207,13 +1196,6 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	// Detect if running in Cursor/VSCode terminal (which has emoji kerning bug for light blue heart)
-	static bool cursor_terminal = (getenv("CURSOR_AGENT") != nullptr ||
-								   (getenv("TERM_PROGRAM") != nullptr && strcmp(getenv("TERM_PROGRAM"), "vscode") == 0));
-
-	// Use space workaround for emojis with kerning issues in Cursor terminal
-	const char *color_names[COLOR_COUNT] = {"❤️ ", "💚", "💙", "💛", cursor_terminal ? "🩵 " : "🩵", "💜", "🤍", "🏳️‍🌈"};
-
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
 		int index;
@@ -1226,7 +1208,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 		sorted[i].count = color_counts[i];
 	}
 
-	// Bubble sort (simple and sufficient for 8 items)
+	// Bubble sort (simple and sufficient for 9 items)
 	for (int i = 0; i < COLOR_COUNT - 1; i++)
 	{
 		for (int j = 0; j < COLOR_COUNT - i - 1; j++)
@@ -1244,7 +1226,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	{
 		int idx = sorted[i].index;
 		if (color_counts[idx] > 0)
-			osd_printf_info("%s=%.1f%% ", color_names[idx],
+			osd_printf_info("%s=%.1f%% ", get_color_emoji(idx),
 				100.0 * color_counts[idx] / total_draws);
 	}
 }
