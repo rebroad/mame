@@ -280,12 +280,17 @@ OP=3 (011): JMPL - Jump
             OP0=0: Return from stack
 
 OP=4 (100): SCAL - Scale (when dvy12=1)
-            scale = DVY[7:0] (8 bits)
-            bin_scale = DVY[10:8] (3 bits)
+            scale = DVY[7:0] (8 bits, 0-255, inverted: 0xFF=slow, 0x00=fast)
+            bin_scale = DVY[10:8] (3 bits, 0-7, additional binary shift)
+            **Purpose**: Controls vector drawing SPEED/TIME, not coordinate range
+            Affects how long beam takes to move (for consistent brightness)
+            Longer time = brighter line (more phosphor excitation)
 
 OP=5 (101): STAT - Color/Intensity (when dvy12=0)
-            color = DVY[2:0] (3 bits = 8 colors)
-            intensity = DVY[7:4] (4 bits = 16 levels)
+            color = DVY[2:0] (3 bits = 8 colors: 0-7)
+            intensity = DVY[7:4] (4 bits = 16 levels: 0-15)
+            **MAME conversion**: intensity << 4 → 8-bit (0, 16, 32, ..., 240)
+            Hardware uses 4 bits, MAME internal uses 8 bits for compatibility
 
 OP=6 (110): CNTR - Center beam
             Resets position to (xcenter, ycenter)
@@ -298,6 +303,35 @@ OP=7 (111): Stack operations / other
 - **dvy12=1**: Scale setting (SCAL)
 
 This is why Star Wars can use 8 colors (3 bits) with 16 intensity levels (4 bits) = 128 color combinations!
+
+### What Does SCAL Actually Do?
+
+**NOT coordinate scaling!** The 13-bit deltas in VCTR commands already provide sufficient range.
+
+**SCAL controls DRAWING SPEED** - how long the beam takes to move from point A to point B:
+
+**The problem SCAL solves:**
+- Short vectors (small dx/dy) move quickly → less time exciting phosphor → DIM
+- Long vectors (large dx/dy) move slowly → more time exciting phosphor → BRIGHT
+- Without scaling, line brightness would vary wildly based on length!
+
+**How SCAL works:**
+```cpp
+drawing_time = (scale ^ 0xFF) * timer_value >> bin_scale_shifts
+
+Short vector + high scale (0xFF) = longer drawing time = brighter
+Long vector + low scale (0x00) = shorter drawing time = normalized brightness
+```
+
+**Example:**
+```
+Short 10-pixel line: SCAL 0xFF (slow) → takes 50µs → bright enough to see
+Long 1000-pixel line: SCAL 0x10 (faster) → takes 50µs → same brightness!
+```
+
+The **normalization** code (lines 532-541 in avgdvg.cpp) further adjusts dx/dy and timing to keep drawing speeds consistent across different vector lengths.
+
+**TL;DR**: SCAL is a **time/brightness** control, not a coordinate scale. It ensures all lines have consistent brightness regardless of length!
 
 **Example execution sequence:**
 ```
@@ -318,33 +352,34 @@ This is why Star Wars can use 8 colors (3 bits) with 16 intensity levels (4 bits
 
 **What actually happens on real hardware:**
 ```
-Time 0.0ms:   CPU writes GO → AVG starts executing from address 0
-Time 0.0-0.5ms: AVG traces through all vectors at 1.5 MHz
-                Draws line, draws line, draws line...
-Time 0.5ms:   AVG encounters HALT command → stops, sets HALT flag
-Time 0.5-1.0ms: Phosphor still glowing (decay time ~15-50ms)
-                CPU sees HALT flag, updates some vector commands
-Time 1.0ms:   CPU writes GO again → AVG restarts from address 0
-Time 1.0-1.5ms: AVG re-traces vectors (now with updates)
-Time 1.5ms:   HALT again
-... repeat 27 times per second ...
+Time 0ms:      CPU writes GO → AVG starts executing from address 0
+Time 0-0.5ms:  AVG traces through all vectors at 1.5 MHz state machine speed
+               Draws line, draws line, draws line...
+Time 0.5ms:    AVG encounters HALT command → stops, sets HALT flag
+Time 0.5-37ms: Phosphor still glowing (decay time ~15-50ms)
+               CPU sees HALT flag, does game logic, updates some vector commands
+Time 37ms:     CPU writes GO again → AVG restarts from address 0
+Time 37-37.5ms: AVG re-traces vectors (now with updates)
+Time 37.5ms:   HALT again
+... repeat ~27 times per second ...
 ```
 
 **Why HALT is necessary:**
 1. **CPU needs to know when AVG is "done"** - synchronization point
-2. **CPU can update vector RAM** while AVG is halted (avoids tearing)
-3. **Brief halts (~0.5ms) are OK** - phosphor glows for 15-50ms
-4. **AVG restarts quickly** (~37ms between GO writes = 27 Hz)
+2. **CPU can update vector RAM** safely while AVG is halted (avoids tearing/glitches)
+3. **Brief halts are OK** - phosphor glows for 15-50ms, longer than the 37ms between GO writes
+4. **GO frequency ~27 Hz** = 1000ms ÷ 27 = ~37ms per cycle
 
-**The continuous loop:**
-The AVG **does** continuously loop, but with brief pauses:
+**The "continuous" loop:**
+The AVG state machine runs at 1.5 MHz, but the overall cycle has pauses:
 ```
-Execute→HALT(0.5ms)→Execute→HALT(0.5ms)→Execute→HALT...
-        ↑           ↑           ↑
-        CPU updates vector RAM between HALTs
+Execute(0.5ms)→WAIT(36.5ms)→Execute(0.5ms)→WAIT(36.5ms)→Execute...
+               ↑                           ↑
+               CPU updates vector RAM      CPU updates again
+               Phosphor still glowing!     Phosphor refreshed!
 ```
 
-Each execution takes ~0.5ms, then halts for ~37ms until next GO. During that 37ms, the phosphor is still glowing from the previous trace! By the time it starts to fade significantly (~15-50ms), the AVG has already re-traced it multiple times.
+**Key insight**: Each execution is very fast (~0.5ms to trace all vectors), then the CPU takes time (~37ms) to compute game logic before issuing the next GO. The phosphor doesn't significantly fade during this brief period.
 
 **In summary**: "Continuous at 1.5 MHz" means the state machine runs at 1.5 MHz, but it pauses between command lists, waiting for CPU to signal GO again.
 
@@ -386,9 +421,31 @@ logerror("AVG SCAL #%u: scale=%d (0x%02X), bin_scale=%d at PC=0x%04X\n", ...);
 ```
 
 **Shows:**
-- `scale`: Linear scale factor (0-255)
+- `scale`: Linear scale factor (0-255, inverted: 255=slowest/brightest, 0=fastest/dimmest)
 - `bin_scale`: Binary scale shift (0-7)
 - `PC`: Where in memory this SCAL command was
+
+### STAT Commands
+```cpp
+// In avgdvg.cpp::handler_6() (avg_strobe2)
+logerror("AVG STAT #%u: color=%d, intensity=%d (4-bit) = %d (8-bit) at PC=0x%04X\n", ...);
+```
+
+**Shows:**
+- `color`: 3-bit color index (0-7)
+- `intensity (4-bit)`: Hardware intensity (0-15)
+- `intensity (8-bit)`: MAME internal value after << 4 shift (0-240)
+- `PC`: Where in memory this STAT command was
+
+### CNTR Commands
+```cpp
+// In avgdvg.cpp::avg_common_strobe3()
+logerror("AVG CNTR #%u: centering beam to (%d, %d) at PC=0x%04X\n", ...);
+```
+
+**Shows:**
+- Center coordinates (xcenter, ycenter)
+- `PC`: Where in memory this CNTR command was
 
 **Note**: `clear_list()` only happens if:
 - AVG was halted (`m_sync_halt == true`)
