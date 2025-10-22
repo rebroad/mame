@@ -121,6 +121,11 @@ public:
 	void set_compression(bool, uint32_t = 1);
 	std::vector<uint8_t> compress_data(const std::vector<uint8_t>&);
 
+	// Color indices for stats (matches emoji array indices)
+	// Uses bitwise RGB flags: RED=1, GREEN=2, BLUE=4
+	// Resulting indices: 0=BLACK(moves), 1=RED, 2=GREEN, 3=YELLOW, 4=BLUE, 5=MAGENTA, 6=CYAN, 7=WHITE, 8=OTHER
+	static constexpr int COLOR_COUNT = 9;
+
 private:
 	// File I/O
 	void write_header();
@@ -198,19 +203,6 @@ private:
 	};
 	std::vector<palette_entry> m_palette;
 	uint32_t m_palette_full_count; // Track palette overflow attempts (always enabled)
-
-	// Color indices for stats
-	enum color_index {
-		COLOR_RED = 0,
-		COLOR_GREEN = 1,
-		COLOR_BLUE = 2,
-		COLOR_YELLOW = 3,
-		COLOR_CYAN = 4,
-		COLOR_MAGENTA = 5,
-		COLOR_WHITE = 6,
-		COLOR_OTHER = 7,
-		COLOR_COUNT = 8
-	};
 
 	// Stats tracking
 	struct {
