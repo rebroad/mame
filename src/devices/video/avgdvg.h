@@ -73,7 +73,7 @@ protected:
 	void vg_set_halt(int dummy);
 
 	void vg_flush();
-	void vg_add_point_buf(int x, int y, rgb_t color, int intensity);
+	void vg_add_point_buf(int x, int y, rgb_t color, int intensity, int scale = 0x80);
 	void vg_add_clip(int xmin, int ymin, int xmax, int ymax);
 
 	required_device<vector_device> m_vector;

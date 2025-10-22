@@ -165,15 +165,21 @@ void avgdvg_device_base::vg_flush()
 	m_nvect = 0;
 }
 
-void avgdvg_device_base::vg_add_point_buf(int x, int y, rgb_t color, int intensity)
+void avgdvg_device_base::vg_add_point_buf(int x, int y, rgb_t color, int intensity, int scale)
 {
+	// Apply scale-based brightness adjustment
+	// scale is inverted: 0xFF=slow=bright, 0x00=fast=dim
+	// Normalize to reference scale of 0x80 (middle value, no adjustment)
+	double scale_factor = (double)(scale ^ 0xFF) / 128.0;  // 0.0 to ~2.0
+	int effective_intensity = std::min(255, (int)(intensity * scale_factor));
+
 	if (m_nvect < MAXVECT)
 	{
 		m_vectbuf[m_nvect].status = VGVECTOR;
 		m_vectbuf[m_nvect].x = x;
 		m_vectbuf[m_nvect].y = y;
 		m_vectbuf[m_nvect].color = color;
-		m_vectbuf[m_nvect].intensity = intensity;
+		m_vectbuf[m_nvect].intensity = effective_intensity;
 		m_nvect++;
 	}
 }
@@ -248,7 +254,8 @@ void dvg_device::dvg_draw_to(int x, int y, int intensity)
 				(m_xmin + x - 512) << 16,
 				(m_ymin + 512 - y) << 16,
 				vector_device::color111(7),
-				intensity << 4);
+				intensity << 4,
+				m_scale);
 }
 
 int dvg_device::handler_2() //dvg_gostrobe
@@ -718,7 +725,8 @@ int avg_device::handler_7() // avg_strobe3
 				x,
 				y,
 				vector_device::color111(m_color),
-				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4);
+				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4,
+				m_scale);
 	}
 
 	return cycles;
@@ -769,7 +777,8 @@ int avg_tempest_device::handler_7() // tempest_strobe3
 				y - m_ycenter + m_xcenter,
 				x - m_xcenter + m_ycenter,
 				rgb_t(r, g, b),
-				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4);
+				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4,
+				m_scale);
 	}
 
 	return cycles;
@@ -886,7 +895,8 @@ int avg_mhavoc_device::handler_7()  // mhavoc_strobe3
 						x,
 						y,
 						rgb_t(r, g, b),
-						(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4);
+						(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4,
+						m_scale);
 				m_spkl_shift = (BIT(m_spkl_shift, 6) ^ BIT(m_spkl_shift, 5) ^ 1) | (m_spkl_shift << 1);
 
 				if ((m_spkl_shift & 0x7f) == 0x7f)
@@ -915,7 +925,8 @@ int avg_mhavoc_device::handler_7()  // mhavoc_strobe3
 					x,
 					y,
 					rgb_t(r, g, b),
-					(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4);
+					(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4,
+					m_scale);
 		}
 	}
 
@@ -989,7 +1000,8 @@ int avg_starwars_device::handler_7() // starwars_strobe3
 				m_xpos,
 				m_ypos,
 				vector_device::color111(m_color),
-				((m_int_latch >> 1) * m_intensity) >> 3);
+				((m_int_latch >> 1) * m_intensity) >> 3,
+				m_scale);
 	}
 
 	return cycles;
@@ -1142,7 +1154,8 @@ int avg_quantum_device::handler_7() // quantum_strobe3
 				y - m_ycenter + m_xcenter,
 				x - m_xcenter + m_ycenter,
 				rgb_t(r, g, b),
-				((m_int_latch == 2) ? m_intensity : m_int_latch) << 4);
+				((m_int_latch == 2) ? m_intensity : m_int_latch) << 4,
+				m_scale);
 	}
 	if (OP2())
 	{
@@ -1223,7 +1236,8 @@ int avg_bzone_device::handler_7() // bzone_strobe3
 				m_xpos,
 				m_ypos,
 				vector_device::color111(7),
-				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4);
+				(((m_int_latch >> 1) == 1) ? m_intensity : m_int_latch & 0xe) << 4,
+				m_scale);
 	}
 
 	return cycles;
