@@ -618,6 +618,14 @@ int avg_device::avg_common_strobe2()
 	{
 		if (m_dvy12)
 		{
+			static uint32_t scal_count = 0;
+			if (scal_count < 50)
+			{
+				osd_printf_info("AVG SCAL #%u: scale=%d (0x%02X), bin_scale=%d at PC=0x%04X\n",
+					scal_count, m_dvy & 0xff, m_dvy & 0xff, (m_dvy >> 8) & 7, m_pc);
+				scal_count++;
+			}
+
 			m_scale = m_dvy & 0xff;
 			m_bin_scale = (m_dvy >> 8) & 7;
 		}
@@ -632,6 +640,14 @@ int avg_device::handler_6() // avg_strobe2
 	{
 		m_color = m_dvy & 0x7;
 		m_intensity = (m_dvy >> 4) & 0xf;
+
+		static uint32_t stat_count = 0;
+		if (stat_count < 50)
+		{
+			osd_printf_info("AVG STAT #%u: color=%d, intensity=%d (4-bit) = %d (8-bit) at PC=0x%04X\n",
+				stat_count, m_color, m_intensity, m_intensity << 4, m_pc);
+			stat_count++;
+		}
 	}
 
 	return avg_common_strobe2();
@@ -642,6 +658,14 @@ int avg_device::avg_common_strobe3()
 	int cycles = 0;
 
 	m_halt = OP0();
+
+	static uint32_t halt_count = 0;
+	if (OP0() && halt_count < 50)
+	{
+		osd_printf_info("AVG HALT #%u: op=0x%X at PC=0x%04X, nvect=%d, xpos=%d, ypos=%d\n",
+			halt_count, m_op, m_pc, m_nvect, m_xpos, m_ypos);
+		halt_count++;
+	}
 
 	if (!OP0() && !OP2())
 	{
@@ -661,6 +685,14 @@ int avg_device::avg_common_strobe3()
 
 	if (OP2())
 	{
+		static uint32_t cntr_count = 0;
+		if (cntr_count < 50)
+		{
+			osd_printf_info("AVG CNTR #%u: centering beam to (%d, %d) at PC=0x%04X\n",
+				cntr_count, m_xcenter, m_ycenter, m_pc);
+			cntr_count++;
+		}
+
 		cycles = 0x8000 - m_timer;
 		m_timer = 0;
 		m_xpos = m_xcenter;
@@ -1282,6 +1314,23 @@ int avgdvg_device_base::done_r()
 
 void avgdvg_device_base::go_w(u8 data)
 {
+	static uint32_t go_count = 0;
+	static attotime last_go_time = attotime::zero;
+
+	attotime current_time = machine().time();
+	double time_since_last = last_go_time != attotime::zero ?
+		(current_time - last_go_time).as_double() * 1000.0 : 0.0;
+
+	if (go_count < 50)
+	{
+		osd_printf_info("VG GO #%u: data=0x%02X, time_since_last=%.2f ms, nvect=%d, sync_halt=%d, will_clear=%d\n",
+			go_count, data, time_since_last, m_nvect, m_sync_halt,
+			(m_sync_halt && m_nvect > 10) ? 1 : 0);
+	}
+
+	go_count++;
+	last_go_time = current_time;
+
 	vggo();
 
 	if (m_sync_halt && (m_nvect > 10))

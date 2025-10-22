@@ -323,7 +323,7 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 					cosang = prev_tx * curr_norm_x + prev_ty * curr_norm_y; // [-1..1]
 				}
 				// base trims
-				float max_trim_colinear = beam_width * 3.0f; // aggressive: up to 3x beam width on colinear joins
+				float max_trim_colinear = beam_width * 1.0f; // aggressive: up to 1x beam width on colinear joins
 				float max_trim_corner   = beam_width * 1.0f; // corners also more aggressive
 				float seg_cap_colinear  = len * 0.70f;
 				float seg_cap_corner    = len * 0.50f;
