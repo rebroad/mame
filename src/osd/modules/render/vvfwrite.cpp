@@ -487,9 +487,16 @@ void vvf_write::end_frame()
 		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
 		double end_fps = end_frames_this_second / (current_time - m_last_stats_print).as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f eFPS (%.1f-%.1f ms) %.2f FPS (%.1f-%.1f ms) | %u frames total, %.2f KB | ",
-			elapsed_sec, end_fps, m_min_end_frame_duration, m_max_end_frame_duration,
-			fps, m_min_frame_duration, m_max_frame_duration, m_frame_count, m_stats.total_bytes / 1024.0);
+		// Format strings for frame durations (only show if frames occurred)
+		char end_frame_timing[64] = "";
+		char frame_timing[64] = "";
+		if (end_frames_this_second > 0 && m_max_end_frame_duration > 0.0)
+			snprintf(end_frame_timing, sizeof(end_frame_timing), " (%.1f-%.1f ms)", m_min_end_frame_duration, m_max_end_frame_duration);
+		if (frames_this_second > 0 && m_max_frame_duration > 0.0)
+			snprintf(frame_timing, sizeof(frame_timing), " (%.1f-%.1f ms)", m_min_frame_duration, m_max_frame_duration);
+
+		osd_printf_info("%.1fs VVF: %.2f eFPS%s %.2f FPS%s | %u frames total, %.2f KB | ",
+			elapsed_sec, end_fps, end_frame_timing, fps, frame_timing, m_frame_count, m_stats.total_bytes / 1024.0);
 
 		if (m_frame_count > 0) {
 			// Print color stats for this second (delta from last second)
