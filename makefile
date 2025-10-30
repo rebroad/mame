@@ -1326,6 +1326,23 @@ ifdef SUBTARGET
 		fi; \
 	fi; \
 	if [ $$NEED_REBUILD -eq 1 ]; then \
+		echo ""; \
+		echo "╔════════════════════════════════════════════════════════════════════════╗"; \
+		echo "║                 ⚠️  WARNING: BUILD CHANGE DETECTED  ⚠️                 ║"; \
+		echo "╚════════════════════════════════════════════════════════════════════════╝"; \
+		echo ""; \
+		echo "Previous: $$PREV_PARAMS"; \
+		echo "Current:  $$CURRENT_PARAMS"; \
+		echo ""; \
+		echo "This will DELETE all build artifacts to rebuild with new parameters!"; \
+		echo ""; \
+		echo "Press Ctrl+C within 5 seconds to abort..."; \
+		echo ""; \
+		for i in 5 4 3 2 1; do \
+			echo "  Cleaning in $$i seconds..."; \
+			sleep 1; \
+		done; \
+		echo ""; \
 		echo "Cleaning old build artifacts..."; \
 		echo "  Deleting: $(PROJECTDIR)"; \
 		rm -rf "$(PROJECTDIR)"; \
