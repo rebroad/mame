@@ -168,9 +168,9 @@ void avgdvg_device_base::vg_flush()
 void avgdvg_device_base::vg_add_point_buf(int x, int y, rgb_t color, int intensity, int scale)
 {
 	// Apply scale-based brightness adjustment
-	// scale is inverted: 0xFF=slow=bright, 0x00=fast=dim
-	// Normalize to reference scale of 0x80 (middle value, no adjustment)
-	double scale_factor = (double)(scale ^ 0xFF) / 128.0;  // 0.0 to ~2.0
+	// Higher scale = slower beam = brighter (more time on phosphor)
+	// Normalize to reference scale of 0x80 (middle value, 1.0x multiplier)
+	double scale_factor = (double)scale / 128.0;  // 0.0 to ~2.0
 	int effective_intensity = std::min(255, (int)(intensity * scale_factor));
 
 	if (m_nvect < MAXVECT)
