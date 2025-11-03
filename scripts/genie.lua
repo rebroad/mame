@@ -388,6 +388,11 @@ newoption {
 }
 
 newoption {
+	trigger = "DRIVERS",
+	description = "List of driver names to compile (comma-separated, e.g., starwars,bbcb,spyhunt).",
+}
+
+newoption {
 	trigger = "SOURCEFILTER",
 	description = "Filter list specifying sources to compile.",
 }
@@ -526,7 +531,7 @@ if _OPTIONS["with-emulator"] then
 			error("File definition for TARGET=" .. _OPTIONS["target"] .. " SUBTARGET=" .. _OPTIONS["subtarget"] .. " does not exist")
 		end
 		dofile (path.join(".." ,"projects", _OPTIONS["PROJECT"], "scripts", "target", _OPTIONS["target"],_OPTIONS["subtarget"] .. ".lua"))
-	elseif (_OPTIONS["SOURCES"] == nil) and (_OPTIONS["SOURCEFILTER"] == nil) then
+	elseif (_OPTIONS["SOURCES"] == nil) and (_OPTIONS["DRIVERS"] == nil) and (_OPTIONS["SOURCEFILTER"] == nil) then
 		local subtargetscript = path.join("target", _OPTIONS["target"], _OPTIONS["subtarget"] .. ".lua")
 		local subtargetfilter = path.join(MAME_DIR, "src", _OPTIONS["target"], _OPTIONS["subtarget"] .. ".flt")
 		if os.isfile(subtargetscript) then
@@ -1368,7 +1373,46 @@ end
 
 configuration { }
 
-if _OPTIONS["SOURCES"] ~= nil then
+if _OPTIONS["DRIVERS"] ~= nil then
+	if _OPTIONS["SOURCES"] ~= nil then
+		error("DRIVERS and SOURCES cannot be combined")
+	end
+	if _OPTIONS["SOURCEFILTER"] ~= nil then
+		error("DRIVERS and SOURCEFILTER cannot be combined")
+	end
+
+	local makedep = path.join(MAME_DIR, "scripts", "build", "makedep.py")
+	local driverlist = path.join(MAME_DIR, "src", _OPTIONS["target"], _OPTIONS["target"] .. ".lst")
+	local str = _OPTIONS["DRIVERS"]
+	local driverargs = ""
+	for word in string.gmatch(str, '([^,]+)') do
+		driverargs = driverargs .. " " .. word
+	end
+
+	local OUT_STR = os.outputof(
+		string.format(
+			"%s %s -r %s driversproject -t %s -l %s %s",
+			PYTHON, makedep, MAME_DIR, _OPTIONS["subtarget"], driverlist, driverargs))
+	if #OUT_STR == 0 then
+		error("Error creating projects from specified drivers")
+	end
+	local chunk, err = load(OUT_STR)
+	if not chunk then
+		print("Error loading Lua from makedep.py driversproject:")
+		print(err)
+		print("Output was:")
+		print(OUT_STR)
+		error("Failed to load driversproject output")
+	end
+	chunk()
+
+	-- Generate .flt file using driversfilter command
+	local driverfilter = path.join(GEN_DIR, _OPTIONS["target"], _OPTIONS["subtarget"] .. ".flt")
+	os.outputof(
+		string.format(
+			"%s %s -r %s driversfilter -l %s %s > %s",
+			PYTHON, makedep, MAME_DIR, driverlist, driverargs, driverfilter))
+elseif _OPTIONS["SOURCES"] ~= nil then
 	if _OPTIONS["SOURCEFILTER"] ~= nil then
 		error("SOURCES and SOURCEFILTER cannot be combined")
 	end
@@ -1461,7 +1505,7 @@ if _OPTIONS["with-emulator"] then
 
 	group "emulator"
 	dofile(path.join("src", "main.lua"))
-	if (_OPTIONS["SOURCES"] == nil) and (_OPTIONS["SOURCEFILTER"] == nil) then
+	if (_OPTIONS["SOURCES"] == nil) and (_OPTIONS["DRIVERS"] == nil) and (_OPTIONS["SOURCEFILTER"] == nil) then
 		if (_OPTIONS["target"] == _OPTIONS["subtarget"]) then
 			startproject (_OPTIONS["target"])
 		else

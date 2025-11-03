@@ -298,6 +298,14 @@ SILENT := @
 MAKEPARAMS += --no-print-directory
 endif
 
+# Smart dependency resolution - limits transitive includes to avoid bloat
+# Set SMART_DEPS=0 to disable (use full transitive dependencies)
+# Set SMART_DEPS=1 to enable (default for filter builds)
+ifndef SMART_DEPS
+SMART_DEPS := 1
+endif
+export SMART_DEPS
+
 ifndef BUILDDIR
 BUILDDIR := build
 endif
@@ -431,9 +439,16 @@ PYTHON := $(PYTHON_EXECUTABLE)
 endif
 
 ifneq ($(TARGETOS),asmjs)
+# Enable ccache if available
+ifneq ($(shell which ccache 2>/dev/null),)
+CC := $(SILENT)ccache gcc
+LD := $(SILENT)ccache g++
+CXX:= $(SILENT)ccache g++
+else
 CC := $(SILENT)gcc
 LD := $(SILENT)g++
 CXX:= $(SILENT)g++
+endif
 endif
 
 #-------------------------------------------------
@@ -840,6 +855,10 @@ ifdef QT_HOME
 PARAMS += --QT_HOME='$(QT_HOME)'
 endif
 
+ifdef DRIVERS
+PARAMS += --DRIVERS='$(DRIVERS)'
+endif
+
 ifdef SOURCES
 PARAMS += --SOURCES='$(SOURCES)'
 endif
@@ -1058,10 +1077,28 @@ PROJECTDIR := $(BUILDDIR)/projects/$(OSD)/$(FULLTARGET)
 PROJECTDIR_SDL := $(BUILDDIR)/projects/sdl/$(FULLTARGET)
 PROJECTDIR_WIN := $(BUILDDIR)/projects/windows/$(FULLTARGET)
 
-.PHONY: all clean regenie generate FORCE
+.PHONY: all clean fix regenie generate FORCE help ccache-optimize
 all: $(GENIE) $(TARGETOS)$(ARCHITECTURE)
 regenie:
 FORCE:
+
+help:
+	@echo "MAME Build System - Available targets:"
+	@echo "  all            - Build MAME (default target)"
+	@echo "  fix            - Intelligently fix build issues (preserves good work)"
+	@echo "  clean          - Full clean (removes entire build directory)"
+	@echo "  regenie        - Regenerate project files"
+	@echo "  generate       - Generate required build files"
+	@echo "  ccache-optimize - Optimize ccache configuration and show stats"
+	@echo ""
+	@echo "For build failures due to undefined references:"
+	@echo "  1. Run 'make fix' to automatically fix corrupted build artifacts"
+	@echo "  2. Then run 'make -j4' to rebuild"
+	@echo "  3. Only use 'make clean' as last resort (loses all build work)"
+	@echo ""
+	@echo "For ccache optimization:"
+	@echo "  1. Run 'make ccache-optimize' to see cache performance"
+	@echo "  2. Configuration has been optimized for better hit rates"
 
 #-------------------------------------------------
 # gmake-mingw64-gcc
@@ -1239,18 +1276,95 @@ endif
 $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS) --gcc=linux-gcc --gcc_version=$(GCC_VERSION) $(MAKETYPE)
 
+# Auto-clean if filter file is newer than project
+# Auto-detect parameter changes and trigger rebuild
+.PHONY: check_params
+check_params:
+	@echo "=== Build started at $$(date '+%Y-%m-%d %H:%M:%S') ==="
+ifdef SUBTARGET
+	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
+	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
+	CURRENT_VERSION="24"; \
+	CURRENT_PARAMS="SUBTARGET=$(SUBTARGET)|DRIVERS=$(DRIVERS)|SOURCES=$(SOURCES)"; \
+	NEED_REBUILD=0; \
+	if [ -f "$$VERSION_FILE" ]; then \
+		PREV_VERSION=$$(cat "$$VERSION_FILE" 2>/dev/null || echo "0"); \
+		if [ "$$PREV_VERSION" != "$$CURRENT_VERSION" ]; then \
+			echo "Build system updated (v$$PREV_VERSION -> v$$CURRENT_VERSION) - regenerating..."; \
+			NEED_REBUILD=1; \
+		fi; \
+	elif [ -d "$(PROJECTDIR)" ]; then \
+		echo "Build version not found - regenerating..."; \
+		NEED_REBUILD=1; \
+	fi; \
+	if [ -f "$$PARAM_FILE" ] && [ $$NEED_REBUILD -eq 0 ]; then \
+		PREV_PARAMS=$$(cat "$$PARAM_FILE" 2>/dev/null || echo ""); \
+		if [ "$$PREV_PARAMS" != "$$CURRENT_PARAMS" ]; then \
+			echo "Build parameters changed - regenerating..."; \
+			echo "  Previous: $$PREV_PARAMS"; \
+			echo "  Current:  $$CURRENT_PARAMS"; \
+			NEED_REBUILD=1; \
+		fi; \
+	fi; \
+	if [ $$NEED_REBUILD -eq 1 ]; then \
+		echo ""; \
+		echo "╔════════════════════════════════════════════════════════════════════════╗"; \
+		echo "║                 ⚠️  WARNING: BUILD CHANGE DETECTED  ⚠️                 ║"; \
+		echo "╚════════════════════════════════════════════════════════════════════════╝"; \
+		echo ""; \
+		echo "Previous: $$PREV_PARAMS"; \
+		echo "Current:  $$CURRENT_PARAMS"; \
+		echo ""; \
+		echo "This will DELETE all build artifacts to rebuild with new parameters!"; \
+		echo ""; \
+		echo "Press Ctrl+C within 5 seconds to abort..."; \
+		echo ""; \
+		for i in 5 4 3 2 1; do \
+			echo "  Cleaning in $$i seconds..."; \
+			sleep 1; \
+		done; \
+		echo ""; \
+		echo "Cleaning old build artifacts..."; \
+		echo "  Deleting: $(PROJECTDIR)"; \
+		rm -rf "$(PROJECTDIR)"; \
+		echo "  Deleting: $(BUILDDIR)/generated"; \
+		rm -rf "$(BUILDDIR)/generated"; \
+		echo "  Deleting: $(BUILDDIR)/*/obj (all object files)"; \
+		rm -rf "$(BUILDDIR)"/*/obj; \
+		echo "  Deleting: $(BUILDDIR)/*/bin (all libraries/binaries)"; \
+		rm -rf "$(BUILDDIR)"/*/bin; \
+		$(MAKE) REGENIE=1 SUBTARGET=$(SUBTARGET) DRIVERS=$(DRIVERS) SOURCES=$(SOURCES) generate; \
+	fi; \
+	mkdir -p "$$(dirname "$$PARAM_FILE")" 2>/dev/null || true; \
+	echo "$$CURRENT_PARAMS" > "$$PARAM_FILE"; \
+	echo "$$CURRENT_VERSION" > "$$VERSION_FILE"
+endif
+
+.PHONY: check_filter
+check_filter:
+ifdef SUBTARGET
+	@if [ -f "src/mame/$(SUBTARGET).flt" ] && [ -d "$(PROJECTDIR)" ]; then \
+		if [ "src/mame/$(SUBTARGET).flt" -nt "$(PROJECTDIR)" ]; then \
+			echo "Filter file updated - cleaning and regenerating..."; \
+			rm -rf "$(PROJECTDIR)"; \
+			rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/bin/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+			rm -rf "$(BUILDDIR)/$(TARGETOS)_$(CC)/obj/$(PLATFORM)/$(CONFIG)/$(TARGET)_$(SUBTARGET)"; \
+		fi; \
+	fi
+endif
+
 .PHONY: linux_x64
-linux_x64: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x64: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)64
 
 .PHONY: linux_x86
-linux_x86: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux_x86: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)32
 
 .PHONY: linux
-linux: generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
+linux: check_params check_filter generate $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG) precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-linux config=$(CONFIG)
 
@@ -1496,6 +1610,85 @@ clean: genieclean
 	-$(SILENT)rm -f language/*/*.mo
 	-$(SILENT)rm -rf $(BUILDDIR)
 	-$(SILENT)rm -rf 3rdparty/bgfx/.build
+
+.PHONY: fix
+fix:
+	@echo "Intelligent build fix - removing corrupted artifacts while preserving good work..."
+	@REMOVED=0; \
+	echo "Checking for empty object files..."; \
+	for file in $$(find $(BUILDDIR) -name "*.o" -size 0 2>/dev/null); do \
+		echo "  Removing empty file: $$file"; \
+		rm -f "$$file"; \
+		REMOVED=$$((REMOVED + 1)); \
+	done; \
+	echo "Checking for corrupted object files..."; \
+	for file in $$(find $(BUILDDIR) -name "*.o" 2>/dev/null); do \
+		if [ -f "$$file" ] && ! file "$$file" 2>/dev/null | grep -q "ELF.*relocatable"; then \
+			echo "  Removing corrupted object: $$file"; \
+			rm -f "$$file"; \
+			REMOVED=$$((REMOVED + 1)); \
+		fi; \
+	done; \
+	echo "Checking libraries for excessive undefined symbols..."; \
+	for lib in $$(find $(BUILDDIR) -name "*.a" 2>/dev/null); do \
+		if [ -f "$$lib" ]; then \
+			UNDEF_COUNT=$$(nm "$$lib" 2>/dev/null | grep " U " | wc -l); \
+			if [ $$UNDEF_COUNT -gt 75 ]; then \
+				echo "  Removing library with $$UNDEF_COUNT undefined symbols: $$lib"; \
+				rm -f "$$lib"; \
+				REMOVED=$$((REMOVED + 1)); \
+			fi; \
+		fi; \
+	done; \
+	echo "Checking for object files missing critical symbols..."; \
+	for obj in $$(find $(BUILDDIR) -name "emumem*.o" -o -name "xa.o" -o -name "debugcpu.o" -o -name "points.o" 2>/dev/null); do \
+		if [ -f "$$obj" ]; then \
+			case "$$obj" in \
+				*emumem*) SYMBOL="_ZN13address_space19add_change_notifier" ;; \
+				*xa.o) SYMBOL="vtable for xa_dasm" ;; \
+				*debugcpu.o|*points.o) SYMBOL="_ZN13address_space19add_change_notifier" ;; \
+				*) SYMBOL="" ;; \
+			esac; \
+			if [ -n "$$SYMBOL" ] && ! nm "$$obj" 2>/dev/null | grep -q "$$SYMBOL"; then \
+				echo "  Removing object missing required symbols: $$obj"; \
+				rm -f "$$obj"; \
+				REMOVED=$$((REMOVED + 1)); \
+			fi; \
+		fi; \
+	done; \
+	if [ $$REMOVED -eq 0 ]; then \
+		echo "No corrupted files found. Build artifacts appear healthy."; \
+	else \
+		echo "Removed $$REMOVED corrupted files. Run 'make -j4' to rebuild."; \
+	fi
+
+.PHONY: ccache-optimize
+ccache-optimize:
+	@echo "=== ccache Performance Analysis ==="
+	@echo ""
+	@echo "Current ccache statistics:"
+	@ccache --show-stats
+	@echo ""
+	@echo "Cache configuration:"
+	@ccache --show-config | grep -E "(compiler_check|sloppiness|max_size|stats_log)"
+	@echo ""
+	@echo "Cache directory usage:"
+	@du -sh /home/rebroad/.cache/ccache 2>/dev/null || echo "Cache directory not accessible"
+	@echo ""
+	@echo "Recent cache activity (last 24h):"
+	@find /home/rebroad/.cache/ccache -type f -mtime -1 | wc -l | xargs echo "Files modified:"
+	@echo ""
+	@echo "Optimization recommendations:"
+	@echo "1. ✅ Content-based compiler checking enabled (better than mtime)"
+	@echo "2. ✅ Enhanced sloppiness settings for C++ projects"
+	@echo "3. ✅ Stats logging enabled for analysis"
+	@echo "4. 💡 Consider running 'make fix' to clean corrupted objects"
+	@echo "5. 💡 Monitor stats.log for detailed miss analysis"
+	@echo ""
+	@if [ -f /home/rebroad/.cache/ccache/stats.log ]; then \
+		echo "Recent cache misses from stats log:"; \
+		tail -10 /home/rebroad/.cache/ccache/stats.log | grep "Result: cache_miss" | head -5; \
+	fi
 
 GEN_FOLDERS := $(GENDIR)/$(TARGET)/layout/ $(GENDIR)/$(TARGET)/$(SUBTARGET_FULL)/ $(GENDIR)/mame/drivers/ $(GENDIR)/mame/machine/
 

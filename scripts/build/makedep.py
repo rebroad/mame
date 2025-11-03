@@ -530,7 +530,7 @@ class DriverLister(DriverFilter):
         excludes = set()
         if options.filter is not None:
             self.parse_filter(options.root, options.filter, includesource, includedriver, excludedriver)
-            sys.stderr.write('%d source file(s) found\n' % (len(sources), ))
+            sys.stderr.write('%d source file(s) found: %s\n' % (len(sources), ', '.join(sorted(sources))))
         self.sources = frozenset(sources)
         self.includes = frozenset(includes)
         self.excludes = frozenset(excludes)
@@ -541,7 +541,7 @@ class DriverLister(DriverFilter):
 
         for driver in self.includes:
             drivers.add(driver)
-        sys.stderr.write('%d driver(s) found\n' % (len(drivers), ))
+        sys.stderr.write('%d driver(s) found: %s\n' % (len(drivers), ', '.join(sorted(drivers))))
         drivers.add('___empty')
         self.drivers = sorted(drivers)
 
@@ -742,6 +742,11 @@ def parse_command_line():
     subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
     subparser.add_argument('sources', metavar='<srcfile>', nargs='+', help='source files to include')
 
+    subparser = subparsers.add_parser('driversproject', help='generate project directives for driver names')
+    subparser.add_argument('-t', '--target', metavar='<target>', required=True, help='generated emulator target name')
+    subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
+    subparser.add_argument('drivers', metavar='<driver>', nargs='+', help='driver names to include')
+
     subparser = subparsers.add_parser('filterproject', help='generate project directives using filter file')
     subparser.add_argument('-t', '--target', metavar='<target>', required=True, help='generated emulator target name')
     subparser.add_argument('-f', '--filter', metavar='<fltfile>', required=True, help='input filter file')
@@ -750,6 +755,10 @@ def parse_command_line():
     subparser = subparsers.add_parser('sourcesfilter', help='generate driver filter for source files')
     subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
     subparser.add_argument('sources', metavar='<srcfile>', nargs='+', help='source files to include')
+
+    subparser = subparsers.add_parser('driversfilter', help='generate driver filter from driver names')
+    subparser.add_argument('-l', '--list', metavar='<lstfile>', required=True, help='master driver list file')
+    subparser.add_argument('drivers', metavar='<drivername>', nargs='+', help='driver names to include')
 
     subparser = subparsers.add_parser('driverlist', help='generate driver list source')
     subparser.add_argument('-f', '--filter', metavar='<fltfile>', help='input filter file')
@@ -794,7 +803,139 @@ def collect_lua_directives(options):
     return result
 
 
-def scan_source_dependencies(root, sources):
+def build_device_map(root):
+    """Build maps of device class names and type constants to their source files
+    Returns: (device_map, device_type_map)
+        device_map: {class_name -> source_file}
+        device_type_map: {TYPE_CONSTANT -> class_name}
+    """
+    device_map = {}
+    device_type_map = {}
+
+    # Scan all device source files for DEFINE_DEVICE_TYPE
+    devices_dir = os.path.join(root, 'src', 'devices')
+    if not os.path.isdir(devices_dir):
+        return device_map, device_type_map
+
+    import re
+    device_type_re = re.compile(r'DEFINE_DEVICE_TYPE\s*\(\s*(\w+)\s*,\s*(\w+)\s*,')
+
+    for dirpath, dirnames, filenames in os.walk(devices_dir):
+        for filename in filenames:
+            if filename.endswith('.cpp'):
+                filepath = os.path.join(dirpath, filename)
+                try:
+                    with io.open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read(50000)  # Read first 50KB
+                        for match in device_type_re.finditer(content):
+                            type_constant = match.group(1)
+                            device_class = match.group(2)
+                            # Store relative path from root
+                            rel_path = os.path.relpath(filepath, root).replace(os.sep, '/')
+                            device_map[device_class] = rel_path
+                            device_type_map[type_constant] = device_class
+                except:
+                    pass
+
+    return device_map, device_type_map
+
+def find_inheritance_chain(device_class, device_map, seen_devices, root):
+    """
+    Find all parent classes in the inheritance chain for a device.
+    Returns a list of (device_class, device_file) tuples.
+    Does NOT modify seen_devices - caller handles that.
+    """
+    chain = []
+    current_class = device_class
+    checked_files = set()  # Track what we've checked in this chain to avoid loops
+
+    # Follow inheritance chain (max depth 5 to avoid infinite loops)
+    for depth in range(5):
+        if current_class not in device_map:
+            break
+        device_file = device_map[current_class]
+        # Skip if already in the build OR already checked in this chain
+        if device_file in seen_devices or device_file in checked_files:
+            break
+        chain.append((current_class, device_file))
+        checked_files.add(device_file)
+
+        # Find parent class by reading the source file (try .h then .cpp)
+        try:
+            import re
+            content = None
+            # Try header file first (.h)
+            header_path = os.path.splitext(device_file)[0] + '.h'
+            full_header_path = os.path.join(root, header_path)
+            if os.path.exists(full_header_path):
+                with open(full_header_path, 'r') as f:
+                    content = f.read()
+            # If not found in header, try .cpp
+            if not content:
+                full_path = os.path.join(root, device_file)
+                with open(full_path, 'r') as f:
+                    content = f.read()
+
+            # Look for class inheritance: class child : public parent
+            class_match = re.search(r'class\s+' + re.escape(current_class) + r'\s*:\s*public\s+(\w+)', content)
+            if class_match:
+                current_class = class_match.group(1)
+            else:
+                break
+        except:
+            break
+
+    return chain
+
+def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
+    """
+    Scan source dependencies with optional smart mode.
+
+    smart=True: Only follow includes to limited depth, detect device usage
+    smart=False: Original behavior (everything transitively)
+    depth_limit: How many levels of #include to follow in smart mode
+    """
+    # Check if SMART_DEPS environment variable is set
+    if os.getenv('SMART_DEPS') == '0':
+        smart = False
+    elif os.getenv('SMART_DEPS') == '1':
+        smart = True
+
+    # Convert sources to list if it's a generator (to allow multiple iterations)
+    if not isinstance(sources, list):
+        sources = list(sources)
+
+    if not smart:
+        # Fall back to original recursive behavior
+        depth_limit = 999
+    else:
+        # Build device map for smart mode
+        sys.stderr.write("Building device map for smart dependency resolution...\n")
+        device_map, device_type_map = build_device_map(root)
+        sys.stderr.write("  Found %d device types\n" % len(device_map))
+
+        # Extract relevant bus systems from source files
+        relevant_bus_systems = set()
+        for source in sources:
+            parts = source.split('/')
+            # Source paths are like: src/mame/acorn/bbcb.cpp or acorn/bbcb.cpp
+            # Find the manufacturer directory (after src/mame prefix if present)
+            start_idx = 0
+            if len(parts) > 0 and parts[0] == 'src':
+                start_idx = 1
+                if len(parts) > 1 and parts[1] == 'mame':
+                    start_idx = 2
+
+            if len(parts) > start_idx:
+                # Add the manufacturer/system directory (e.g., 'acorn', 'midway', 'atari')
+                relevant_bus_systems.add(parts[start_idx])
+                # Add any explicit bus references (e.g., 'bus/bbc')
+                for i, part in enumerate(parts):
+                    if part == 'bus' and i + 1 < len(parts):
+                        relevant_bus_systems.add(parts[i + 1])
+
+        sys.stderr.write("  Relevant systems/buses: %s\n" % ', '.join(sorted(relevant_bus_systems)))
+
     def locate_include(path):
         split = [ ]
         forward = 0
@@ -834,6 +975,35 @@ def scan_source_dependencies(root, sources):
                 remaining.append((path, depth))
                 seen.add(path)
 
+        # SMART MODE: Also include disassembler for CPU devices (only exact basename match)
+        is_cpu_device = len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu'
+        if smart and is_cpu_device:
+            # Check for common disassembler naming patterns based on basename
+            for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                dasm_cpp = pathbase + basename + suffix + '.cpp'
+                dasm_h = pathbase + basename + suffix + '.h'
+                dasm_file = os.path.join(dirname, basename + suffix + '.cpp')
+
+                if (dasm_cpp not in seen) and os.path.isfile(dasm_file):
+                    # Add disassembler source - don't count toward depth limit
+                    remaining.append((dasm_cpp, 0))  # depth=0 so it's always included
+                    seen.add(dasm_cpp)
+
+                    # Also add the header if it exists
+                    if (dasm_h not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.h')):
+                        seen.add(dasm_h)
+
+        # SMART MODE: Also include format files for imagedev
+        if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'imagedev':
+            # Check for formats/*.cpp in lib/formats
+            formats_dir = os.path.join(root, 'src', 'lib', 'formats')
+            if os.path.isdir(formats_dir):
+                # Add all.cpp which includes all formats
+                formats_all = 'src/lib/formats/all.cpp'
+                if formats_all not in seen:
+                    seen.add(formats_all)
+                    remaining.append((formats_all, depth))
+
     def line_hook(text):
         text = text.lstrip()
         if text.startswith('#'):
@@ -847,15 +1017,49 @@ def scan_source_dependencies(root, sources):
                         if components:
                             path = '/'.join(components)
                             if path not in seen:
-                                remaining.append((path, depth))
                                 seen.add(path)
                                 base, ext = os.path.splitext(components[-1])
+
+                                # ALWAYS call test_siblings for headers to find disassemblers/siblings
                                 if ext.lower().startswith('.h'):
-                                    components = components[:-1]
-                                    test_siblings(components, base, depth)
-                                    if components[:2] == ('src', 'mame'):
+                                    components_dir = components[:-1]
+                                    test_siblings(components_dir, base, depth)
+                                    if components_dir[:2] == ('src', 'mame'):
                                         for aspect in ('_a', '_v', '_m'):
-                                            test_siblings(components, base + aspect, depth)
+                                            test_siblings(components_dir, base + aspect, depth)
+
+                                # SMART MODE: Check depth limit and bus relevance
+                                if smart:
+                                    # Check if this is a bus include from an unrelated system
+                                    path_parts = components
+                                    is_irrelevant_bus = False
+                                    is_bus_file = len(path_parts) >= 3 and path_parts[1] == 'bus'
+
+                                    if is_bus_file:
+                                        bus_system = path_parts[2]
+                                        # Skip bus systems that aren't in our relevant set
+                                        if bus_system not in relevant_bus_systems:
+                                            # Also check if it's a generic bus (like generic/slot) - keep those
+                                            if bus_system not in ('generic', 'centronics', 'rs232', 'ata', 'scsi'):
+                                                is_irrelevant_bus = True
+                                                # Uncomment for debugging:
+                                                print("  [SKIP] Irrelevant bus: %s (not in %s)" % (path, relevant_bus_systems), file=sys.stderr)
+
+                                    # Use stricter depth limit for bus files (max depth 2) to prevent transitive dependencies
+                                    effective_depth_limit = 2 if is_bus_file else depth_limit
+
+                                    if is_irrelevant_bus:
+                                        # Skip this unrelated bus
+                                        pass
+                                    elif depth > effective_depth_limit:
+                                        # Too deep
+                                        pass
+                                    else:
+                                        # Within depth limit and relevant - include it
+                                        remaining.append((path, depth))
+                                else:
+                                    # Not smart mode - include everything
+                                    remaining.append((path, depth))
 
     handler = CppParser.Handler()
     handler.line = line_hook
@@ -863,6 +1067,38 @@ def scan_source_dependencies(root, sources):
     seen = set('/'.join(x for x in split_path(source) if x) for source in sources)
     remaining = list([(x, 0) for x in seen])
     default_roots = ((('src', 'devices'), 0), (('src', 'mame', 'shared'), 0), (('src', 'lib'), 0))
+
+    # SMART MODE: For each initial source file, check if it's a CPU and add disassembler
+    if smart:
+        for source in list(seen):
+            components = source.split('/')
+            if len(components) >= 4 and components[1] == 'devices' and components[2] == 'cpu':
+                # This is a CPU file - add its disassembler
+                cpu_dir = '/'.join(components[:-1])
+                base_name = components[-1].rsplit('.', 1)[0]  # Remove extension
+                cpu_path_obj = os.path.join(root, *components[:-1])
+
+                # Try common disassembler patterns: {name}d, {name}dasm, {name}dis
+                for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                    for ext in ('.cpp', '.h', '.ipp'):
+                        dasm_file = base_name + suffix + ext
+                        dasm_path = cpu_dir + '/' + dasm_file
+                        if dasm_path not in seen and os.path.isfile(os.path.join(cpu_path_obj, dasm_file)):
+                            seen.add(dasm_path)
+                            if ext == '.cpp':
+                                remaining.append((dasm_path, 0))
+                                sys.stderr.write('  Found disassembler: %s\n' % dasm_path)
+
+        sys.stderr.write('Using SMART dependency resolution (depth_limit=%d)\n' % (depth_limit, ))
+
+    # Device usage pattern (for smart mode)
+    if smart:
+        import re
+        # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE> (including _array variants)
+        device_finder_re = re.compile(r'(?:required_device(?:_array)?|optional_device(?:_array)?|device_finder)\s*<\s*(\w+)\s*[,>]')
+        # Match device type references in option_add calls: option_add("name", DEVICE_TYPE)
+        device_type_re = re.compile(r'option_add(?:_internal)?\s*\([^,]+,\s*([A-Z][A-Z0-9_]+)\s*\)')
+
     while remaining:
         source, depth = remaining.pop()
         components = tuple(source.split('/'))
@@ -872,26 +1108,146 @@ def scan_source_dependencies(root, sources):
         except IOError:
             sys.stderr.write('Unable to open source file "%s"\n' % (source, ))
             sys.exit(1)
+
+        file_content = None
+        header_content = None
         try:
             with f:
-                parser.parse(f)
+                file_content = f.read()
+                # If this is a .cpp file, also read the corresponding .h file
+                if smart and source.endswith('.cpp'):
+                    header_path = os.path.splitext(source)[0] + '.h'
+                    try:
+                        with io.open(os.path.join(root, header_path), 'r', encoding='utf-8', errors='ignore') as hf:
+                            header_content = hf.read()
+                    except:
+                        pass
+
+                # Scan for device usage in smart mode
+                if smart and file_content:
+                    # Scan for device_finder/required_device/optional_device patterns
+                    for match in device_finder_re.finditer(file_content):
+                        device_class = match.group(1)
+                        if device_class in device_map:
+                            device_file = device_map[device_class]
+                            # Scan the device file itself for option_add calls BEFORE following inheritance
+                            # BUT skip bus controller files (same heuristic as below)
+                            skip_device_option_scan = False
+                            if device_file.startswith('src/devices/bus/'):
+                                parts_dev = device_file.split('/')
+                                if len(parts_dev) >= 4:
+                                    bus_name_dev = parts_dev[3]
+                                    filename_dev = os.path.splitext(parts_dev[-1])[0]
+                                    controller_names_dev = [bus_name_dev, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                                    if filename_dev in controller_names_dev:
+                                        skip_device_option_scan = True
+
+                            if not skip_device_option_scan:
+                                try:
+                                    full_device_path = os.path.join(root, device_file)
+                                    with io.open(full_device_path, 'r', encoding='utf-8', errors='ignore') as df:
+                                        device_file_content = df.read()
+                                        for type_match in device_type_re.finditer(device_file_content):
+                                            device_type_constant = type_match.group(1)
+                                            if device_type_constant in device_type_map:
+                                                type_device_class = device_type_map[device_type_constant]
+                                                if type_device_class in device_map:
+                                                    type_device_file = device_map[type_device_class]
+                                                    if type_device_file not in seen:
+                                                        seen.add(type_device_file)
+                                                        remaining.append((type_device_file, 0))
+                                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, type_device_class, type_device_file, device_file))
+                                except:
+                                    pass
+
+                            # Follow inheritance chain to include parent classes
+                            inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
+                            for parent_class, parent_file in inheritance_chain:
+                                if parent_file not in seen:
+                                    seen.add(parent_file)
+                                    remaining.append((parent_file, 0))  # Add at depth 0
+                                    # Show which file triggered this device addition
+                                    if parent_class == device_class:
+                                        sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, source))
+                                    else:
+                                        sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, source))
+
+                    # Scan for device type references in option_add calls
+                    # SKIP bus controller files (they define ALL possible options, creating bloat)
+                    # Heuristic: If file is in devices/bus/BUSNAME/ and filename matches BUSNAME or is a known controller name
+                    skip_option_scan = False
+                    if source.startswith('src/devices/bus/'):
+                        parts = source.split('/')
+                        if len(parts) >= 4:  # src/devices/bus/BUSNAME/file.cpp
+                            bus_name = parts[3]
+                            filename = os.path.splitext(parts[-1])[0]
+                            # Skip if filename matches bus name OR is a known controller file
+                            controller_names = [bus_name, 'ctronics', 'devices', 'carts', 'atadev', 'ctrl', 'user']
+                            if filename in controller_names:
+                                skip_option_scan = True
+
+                    if not skip_option_scan:
+                        for match in device_type_re.finditer(file_content):
+                            device_type_constant = match.group(1)
+                            # Look up the class name from the constant
+                            if device_type_constant in device_type_map:
+                                device_class = device_type_map[device_type_constant]
+                                if device_class in device_map:
+                                    device_file = device_map[device_class]
+                                    if device_file not in seen:
+                                        seen.add(device_file)
+                                        remaining.append((device_file, 0))
+                                        sys.stderr.write('  + DeviceType: %s (%s) -> %s (option_add in %s)\n' % (device_type_constant, device_class, device_file, source))
+
+                    # Also scan the header file for device patterns
+                    if header_content:
+                        for match in device_finder_re.finditer(header_content):
+                            device_class = match.group(1)
+                            if device_class in device_map:
+                                device_file = device_map[device_class]
+                                # Follow inheritance chain to include parent classes
+                                inheritance_chain = find_inheritance_chain(device_class, device_map, seen, root)
+                                for parent_class, parent_file in inheritance_chain:
+                                    if parent_file not in seen:
+                                        seen.add(parent_file)
+                                        remaining.append((parent_file, 0))
+                                        header_path = os.path.splitext(source)[0] + '.h'
+                                        if parent_class == device_class:
+                                            sys.stderr.write('  + Device: %s -> %s (referenced by %s)\n' % (parent_class, parent_file, header_path))
+                                        else:
+                                            sys.stderr.write('  + Device: %s -> %s (parent of %s referenced by %s)\n' % (parent_class, parent_file, device_class, header_path))
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
         except Exception as e:
-            sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
-            sys.exit(1)
+            sys.stderr.write('Error scanning source file "%s": %s\n' % (source, e))
+
+        # Now parse for includes
+        if file_content:
+            try:
+                import io as io_module
+                parser.parse(io_module.StringIO(file_content))
+            except Exception as e:
+                sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
+                sys.exit(1)
+
+    if smart:
+        sys.stderr.write('Smart scan found %d files (vs ~thousands with full transitive scan)\n' % (len(seen), ))
+
     return seen
 
 
 def write_project(options, projectfile, mappings, sources, single):
     if single:
         targetsrc = ''
+        written_directives = set()  # Track written BUSES/directives to avoid duplicates
         for source in sorted(sources):
             action = mappings.get(source)
             if action:
                 for line in action:
-                    projectfile.write(line + '\n')
+                    if line not in written_directives:
+                        projectfile.write(line + '\n')
+                        written_directives.add(line)
             if source.startswith('src/mame/'):
                 targetsrc += '        MAME_DIR .. "%s",\n' % (source, )
         projectfile.write(
@@ -1014,6 +1370,67 @@ def collect_sources(root, sources):
     return result
 
 
+def map_drivers_to_sources(listfile, drivers):
+    """
+    Map driver names to their source files by parsing mame.lst.
+    Returns a list of source file paths (e.g., ['atari/starwars.cpp']).
+    """
+    driver_to_source = {}
+    current_source = None
+
+    try:
+        with io.open(listfile, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Lines starting with @source: define the current source file
+                if line.startswith('@source:'):
+                    current_source = line.split(':', 1)[1].strip()
+                # Non-empty lines without @ are driver names
+                elif line and not line.startswith('@') and not line.startswith('#'):
+                    if current_source:
+                        driver_to_source[line] = current_source
+    except IOError:
+        sys.stderr.write('Error reading driver list file "%s"\n' % listfile)
+        sys.exit(1)
+
+    # Map requested drivers to sources
+    sources = []
+    missing_drivers = []
+    for driver in drivers:
+        if driver in driver_to_source:
+            source = driver_to_source[driver]
+            if source not in sources:
+                sources.append(source)
+        else:
+            missing_drivers.append(driver)
+
+    if missing_drivers:
+        sys.stderr.write('Error: Driver(s) not found in %s: %s\n' % (listfile, ', '.join(missing_drivers)))
+        sys.stderr.write('Available drivers can be listed with: grep -v "^@" %s | grep -v "^#" | sort\n' % listfile)
+        sys.exit(1)
+
+    return sources
+
+
+def write_drivers_project(options, projectfile):
+    """Generate project for driver names (convenience wrapper)."""
+    # Map driver names to source files
+    sources = map_drivers_to_sources(options.list, options.drivers)
+
+    # Convert to full paths
+    full_sources = []
+    for source in sources:
+        full_path = os.path.join('src', 'mame', source)
+        full_sources.append(full_path)
+
+    sys.stderr.write("Drivers: %s\n" % ', '.join(options.drivers))
+    sys.stderr.write("Sources: %s\n" % ', '.join(sources))
+
+    # Reuse sourcesproject logic
+    options.sources = full_sources
+    write_sources_project(options, projectfile)
+
+
 def write_sources_project(options, projectfile):
     def sourcefile(filename):
         if tuple(filename.split('/')) in splitsources:
@@ -1057,14 +1474,28 @@ def write_sources_filter(options, filterfile):
         filterfile.write(driver + '\n')
 
 
+def write_drivers_filter(options, filterfile):
+    """
+    Generate a driver filter (.flt) file from driver names.
+    Maps driver names to their source files and outputs them.
+    """
+    sources = map_drivers_to_sources(options.list, options.drivers)
+    for source in sorted(sources):
+        filterfile.write(source + '\n')
+
+
 if __name__ == '__main__':
     options = parse_command_line()
     if options.command == 'sourcesproject':
         write_sources_project(options, sys.stdout)
+    elif options.command == 'driversproject':
+        write_drivers_project(options, sys.stdout)
     elif options.command == 'filterproject':
         write_filter_project(options, sys.stdout)
     elif options.command == 'sourcesfilter':
         write_sources_filter(options, sys.stdout)
+    elif options.command == 'driversfilter':
+        write_drivers_filter(options, sys.stdout)
     elif options.command == 'driverlist':
         DriverLister(options).write_source(sys.stdout)
     elif options.command == 'reconcilelist':
