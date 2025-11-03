@@ -235,13 +235,8 @@ void vvf_write::begin_frame()
 	// Debug: Print frame stats (stop at 50 line_to calls)
 	if (m_stats.write_line_count < 50)
 	{
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
-		osd_printf_info("%u.%03u VVF frame_begin #%u: %u line_to calls, %u write commands, %zu bytes\n",
-			seconds, milliseconds, m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
+		osd_printf_info("VVF frame_begin #%u: %u line_to calls, %u write commands, %zu bytes\n",
+			m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
 			m_stats.line_to6_count + m_stats.line_to6_pal_count + m_stats.line_to10_count + m_stats.line_to10_pal_count +
 			m_stats.line_to14_count + m_stats.line_to14_pal_count + m_stats.new_color_count, m_frame_buffer.size());
 	}
@@ -376,16 +371,11 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	// Get emoji directly using color_index (0=black, 1=red, ..., 8=other)
 	const char* color_emoji = get_color_emoji(color_index);
 
-	attotime elapsed = m_machine.time() - m_start_time;
-	double elapsed_sec = elapsed.as_double();
-	uint32_t seconds = (uint32_t)elapsed_sec;
-	uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
 	if (m_stats.write_line_count < 50 || (intensity > 0 && palette_index_hint == -1)
 		|| old_scale_x != m_scale_x || old_scale_y != m_scale_y)
 	{
-		osd_printf_info("%u.%03u line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
-			seconds, milliseconds, m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
+		osd_printf_info("line_to #%u: RAW: %d,%d SCALED: %d,%d (%+d%+d) %s i=%u",
+			m_stats.write_line_count, raw_x, raw_y, scaled_x, scaled_y,
 			scaled_x - m_last_scaled_x, scaled_y - m_last_scaled_y, color_emoji, intensity);
 
 		// Show palette entry info if needed (only for visible draws)
@@ -495,8 +485,8 @@ void vvf_write::end_frame()
 		if (frames_this_second > 0 && m_max_frame_duration > 0.0)
 			snprintf(frame_timing, sizeof(frame_timing), " (%.1f-%.1f ms)", m_min_frame_duration, m_max_frame_duration);
 
-		osd_printf_info("%.1fs VVF: %.2f eFPS%s %.2f FPS%s | %u frames total, %.2f KB | ",
-			elapsed_sec, end_fps, end_frame_timing, fps, frame_timing, m_frame_count, m_stats.total_bytes / 1024.0);
+		osd_printf_info("VVF: %.2f eFPS%s %.2f FPS%s | %u frames total, %.2f KB | ",
+			end_fps, end_frame_timing, fps, frame_timing, m_frame_count, m_stats.total_bytes / 1024.0);
 
 		if (m_frame_count > 0) {
 			// Print color stats for this second (delta from last second)
@@ -534,11 +524,8 @@ void vvf_write::end_frame()
 #if VVF_STATS
 	if (m_stats.write_line_count < 50 || m_frame_count < 10)
 	{
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
-		osd_printf_info("%u.%03u VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
-			seconds, milliseconds, m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
+		osd_printf_info("VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
+			m_frame_count, m_stats.raw_moves_count + m_stats.raw_draws_count,
 			m_stats.write_line_count + m_stats.new_color_count, m_frame_buffer.size());
 	}
 #endif
