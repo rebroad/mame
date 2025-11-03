@@ -16,6 +16,7 @@
 #include "strformat.h"
 
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <string_view>
@@ -571,6 +572,9 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args);
 void osd_vprintf_info(util::format_argument_pack<char> const &args);
 void osd_vprintf_verbose(util::format_argument_pack<char> const &args);
 void osd_vprintf_debug(util::format_argument_pack<char> const &args);
+
+// Set timestamp callback for osd_printf_info
+void osd_set_timestamp_callback(std::function<std::string()> callback);
 
 /// \brief Print error message
 ///

@@ -4,6 +4,9 @@
 #include "osdcore.h"
 #include <thread>
 #include <chrono>
+#include <cstdio>
+#include <cstring>
+#include <functional>
 
 #if defined(SDLMAME_ANDROID)
 #include <android/log.h>
@@ -23,6 +26,9 @@
 static const int MAXSTACK = 10;
 static osd_output *m_stack[MAXSTACK];
 static int m_ptr = -1;
+
+// Timestamp callback for osd_printf_info
+static std::function<std::string()> m_timestamp_callback = nullptr;
 
 /*-------------------------------------------------
 	osd_output
@@ -93,17 +99,44 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
+	osd_set_timestamp_callback - set callback
+	for timestamp generation
+-------------------------------------------------*/
+
+void osd_set_timestamp_callback(std::function<std::string()> callback)
+{
+	m_timestamp_callback = std::move(callback);
+}
+
+/*-------------------------------------------------
 	osd_vprintf_info - output info text to the
 	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_info(util::format_argument_pack<char> const &args)
 {
+	// Prepend timestamp if callback is available
+	if (m_timestamp_callback)
+	{
+		std::string timestamp = m_timestamp_callback();
+		std::string message = util::string_format(args);
+		std::string full_message = timestamp + message;
+		auto timestamped_args = util::make_format_argument_pack("%s", full_message.c_str());
+	#if defined(SDLMAME_ANDROID)
+		__android_log_write(ANDROID_LOG_INFO, "MAME", full_message.c_str());
+	#else
+		if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, timestamped_args);
+	#endif
+	}
+	else
+	{
+		// No timestamp, use original args through normal path
 #if defined(SDLMAME_ANDROID)
-	__android_log_write(ANDROID_LOG_INFO, "MAME", util::string_format(args).c_str());
+		__android_log_write(ANDROID_LOG_INFO, "MAME", util::string_format(args).c_str());
 #else
-	if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, args);
+		if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, args);
 #endif
+	}
 }
 
 
