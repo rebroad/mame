@@ -190,8 +190,7 @@ float vector_device::normalized_sigmoid(float n, float k)
  */
 void vector_device::add_point(int x, int y, rgb_t color, int intensity)
 {
-	machine().video().record_vector_line(
-		x, y, color, intensity);
+	machine().video().record_vector_line(x, y, color, intensity); // TODO - include scale?
 
 	point *newpoint;
 

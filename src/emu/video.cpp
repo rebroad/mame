@@ -247,6 +247,7 @@ void video_manager::frame_update(bool from_debugger)
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
 
+#if 0
 	// Check if this is a vector game frame without new content (if optimization enabled)
 	bool vector_frame_empty = false;
 	bool has_vector_screen = false;
@@ -272,17 +273,21 @@ void video_manager::frame_update(bool from_debugger)
 
 	// Reset vector frame started flag for next frame
 	m_vector_frame_started = false;
+#endif
 
 	// if none of the screens changed and we haven't skipped too many frames in a row,
 	// mark this frame as skipped to prevent throttling; this helps for games that
 	// don't update their screen at the monitor refresh rate
+#if 0
 	// For vector games without new content, skip without limit
 	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0))
-	{
-		if (vector_frame_empty || m_empty_skip_count++ < 3)
-			skipped_it = true;
-	}
+		if (vector_frame_empty || m_empty_skip_count++ < 3) skipped_it = true;
 	if (anything_changed || !vector_frame_empty)
+#else
+	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0) && (m_empty_skip_count++ < 3))
+		skipped_it = true;
+	else
+#endif
 		m_empty_skip_count = 0;
 
 	// if we're throttling, synchronize before rendering
@@ -1311,6 +1316,7 @@ std::error_condition video_manager::open_next(emu_file &file, const char *extens
 
 void video_manager::record_frame()
 {
+	// ignore if nothing to do
 	if (!is_recording())
 		return;
 

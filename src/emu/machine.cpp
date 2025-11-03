@@ -1584,10 +1584,9 @@ void running_machine::emscripten_main_loop()
 			fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
 		}
 	}
-	// other, just pump video updates and sound mapping updates through
+	// otherwise, just pump video updates through
 	else
 		machine->m_video->frame_update();
-
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
