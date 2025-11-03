@@ -4,6 +4,12 @@
 #include "osdcore.h"
 #include <thread>
 #include <chrono>
+#include <cstdio>
+#include <cstring>
+
+// For running_machine and attotime
+#include "emu/machine.h"
+#include "emu/attotime.h"
 
 #if defined(SDLMAME_ANDROID)
 #include <android/log.h>
@@ -24,8 +30,11 @@ static const int MAXSTACK = 10;
 static osd_output *m_stack[MAXSTACK];
 static int m_ptr = -1;
 
+// Machine reference for timestamp generation
+static running_machine *m_machine_ref = nullptr;
+
 /*-------------------------------------------------
-    osd_output
+	osd_output
 -------------------------------------------------*/
 
 void osd_output::push(osd_output *delegate)
@@ -59,12 +68,12 @@ void osd_output::pop(osd_output *delegate)
 
 
 /***************************************************************************
-    OUTPUT MANAGEMENT
+	OUTPUT MANAGEMENT
 ***************************************************************************/
 
 /*-------------------------------------------------
-    osd_vprintf_error - output an error to the
-    appropriate callback
+	osd_vprintf_error - output an error to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_error(util::format_argument_pack<char> const &args)
@@ -78,8 +87,8 @@ void osd_vprintf_error(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_warning - output a warning to the
-    appropriate callback
+	osd_vprintf_warning - output a warning to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_warning(util::format_argument_pack<char> const &args)
@@ -93,23 +102,53 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_info - output info text to the
-    appropriate callback
+	osd_set_machine_reference - set machine
+	reference for timestamp generation
+-------------------------------------------------*/
+
+void osd_set_machine_reference(running_machine *machine)
+{
+	m_machine_ref = machine;
+}
+
+/*-------------------------------------------------
+	osd_vprintf_info - output info text to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_info(util::format_argument_pack<char> const &args)
 {
+	std::string message = util::string_format(args);
+
+	// Prepend timestamp if machine reference is available
+	if (m_machine_ref != nullptr)
+	{
+		attotime elapsed = m_machine_ref->time();
+		double elapsed_sec = elapsed.as_double();
+		uint32_t total_seconds = (uint32_t)elapsed_sec;
+		uint32_t minutes = total_seconds / 60;
+		uint32_t seconds = total_seconds % 60;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - total_seconds) * 1000.0);
+
+		char timestamp[16];
+		snprintf(timestamp, sizeof(timestamp), "%02u:%02u.%03u ", minutes, seconds, milliseconds);
+
+		message = std::string(timestamp) + message;
+	}
+
 #if defined(SDLMAME_ANDROID)
-	__android_log_write(ANDROID_LOG_INFO, "MAME", util::string_format(args).c_str());
+	__android_log_write(ANDROID_LOG_INFO, "MAME", message.c_str());
 #else
-	if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, args);
+	// Create new format pack with the timestamped message
+	util::format_argument_pack<char> timestamped_args = util::make_format_argument_pack("%s", message.c_str());
+	if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, timestamped_args);
 #endif
 }
 
 
 /*-------------------------------------------------
-    osd_vprintf_verbose - output verbose text to
-    the appropriate callback
+	osd_vprintf_verbose - output verbose text to
+	the appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_verbose(util::format_argument_pack<char> const &args)
@@ -123,8 +162,8 @@ void osd_vprintf_verbose(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_debug - output debug text to the
-    appropriate callback
+	osd_vprintf_debug - output debug text to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_debug(util::format_argument_pack<char> const &args)

@@ -40,29 +40,29 @@ int osd_getpid() noexcept;
 
 
 /*-----------------------------------------------------------------------------
-    osd_uchar_from_osdchar: convert the given character or sequence of
-        characters from the OS-default encoding to a Unicode character
+	osd_uchar_from_osdchar: convert the given character or sequence of
+		characters from the OS-default encoding to a Unicode character
 
-    Parameters:
+	Parameters:
 
-        uchar - pointer to a uint32_t to receive the resulting unicode
-            character
+		uchar - pointer to a uint32_t to receive the resulting unicode
+			character
 
-        osdchar - pointer to one or more chars that are in the OS-default
-            encoding
+		osdchar - pointer to one or more chars that are in the OS-default
+			encoding
 
-        count - number of characters provided in the OS-default encoding
+		count - number of characters provided in the OS-default encoding
 
-    Return value:
+	Return value:
 
-        The number of characters required to form a Unicode character.
+		The number of characters required to form a Unicode character.
 -----------------------------------------------------------------------------*/
 int osd_uchar_from_osdchar(char32_t *uchar, const char *osdchar, size_t count);
 
 
 
 /***************************************************************************
-    TIMING INTERFACES
+	TIMING INTERFACES
 ***************************************************************************/
 
 /* a osd_ticks_t is a 64-bit unsigned integer that is used as a core type in timing interfaces */
@@ -70,69 +70,69 @@ typedef uint64_t osd_ticks_t;
 
 
 /*-----------------------------------------------------------------------------
-    osd_ticks: return the current running tick counter
+	osd_ticks: return the current running tick counter
 
-    Parameters:
+	Parameters:
 
-        None
+		None
 
-    Return value:
+	Return value:
 
-        an osd_ticks_t value which represents the current tick counter
+		an osd_ticks_t value which represents the current tick counter
 
-    Notes:
+	Notes:
 
-        The resolution of this counter should be 1ms or better for accurate
-        performance. It is also important that the source of this timer be
-        accurate. It is ok if this call is not ultra-fast, since it is
-        primarily used for once/frame synchronization.
+		The resolution of this counter should be 1ms or better for accurate
+		performance. It is also important that the source of this timer be
+		accurate. It is ok if this call is not ultra-fast, since it is
+		primarily used for once/frame synchronization.
 -----------------------------------------------------------------------------*/
 osd_ticks_t osd_ticks() noexcept;
 
 
 /*-----------------------------------------------------------------------------
-    osd_ticks_per_second: return the number of ticks per second
+	osd_ticks_per_second: return the number of ticks per second
 
-    Parameters:
+	Parameters:
 
-        None
+		None
 
-    Return value:
+	Return value:
 
-        an osd_ticks_t value which represents the number of ticks per
-        second
+		an osd_ticks_t value which represents the number of ticks per
+		second
 -----------------------------------------------------------------------------*/
 osd_ticks_t osd_ticks_per_second() noexcept;
 
 
 /*-----------------------------------------------------------------------------
-    osd_sleep: sleep for the specified time interval
+	osd_sleep: sleep for the specified time interval
 
-    Parameters:
+	Parameters:
 
-        duration - an osd_ticks_t value that specifies how long we should
-            sleep
+		duration - an osd_ticks_t value that specifies how long we should
+			sleep
 
-    Return value:
+	Return value:
 
-        None
+		None
 
-    Notes:
+	Notes:
 
-        The OSD layer should try to sleep for as close to the specified
-        duration as possible, or less. This is used as a mechanism to
-        "give back" unneeded time to other programs running in the system.
-        On a simple, non multitasking system, this routine can be a no-op.
-        If there is significant volatility in the amount of time that the
-        sleep occurs for, the OSD layer should strive to sleep for less time
-        than specified rather than sleeping too long.
+		The OSD layer should try to sleep for as close to the specified
+		duration as possible, or less. This is used as a mechanism to
+		"give back" unneeded time to other programs running in the system.
+		On a simple, non multitasking system, this routine can be a no-op.
+		If there is significant volatility in the amount of time that the
+		sleep occurs for, the OSD layer should strive to sleep for less time
+		than specified rather than sleeping too long.
 -----------------------------------------------------------------------------*/
 void osd_sleep(osd_ticks_t duration) noexcept;
 
 
 
 /***************************************************************************
-    WORK ITEM INTERFACES
+	WORK ITEM INTERFACES
 ***************************************************************************/
 
 /* this is the maximum number of supported threads for a single work queue */
@@ -160,120 +160,120 @@ typedef void *(*osd_work_callback)(void *param, int threadid);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_queue_alloc: create a new work queue
+	osd_work_queue_alloc: create a new work queue
 
-    Parameters:
+	Parameters:
 
-        flags - one or more of the WORK_QUEUE_FLAG_* values ORed together:
+		flags - one or more of the WORK_QUEUE_FLAG_* values ORed together:
 
-            WORK_QUEUE_FLAG_IO - indicates that the work queue will do some
-                I/O; this may be a useful hint so that threads are created
-                even on single-processor systems since I/O can often be
-                overlapped with other work
+			WORK_QUEUE_FLAG_IO - indicates that the work queue will do some
+				I/O; this may be a useful hint so that threads are created
+				even on single-processor systems since I/O can often be
+				overlapped with other work
 
-            WORK_QUEUE_FLAG_MULTI - indicates that the work queue should
-                take advantage of as many processors as it can; items queued
-                here are assumed to be fully independent or shared
+			WORK_QUEUE_FLAG_MULTI - indicates that the work queue should
+				take advantage of as many processors as it can; items queued
+				here are assumed to be fully independent or shared
 
-            WORK_QUEUE_FLAG_HIGH_FREQ - indicates that items are expected
-                to be queued at high frequency and acted upon quickly; in
-                general, this implies doing some spin-waiting internally
-                before falling back to OS-specific synchronization
+			WORK_QUEUE_FLAG_HIGH_FREQ - indicates that items are expected
+				to be queued at high frequency and acted upon quickly; in
+				general, this implies doing some spin-waiting internally
+				before falling back to OS-specific synchronization
 
-    Return value:
+	Return value:
 
-        A pointer to an allocated osd_work_queue object.
+		A pointer to an allocated osd_work_queue object.
 
-    Notes:
+	Notes:
 
-        A work queue abstracts the notion of how potentially threaded work
-        can be performed. If no threading support is available, it is a
-        simple matter to execute the work items as they are queued.
+		A work queue abstracts the notion of how potentially threaded work
+		can be performed. If no threading support is available, it is a
+		simple matter to execute the work items as they are queued.
 -----------------------------------------------------------------------------*/
 osd_work_queue *osd_work_queue_alloc(int flags);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_queue_items: return the number of pending items in the queue
+	osd_work_queue_items: return the number of pending items in the queue
 
-    Parameters:
+	Parameters:
 
-        queue - pointer to an osd_work_queue that was previously created via
-            osd_work_queue_alloc
+		queue - pointer to an osd_work_queue that was previously created via
+			osd_work_queue_alloc
 
-    Return value:
+	Return value:
 
-        The number of incomplete items remaining in the queue.
+		The number of incomplete items remaining in the queue.
 -----------------------------------------------------------------------------*/
 int osd_work_queue_items(osd_work_queue *queue);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_queue_wait: wait for the queue to be empty
+	osd_work_queue_wait: wait for the queue to be empty
 
-    Parameters:
+	Parameters:
 
-        queue - pointer to an osd_work_queue that was previously created via
-            osd_work_queue_alloc
+		queue - pointer to an osd_work_queue that was previously created via
+			osd_work_queue_alloc
 
-        timeout - a timeout value in osd_ticks_per_second()
+		timeout - a timeout value in osd_ticks_per_second()
 
-    Return value:
+	Return value:
 
-        true if the queue is empty; false if the wait timed out before the
-        queue was emptied.
+		true if the queue is empty; false if the wait timed out before the
+		queue was emptied.
 -----------------------------------------------------------------------------*/
 bool osd_work_queue_wait(osd_work_queue *queue, osd_ticks_t timeout);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_queue_free: free a work queue, waiting for all items to complete
+	osd_work_queue_free: free a work queue, waiting for all items to complete
 
-    Parameters:
+	Parameters:
 
-        queue - pointer to an osd_work_queue that was previously created via
-            osd_work_queue_alloc
+		queue - pointer to an osd_work_queue that was previously created via
+			osd_work_queue_alloc
 
-    Return value:
+	Return value:
 
-        None.
+		None.
 -----------------------------------------------------------------------------*/
 void osd_work_queue_free(osd_work_queue *queue);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_item_queue_multiple: queue a set of work items
+	osd_work_item_queue_multiple: queue a set of work items
 
-    Parameters:
+	Parameters:
 
-        queue - pointer to an osd_work_queue that was previously created via
-            osd_work_queue_alloc
+		queue - pointer to an osd_work_queue that was previously created via
+			osd_work_queue_alloc
 
-        callback - pointer to a function that will do the work
+		callback - pointer to a function that will do the work
 
-        numitems - number of work items to queue
+		numitems - number of work items to queue
 
-        param - a void * parameter that can be used to pass data to the
-            function
+		param - a void * parameter that can be used to pass data to the
+			function
 
-        paramstep - the number of bytes to increment param by for each item
-            queued; for example, if you have an array of work_unit objects,
-            you can point param to the base of the array and set paramstep to
-            sizeof(work_unit)
+		paramstep - the number of bytes to increment param by for each item
+			queued; for example, if you have an array of work_unit objects,
+			you can point param to the base of the array and set paramstep to
+			sizeof(work_unit)
 
-        flags - one or more of the WORK_ITEM_FLAG_* values ORed together:
+		flags - one or more of the WORK_ITEM_FLAG_* values ORed together:
 
-            WORK_ITEM_FLAG_AUTO_RELEASE - indicates that the work item
-                should be automatically freed when it is complete
+			WORK_ITEM_FLAG_AUTO_RELEASE - indicates that the work item
+				should be automatically freed when it is complete
 
-    Return value:
+	Return value:
 
-        A pointer to the final allocated osd_work_item in the list.
+		A pointer to the final allocated osd_work_item in the list.
 
-    Notes:
+	Notes:
 
-        On single-threaded systems, this function may actually execute the
-        work item immediately before returning.
+		On single-threaded systems, this function may actually execute the
+		work item immediately before returning.
 -----------------------------------------------------------------------------*/
 osd_work_item *osd_work_item_queue_multiple(osd_work_queue *queue, osd_work_callback callback, int32_t numitems, void *parambase, int32_t paramstep, uint32_t flags);
 
@@ -286,62 +286,62 @@ static inline osd_work_item *osd_work_item_queue(osd_work_queue *queue, osd_work
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_item_wait: wait for a work item to complete
+	osd_work_item_wait: wait for a work item to complete
 
-    Parameters:
+	Parameters:
 
-        item - pointer to an osd_work_item that was previously returned from
-            osd_work_item_queue
+		item - pointer to an osd_work_item that was previously returned from
+			osd_work_item_queue
 
-        timeout - a timeout value in osd_ticks_per_second()
+		timeout - a timeout value in osd_ticks_per_second()
 
-    Return value:
+	Return value:
 
-        true if the item completed; false if the wait timed out before the
-        item completed.
+		true if the item completed; false if the wait timed out before the
+		item completed.
 -----------------------------------------------------------------------------*/
 bool osd_work_item_wait(osd_work_item *item, osd_ticks_t timeout);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_item_result: get the result of a work item
+	osd_work_item_result: get the result of a work item
 
-    Parameters:
+	Parameters:
 
-        item - pointer to an osd_work_item that was previously returned from
-            osd_work_item_queue
+		item - pointer to an osd_work_item that was previously returned from
+			osd_work_item_queue
 
-    Return value:
+	Return value:
 
-        A void * that represents the work item's result.
+		A void * that represents the work item's result.
 -----------------------------------------------------------------------------*/
 void *osd_work_item_result(osd_work_item *item);
 
 
 /*-----------------------------------------------------------------------------
-    osd_work_item_release: release the memory allocated to a work item
+	osd_work_item_release: release the memory allocated to a work item
 
-    Parameters:
+	Parameters:
 
-        item - pointer to an osd_work_item that was previously returned from
-            osd_work_item_queue
+		item - pointer to an osd_work_item that was previously returned from
+			osd_work_item_queue
 
-    Return value:
+	Return value:
 
-        None.
+		None.
 
-    Notes:
+	Notes:
 
-        The osd_work_item exists until explicitly released, even if it has
-        long since completed. It is the queuer's responsibility to release
-        any work items it has queued.
+		The osd_work_item exists until explicitly released, even if it has
+		long since completed. It is the queuer's responsibility to release
+		any work items it has queued.
 -----------------------------------------------------------------------------*/
 void osd_work_item_release(osd_work_item *item);
 
 
 
 /***************************************************************************
-    MISCELLANEOUS INTERFACES
+	MISCELLANEOUS INTERFACES
 ***************************************************************************/
 
 /// \brief Break into host debugger if attached
@@ -363,15 +363,15 @@ std::pair<std::error_condition, unsigned> osd_get_cache_line_size() noexcept;
 
 
 /***************************************************************************
-    UNCATEGORIZED INTERFACES
+	UNCATEGORIZED INTERFACES
 ***************************************************************************/
 
 /*-----------------------------------------------------------------------------
-    osd_subst_env: substitute environment variables with values
+	osd_subst_env: substitute environment variables with values
 
-    Parameters:
+	Parameters:
 
-        src - source string
+		src - source string
 
 -----------------------------------------------------------------------------*/
 std::string osd_subst_env(std::string_view src);
@@ -571,6 +571,12 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args);
 void osd_vprintf_info(util::format_argument_pack<char> const &args);
 void osd_vprintf_verbose(util::format_argument_pack<char> const &args);
 void osd_vprintf_debug(util::format_argument_pack<char> const &args);
+
+// Forward declaration
+class running_machine;
+
+// Set machine reference for timestamp generation
+void osd_set_machine_reference(running_machine *machine);
 
 /// \brief Print error message
 ///

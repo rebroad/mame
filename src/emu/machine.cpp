@@ -10,6 +10,7 @@
 
 #include "emu.h"
 
+#include "osd/osdcore.h"
 #include "config.h"
 #include "screen.h"
 #include "crsshair.h"
@@ -104,6 +105,8 @@ running_machine::running_machine(const machine_config &_config, machine_manager 
 
 running_machine::~running_machine()
 {
+	// Clear machine reference
+	osd_set_machine_reference(nullptr);
 }
 
 
@@ -154,6 +157,9 @@ void running_machine::start()
 
 	// init the OSD layer
 	m_manager.osd().init(*this);
+
+	// Set machine reference for osd_printf_info timestamps
+	osd_set_machine_reference(this);
 
 	// create the video manager and UI manager
 	m_video = std::make_unique<video_manager>(*this);
