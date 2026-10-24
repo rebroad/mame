@@ -642,6 +642,13 @@ else
 	ARTIFACT_BASE="$SUBTARGET"
 fi
 
+# Some MAME targets include the main target name in the generated Emscripten
+# artifact (for example, mamestarwarswasm).  Accept either form and keep the
+# generated page pointing at the actual files.
+if [[ ! -f "$SRC_ROOT/${ARTIFACT_BASE}.html" && -f "$SRC_ROOT/mame${ARTIFACT_BASE}.html" ]]; then
+	ARTIFACT_BASE="mame${ARTIFACT_BASE}"
+fi
+
 for f in "$SRC_ROOT/${ARTIFACT_BASE}.html" "$SRC_ROOT/${ARTIFACT_BASE}.js" "$SRC_ROOT/${ARTIFACT_BASE}.wasm"; do
 	if [[ ! -f "$f" ]]; then
 		echo "Error: Expected artifact missing: $f" >&2
