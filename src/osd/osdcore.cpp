@@ -8,7 +8,7 @@
 #include <cstring>
 
 // For running_machine and attotime
-#include "emu/machine.h"
+#include "emu/emu.h"
 #include "emu/attotime.h"
 
 #if defined(SDLMAME_ANDROID)
@@ -140,7 +140,7 @@ void osd_vprintf_info(util::format_argument_pack<char> const &args)
 	__android_log_write(ANDROID_LOG_INFO, "MAME", message.c_str());
 #else
 	// Create new format pack with the timestamped message
-	util::format_argument_pack<char> timestamped_args = util::make_format_argument_pack("%s", message.c_str());
+	auto timestamped_args = util::make_format_argument_pack("%s", message.c_str());
 	if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, timestamped_args);
 #endif
 }
