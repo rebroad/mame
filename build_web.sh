@@ -164,8 +164,11 @@ if $DO_WIPE; then
 	fi
 fi
 
-# Derive ROM path from driver shortname
-ROM_PATH="$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip"
+# Derive ROM path from driver shortname.  Callers that generate ROMs as part of
+# another build may provide the exact archive without staging it in $HOME.
+ROM_ROOT="${MAME_ROM_ROOT:-$HOME/.mame/roms}"
+ROM_PATH="${MAME_ROM_PATH:-$ROM_ROOT/${DRIVER_SHORTNAME}.zip}"
+MAME_GAME="${MAME_GAME:-$DRIVER_SHORTNAME}"
 
 # Ensure ROM exists - check for zip first, then individual files
 ROM_FOUND=false
@@ -174,7 +177,7 @@ if [[ -f "$ROM_PATH" ]]; then
 	echo "Using ROM zip: $ROM_PATH"
 else
 	# Check for individual ROM files in driver directory
-	ROM_DIR="$HOME/.mame/roms/${DRIVER_SHORTNAME}"
+	ROM_DIR="$ROM_ROOT/${DRIVER_SHORTNAME}"
 	if [[ -d "$ROM_DIR" ]]; then
 		echo "ROM zip not found, checking for individual files in $ROM_DIR"
 		ROM_FOUND=true
@@ -186,8 +189,8 @@ fi
 if [[ "$ROM_FOUND" != "true" ]]; then
 	echo "Error: ROM not found for driver '$DRIVER_SHORTNAME'"
 	echo "Please ensure you have either:"
-	echo "  - $HOME/.mame/roms/${DRIVER_SHORTNAME}.zip, or"
-	echo "  - Individual ROM files in $HOME/.mame/roms/${DRIVER_SHORTNAME}/"
+	echo "  - $ROM_ROOT/${DRIVER_SHORTNAME}.zip, or"
+	echo "  - Individual ROM files in $ROM_ROOT/${DRIVER_SHORTNAME}/"
 	exit 1
 fi
 
@@ -677,8 +680,8 @@ if $INCLUDE_ROMS; then
 	ROM_DIR="$(dirname "$ROM_PATH")"
 	if [[ -f "$ROM_DIR/${DRIVER_SHORTNAME}.zip" ]]; then
 		PARENT_ROM="$ROM_DIR/${DRIVER_SHORTNAME}.zip"
-	elif [[ -f "$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip" ]]; then
-		PARENT_ROM="$HOME/.mame/roms/${DRIVER_SHORTNAME}.zip"
+	elif [[ -f "$ROM_ROOT/${DRIVER_SHORTNAME}.zip" ]]; then
+		PARENT_ROM="$ROM_ROOT/${DRIVER_SHORTNAME}.zip"
 	fi
 
 	# Determine the correct ROM path based on ROM file type
@@ -1146,7 +1149,7 @@ cat >> "$OUTDIR/index.html" <<EOF
 	  var Module = {
 		canvas: (function(){ return document.getElementById('canvas'); })(),
 		arguments: [
-		  "${DRIVER_SHORTNAME}",
+		  "${MAME_GAME}",
 		  "-rompath", "roms",
 		  "-video", chosenVideo,
 		  "-window", "-nomaximize", "-numscreens", "1",
@@ -1160,7 +1163,7 @@ cat >> "$OUTDIR/index.html" <<EOF
 		print: function(text){ console.log(text); },
 		printErr: function(text){ console.error(text); },
 		locateFile: function(path){ return path; },
-		preRun: [],
+		preRun: [function(){ console.log('[MAME] preRun reached'); }],
 		monitorRunDependencies: function(left){
 		  if (left === 0) {
 			try {
