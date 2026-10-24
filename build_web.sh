@@ -799,7 +799,23 @@ cat > "$OUTDIR/index.html" <<EOF
 	  console.log('[BROWSER] HTML page starting to load...');
 	</script>
 	<style>
-	  html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif} #canvas{width:100%;height:100%;display:block}
+	  html,body{height:100%;margin:0;background:#000;color:#ccc;font-family:sans-serif}
+	  body{display:flex;flex-direction:column;align-items:center;overflow:hidden}
+	  #game-screen{width:min(100vw,calc(100vh * 4 / 3));aspect-ratio:4 / 3;flex:0 1 auto;background:#000}
+	  #canvas{width:100%;height:100%;display:block;touch-action:none}
+	  #touch-controls{display:none}
+	  @media (hover:none) and (pointer:coarse){
+	    body{overflow:auto;justify-content:flex-start}
+	    #game-screen{width:min(100vw,calc((100vh - 170px) * 4 / 3));max-height:calc(100vh - 170px);flex:none}
+	    #touch-controls{width:min(100vw,560px);box-sizing:border-box;padding:12px 18px 18px;display:flex;align-items:center;justify-content:space-between;gap:24px;user-select:none;-webkit-user-select:none;touch-action:none}
+	    #virtual-joystick{position:relative;width:min(34vw,150px);height:min(34vw,150px);max-width:150px;max-height:150px;border:3px solid #888;border-radius:50%;background:radial-gradient(circle,#333 0 30%,#171717 31% 100%);box-shadow:0 0 0 5px #222;touch-action:none}
+	    #virtual-joystick::before,#virtual-joystick::after{content:"";position:absolute;background:#555;opacity:.7}
+	    #virtual-joystick::before{left:10%;right:10%;top:calc(50% - 1px);height:2px}
+	    #virtual-joystick::after{top:10%;bottom:10%;left:calc(50% - 1px);width:2px}
+	    #joystick-knob{position:absolute;left:50%;top:50%;width:34%;height:34%;transform:translate(-50%,-50%);border-radius:50%;background:#aaa;border:2px solid #ddd;box-sizing:border-box;pointer-events:none}
+	    #fire-button{width:min(24vw,105px);height:min(24vw,105px);max-width:105px;max-height:105px;border:3px solid #f88;border-radius:50%;background:#a22;color:#fff;font-weight:bold;font-size:clamp(14px,4vw,22px);box-shadow:0 0 0 5px #411;touch-action:none}
+	    #fire-button:active{background:#e44;transform:scale(.96)}
+	  }
 EOF
 
 if ! $INCLUDE_ROMS; then
@@ -826,7 +842,11 @@ EOF
 
 if $INCLUDE_ROMS; then
 	cat >> "$OUTDIR/index.html" <<EOF
-	<canvas id="canvas"></canvas>
+	<div id="game-screen"><canvas id="canvas"></canvas></div>
+	<div id="touch-controls" aria-label="Touch controls">
+	  <div id="virtual-joystick" role="application" aria-label="Joystick"><div id="joystick-knob"></div></div>
+	  <button id="fire-button" type="button" aria-label="Fire">FIRE</button>
+	</div>
 	<script>
 EOF
 else
@@ -851,7 +871,11 @@ else
 		  <span id="debug-fs">FS: checking...</span>
 		</div>
 	</div>
-	<canvas id="canvas" class="hidden"></canvas>
+	<div id="game-screen"><canvas id="canvas" class="hidden"></canvas></div>
+	<div id="touch-controls" aria-label="Touch controls">
+	  <div id="virtual-joystick" role="application" aria-label="Joystick"><div id="joystick-knob"></div></div>
+	  <button id="fire-button" type="button" aria-label="Fire">FIRE</button>
+	</div>
 	<script>
 	  // ROM loading functionality
 	  var romFiles = [];
@@ -1116,10 +1140,59 @@ EOF
 fi
 
 cat >> "$OUTDIR/index.html" <<EOF
+	  // Touch controls are deliberately browser-side: MAME receives the same
+	  // keyboard events as its normal desktop input path. CSS keeps them hidden
+	  // unless the browser reports a coarse, touch-oriented pointer.
+	  (function(){
+		var touchCapable = navigator.maxTouchPoints > 0 && matchMedia('(hover: none) and (pointer: coarse)').matches;
+		if (!touchCapable) return;
+		var controls = document.getElementById('touch-controls');
+		var pad = document.getElementById('virtual-joystick');
+		var knob = document.getElementById('joystick-knob');
+		var fire = document.getElementById('fire-button');
+		var canvas = document.getElementById('canvas');
+		var activeKeys = {};
+		var padPointer = null;
+		var firePointer = null;
+		function keyEvent(type, key){
+			var event = new KeyboardEvent(type, {key:key, code:key, bubbles:true, cancelable:true});
+			canvas.dispatchEvent(event);
+		}
+		function setKey(key, down){
+			if (!!activeKeys[key] === down) return;
+			activeKeys[key] = down;
+			keyEvent(down ? 'keydown' : 'keyup', key);
+		}
+		function releaseStick(){
+			['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].forEach(function(key){ setKey(key, false); });
+			knob.style.transform = 'translate(-50%,-50%)';
+		}
+		function moveStick(event){
+			var rect = pad.getBoundingClientRect();
+			var dx = event.clientX - (rect.left + rect.width / 2);
+			var dy = event.clientY - (rect.top + rect.height / 2);
+			var radius = rect.width * .32;
+			var distance = Math.hypot(dx, dy);
+			if (distance > radius){ dx *= radius / distance; dy *= radius / distance; }
+			knob.style.transform = 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px))';
+			var threshold = rect.width * .18;
+			setKey('ArrowLeft', dx < -threshold); setKey('ArrowRight', dx > threshold);
+			setKey('ArrowUp', dy < -threshold); setKey('ArrowDown', dy > threshold);
+		}
+		pad.addEventListener('pointerdown', function(event){ padPointer=event.pointerId; pad.setPointerCapture(event.pointerId); canvas.focus(); moveStick(event); });
+		pad.addEventListener('pointermove', function(event){ if (event.pointerId === padPointer) moveStick(event); });
+		['pointerup','pointercancel','lostpointercapture'].forEach(function(name){ pad.addEventListener(name, function(event){ if (padPointer === null || event.pointerId === padPointer){ padPointer=null; releaseStick(); } }); });
+		fire.addEventListener('pointerdown', function(event){ firePointer=event.pointerId; fire.setPointerCapture(event.pointerId); canvas.focus(); setKey('z', true); });
+		['pointerup','pointercancel','lostpointercapture'].forEach(function(name){ fire.addEventListener(name, function(event){ if (firePointer === null || event.pointerId === firePointer){ firePointer=null; setKey('z', false); } }); });
+		window.addEventListener('blur', function(){ releaseStick(); setKey('z', false); });
+		controls.style.display = 'flex';
+		window.touchControlsEnabled = true;
+		console.log('[TOUCH] controls enabled');
+	  })();
 	  // Ensure canvas has explicit pixel size and is visible
 	  (function(){
 		var c = document.getElementById('canvas');
-		function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+		function resize(){ c.width = c.clientWidth || window.innerWidth; c.height = c.clientHeight || window.innerHeight; }
 		window.addEventListener('resize', resize);
 		resize();
 	  })();
@@ -1217,7 +1290,7 @@ cat >> "$OUTDIR/index.html" <<EOF
 	  (function(){
 		var c=document.getElementById('canvas');
 		function applySize(){
-		  var w = window.innerWidth, h = window.innerHeight;
+		  var w = c.clientWidth || window.innerWidth, h = c.clientHeight || window.innerHeight;
 		  c.width=w; c.height=h;
 		  if (Module && typeof Module.setCanvasSize === 'function') {
 			try { Module.setCanvasSize(w, h, true); } catch(e) {}
