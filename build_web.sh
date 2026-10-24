@@ -1155,7 +1155,8 @@ cat >> "$OUTDIR/index.html" <<EOF
 		var padPointer = null;
 		var firePointer = null;
 		function keyEvent(type, key){
-			var event = new KeyboardEvent(type, {key:key, code:key, bubbles:true, cancelable:true});
+			var code = key.length === 1 ? 'Key' + key.toUpperCase() : key;
+			var event = new KeyboardEvent(type, {key:key, code:code, bubbles:true, cancelable:true});
 			canvas.dispatchEvent(event);
 		}
 		function setKey(key, down){
