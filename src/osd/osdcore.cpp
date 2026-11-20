@@ -6,10 +6,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
-
-// For running_machine and attotime
-#include "emu/emu.h"
-#include "emu/attotime.h"
+#include <functional>
 
 #if defined(SDLMAME_ANDROID)
 #include <android/log.h>
@@ -30,8 +27,8 @@ static const int MAXSTACK = 10;
 static osd_output *m_stack[MAXSTACK];
 static int m_ptr = -1;
 
-// Machine reference for timestamp generation
-static running_machine *m_machine_ref = nullptr;
+// Timestamp callback for osd_printf_info
+static std::function<std::string()> m_timestamp_callback = nullptr;
 
 /*-------------------------------------------------
 	osd_output
@@ -102,13 +99,13 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-	osd_set_machine_reference - set machine
-	reference for timestamp generation
+	osd_set_timestamp_callback - set callback
+	for timestamp generation
 -------------------------------------------------*/
 
-void osd_set_machine_reference(running_machine *machine)
+void osd_set_timestamp_callback(std::function<std::string()> callback)
 {
-	m_machine_ref = machine;
+	m_timestamp_callback = std::move(callback);
 }
 
 /*-------------------------------------------------
@@ -118,31 +115,28 @@ void osd_set_machine_reference(running_machine *machine)
 
 void osd_vprintf_info(util::format_argument_pack<char> const &args)
 {
-	std::string message = util::string_format(args);
-
-	// Prepend timestamp if machine reference is available
-	if (m_machine_ref != nullptr)
+	// Prepend timestamp if callback is available
+	if (m_timestamp_callback)
 	{
-		attotime elapsed = m_machine_ref->time();
-		double elapsed_sec = elapsed.as_double();
-		uint32_t total_seconds = (uint32_t)elapsed_sec;
-		uint32_t minutes = total_seconds / 60;
-		uint32_t seconds = total_seconds % 60;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - total_seconds) * 1000.0);
-
-		char timestamp[16];
-		snprintf(timestamp, sizeof(timestamp), "%02u:%02u.%03u ", minutes, seconds, milliseconds);
-
-		message = std::string(timestamp) + message;
+		std::string timestamp = m_timestamp_callback();
+		std::string message = util::string_format(args);
+		std::string full_message = timestamp + message;
+		auto timestamped_args = util::make_format_argument_pack("%s", full_message.c_str());
+	#if defined(SDLMAME_ANDROID)
+		__android_log_write(ANDROID_LOG_INFO, "MAME", full_message.c_str());
+	#else
+		if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, timestamped_args);
+	#endif
 	}
-
+	else
+	{
+		// No timestamp, use original args through normal path
 #if defined(SDLMAME_ANDROID)
-	__android_log_write(ANDROID_LOG_INFO, "MAME", message.c_str());
+		__android_log_write(ANDROID_LOG_INFO, "MAME", util::string_format(args).c_str());
 #else
-	// Create new format pack with the timestamped message
-	auto timestamped_args = util::make_format_argument_pack("%s", message.c_str());
-	if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, timestamped_args);
+		if (m_ptr >= 0) m_stack[m_ptr]->output_callback(OSD_OUTPUT_CHANNEL_INFO, args);
 #endif
+	}
 }
 
 

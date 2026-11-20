@@ -10,7 +10,8 @@
 
 #include "emu.h"
 
-#include "osd/osdcore.h"
+// FIXME: allow OSD module headers to be included in a less ugly way
+#include "../osd/osdcore.h"
 #include "config.h"
 #include "screen.h"
 #include "crsshair.h"
@@ -105,8 +106,8 @@ running_machine::running_machine(const machine_config &_config, machine_manager 
 
 running_machine::~running_machine()
 {
-	// Clear machine reference
-	osd_set_machine_reference(nullptr);
+	// Clear timestamp callback
+	osd_set_timestamp_callback(nullptr);
 }
 
 
@@ -158,8 +159,18 @@ void running_machine::start()
 	// init the OSD layer
 	m_manager.osd().init(*this);
 
-	// Set machine reference for osd_printf_info timestamps
-	osd_set_machine_reference(this);
+	// Set timestamp callback for osd_printf_info
+	osd_set_timestamp_callback([this]() {
+		attotime elapsed = this->time();
+		double elapsed_sec = elapsed.as_double();
+		uint32_t total_seconds = (uint32_t)elapsed_sec;
+		uint32_t minutes = total_seconds / 60;
+		uint32_t seconds = total_seconds % 60;
+		uint32_t milliseconds = (uint32_t)((elapsed_sec - total_seconds) * 1000.0);
+		char timestamp[24];
+		snprintf(timestamp, sizeof(timestamp), "%02u:%02u.%03u ", minutes, seconds, milliseconds);
+		return std::string(timestamp);
+	});
 
 	// create the video manager and UI manager
 	m_video = std::make_unique<video_manager>(*this);

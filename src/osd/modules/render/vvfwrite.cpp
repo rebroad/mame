@@ -423,18 +423,16 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 		m_stats.x_rescale_count++;
-		osd_printf_warning("%u.%03u Optimized X: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
-			seconds, milliseconds,
-			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x, m_scale_x / old_scale_x);
+		osd_printf_warning("Optimized X: range [%d..%d] → scale %.1f -> %.1f\n",
+			m_min_raw_x, m_max_raw_x, old_scale_x, m_scale_x);
 	}
 
 	if (old_scale_y != m_scale_y)
 	{
 		// Need to fit range into signed coordinate space: -2047 to +2047 (4095 total values)
 		m_stats.y_rescale_count++;
-		osd_printf_warning("%u.%03u Optimized Y: range [%d..%d] → scale %.1f -> %.1f (%.1fx loss)\n",
-			seconds, milliseconds,
-			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y, m_scale_y / old_scale_y);
+		osd_printf_warning("Optimized Y: range [%d..%d] → scale %.1f -> %.1f\n",
+			m_min_raw_y, m_max_raw_y, old_scale_y, m_scale_y);
 	}
 #endif
 
