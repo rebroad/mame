@@ -1587,10 +1587,9 @@ void running_machine::emscripten_main_loop()
 		}
 		}
 	}
-	// other, just pump video updates and sound mapping updates through
+	// otherwise, just pump video updates through
 	else
 		machine->m_video->frame_update();
-
 
 	// cancel the emscripten loop if the system has been told to exit
 	if (machine->exit_pending())
