@@ -1,12 +1,7 @@
 # Remaining rearrangement work
 
-- Phase 35 starts from `master` `b7e108f421178af43c9a1dda5ab7541c0bcc079f`, tree `002fb088b506c531f9687a4831fc6f2036e8df8e`; preserve this exact checkpoint as `20261121-before-rearrange-phase35`.
-- Locked upstream is `upstream/master` at `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` is unavailable. Locked merge-base is `2cf2ef01a396ccc162ce0344717f6a110fe971b3`. Keep this base unchanged.
-- Split `8c3d1a4` by semantic owner. Confirmed likely owners: `de7b4f5` timed-trigger timer; `4eec4ea` UTF-8 conversion; `213c0e4` vector-frame-skip lifecycle; `802ea6a` FFmpeg dimensions; `9bed7cc` FFmpeg bilinear behavior; `643d41b`/`e874cb9` VVF frame/color statistics; `7939617` VVF scaling; `19c9842` VVF coordinate format; `bfb9d94` browser performance warnings. Audit each patch hunk before fixing targets.
-- Separate the `wasm_debug` option and diagnostic gates from the TPS ring-buffer repair. Diagnostic origins are `90f4fb5` startup diagnostics and `4975311` FPS/FUPS reporting; the 32-sample TPS window repair belongs to `ca48a5416`, which introduced the 32-frame calculation over a 30-slot buffer.
-- Split `6ae70b0`: reset the movement/color `m_stats` aggregates with `8470ecf`; reset FPS counters/baseline and `m_last_stats_print` with `643d41b`/`e874cb9`; reset begin/end-frame timing values with `ccb20d7`. Keep each patch owner-scoped.
-- Retarget `b7e108f` to startup-diagnostic owner `90f4fb5` after splitting; validate that it removes only the INIT-phase debug line.
-- Drop or otherwise neutralize `189ab8c`'s obsolete `BUGS.md` deletion while retaining the current bug notes; preserve the existing `BUGS-done.md` audit.
-- Review downstream record-file churn and consolidate `REARRANGE-TODO.md` and `REARRANGE-DONE.md` in separate, focused commits.
-- Verify with Git history/range-diff, clean-tree checks, unchanged locked merge-base, and exact checkpoint tree equality excluding `BUGS.md`, `REARRANGE-DONE.md`, and `REARRANGE-TODO.md`. No tests or builds.
-- Do not rewrite or force-update the existing `origin/master` without explicit authorization; determine a publication path that preserves its current tip.
+- Phase 36 starts after the Phase 35 records are committed. Recheck upstream refs and lock the merge-base again before creating `20261121-before-rearrange-phase36` at the exact clean starting commit.
+- Autosquash the audited fixups into their intended downstream owners using the locked merge-base, then inspect any conflict or empty-commit decisions consciously.
+- Consolidate related phase records in focused commits; audit same-file churn across `REARRANGE-TODO.md`, `REARRANGE-DONE.md`, `BUGS.md`, and `BUGS-done.md`.
+- Verify fixed merge-base, clean tree, exact source-tree equality with the Phase 36 checkpoint excluding `BUGS.md`, `REARRANGE-DONE.md`, and `REARRANGE-TODO.md`, and no remaining `fixup!`, `squash!`, or generic `fixup` subjects after the locked base. Do not run tests or builds.
+- Determine how to publish without force-updating the diverged existing `origin/master`.
