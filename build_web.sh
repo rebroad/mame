@@ -1065,12 +1065,42 @@ if $START_SERVER; then
         USED_PORT="$final_port"
 
         # Launch browser with optimized arguments for MAME WebAssembly
-        if command -v chromium >/dev/null 2>&1; then
-            chromium  "http://localhost:$used_port" >/dev/null 2>&1 &
-        elif command -v chromium-browser >/dev/null 2>&1; then
-            chromium-browser "http://localhost:$used_port" >/dev/null 2>&1 &
-        elif command -v xdg-open >/dev/null 2>&1; then
-            xdg-open "http://localhost:$used_port" >/dev/null 2>&1 || true
+        echo "🎮 Launching MAME Web with optimized Chrome settings..."
+
+        # Create a temporary profile to avoid conflicts with existing Chrome
+        TEMP_PROFILE_DIR="/tmp/mame_web_profile_$$"
+        mkdir -p "$TEMP_PROFILE_DIR"
+        echo "Using temporary profile: $TEMP_PROFILE_DIR"
+
+        found_chrome=""
+        for chrome_cmd in chromium chromium-browser; do
+            if command -v "$chrome_cmd" >/dev/null 2>&1; then
+                nohup "$chrome_cmd" \
+                  --user-data-dir="$TEMP_PROFILE_DIR" \
+                  --no-first-run \
+                  "http://localhost:$used_port" \
+                  >/dev/null 2>&1 &
+                CHROME_PID=$!
+                echo "Chrome PID: $CHROME_PID"
+                echo "Opening: http://localhost:$used_port"
+                found_chrome=1
+                break
+            fi
+        done
+
+        if [[ -z "$found_chrome" ]]; then
+            if command -v xdg-open >/dev/null 2>&1; then
+                xdg-open "http://localhost:$used_port" >/dev/null 2>&1 || true
+            fi
+        fi
+
+        # Clean up profile when Chrome exits (if we launched it)
+        if [[ -n "$CHROME_PID" ]]; then
+            {
+                wait $CHROME_PID 2>/dev/null || true
+                rm -rf "$TEMP_PROFILE_DIR"
+                echo "🧹 Cleaned up temporary profile"
+            } &
         fi
     }
     ensure_server "$SERVER_PORT"
