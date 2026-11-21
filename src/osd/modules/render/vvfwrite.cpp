@@ -318,7 +318,7 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 #if VVF_STATS
 	// Classify color for stats and emoji (only for draws, not moves)
-	const char* color_emoji = "🖤";  // Black heart for moves
+	const char* color_emoji = "⚫";  // Black circle for moves
 	if (intensity > 0)
 	{
 		uint8_t r = color.r();
@@ -333,42 +333,42 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		if (r >= max_rgb && g < min_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_RED]++;
-			color_emoji = "❤️";  // Red heart
+			color_emoji = "🔴";  // Red circle
 		}
 		else if (r < min_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_GREEN]++;
-			color_emoji = "💚";  // Green heart
+			color_emoji = "🟢";  // Green circle
 		}
 		else if (r < min_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_BLUE]++;
-			color_emoji = "💙";  // Blue heart
+			color_emoji = "🔵";  // Blue circle
 		}
 		else if (r >= max_rgb && g >= max_rgb && b < min_rgb)
 		{
 			m_stats.draws_per_color[COLOR_YELLOW]++;
-			color_emoji = "💛";  // Yellow heart
+			color_emoji = "🟡";  // Yellow circle
 		}
 		else if (r < min_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_CYAN]++;
-			color_emoji = "💎";  // Cyan: 💎diamond 🧊ice 💧droplet 🐬dolphin 🦋butterfly
+			color_emoji = "🩵";  // Light blue heart (Unicode 15.0)
 		}
 		else if (r >= max_rgb && g < min_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_MAGENTA]++;
-			color_emoji = "💜";  // Purple heart for magenta
+			color_emoji = "🟣";  // Purple circle for magenta
 		}
 		else if (r >= max_rgb && g >= max_rgb && b >= max_rgb)
 		{
 			m_stats.draws_per_color[COLOR_WHITE]++;
-			color_emoji = "🤍";  // White heart
+			color_emoji = "⚪";  // White circle
 		}
 		else
 		{
 			m_stats.draws_per_color[COLOR_OTHER]++;
-			color_emoji = "🌈";  // Mixed: 🌈rainbow 🎨palette 🦜parrot 🦚peacock 🎪circus
+			color_emoji = "🌈";  // Mixed: rainbow (no better circle option)
 		}
 	}
 
@@ -1173,7 +1173,7 @@ void vvf_write::print_color_stats(const uint32_t baseline[COLOR_COUNT]) const
 	if (total_draws == 0)
 		return;
 
-	const char *color_names[COLOR_COUNT] = {"❤️", "💚", "💙", "💛", "💎", "💜", "🤍", "🌈"};
+	const char *color_names[COLOR_COUNT] = {"🔴", "🟢", "🔵", "🟡", "💎", "🟣", "⚪", "🌈"};
 
 	// Create array of indices and sort by count (descending)
 	struct color_sort {
