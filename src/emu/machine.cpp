@@ -1421,12 +1421,12 @@ void running_machine::emscripten_main_loop()
 		static double fps_4 = 0.0, fps_8 = 0.0, fps_16 = 0.0;
 
 		// Track timestamps of actual scheduler->timeslice() calls for FUPS calculation
-		static double timeslice_timestamps[30] = {0};
+		static double timeslice_timestamps[32] = {0};
 		static int timeslice_timestamps_index = 0;
 		static int timeslice_timestamps_collected = 0;
 
 		// Real-time TPS values (calculated every frame)
-		static double tps_4 = 0.0, tps_8 = 0.0, tps_16 = 0.0;
+		static double tps_4 = 0.0, tps_8 = 0.0, tps_16 = 0.0, tps_32 = 0.0;
 
 		// Store timestamp for this main loop frame
 		frame_timestamps[frame_timestamps_index] = current_time;
@@ -1438,8 +1438,8 @@ void running_machine::emscripten_main_loop()
 		// Store timestamps for timeslice calls (track actual emulation advancement)
 		for (int pass = 0; pass < emulation_passes; pass++) {
 			timeslice_timestamps[timeslice_timestamps_index] = current_time;
-			timeslice_timestamps_index = (timeslice_timestamps_index + 1) % 30;
-			if (timeslice_timestamps_collected < 30) {
+			timeslice_timestamps_index = (timeslice_timestamps_index + 1) % 32;
+			if (timeslice_timestamps_collected < 32) {
 				timeslice_timestamps_collected++;
 			}
 		}
@@ -1453,13 +1453,15 @@ void running_machine::emscripten_main_loop()
 				fps_4 = 3.0 * 1000.0 / time_span;
 			}
 		}
-		// 4-frame TPS
-		if (timeslice_timestamps_collected >= 4) {
-			int update_idx4 = (timeslice_timestamps_index - 4 + 30) % 30;
-			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx4];
+		// 4-frame TPS (only meaningful when running <= 2x emulation)
+		if (emulation_passes <= 2 && timeslice_timestamps_collected >= 4) {
+			int update_idx4 = (timeslice_timestamps_index - 4 + 32) % 32;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 32) % 32] - timeslice_timestamps[update_idx4];
 			if (update_time_span > 0) {
 				tps_4 = 3.0 * 1000.0 / update_time_span;
 			}
+		} else {
+			tps_4 = 0.0; // Not meaningful at high emulation rates
 		}
 
 		// 8-frame FPS
@@ -1472,8 +1474,8 @@ void running_machine::emscripten_main_loop()
 		}
 		// 8-frame TPS
 		if (timeslice_timestamps_collected >= 8) {
-			int update_idx8 = (timeslice_timestamps_index - 8 + 30) % 30;
-			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx8];
+			int update_idx8 = (timeslice_timestamps_index - 8 + 32) % 32;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 32) % 32] - timeslice_timestamps[update_idx8];
 			if (update_time_span > 0) {
 				tps_8 = 7.0 * 1000.0 / update_time_span;
 			}
@@ -1489,10 +1491,19 @@ void running_machine::emscripten_main_loop()
 		}
 		// 16-frame TPS
 		if (timeslice_timestamps_collected >= 16) {
-			int update_idx16 = (timeslice_timestamps_index - 16 + 30) % 30;
-			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 30) % 30] - timeslice_timestamps[update_idx16];
+			int update_idx16 = (timeslice_timestamps_index - 16 + 32) % 32;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 32) % 32] - timeslice_timestamps[update_idx16];
 			if (update_time_span > 0) {
 				tps_16 = 15.0 * 1000.0 / update_time_span;
+			}
+		}
+
+		// 32-frame TPS (only meaningful when running > 2x emulation)
+		if (timeslice_timestamps_collected >= 32) {
+			int update_idx32 = (timeslice_timestamps_index - 32 + 32) % 32;
+			double update_time_span = timeslice_timestamps[(timeslice_timestamps_index - 1 + 32) % 32] - timeslice_timestamps[update_idx32];
+			if (update_time_span > 0) {
+				tps_32 = 31.0 * 1000.0 / update_time_span;
 			}
 		}
 
@@ -1510,9 +1521,11 @@ void running_machine::emscripten_main_loop()
 			// Get game speed from video manager
 			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
-			// Use the real-time FPS and TPS values calculated every frame
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
-				fmod(current_time, 100000.0), fps_4, fps_8, fps_16, tps_4, tps_8, tps_16, game_speed_percent, count_1x, count_2x, count_3x, count_4x);
+			// One printf to rule them all! 🧙‍♂️
+			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %s/%.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
+				fmod(current_time, 100000.0), fps_4, fps_8, fps_16,
+				(tps_4 > 0.0 ? std::to_string(tps_4) : "?"), tps_8, tps_16, tps_32,
+				game_speed_percent, count_1x, count_2x, count_3x, count_4x);
 
 			// Reset counters for next period
 			fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
