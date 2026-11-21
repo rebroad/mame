@@ -22,6 +22,12 @@
 - The phase-35 rebase preserved locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`. `git diff --quiet 20261121-before-rearrange-phase35 master -- . ':(exclude)BUGS.md' ':(exclude)REARRANGE-DONE.md' ':(exclude)REARRANGE-TODO.md'` returned 0. Worktree was clean. The owner fixups remain unsquashed for Phase 36.
 - Phase 36 will start from the clean, recorded result and autosquash the verified fixups.
 
+## History phase 36 starting point
+
+- Clean `master` start: `6b775eaa3f8ef0aa8f464e9eee605584a6a1d30d`, tree `aacc8de54aca01ca3c28efe66d03cae3fce14c64`; checkpoint `20261121-before-rearrange-phase36` points to this exact commit/tree.
+- Rechecked upstream refs before the operation: `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`, `upstream/main` unavailable. Locked merge-base remains `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
+- The verified owner fixups from phase 35 are present in the downstream range and remain to be autosquashed.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
