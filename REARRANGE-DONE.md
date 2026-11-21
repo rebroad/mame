@@ -7,6 +7,13 @@
 - The source tree matches the existing `20261121-before-rearrange` checkpoint. Current downstream range is 312 commits.
 - New post-completion history contains a broad mixed bug-resolution commit, two further fixups, and a `BUGS.md` deletion. Phase 35 will audit these without running tests/builds or making source-code changes.
 
+## History phase 35 ownership findings
+
+- `git log -S` and per-path history map timed-trigger timer ownership to `de7b4f554`, UTF-8 conversion behavior to `4eec4eaed`, vector frame-skip state to `213c0e48f`, and browser warning reappearance to `bfb9d94e2`.
+- FFmpeg configured output dimensions belong with `802ea6a29` (AVI-write scaling); the bilinear override belongs with `9bed7cc5f` (video recording bilinear).
+- VVF end-frame and color baselines have separate owners (`643d41b11`, `e874cb980`); degenerate-range scaling belongs with `7939617a5`; the VVF 14-bit format comment belongs with `19c984255`.
+- Startup diagnostic gating traces to `90f4fb5aae0`; the comprehensive FPS/FUPS output traces to `497531150ba`. The 30-to-32 sample buffer correction still needs exact owner validation before retargeting.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
