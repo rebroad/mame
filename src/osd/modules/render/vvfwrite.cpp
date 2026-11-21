@@ -53,7 +53,11 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_width(width)
 	, m_height(height)
 	, m_frame_rate(60000)  // Default 60 Hz
+	, m_end_frame_count(0)
 	, m_frame_count(0)
+	, m_last_frame_count(0)
+	, m_last_end_frame_count(0)
+	, m_last_second_baseline{0}
 	, m_start_time(attotime::zero)
 	, m_center_x(0), m_center_y(0)
 	, m_range_x(0), m_range_y(0)
@@ -462,40 +466,46 @@ void vvf_write::end_frame()
 	if (!m_recording)
 		return;
 
-	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
-	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
-	{
-		// Calculate instantaneous FPS for this 1-second interval
-		static uint32_t last_frame_count = 0;
-		static uint32_t last_second_baseline[COLOR_COUNT] = {0};
-		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
-		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
+	attotime current_time = m_machine.time();
+	attotime elapsed = current_time - m_start_time;
+	double elapsed_sec = elapsed.as_double();
 
-		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB | ",
+	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
+	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 30.0)
+	{
+		uint32_t frames_this_second = m_frame_count - m_last_frame_count;
+		uint32_t end_frames_this_second = m_end_frame_count - m_last_end_frame_count;
+		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
+		double end_fps = end_frames_this_second / (current_time - m_last_stats_print).as_double();
+
+		osd_printf_info("%.1fs VVF: %.2f FPS | %u frames total, %.2f KB | ",
 			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
 
-		// Print color stats for this second (delta from last second)
-		print_color_stats(last_second_baseline);
-		osd_printf_info("\n");
+		if (m_frame_count > 0) {
+			// Print color stats for this second (delta from last second)
+			print_color_stats(m_last_second_baseline);
+			osd_printf_info("\n");
 
-		// Save baseline for next second
-		for (int i = 0; i < COLOR_COUNT; i++)
-		{
-			last_second_baseline[i] = m_stats.draws_per_color[i];
+			// Save baseline for next second
+			for (int i = 0; i < COLOR_COUNT; i++)
+			{
+				m_last_second_baseline[i] = m_stats.draws_per_color[i];
+			}
+
+			m_last_frame_count = m_frame_count;
+		} else {
+			osd_printf_info("No frames started\n");
 		}
-
-		last_frame_count = m_frame_count + 1;
-		m_last_stats_print = current_time;
+		m_last_end_frame_count = m_end_frame_count;
+		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
+
+	m_end_frame_count++;
 
 	// Skip frames where begin_frame() was never called
 	// (happens during initialization before vector rendering starts)
 	if (!m_frame_started)
 		return;
-
-	attotime current_time = m_machine.time();
-	attotime elapsed = current_time - m_start_time;
-	double elapsed_sec = elapsed.as_double();
 
 #if VVF_STATS
 	if (m_stats.write_line_count < 50 || m_frame_count < 10)
