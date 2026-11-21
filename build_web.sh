@@ -80,6 +80,7 @@ while [[ $# -gt 0 ]]; do
         -autostart) AUTOSTART=true; shift;;
         -workers) ENABLE_WORKERS=true; shift;;
         -wipe) DO_WIPE=true; shift;;
+        -x) set -x; shift;;
         -h|--help) print_usage; exit 0;;
         *) echo "Unknown option: $1"; print_usage; exit 1;;
     esac
