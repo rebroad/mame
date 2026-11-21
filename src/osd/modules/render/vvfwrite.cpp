@@ -164,18 +164,21 @@ void vvf_write::record(std::string_view filename)
 	m_recording = true;
 	m_frame_count = 0;
 	m_end_frame_count = 0;
+	m_stats = {};
+	m_stats.min_draw_distance = std::numeric_limits<double>::max();
+	m_stats.min_move_distance = std::numeric_limits<double>::max();
 	m_last_frame_count = 0;
 	m_last_end_frame_count = 0;
 	for (uint32_t &count : m_last_second_baseline)
 		count = 0;
-	m_start_time = m_machine.time();
-	m_last_stats_print = m_start_time;
 	m_last_end_frame_time = attotime::zero;
 	m_min_end_frame_duration = std::numeric_limits<double>::max();
 	m_max_end_frame_duration = 0.0;
 	m_last_begin_frame_time = attotime::zero;
 	m_min_frame_duration = std::numeric_limits<double>::max();
 	m_max_frame_duration = 0.0;
+	m_start_time = m_machine.time();
+	m_last_stats_print = m_start_time;
 	m_frame_index.clear();
 	m_audio_buffer.clear();
 
@@ -505,7 +508,6 @@ void vvf_write::end_frame()
 			}
 
 			m_last_frame_count = m_frame_count;
-			last_frame_count = m_frame_count;
 		} else {
 			osd_printf_info("No frames started\n");
 		}
