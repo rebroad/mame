@@ -33,7 +33,7 @@ package-lock.json
 !/tests/
 !/doxygen/
 !/web/
-!/starwars_analysis/
+!/webdist/
 !/.gitattributes
 !/.gitignore
 !/.travis.yml
