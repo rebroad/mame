@@ -156,11 +156,9 @@ void vvf_write::record(std::string_view filename)
 	m_audio_buffer.clear();
 
 #ifdef MAME_FFMPEG
-	// Initialize Opus encoder
-	if (!init_opus_encoder())
-	{
-		osd_printf_warning("VVF: Failed to initialize Opus encoder, audio will not be recorded\n");
-	}
+	// Temporarily disable Opus encoding due to timing issues
+	// TODO: Fix Opus timing issues and re-enable
+	osd_printf_info("VVF: Using PCM audio encoding (Opus disabled due to timing issues)\n");
 #else
 	osd_printf_warning("VVF: Compiled without FFmpeg support, audio will not be recorded\n");
 #endif
@@ -648,6 +646,16 @@ void vvf_write::audio_frame(const s16 *samples, int num_samples)
 #ifdef MAME_FFMPEG
 	if (m_opus_context)
 	{
+		// Add some debugging to understand the timing issue
+		static uint32_t audio_frame_count = 0;
+		audio_frame_count++;
+
+		if (audio_frame_count <= 10) // Log first 10 audio frames
+		{
+			osd_printf_info("VVF: Audio frame %u: %d samples at %d Hz\n",
+				audio_frame_count, num_samples, m_audio_sample_rate);
+		}
+
 		encode_opus_frame(samples, num_samples);
 	}
 	else
@@ -758,7 +766,7 @@ void vvf_write::finalize()
 #ifdef MAME_FFMPEG
 	header.audio_codec = static_cast<uint8_t>(m_opus_context ? vvf_audio_codec::OPUS : vvf_audio_codec::PCM);
 #else
-	header.audio_codec = static_cast<uint8_t>(vvf_audio_codec::PCM);  // Fallback to PCM
+	header.audio_codec = static_cast<uint8_t>(vvf_audio_codec::PCM);  // Using PCM due to Opus timing issues
 #endif
 	header.frame_index_offset = frame_index_offset;
 	header.audio_data_offset = audio_data_offset;
@@ -1076,6 +1084,10 @@ bool vvf_write::init_opus_encoder()
 	m_opus_context->sample_fmt = AV_SAMPLE_FMT_FLT; // Opus uses float samples
 	m_opus_context->bit_rate = 64000; // 64 kbps - good quality for game audio
 
+	// Set timing parameters to fix "backward in time" errors
+	m_opus_context->time_base = AVRational{1, static_cast<int>(m_audio_sample_rate)};
+	m_opus_context->pkt_timebase = AVRational{1, static_cast<int>(m_audio_sample_rate)};
+
 	// Open encoder
 	if (avcodec_open2(m_opus_context, codec, nullptr) < 0)
 	{
@@ -1180,7 +1192,10 @@ void vvf_write::encode_opus_frame(const s16 *samples, int num_samples)
 			return;
 		}
 
-		m_opus_frame->pts = m_opus_context->frame_num;
+		// Set PTS to fix timing issues - use frame number * frame size
+		static int64_t pts_counter = 0;
+		m_opus_frame->pts = pts_counter;
+		pts_counter += m_opus_frame_size;
 
 		// Send frame to encoder
 		if (avcodec_send_frame(m_opus_context, m_opus_frame) < 0)
