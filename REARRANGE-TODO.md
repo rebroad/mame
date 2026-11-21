@@ -5,4 +5,4 @@
 - Continue the final owner and record-file churn audit in focused phases; keep conflict-repair commits explicit where folding them would repeat verified conflicts.
 - Consolidate related phase records in focused commits; audit same-file churn across `REARRANGE-TODO.md`, `REARRANGE-DONE.md`, `BUGS.md`, and `BUGS-done.md`.
 - Recheck fixed merge-base, clean tree, source-tree equality with the Phase 38 checkpoint excluding `BUGS.md`, `REARRANGE-DONE.md`, and `REARRANGE-TODO.md`, and absence of fixup/squash subjects after the locked base. Do not run tests or builds.
-- Publish without force-updating the diverged existing `origin/master`; use a new remote branch if the configured remote accepts it.
+- Final audit passed: clean worktree; Phase 38 source comparison exit 0; locked merge-base unchanged; no fixup/squash subjects remain in 334 downstream commits. Remote `origin/master` is `b7e108f421178af43c9a1dda5ab7541c0bcc079f`; publish on the available new branch `codex/mame-history-rearrangement-20261122` without force-updating `master`.
