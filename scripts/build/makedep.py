@@ -794,7 +794,58 @@ def collect_lua_directives(options):
     return result
 
 
-def scan_source_dependencies(root, sources):
+def build_device_map(root):
+    """Build a map of device class names to their source files"""
+    device_map = {}
+
+    # Scan all device source files for DEFINE_DEVICE_TYPE
+    devices_dir = os.path.join(root, 'src', 'devices')
+    if not os.path.isdir(devices_dir):
+        return device_map
+
+    import re
+    device_type_re = re.compile(r'DEFINE_DEVICE_TYPE\s*\(\s*\w+\s*,\s*(\w+)\s*,')
+
+    for dirpath, dirnames, filenames in os.walk(devices_dir):
+        for filename in filenames:
+            if filename.endswith('.cpp'):
+                filepath = os.path.join(dirpath, filename)
+                try:
+                    with io.open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read(50000)  # Read first 50KB
+                        for match in device_type_re.finditer(content):
+                            device_class = match.group(1)
+                            # Store relative path from root
+                            rel_path = os.path.relpath(filepath, root).replace(os.sep, '/')
+                            device_map[device_class] = rel_path
+                except:
+                    pass
+
+    return device_map
+
+def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
+    """
+    Scan source dependencies with optional smart mode.
+
+    smart=True: Only follow includes to limited depth, detect device usage
+    smart=False: Original behavior (everything transitively)
+    depth_limit: How many levels of #include to follow in smart mode
+    """
+    # Check if SMART_DEPS environment variable is set
+    if os.getenv('SMART_DEPS') == '0':
+        smart = False
+    elif os.getenv('SMART_DEPS') == '1':
+        smart = True
+
+    if not smart:
+        # Fall back to original recursive behavior
+        depth_limit = 999
+    else:
+        # Build device map for smart mode
+        sys.stderr.write("Building device map for smart dependency resolution...\n")
+        device_map = build_device_map(root)
+        sys.stderr.write("  Found %d device types\n" % len(device_map))
+
     def locate_include(path):
         split = [ ]
         forward = 0
@@ -834,6 +885,54 @@ def scan_source_dependencies(root, sources):
                 remaining.append((path, depth))
                 seen.add(path)
 
+        # SMART MODE: Also include disassembler for CPU devices
+        is_cpu_device = len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu'
+        if smart and is_cpu_device:
+            print("  [DEBUG] Checking for disassembler for CPU: %s (basename=%s)" % (pathbase, basename), file=sys.stderr)
+
+            # Method 1: Check for common disassembler naming patterns based on basename
+            for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                dasm_cpp = pathbase + basename + suffix + '.cpp'
+                dasm_h = pathbase + basename + suffix + '.h'
+                dasm_file = os.path.join(dirname, basename + suffix + '.cpp')
+
+                if (dasm_cpp not in seen) and os.path.isfile(dasm_file):
+                    # Add disassembler source - don't count toward depth limit
+                    remaining.append((dasm_cpp, 0))  # depth=0 so it's always included
+                    seen.add(dasm_cpp)
+                    print("  ✓ Found CPU disassembler: %s" % dasm_cpp, file=sys.stderr)
+
+                    # Also add the header if it exists
+                    if (dasm_h not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.h')):
+                        seen.add(dasm_h)
+
+            # Method 2: Scan directory for ANY file containing 'dasm' or ending in 'd.cpp'
+            if os.path.isdir(dirname):
+                for filename in os.listdir(dirname):
+                    if filename.endswith('.cpp') and ('dasm' in filename or filename.endswith('d.cpp')):
+                        dasm_path = pathbase + filename
+                        if dasm_path not in seen:
+                            remaining.append((dasm_path, 0))
+                            seen.add(dasm_path)
+                            print("  ✓ Found CPU disassembler (scan): %s" % dasm_path, file=sys.stderr)
+
+                            # Also add the header
+                            h_filename = filename[:-4] + '.h'
+                            h_path = pathbase + h_filename
+                            if (h_path not in seen) and os.path.isfile(os.path.join(dirname, h_filename)):
+                                seen.add(h_path)
+
+        # SMART MODE: Also include format files for imagedev
+        if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'imagedev':
+            # Check for formats/*.cpp in lib/formats
+            formats_dir = os.path.join(root, 'src', 'lib', 'formats')
+            if os.path.isdir(formats_dir):
+                # Add all.cpp which includes all formats
+                formats_all = 'src/lib/formats/all.cpp'
+                if formats_all not in seen:
+                    seen.add(formats_all)
+                    remaining.append((formats_all, depth))
+
     def line_hook(text):
         text = text.lstrip()
         if text.startswith('#'):
@@ -847,15 +946,25 @@ def scan_source_dependencies(root, sources):
                         if components:
                             path = '/'.join(components)
                             if path not in seen:
-                                remaining.append((path, depth))
                                 seen.add(path)
                                 base, ext = os.path.splitext(components[-1])
+
+                                # ALWAYS call test_siblings for headers to find disassemblers/siblings
                                 if ext.lower().startswith('.h'):
-                                    components = components[:-1]
-                                    test_siblings(components, base, depth)
-                                    if components[:2] == ('src', 'mame'):
+                                    components_dir = components[:-1]
+                                    test_siblings(components_dir, base, depth)
+                                    if components_dir[:2] == ('src', 'mame'):
                                         for aspect in ('_a', '_v', '_m'):
-                                            test_siblings(components, base + aspect, depth)
+                                            test_siblings(components_dir, base + aspect, depth)
+
+                                # SMART MODE: Check depth limit only
+                                # Device-specific filtering was too aggressive
+                                if smart and depth > depth_limit:
+                                    # Don't follow this include - too deep
+                                    pass
+                                else:
+                                    # Within depth limit - include it
+                                    remaining.append((path, depth))
 
     handler = CppParser.Handler()
     handler.line = line_hook
@@ -863,6 +972,36 @@ def scan_source_dependencies(root, sources):
     seen = set('/'.join(x for x in split_path(source) if x) for source in sources)
     remaining = list([(x, 0) for x in seen])
     default_roots = ((('src', 'devices'), 0), (('src', 'mame', 'shared'), 0), (('src', 'lib'), 0))
+
+    # SMART MODE: For each initial source file, check if it's a CPU and add disassembler
+    if smart:
+        for source in list(seen):
+            components = source.split('/')
+            if len(components) >= 4 and components[1] == 'devices' and components[2] == 'cpu':
+                # This is a CPU file - add its disassembler
+                cpu_dir = '/'.join(components[:-1])
+                base_name = components[-1].rsplit('.', 1)[0]  # Remove extension
+                cpu_path_obj = os.path.join(root, *components[:-1])
+
+                # Try common disassembler patterns: {name}d, {name}dasm, {name}dis
+                for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                    for ext in ('.cpp', '.h', '.ipp'):
+                        dasm_file = base_name + suffix + ext
+                        dasm_path = cpu_dir + '/' + dasm_file
+                        if dasm_path not in seen and os.path.isfile(os.path.join(cpu_path_obj, dasm_file)):
+                            seen.add(dasm_path)
+                            if ext == '.cpp':
+                                remaining.append((dasm_path, 0))
+                                sys.stderr.write('  Found disassembler: %s\n' % dasm_path)
+
+        sys.stderr.write('Using SMART dependency resolution (depth_limit=%d)\n' % (depth_limit, ))
+
+    # Device usage pattern (for smart mode)
+    if smart:
+        import re
+        # Match device_finder<TYPE> or required_device<TYPE> or optional_device<TYPE>
+        device_finder_re = re.compile(r'(?:required_device|optional_device|device_finder)\s*<\s*(\w+)\s*>')
+
     while remaining:
         source, depth = remaining.pop()
         components = tuple(source.split('/'))
@@ -872,15 +1011,41 @@ def scan_source_dependencies(root, sources):
         except IOError:
             sys.stderr.write('Unable to open source file "%s"\n' % (source, ))
             sys.exit(1)
+
+        file_content = None
         try:
             with f:
-                parser.parse(f)
+                file_content = f.read()
+                # Scan for device usage in smart mode
+                if smart and file_content:
+                    for match in device_finder_re.finditer(file_content):
+                        device_class = match.group(1)
+                        if device_class in device_map:
+                            device_file = device_map[device_class]
+                            if device_file not in seen:
+                                seen.add(device_file)
+                                remaining.append((device_file, 0))  # Add at depth 0
+                                sys.stderr.write('  + Device: %s -> %s (added to build)\n' % (device_class, device_file))
+                            else:
+                                sys.stderr.write('  = Device: %s already in build\n' % device_class)
         except IOError:
             sys.stderr.write('Error reading source file "%s"\n' % (source, ))
             sys.exit(1)
         except Exception as e:
-            sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
-            sys.exit(1)
+            sys.stderr.write('Error scanning source file "%s": %s\n' % (source, e))
+
+        # Now parse for includes
+        if file_content:
+            try:
+                import io as io_module
+                parser.parse(io_module.StringIO(file_content))
+            except Exception as e:
+                sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
+                sys.exit(1)
+
+    if smart:
+        sys.stderr.write('Smart scan found %d files (vs ~thousands with full transitive scan)\n' % (len(seen), ))
+
     return seen
 
 
