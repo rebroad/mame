@@ -33,6 +33,11 @@
 - The first autosquash attempt reached the VVF aggregate reset fixup before the `record()` method existed and conflicted. It was aborted; the branch returned cleanly to `00a89542a6343cbeb59e4c334da322f2c3028eae`, and the source tree still matches checkpoint `20261121-before-rearrange-phase36` under the three record-file exclusions.
 - The reset fixup is retargeted to `5578058c7e5` (`VVF!`), the commit that introduces `record()`. A retry requires a new checkpoint and fresh upstream/base verification.
 
+## History phase 37 starting point
+
+- Started clean at `9154ab241e57aabcfebd26f0f562469c3e359b5b`, tree `1cc1dbea62d7a99e16b94b791ec07f6c56e14f4e`. Upstream refs were rechecked: `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` unavailable; locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
+- The Phase 36 attempt was aborted after a VVF session-reset fixup conflicted before `record()` existed. Its owner is corrected to `5578058c7e5`, and a fresh autosquash attempt is pending.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
