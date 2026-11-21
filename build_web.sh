@@ -409,7 +409,8 @@ if $DO_BUILD; then
     # Add size-optimization defaults for release builds
     if $BUILD_DEBUG; then
         BUILD_LDFLAGS+=" -s ASSERTIONS=2 -s DEMANGLE_SUPPORT=1 -s NO_DISABLE_EXCEPTION_CATCHING=1"
-        export EMCC_DEBUG=1
+        # Keep EMCC_DEBUG unset to avoid emscripten spam, but enable profiler
+        unset EMCC_DEBUG
         BUILD_LDFLAGS+=" -v"
     else
         export EMCC_CFLAGS="${EMCC_CFLAGS:-} -Oz"
@@ -424,7 +425,8 @@ if $DO_BUILD; then
     fi
     # Enable profiler debug output (useful progress without compile noise)
     if $PROFILER_DEBUG; then
-        export EMCC_DEBUG=1
+        # Keep EMCC_DEBUG unset to avoid emscripten spam, profiler will still work
+        unset EMCC_DEBUG
         BUILD_LDFLAGS+=" -v"
     fi
     # Default threads to CPU count if not specified
