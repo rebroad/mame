@@ -339,13 +339,6 @@ int running_machine::run(bool quiet)
 		// move to the init phase
 		m_current_phase = machine_phase::INIT;
 
-		// DEBUG: Add a line to error.log when machine starts INIT phase
-		if (options().wasm_debug() && m_logfile != nullptr)
-		{
-			m_logfile->puts("DEBUG: Machine started INIT phase\n");
-			m_logfile->flush();
-		}
-
 		// if we have a logfile, set up the callback
 		if (options().log() && !quiet)
 		{
@@ -353,10 +346,11 @@ int running_machine::run(bool quiet)
 			std::error_condition const filerr = m_logfile->open("error.log");
 			if (filerr)
 				throw emu_fatalerror("running_machine::run: unable to open error.log file");
-
-			// DEBUG: Add a test line to error.log as soon as it's created
-			m_logfile->puts("DEBUG: error.log created successfully\n");
-			m_logfile->flush();
+			if (options().wasm_debug())
+			{
+				m_logfile->puts("DEBUG: error.log created successfully\n");
+				m_logfile->flush();
+			}
 
 			using namespace std::placeholders;
 			add_logerror_callback(std::bind(&running_machine::logfile_callback, this, _1));
@@ -413,7 +407,6 @@ int running_machine::run(bool quiet)
 		// run the CPUs until a reset or exit
 		while ((!m_hard_reset_pending && !m_exit_pending) || m_saveload_schedule != saveload_schedule::NONE)
 		{
-			// DEBUG: Add a line to error.log when main execution loop starts
 			if (options().wasm_debug() && m_logfile != nullptr)
 			{
 				m_logfile->puts("DEBUG: Main execution loop started\n");
@@ -1057,8 +1050,6 @@ void running_machine::soft_reset(s32 param)
 
 	// temporarily in the reset phase
 	m_current_phase = machine_phase::RESET;
-
-	// DEBUG: Add a line to error.log when machine starts RESET phase
 	if (options().wasm_debug() && m_logfile != nullptr)
 	{
 		m_logfile->puts("DEBUG: Machine started RESET phase\n");
@@ -1070,13 +1061,12 @@ void running_machine::soft_reset(s32 param)
 
 	// now we're running
 	m_current_phase = machine_phase::RUNNING;
-
-	// DEBUG: Add a line to error.log when machine reaches RUNNING phase
 	if (options().wasm_debug() && m_logfile != nullptr)
 	{
 		m_logfile->puts("DEBUG: Machine reached RUNNING phase\n");
 		m_logfile->flush();
 	}
+
 }
 
 
@@ -1087,7 +1077,7 @@ void running_machine::soft_reset(s32 param)
 
 void running_machine::logfile_callback(const char *buffer)
 {
-	if (options().wasm_debug() && m_logfile != nullptr)
+	if (m_logfile != nullptr)
 	{
 		m_logfile->puts(buffer);
 		m_logfile->flush();
@@ -1579,29 +1569,29 @@ void running_machine::emscripten_main_loop()
 			}
 		}
 
-		static int count_1x = 0, count_2x = 0, count_3x = 0, count_4x = 0;
-		if (emulation_passes == 1) { count_1x++; }
-		else if (emulation_passes == 2) { count_2x++; }
-		else if (emulation_passes == 3) { count_3x++; }
-		else if (emulation_passes == 4) { count_4x++; }
-
 		if (machine->options().wasm_debug())
 		{
-		// Log comprehensive stats every 120 frames
-		fps_log_counter++;
-		if (fps_log_counter >= 120) {
-			// Get game speed from video manager
-			double game_speed_percent = machine->m_video->speed_percent() * 100.0;
+			static int count_1x = 0, count_2x = 0, count_3x = 0, count_4x = 0;
+			if (emulation_passes == 1) { count_1x++; }
+			else if (emulation_passes == 2) { count_2x++; }
+			else if (emulation_passes == 3) { count_3x++; }
+			else if (emulation_passes == 4) { count_4x++; }
 
-			// One printf to rule them all! 🧙‍♂️
-			osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
-				fmod(current_time, 100000.0), fps_4, fps_8, fps_16,
-				(tps_4 > 0.0 ? tps_4: tps_8), (tps_4 > 0.0 ? tps_8 : tps_16), (tps_4 > 0.0 ? tps_16 : tps_32),
-				game_speed_percent, count_1x, count_2x, count_3x, count_4x);
+			// Log comprehensive stats every 120 frames when requested
+			fps_log_counter++;
+			if (fps_log_counter >= 120)
+			{
+				// Get game speed from video manager
+				double game_speed_percent = machine->m_video->speed_percent() * 100.0;
 
-			// Reset counters for next period
-			fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
-		}
+				osd_printf_info("[%.0fms] MAME STATS: %.1f/%.1f/%.1ffps | %.1f/%.1f/%.1ftps | Speed: %.1f%% | 1x:%d 2x:%d 3x:%d 4x:%d\n",
+					fmod(current_time, 100000.0), fps_4, fps_8, fps_16,
+					(tps_4 > 0.0 ? tps_4: tps_8), (tps_4 > 0.0 ? tps_8 : tps_16), (tps_4 > 0.0 ? tps_16 : tps_32),
+					game_speed_percent, count_1x, count_2x, count_3x, count_4x);
+
+				// Reset counters for next period
+				fps_log_counter = 0; count_1x = 0; count_2x = 0; count_3x = 0; count_4x = 0;
+			}
 		}
 	}
 	// otherwise, just pump video updates through
