@@ -14,7 +14,7 @@
 - VVF end-frame and color baselines have separate owners (`643d41b11`, `e874cb980`); degenerate-range scaling belongs with `7939617a5`; the VVF 14-bit format comment belongs with `19c984255`.
 - Startup diagnostic gating traces to `90f4fb5aae0`; the comprehensive FPS/FUPS output traces to `497531150ba`. The 30-to-32 sample buffer correction still needs exact owner validation before retargeting.
 - Inspection of `84b07ed` and `ca48a54` confirms `ca48a54` added `tps_32` while leaving `timeslice_timestamps` at 30 slots; retarget the 32-slot correction there. The `wasm_debug` gate around the comprehensive stats output belongs with `4975311`, while startup/reset log gates belong with `90f4fb5`.
-- The `6ae70b0` follow-up is cross-owner: aggregate movement/color reset and minimum-distance sentinels originate in `8470ecf`; FPS counters and `m_last_stats_print` originate in `643d41b`; the per-second color baseline originates in `e874cb9`; duration timestamps/min-max values originate in `ccb20d7`.
+- The `6ae70b0` follow-up is cross-owner: aggregate movement/color fields and minimum-distance sentinels originate in `8470ecf`; the session-reset behavior is a fixup to `5578058c7e5`, which introduces `record()`; FPS counters and `m_last_stats_print` originate in `643d41b`; the per-second color baseline originates in `e874cb9`; duration timestamps/min-max values originate in `ccb20d7`.
 
 ## History phase 35 completed
 
@@ -27,6 +27,11 @@
 - Clean `master` start: `6b775eaa3f8ef0aa8f464e9eee605584a6a1d30d`, tree `aacc8de54aca01ca3c28efe66d03cae3fce14c64`; checkpoint `20261121-before-rearrange-phase36` points to this exact commit/tree.
 - Rechecked upstream refs before the operation: `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`, `upstream/main` unavailable. Locked merge-base remains `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
 - The verified owner fixups from phase 35 are present in the downstream range and remain to be autosquashed.
+
+## History phase 36 autosquash re-plan
+
+- The first autosquash attempt reached the VVF aggregate reset fixup before the `record()` method existed and conflicted. It was aborted; the branch returned cleanly to `00a89542a6343cbeb59e4c334da322f2c3028eae`, and the source tree still matches checkpoint `20261121-before-rearrange-phase36` under the three record-file exclusions.
+- The reset fixup is retargeted to `5578058c7e5` (`VVF!`), the commit that introduces `record()`. A retry requires a new checkpoint and fresh upstream/base verification.
 
 ## Start state
 
