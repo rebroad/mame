@@ -247,38 +247,45 @@ void video_manager::frame_update(bool from_debugger)
 	// let plugins draw over the UI
 	anything_changed = emulator_info::frame_hook() || anything_changed;
 
-	// Check if this is a vector game frame without new content
+#if 0
+	// Check if this is a vector game frame without new content (if optimization enabled)
 	bool vector_frame_empty = false;
 	bool has_vector_screen = false;
-	for (screen_device &screen : screen_device_enumerator(machine().root_device()))
+
+	if (machine().options().vector_frame_skip())
 	{
-		if (screen.screen_type() == SCREEN_TYPE_VECTOR)
+		for (screen_device &screen : screen_device_enumerator(machine().root_device()))
 		{
-			has_vector_screen = true;
-			break;
+			if (screen.screen_type() == SCREEN_TYPE_VECTOR)
+			{
+				has_vector_screen = true;
+				break;
+			}
+		}
+
+		// For vector games, only consider frame non-empty if begin_vector_frame() was called
+		if (has_vector_screen && !m_vector_frame_started)
+		{
+			vector_frame_empty = true;
+			anything_changed = false;  // Force frame to be considered unchanged
 		}
 	}
 
-	// For vector games, only consider frame non-empty if begin_vector_frame() was called
-	if (has_vector_screen && !m_vector_frame_started)
-	{
-		vector_frame_empty = true;
-		anything_changed = false;  // Force frame to be considered unchanged
-	}
-
-	// Reset vector frame started flag for next frame
-	m_vector_frame_started = false;
+#endif
 
 	// if none of the screens changed and we haven't skipped too many frames in a row,
 	// mark this frame as skipped to prevent throttling; this helps for games that
 	// don't update their screen at the monitor refresh rate
+#if 0
 	// For vector games without new content, skip without limit
 	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0))
-	{
-		if (vector_frame_empty || m_empty_skip_count++ < 3)
-			skipped_it = true;
-	}
+		if (vector_frame_empty || m_empty_skip_count++ < 3) skipped_it = true;
 	if (anything_changed || !vector_frame_empty)
+#else
+	if (!anything_changed && !m_auto_frameskip && (m_frameskip_level == 0) && (m_empty_skip_count++ < 3))
+		skipped_it = true;
+	else
+#endif
 		m_empty_skip_count = 0;
 
 	// if we're throttling, synchronize before rendering
@@ -323,6 +330,10 @@ void video_manager::frame_update(bool from_debugger)
 		if (screen && ((machine().paused() && machine().options().update_in_pause()) || from_debugger || within_instruction_hook))
 			screen->reset_partial_updates();
 	}
+
+	// clear_list() marks whether this frame produced new vector content
+	// during finish_screen_updates(); start the next frame with a clean flag.
+	m_vector_frame_started = false;
 }
 
 
@@ -1643,8 +1654,8 @@ void video_manager::end_vector_frame()
 {
 	// Only process if a vector frame was actually started this VBLANK
 	// This prevents calling end_frame when the game doesn't generate new vectors
-	// Applies to both VVF recording and any future vector frame processing
-	if (!m_vector_frame_started)
+	// Conditional on vector_frame_skip option (enabled by default, recommended for WASM/browser)
+	if (machine().options().vector_frame_skip() && !m_vector_frame_started)
 		return;
 
 	if (m_vvf_writer && m_vvf_writer->recording())
