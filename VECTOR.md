@@ -147,24 +147,41 @@ Originally, MAME would present **every VBLANK** (40 Hz) even when no new vectors
 
 ### Solution
 
-Added `m_vector_frame_started` flag to track when new content is actually generated:
+Added `m_vector_frame_started` flag to track when new content is actually generated, controlled by the **`-vector_frame_skip`** option:
 
 ```cpp
 // In video_manager::frame_update()
-if (has_vector_screen && !m_vector_frame_started)
+if (machine().options().vector_frame_skip())  // Option check
 {
-    vector_frame_empty = true;
-    anything_changed = false;  // Skip presentation
+    if (has_vector_screen && !m_vector_frame_started)
+    {
+        vector_frame_empty = true;
+        anything_changed = false;  // Skip presentation
+    }
 }
 m_vector_frame_started = false;  // Reset for next frame
 ```
 
+### Configuration
+
+**Command line:**
+```bash
+mame starwars -vector_frame_skip 1    # Enable (default, recommended for WASM)
+mame starwars -vector_frame_skip 0    # Disable (legacy behavior)
+```
+
+**INI file (mame.ini):**
+```ini
+vector_frame_skip       1
+```
+
 ### Result
 
-- **Before**: Browser sees 40 FPS (VBLANK rate), 34% are duplicate frames
-- **After**: Browser sees ~27 FPS (actual content rate), 0% duplicates
-- **Game timing**: Still runs at 41 Hz internally (unchanged)
-- **Benefits**: Better browser compatibility, lower resource usage
+- **Enabled (default)**: Browser sees ~27 FPS (actual content rate), 0% duplicates
+- **Disabled**: Browser sees 40 FPS (VBLANK rate), 34% are duplicate frames
+- **Game timing**: Always runs at 41 Hz internally (option doesn't affect game speed)
+- **Benefits**: Better browser compatibility, lower resource usage, better battery life
+- **VVF recording**: Also skips empty frames when enabled (smaller file size)
 
 ---
 
@@ -223,22 +240,64 @@ screen.set_refresh_hz(CLOCK_3KHZ / 72);  // = 41.015625 Hz
 
 ### AVG Command Format
 
-The "command list" is a sequence of 2-byte instructions in memory:
+The "command list" is a sequence of **multi-byte instructions** in memory. Commands are read sequentially by the AVG state machine.
 
-**AVG Command Structure (Star Wars variant):**
-```
-Byte 1 (Low):  [Data bits 0-7]
-Byte 2 (High): [Opcode:5 bits | Data bits 8-12]
+**AVG Instruction Format (Star Wars AVG variant):**
 
-Opcode (5 bits) determines command type:
-  000xx - VCTR (Vector): Draw a line with dx/dy/intensity
-  001xx - HALT: Stop execution, wait for GO
-  010xx - LABS (Load Absolute): Set absolute beam position
-  011xx - JMPL (Jump): Jump to new address in vector memory
-  100xx - SCAL (Scale): Set drawing scale factor
-  110xx - STAT (Color): Set beam color
-  111xx - CNTR (Center): Move beam to center position
+Commands consist of **4 bytes** (2 words) each:
+
 ```
+Word 1 (bytes 0-1):
+  Byte 0: DVY[7:0]   - Y delta low byte
+  Byte 1: [OP:3 bits | dvy12:1 bit | DVY[11:8]:4 bits]
+          bits 7-5: OP (opcode, 3 bits = 8 possible commands)
+          bit 4: dvy12 flag (1=SCAL command, 0=other)
+          bits 3-0: DVY high nibble
+
+Word 2 (bytes 2-3):
+  Byte 2: DVX[7:0]   - X delta low byte
+  Byte 3: [int_latch:4 bits | DVX[11:8]:4 bits OR Intensity:4 bits]
+          bits 7-4: Intensity (for VCTR) or int_latch
+          bits 3-0: DVX high nibble
+```
+
+**Opcode (OP bits 7-5) determines command:**
+```
+OP=0 (000): VCTR - Vector draw (dx, dy, intensity)
+            DVY/DVX = signed 13-bit delta
+            Intensity = 4 bits (0-15)
+            Color set separately by STAT command
+
+OP=1 (001): HALT - Stop execution
+            OP0=1 triggers halt
+            AVG waits for GO register write
+
+OP=2 (010): Not used / reserved
+
+OP=3 (011): JMPL - Jump
+            DVY contains target address
+            OP0=1: Absolute jump
+            OP0=0: Return from stack
+
+OP=4 (100): SCAL - Scale (when dvy12=1)
+            scale = DVY[7:0] (8 bits)
+            bin_scale = DVY[10:8] (3 bits)
+
+OP=5 (101): STAT - Color/Intensity (when dvy12=0)
+            color = DVY[2:0] (3 bits = 8 colors)
+            intensity = DVY[7:4] (4 bits = 16 levels)
+
+OP=6 (110): CNTR - Center beam
+            Resets position to (xcenter, ycenter)
+
+OP=7 (111): Stack operations / other
+```
+
+**The "dvy12" bit** (bit 4) differentiates between:
+- **dvy12=0**: Color/intensity setting (STAT)
+- **dvy12=1**: Scale setting (SCAL)
+
+This is why Star Wars can use 8 colors (3 bits) with 16 intensity levels (4 bits) = 128 color combinations!
 
 **Example execution sequence:**
 ```
@@ -251,27 +310,85 @@ Opcode (5 bits) determines command type:
    - HALT: Stop and set m_sync_halt flag
 5. CPU polls DONE register (0x4600 read) until halted
 6. Repeat from step 1
-
-On real hardware, this loop ran continuously at 1.5 MHz until HALT, keeping phosphor glowing.
 ```
+
+### The HALT Paradox: Why Stop if Phosphor Needs Continuous Tracing?
+
+**Great question!** Here's the real picture:
+
+**What actually happens on real hardware:**
+```
+Time 0.0ms:   CPU writes GO → AVG starts executing from address 0
+Time 0.0-0.5ms: AVG traces through all vectors at 1.5 MHz
+                Draws line, draws line, draws line...
+Time 0.5ms:   AVG encounters HALT command → stops, sets HALT flag
+Time 0.5-1.0ms: Phosphor still glowing (decay time ~15-50ms)
+                CPU sees HALT flag, updates some vector commands
+Time 1.0ms:   CPU writes GO again → AVG restarts from address 0
+Time 1.0-1.5ms: AVG re-traces vectors (now with updates)
+Time 1.5ms:   HALT again
+... repeat 27 times per second ...
+```
+
+**Why HALT is necessary:**
+1. **CPU needs to know when AVG is "done"** - synchronization point
+2. **CPU can update vector RAM** while AVG is halted (avoids tearing)
+3. **Brief halts (~0.5ms) are OK** - phosphor glows for 15-50ms
+4. **AVG restarts quickly** (~37ms between GO writes = 27 Hz)
+
+**The continuous loop:**
+The AVG **does** continuously loop, but with brief pauses:
+```
+Execute→HALT(0.5ms)→Execute→HALT(0.5ms)→Execute→HALT...
+        ↑           ↑           ↑
+        CPU updates vector RAM between HALTs
+```
+
+Each execution takes ~0.5ms, then halts for ~37ms until next GO. During that 37ms, the phosphor is still glowing from the previous trace! By the time it starts to fade significantly (~15-50ms), the AVG has already re-traced it multiple times.
+
+**In summary**: "Continuous at 1.5 MHz" means the state machine runs at 1.5 MHz, but it pauses between command lists, waiting for CPU to signal GO again.
 
 ---
 
-## Debugging Vector GO Writes
+## Debugging AVG Commands
 
-Debug output has been added to track when the game writes to the GO register:
+Debug output has been added to track key AVG operations (first 50 occurrences):
 
+### GO Register Writes
 ```cpp
 // In avgdvg.cpp::go_w()
 logerror("VG GO #%u: data=0x%02X, time_since_last=%.2f ms, nvect=%d, sync_halt=%d, will_clear=%d\n", ...);
 ```
 
-**Output shows:**
-- `data`: Value written (always ignored, typically 0x00)
-- `time_since_last`: Milliseconds since previous GO write
-- `nvect`: Number of vectors in buffer
+**Shows:**
+- `data`: Value written to 0x4600 (always ignored, typically 0x00)
+- `time_since_last`: Milliseconds since previous GO (~37ms for Star Wars)
+- `nvect`: Number of vectors accumulated in buffer
 - `sync_halt`: Whether AVG had halted (1=yes, 0=still running)
-- `will_clear`: Whether MAME will call `clear_list()` (1=yes, 0=no)
+- `will_clear`: Whether MAME will call `clear_list()` (1=yes if halted with >10 vectors)
+
+### HALT Commands
+```cpp
+// In avgdvg.cpp::avg_common_strobe3()
+logerror("AVG HALT #%u: op=0x%X at PC=0x%04X, nvect=%d, xpos=%d, ypos=%d\n", ...);
+```
+
+**Shows:**
+- `op`: Full opcode byte (OP0=1 triggers HALT)
+- `PC`: Program counter location in vector memory
+- `nvect`: Vectors drawn so far
+- `xpos/ypos`: Current beam position
+
+### SCAL Commands
+```cpp
+// In avgdvg.cpp::avg_common_strobe2()
+logerror("AVG SCAL #%u: scale=%d (0x%02X), bin_scale=%d at PC=0x%04X\n", ...);
+```
+
+**Shows:**
+- `scale`: Linear scale factor (0-255)
+- `bin_scale`: Binary scale shift (0-7)
+- `PC`: Where in memory this SCAL command was
 
 **Note**: `clear_list()` only happens if:
 - AVG was halted (`m_sync_halt == true`)
