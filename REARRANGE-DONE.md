@@ -16,6 +16,12 @@
 - Inspection of `84b07ed` and `ca48a54` confirms `ca48a54` added `tps_32` while leaving `timeslice_timestamps` at 30 slots; retarget the 32-slot correction there. The `wasm_debug` gate around the comprehensive stats output belongs with `4975311`, while startup/reset log gates belong with `90f4fb5`.
 - The `6ae70b0` follow-up is cross-owner: aggregate movement/color reset and minimum-distance sentinels originate in `8470ecf`; FPS counters and `m_last_stats_print` originate in `643d41b`; the per-second color baseline originates in `e874cb9`; duration timestamps/min-max values originate in `ccb20d7`.
 
+## History phase 35 completed
+
+- Split mixed bug-resolution commit `8c3d1a4` into scoped owner fixups for timed triggers (`de7b4f5`), UTF-8 conversion (`4eec4ea`), browser performance warnings (`bfb9d94`), vector-frame state (`213c0e4`), TPS sample capacity (`ca48a54`), startup diagnostics (`90f4fb5`), FPS/TPS diagnostics (`568e3d6`), FFmpeg output configuration (`802ea6a`), VVF scaling (`7939617`), VVF format documentation (`19c9842`), and VVF statistics (`643d41b`, `8470ecf`). Retargeted the later diagnostic and VVF follow-ups; dropped the obsolete `BUGS.md` deletion and retained the findings.
+- The phase-35 rebase preserved locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`. `git diff --quiet 20261121-before-rearrange-phase35 master -- . ':(exclude)BUGS.md' ':(exclude)REARRANGE-DONE.md' ':(exclude)REARRANGE-TODO.md'` returned 0. Worktree was clean. The owner fixups remain unsquashed for Phase 36.
+- Phase 36 will start from the clean, recorded result and autosquash the verified fixups.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
