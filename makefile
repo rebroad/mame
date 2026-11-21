@@ -312,12 +312,13 @@ CXXFLAGS += -DMAME_FFMPEG
 export CXXFLAGS
 endif
 
-# Quick driver build - specify DRIVERS="spyhunt bbcb" to build only those
-ifdef DRIVERS
-SUBTARGET := quickbuild
-DRIVER_FLT := $(BUILDDIR)/quickbuild.flt
-$(shell python3 scripts/build/minimal_driver_deps.py $(DRIVERS) > src/mame/quickbuild.flt 2>/dev/null || echo "\"**/*.cpp\"" > src/mame/quickbuild.flt)
+# Smart dependency resolution - limits transitive includes to avoid bloat
+# Set SMART_DEPS=0 to disable (use full transitive dependencies)
+# Set SMART_DEPS=1 to enable (default for filter builds)
+ifndef SMART_DEPS
+SMART_DEPS := 1
 endif
+export SMART_DEPS
 
 ifndef BUILDDIR
 BUILDDIR := build

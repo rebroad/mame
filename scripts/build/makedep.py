@@ -794,7 +794,24 @@ def collect_lua_directives(options):
     return result
 
 
-def scan_source_dependencies(root, sources):
+def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
+    """
+    Scan source dependencies with optional smart mode.
+
+    smart=True: Only follow includes to limited depth, skip device transitive deps
+    smart=False: Original behavior (everything transitively)
+    depth_limit: How many levels of #include to follow in smart mode
+    """
+    # Check if SMART_DEPS environment variable is set
+    if os.getenv('SMART_DEPS') == '0':
+        smart = False
+    elif os.getenv('SMART_DEPS') == '1':
+        smart = True
+
+    if not smart:
+        # Fall back to original recursive behavior
+        depth_limit = 999
+
     def locate_include(path):
         split = [ ]
         forward = 0
@@ -834,6 +851,30 @@ def scan_source_dependencies(root, sources):
                 remaining.append((path, depth))
                 seen.add(path)
 
+        # SMART MODE: Also include disassembler for CPU devices
+        if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'cpu':
+            # Check for common disassembler naming patterns
+            for suffix in ('d', 'dasm', 'dis'):
+                dasm_path = pathbase + basename + suffix + '.cpp'
+                if (dasm_path not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.cpp')):
+                    remaining.append((dasm_path, depth))
+                    seen.add(dasm_path)
+                    # Also add the header
+                    dasm_h = pathbase + basename + suffix + '.h'
+                    if (dasm_h not in seen) and os.path.isfile(os.path.join(dirname, basename + suffix + '.h')):
+                        seen.add(dasm_h)
+
+        # SMART MODE: Also include format files for imagedev
+        if smart and len(relative) >= 3 and relative[1] == 'devices' and relative[2] == 'imagedev':
+            # Check for formats/*.cpp in lib/formats
+            formats_dir = os.path.join(root, 'src', 'lib', 'formats')
+            if os.path.isdir(formats_dir):
+                # Add all.cpp which includes all formats
+                formats_all = 'src/lib/formats/all.cpp'
+                if formats_all not in seen:
+                    seen.add(formats_all)
+                    remaining.append((formats_all, depth))
+
     def line_hook(text):
         text = text.lstrip()
         if text.startswith('#'):
@@ -847,15 +888,35 @@ def scan_source_dependencies(root, sources):
                         if components:
                             path = '/'.join(components)
                             if path not in seen:
-                                remaining.append((path, depth))
-                                seen.add(path)
-                                base, ext = os.path.splitext(components[-1])
-                                if ext.lower().startswith('.h'):
-                                    components = components[:-1]
-                                    test_siblings(components, base, depth)
-                                    if components[:2] == ('src', 'mame'):
-                                        for aspect in ('_a', '_v', '_m'):
-                                            test_siblings(components, base + aspect, depth)
+                                # SMART MODE: Check depth and skip deep device includes
+                                if smart and depth > depth_limit:
+                                    # Don't follow this include - too deep
+                                    pass
+                                elif smart and depth > 0 and len(components) > 2:
+                                    # Skip transitive device dependencies
+                                    if components[1] == 'devices' and depth > 1:
+                                        pass  # Don't follow device→device includes
+                                    else:
+                                        remaining.append((path, depth))
+                                        seen.add(path)
+                                        base, ext = os.path.splitext(components[-1])
+                                        if ext.lower().startswith('.h'):
+                                            components = components[:-1]
+                                            test_siblings(components, base, depth)
+                                            if components[:2] == ('src', 'mame'):
+                                                for aspect in ('_a', '_v', '_m'):
+                                                    test_siblings(components, base + aspect, depth)
+                                else:
+                                    # Original behavior or within limits
+                                    remaining.append((path, depth))
+                                    seen.add(path)
+                                    base, ext = os.path.splitext(components[-1])
+                                    if ext.lower().startswith('.h'):
+                                        components = components[:-1]
+                                        test_siblings(components, base, depth)
+                                        if components[:2] == ('src', 'mame'):
+                                            for aspect in ('_a', '_v', '_m'):
+                                                test_siblings(components, base + aspect, depth)
 
     handler = CppParser.Handler()
     handler.line = line_hook
@@ -863,6 +924,30 @@ def scan_source_dependencies(root, sources):
     seen = set('/'.join(x for x in split_path(source) if x) for source in sources)
     remaining = list([(x, 0) for x in seen])
     default_roots = ((('src', 'devices'), 0), (('src', 'mame', 'shared'), 0), (('src', 'lib'), 0))
+
+    # SMART MODE: For each initial source file, check if it's a CPU and add disassembler
+    if smart:
+        for source in list(seen):
+            components = source.split('/')
+            if len(components) >= 4 and components[1] == 'devices' and components[2] == 'cpu':
+                # This is a CPU file - add its disassembler
+                cpu_dir = '/'.join(components[:-1])
+                base_name = components[-1].rsplit('.', 1)[0]  # Remove extension
+                cpu_path_obj = os.path.join(root, *components[:-1])
+
+                # Try common disassembler patterns: {name}d, {name}dasm, {name}dis
+                for suffix in ('d', 'dasm', 'dis', 'disasm'):
+                    for ext in ('.cpp', '.h', '.ipp'):
+                        dasm_file = base_name + suffix + ext
+                        dasm_path = cpu_dir + '/' + dasm_file
+                        if dasm_path not in seen and os.path.isfile(os.path.join(cpu_path_obj, dasm_file)):
+                            seen.add(dasm_path)
+                            if ext == '.cpp':
+                                remaining.append((dasm_path, 0))
+                                sys.stderr.write('  Found disassembler: %s\n' % dasm_path)
+
+        sys.stderr.write('Using SMART dependency resolution (depth_limit=%d)\n' % (depth_limit, ))
+
     while remaining:
         source, depth = remaining.pop()
         components = tuple(source.split('/'))
@@ -881,6 +966,10 @@ def scan_source_dependencies(root, sources):
         except Exception as e:
             sys.stderr.write('Error parsing source file "%s": %s\n' % (source, e))
             sys.exit(1)
+
+    if smart:
+        sys.stderr.write('Smart scan found %d files (vs ~thousands with full transitive scan)\n' % (len(seen), ))
+
     return seen
 
 
