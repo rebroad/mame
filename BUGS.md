@@ -1,3 +1,6 @@
 # Bugs observed during rearrangement
 
-No outstanding entries.
+- **Delayed triggers could reuse another scheduler's timer.** `device_scheduler::trigger` used a function-static `emu_timer` bound to the first scheduler instance, so later instances could route a timeout to the wrong scheduler. Fixed as a fixup to `de7b4f5` (`src/emu/schedule.cpp`, `src/emu/schedule.h`).
+- **Vector frame state was not reset at runtime.** `m_vector_frame_started` was reset only in disabled code in `video_manager::frame_update`, allowing previous-frame state to affect later vector-frame gating. Fixed as a fixup to `213c0e4` (`src/emu/video.cpp`).
+- **VVF recording statistics leaked across recording sessions.** Function-static counters and color baselines in `vvf_write::end_frame` survived recorder instances and could produce stale deltas. Fixed by moving interval counters into recorder state and resetting per-session statistics; fixups target `643d41b` and `8470ecf` (`src/osd/modules/render/vvfwrite.cpp`, `src/osd/modules/render/vvfwrite.h`).
+- **Degenerate VVF coordinate ranges collapsed vector output.** `vvf_write::line_to` skipped scaling if either coordinate range was zero, discarding the non-constant axis for horizontal or vertical-only streams. Fixed as a fixup to `7939617` (`src/osd/modules/render/vvfwrite.cpp`).
