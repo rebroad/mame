@@ -38,6 +38,12 @@
 - Started clean at `9154ab241e57aabcfebd26f0f562469c3e359b5b`, tree `1cc1dbea62d7a99e16b94b791ec07f6c56e14f4e`. Upstream refs were rechecked: `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` unavailable; locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
 - The Phase 36 attempt was aborted after a VVF session-reset fixup conflicted before `record()` existed. Its owner is corrected to `5578058c7e5`, and a fresh autosquash attempt is pending.
 
+## History phase 37 completed
+
+- Created checkpoint `20261121-before-rearrange-phase37` at the exact recorded start `9154ab241e57aabcfebd26f0f562469c3e359b5b` (tree `1cc1dbea62d7a99e16b94b791ec07f6c56e14f4e`). Rechecked `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` was unavailable; merge-base stayed `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
+- Autosquash replayed 341 entries. Conflicts arose in machine logging/FPS, FFmpeg scaling, and VVF statistics. Verification found replay-only source drift in two files; separate correction commits restored checkpointed behavior and VVF session state. `git diff --quiet 20261121-before-rearrange-phase37 master -- . ':(exclude)BUGS.md' ':(exclude)REARRANGE-DONE.md' ':(exclude)REARRANGE-TODO.md'` returned 0. The worktree was clean and merge-base unchanged.
+- No fixup or squash subjects remain in the locked range. No tests or builds were run. `origin/master` remains diverged; do not force-update it. Final publication remains pending.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
