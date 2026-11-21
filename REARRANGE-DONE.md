@@ -1,5 +1,12 @@
 # Rearrangement audit
 
+## History phase 35 starting point
+
+- Started from clean `master` `b7e108f421178af43c9a1dda5ab7541c0bcc079f`, tree `002fb088b506c531f9687a4831fc6f2036e8df8e`. Created no refs or commits yet; checkpoint creation is pending the source records being written.
+- Rechecked the available upstream refs: `upstream/master` is `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`, `upstream/main` is unavailable, and the locked merge-base is `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
+- The source tree matches the existing `20261121-before-rearrange` checkpoint. Current downstream range is 312 commits.
+- New post-completion history contains a broad mixed bug-resolution commit, two further fixups, and a `BUGS.md` deletion. Phase 35 will audit these without running tests/builds or making source-code changes.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
