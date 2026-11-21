@@ -30,7 +30,6 @@
 static const s32 BIT6_MAX = 31;       // 6-bit signed delta: ±31
 static const s32 BIT10_MAX = 511;     // 10-bit signed delta: ±511
 static const s32 BIT13_MAX = 8191;    // Maximum coordinate value (signed: -8191 to +8191, 16383 values)
-static const s32 BIT14_MAX = 16383;   // 14-bit absolute: 0-16383
 
 #if VVF_STATS
 // Color emoji names (centralized for consistency between inline debug and stats)
@@ -81,7 +80,7 @@ vvf_write::vvf_write(running_machine &machine, s32 width, s32 height)
 	, m_start_time(attotime::zero)
 	, m_center_x(0), m_center_y(0)
 	, m_range_x(0), m_range_y(0)
-	, m_scale_x(1.0), m_scale_y(1.0)  // Start with 1, will optimize later
+	, m_scale_x(1.0), m_scale_y(1.0)  // Start with 1.0, will optimize later
 	, m_min_raw_x(INT32_MAX), m_max_raw_x(INT32_MIN)  // Track actual raw coordinate range (for scaling and bit analysis)
 	, m_min_raw_y(INT32_MAX), m_max_raw_y(INT32_MIN)
 	, m_frame_started(false)
@@ -330,7 +329,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 
 	// Map coordinate to VVF signed range centered at (0,0)
 	s32 scaled_x = 0, scaled_y = 0;
-	bool initial_scaling = false;
 	double old_scale_x = m_scale_x;
 	double old_scale_y = m_scale_y;
 
@@ -350,7 +348,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		m_scale_y = std::max(1.0, half_range_y / BIT13_MAX);
 		scaled_y = s32(std::round((raw_y - m_center_y) / m_scale_y));
 	}
-
 
 #if VVF_STATS
 	// Classify color using bitwise RGB flags (RED=1, GREEN=2, BLUE=4)
@@ -436,7 +433,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	}
 #endif
 
-
 	// Optimization: Skip redundant zero-length moves (pen already at position)
 	if (intensity == 0 && scaled_x == m_last_scaled_x && scaled_y == m_last_scaled_y)
 	{
@@ -509,6 +505,7 @@ void vvf_write::end_frame()
 			}
 
 			m_last_frame_count = m_frame_count;
+			last_frame_count = m_frame_count;
 		} else {
 			osd_printf_info("No frames started\n");
 		}
@@ -519,6 +516,7 @@ void vvf_write::end_frame()
 		m_max_end_frame_duration = 0.0;
 		m_min_frame_duration = std::numeric_limits<double>::max();
 		m_max_frame_duration = 0.0;
+
 		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
 
@@ -540,7 +538,6 @@ void vvf_write::end_frame()
 
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
-
 
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
