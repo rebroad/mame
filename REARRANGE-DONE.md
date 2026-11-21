@@ -44,6 +44,11 @@
 - Autosquash replayed 341 entries. Conflicts arose in machine logging/FPS, FFmpeg scaling, and VVF statistics. Verification found replay-only source drift in two files; separate correction commits restored checkpointed behavior and VVF session state. `git diff --quiet 20261121-before-rearrange-phase37 master -- . ':(exclude)BUGS.md' ':(exclude)REARRANGE-DONE.md' ':(exclude)REARRANGE-TODO.md'` returned 0. The worktree was clean and merge-base unchanged.
 - No fixup or squash subjects remain in the locked range. No tests or builds were run. `origin/master` remains diverged; do not force-update it. Final publication remains pending.
 
+## History phase 38 starting point
+
+- Started from clean `master` at `a5c98ec2a3b6f6fa69bd96981b25f5f53a127ea9`, tree `b39d5b3d48ebd7375ce4fbe5b0aaf542e2a6387b`. Rechecked `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` unavailable; locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
+- Phase 38 will audit whether the two source replay-correction commits can be retargeted into their semantic owners while preserving the Phase 38 checkpoint tree.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
