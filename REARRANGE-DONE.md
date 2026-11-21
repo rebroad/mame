@@ -55,6 +55,11 @@
 - Reviewed the machine and VVF replay-correction commits. Kept them explicit because the machine correction spans startup diagnostics and FPS gating, and the VVF correction restores recording state after demonstrated conflicts. Folding them into older owners would repeat those conflicts without improving the final tree.
 - Upstream ref and merge-base remain `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d` and `2cf2ef01a396ccc162ce0344717f6a110fe971b3`; no tests or builds were run.
 
+## Final local audit
+
+- Source comparison against `20261121-before-rearrange-phase38` returned 0 with only the three audit files excluded. Worktree was clean before this record update; merge-base remains `2cf2ef01a396ccc162ce0344717f6a110fe971b3`; no fixup/squash subjects remain in the 334-commit downstream range.
+- Remote `origin/master` is `b7e108f421178af43c9a1dda5ab7541c0bcc079f`. The proposed branch `codex/mame-history-rearrangement-20261122` was absent at the remote check. Publication is pending.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
