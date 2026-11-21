@@ -49,6 +49,12 @@
 - Started from clean `master` at `a5c98ec2a3b6f6fa69bd96981b25f5f53a127ea9`, tree `b39d5b3d48ebd7375ce4fbe5b0aaf542e2a6387b`. Rechecked `upstream/master` `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d`; `upstream/main` unavailable; locked merge-base `2cf2ef01a396ccc162ce0344717f6a110fe971b3`.
 - Phase 38 will audit whether the two source replay-correction commits can be retargeted into their semantic owners while preserving the Phase 38 checkpoint tree.
 
+## History phase 38 completed
+
+- Created checkpoint `20261121-before-rearrange-phase38` at the exact recorded start `a5c98ec2a3b6f6fa69bd96981b25f5f53a127ea9` (tree `b39d5b3d48ebd7375ce4fbe5b0aaf542e2a6387b`). The checkpoint source tree matches current `master` under the three record-file exclusions.
+- Reviewed the machine and VVF replay-correction commits. Kept them explicit because the machine correction spans startup diagnostics and FPS gating, and the VVF correction restores recording state after demonstrated conflicts. Folding them into older owners would repeat those conflicts without improving the final tree.
+- Upstream ref and merge-base remain `2c2a20b9a4e5ba4dc46f8ae19a77f19d30fb225d` and `2cf2ef01a396ccc162ce0344717f6a110fe971b3`; no tests or builds were run.
+
 ## Start state
 
 - Operation began from clean `master` at `3c2af20ef8f82df155ae23187c9fff25472289c3`, tree `6d25c74cff6df5eab92bfb47b26e983fb514fd01`.
