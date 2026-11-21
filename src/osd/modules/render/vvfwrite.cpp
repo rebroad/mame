@@ -214,8 +214,8 @@ void vvf_write::begin_frame()
 	m_frame_started = true;
 
 #if VVF_STATS
-	// Debug: Print frame stats (stop at 40 line_to or end of frame 0)
-	if (m_frame_count < 10 || m_stats.debug_line_count < 40)
+	// Debug: Print frame stats (stop at 50 line_to calls)
+	if (m_stats.debug_line_count < 50)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
@@ -295,31 +295,54 @@ void vvf_write::line_to(s32 x, s32 y, rgb_t color, uint8_t intensity)
 		return;
 	}
 
+	// Write VVF command
+	bool is_new_palette_entry = false;
+	write_line_command(scaled_x, scaled_y, color, intensity, &is_new_palette_entry);
+
 #if VVF_STATS
-	// Debug output (stop at 40 or end of frame 0)
-	static uint32_t debug_draw_count = 0;
-	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
+	// Debug output (stop at 50 line_to calls)
+	if (m_stats.debug_line_count < 50)
 	{
 		attotime elapsed = m_machine.time() - m_start_time;
 		double elapsed_sec = elapsed.as_double();
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
-		osd_printf_info("%u.%03u VVF line_to #%u: RAW (%d,%d) SCALED (%d,%d) RGB(%u,%u,%u) i=%u\n",
-			seconds, milliseconds, debug_draw_count, x, y, scaled_x, scaled_y,
+		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u",
+			seconds, milliseconds, m_stats.debug_line_count, m_last_x, m_last_y, scaled_x, scaled_y,
 			color.r(), color.g(), color.b(), intensity);
-		debug_draw_count++;
-	}
-#endif
 
-	// Write VVF command
-	write_line_command(scaled_x, scaled_y, color, intensity);
+		// Show palette entry information if this is a new entry
+		if (is_new_palette_entry)
+		{
+			osd_printf_info(" -> Adding palette entry %u", (unsigned)m_palette.size());
+		}
+
+		osd_printf_info("\n");
+	}
+	m_stats.debug_line_count++;
+#endif
 }
 
 void vvf_write::end_frame()
 {
 	if (!m_recording)
 		return;
+
+	// FPS output once per second for 10 seconds (after initial 50 line_to debug)
+	if ((current_time - m_last_stats_print).as_double() >= 1.0 && elapsed_sec <= 10.0)
+	{
+		// Calculate instantaneous FPS for this 1-second interval
+		static uint32_t last_frame_count = 0;
+		uint32_t frames_this_second = m_frame_count + 1 - last_frame_count;
+		double fps = frames_this_second / (current_time - m_last_stats_print).as_double();
+
+		osd_printf_info("%.1fs VVF: %.2f FPS (instant) | %u frames total, %.2f KB\n",
+			elapsed_sec, fps, m_frame_count + 1, m_stats.total_bytes / 1024.0);
+
+		last_frame_count = m_frame_count + 1;
+		m_last_stats_print = current_time;
+	}
 
 	// Skip frames where begin_frame() was never called
 	// (happens during initialization before vector rendering starts)
@@ -331,22 +354,13 @@ void vvf_write::end_frame()
 	double elapsed_sec = elapsed.as_double();
 
 #if VVF_STATS
-	if (m_stats.debug_line_count < 40 || m_frame_count < 10)
+	if (m_stats.debug_line_count < 50 || m_frame_count < 10)
 	{
 		uint32_t seconds = (uint32_t)elapsed_sec;
 		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
 
 		osd_printf_info("%u.%03u VVF end_frame #%u: %u line_to calls, %u write commands (%zu bytes)\n",
 			seconds, milliseconds, m_frame_count, m_stats.frame_line_to_calls, m_stats.frame_write_commands, m_frame_buffer.size());
-	}
-
-	// Per-second stats output (for live monitoring)
-	if ((current_time - m_last_stats_print).as_double() >= 1.0)
-	{
-		osd_printf_info("%.1fs VVF: ", elapsed_sec);
-		print_color_stats();
-		osd_printf_info("| %u frames, %.2f KB\n", m_frame_count, m_stats.total_bytes / 1024.0);
-		m_last_stats_print = current_time;
 	}
 #endif
 
@@ -403,27 +417,10 @@ void vvf_write::end_frame()
 	m_frame_started = false;
 }
 
-void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
+void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity, bool *is_new_palette_entry)
 {
 #if VVF_STATS
 	m_stats.frame_write_commands++;
-#endif
-
-#if VVF_STATS
-	// Debug: Print line_to calls (stop at 40 or end of frame 0)
-	if (m_stats.debug_line_count < 40 && m_frame_count == 0)
-	{
-		// Get timestamp since recording started
-		attotime elapsed = m_machine.time() - m_start_time;
-		double elapsed_sec = elapsed.as_double();
-		uint32_t seconds = (uint32_t)elapsed_sec;
-		uint32_t milliseconds = (uint32_t)((elapsed_sec - seconds) * 1000.0);
-
-		osd_printf_info("%u.%03u VVF line_to #%u: (%d,%d) -> (%d,%d) color=RGB(%u,%u,%u) intensity=%u\n",
-			seconds, milliseconds, m_stats.debug_line_count, m_last_x, m_last_y, x, y,
-			color.r(), color.g(), color.b(), intensity);
-		m_stats.debug_line_count++;
-	}
 #endif
 
 	// Calculate deltas from current position to target (x, y)
@@ -498,7 +495,7 @@ void vvf_write::write_line_command(s32 x, s32 y, rgb_t color, uint8_t intensity)
 #endif
 
 	// Check if we need to add color+intensity to palette
-	uint8_t palette_index = find_or_add_palette_entry(color, intensity);
+	uint8_t palette_index = find_or_add_palette_entry(color, intensity, is_new_palette_entry);
 	bool needs_palette_switch = (palette_index != m_current_palette_index);
 
 	// Choose command based on delta magnitude
@@ -912,12 +909,13 @@ void vvf_write::finalize()
 //  PALETTE HELPER
 //**************************************************************************
 
-uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
+uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity, bool *is_new)
 {
 	// Intensity 0 means invisible (beam move) - always use palette entry 0
 	// Don't waste palette slots on invisible colors
 	if (intensity == 0)
 	{
+		if (is_new) *is_new = false;
 		return 0;
 	}
 
@@ -926,6 +924,7 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 	{
 		if (m_palette[i].color == color && m_palette[i].intensity == intensity)
 		{
+			if (is_new) *is_new = false;
 			return static_cast<uint8_t>(i);
 		}
 	}
@@ -949,11 +948,8 @@ uint8_t vvf_write::find_or_add_palette_entry(rgb_t color, uint8_t intensity)
 		entry.intensity = intensity;
 		m_palette.push_back(entry);
 
-#if VVF_STATS
-		osd_printf_info("VVF: Added palette entry %u: RGB(%u,%u,%u) intensity=%u\n",
-			(unsigned)m_palette.size() - 1, (unsigned)color.r(), (unsigned)color.g(), (unsigned)color.b(), (unsigned)intensity);
-#endif
-
+		// Palette entry added (debug output handled in line_to function)
+		if (is_new) *is_new = true;
 		return static_cast<uint8_t>(m_palette.size() - 1);
 	}
 
