@@ -13,6 +13,7 @@
 
 #include "util/path.h"
 #include "util/unzip.h"
+#include "osdfile.h"
 
 #include <tuple>
 
@@ -215,6 +216,7 @@ emu_file::emu_file(u32 openflags, empty_t)
 	, m_ziplength(0)
 	, m_remove_on_close(false)
 	, m_restrict_to_mediapath(0)
+	, m_attempted_paths()
 {
 	// sanity check the open flags
 	if ((m_openflags & OPEN_FLAG_HAS_CRC) && (m_openflags & OPEN_FLAG_WRITE))
@@ -379,6 +381,14 @@ std::error_condition emu_file::open_next()
 		}
 		m_fullpath.append(m_filename);
 
+		// record the attempted path (convert to absolute path)
+		std::string absolute_path;
+		std::error_condition path_err = osd_get_full_path(absolute_path, m_fullpath);
+		if (!path_err)
+			m_attempted_paths.emplace_back(absolute_path);
+		else
+			m_attempted_paths.emplace_back(m_fullpath); // fallback to relative path if conversion fails
+		
 		// attempt to open the file directly
 		LOG("emu_file: attempting to open '%s' directly\n", m_fullpath);
 		filerr = util::core_file::open(m_fullpath, m_openflags, m_file);
@@ -387,7 +397,19 @@ std::error_condition emu_file::open_next()
 		if (filerr && ((m_openflags & (OPEN_FLAG_READ | OPEN_FLAG_WRITE)) == OPEN_FLAG_READ))
 		{
 			LOG("emu_file: attempting to open '%s' from archives\n", m_fullpath);
+			// Note: attempt_zipped() may modify m_fullpath, so we record it again if it changes
+			std::string archive_path = m_fullpath;
 			filerr = attempt_zipped();
+			if (archive_path != m_fullpath)
+			{
+				// record the modified path (convert to absolute path)
+				std::string absolute_path;
+				std::error_condition path_err = osd_get_full_path(absolute_path, m_fullpath);
+				if (!path_err)
+					m_attempted_paths.emplace_back(absolute_path);
+				else
+					m_attempted_paths.emplace_back(m_fullpath); // fallback to relative path if conversion fails
+			}
 		}
 	}
 	return filerr;
