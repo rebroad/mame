@@ -2,9 +2,9 @@
 // copyright-holders:Aaron Giles
 /***************************************************************************
 
-    machine.cpp
+	machine.cpp
 
-    Controls execution of the core MAME system.
+	Controls execution of the core MAME system.
 
 ***************************************************************************/
 
@@ -1121,12 +1121,12 @@ void running_machine::postload_all_devices()
 
 
 /***************************************************************************
-    NVRAM MANAGEMENT
+	NVRAM MANAGEMENT
 ***************************************************************************/
 
 /*-------------------------------------------------
-    nvram_filename - returns filename of system's
-    NVRAM depending of selected BIOS
+	nvram_filename - returns filename of system's
+	NVRAM depending of selected BIOS
 -------------------------------------------------*/
 
 std::string running_machine::nvram_filename(device_t &device) const
@@ -1163,7 +1163,7 @@ std::string running_machine::nvram_filename(device_t &device) const
 }
 
 /*-------------------------------------------------
-    nvram_load - load a system's NVRAM
+	nvram_load - load a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_load()
@@ -1184,7 +1184,7 @@ void running_machine::nvram_load()
 
 
 /*-------------------------------------------------
-    nvram_save - save a system's NVRAM
+	nvram_save - save a system's NVRAM
 -------------------------------------------------*/
 
 void running_machine::nvram_save()
