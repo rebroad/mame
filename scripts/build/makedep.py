@@ -530,7 +530,7 @@ class DriverLister(DriverFilter):
         excludes = set()
         if options.filter is not None:
             self.parse_filter(options.root, options.filter, includesource, includedriver, excludedriver)
-            sys.stderr.write('%d source file(s) found\n' % (len(sources), ))
+            sys.stderr.write('%d source file(s) found: %s\n' % (len(sources), ', '.join(sorted(sources))))
         self.sources = frozenset(sources)
         self.includes = frozenset(includes)
         self.excludes = frozenset(excludes)
@@ -541,7 +541,7 @@ class DriverLister(DriverFilter):
 
         for driver in self.includes:
             drivers.add(driver)
-        sys.stderr.write('%d driver(s) found\n' % (len(drivers), ))
+        sys.stderr.write('%d driver(s) found: %s\n' % (len(drivers), ', '.join(sorted(drivers))))
         drivers.add('___empty')
         self.drivers = sorted(drivers)
 
