@@ -25,7 +25,7 @@ static osd_output *m_stack[MAXSTACK];
 static int m_ptr = -1;
 
 /*-------------------------------------------------
-    osd_output
+	osd_output
 -------------------------------------------------*/
 
 void osd_output::push(osd_output *delegate)
@@ -59,12 +59,12 @@ void osd_output::pop(osd_output *delegate)
 
 
 /***************************************************************************
-    OUTPUT MANAGEMENT
+	OUTPUT MANAGEMENT
 ***************************************************************************/
 
 /*-------------------------------------------------
-    osd_vprintf_error - output an error to the
-    appropriate callback
+	osd_vprintf_error - output an error to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_error(util::format_argument_pack<char> const &args)
@@ -78,8 +78,8 @@ void osd_vprintf_error(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_warning - output a warning to the
-    appropriate callback
+	osd_vprintf_warning - output a warning to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_warning(util::format_argument_pack<char> const &args)
@@ -93,8 +93,8 @@ void osd_vprintf_warning(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_info - output info text to the
-    appropriate callback
+	osd_vprintf_info - output info text to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_info(util::format_argument_pack<char> const &args)
@@ -108,8 +108,8 @@ void osd_vprintf_info(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_verbose - output verbose text to
-    the appropriate callback
+	osd_vprintf_verbose - output verbose text to
+	the appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_verbose(util::format_argument_pack<char> const &args)
@@ -123,8 +123,8 @@ void osd_vprintf_verbose(util::format_argument_pack<char> const &args)
 
 
 /*-------------------------------------------------
-    osd_vprintf_debug - output debug text to the
-    appropriate callback
+	osd_vprintf_debug - output debug text to the
+	appropriate callback
 -------------------------------------------------*/
 
 void osd_vprintf_debug(util::format_argument_pack<char> const &args)
