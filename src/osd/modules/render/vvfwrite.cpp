@@ -352,7 +352,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 		scaled_y = s32(std::round((raw_y - m_center_y) / m_scale_y));
 	}
 
-
 #if VVF_STATS
 	// Classify color using bitwise RGB flags (RED=1, GREEN=2, BLUE=4)
 	// Results: 0=BLACK, 1=RED, 2=GREEN, 3=YELLOW, 4=BLUE, 5=MAGENTA, 6=CYAN, 7=WHITE, 8=OTHER
@@ -437,7 +436,6 @@ void vvf_write::line_to(s32 raw_x, s32 raw_y, rgb_t color, uint8_t intensity)
 	}
 #endif
 
-
 	// Optimization: Skip redundant zero-length moves (pen already at position)
 	if (intensity == 0 && scaled_x == m_last_scaled_x && scaled_y == m_last_scaled_y)
 	{
@@ -520,6 +518,7 @@ void vvf_write::end_frame()
 		m_max_end_frame_duration = 0.0;
 		m_min_frame_duration = std::numeric_limits<double>::max();
 		m_max_frame_duration = 0.0;
+
 		m_last_stats_print = std::min(current_time, m_last_stats_print + attotime::from_seconds(1));
 	}
 
@@ -542,7 +541,6 @@ void vvf_write::end_frame()
 	// Write end-of-frame marker with timestamp
 	write_end_frame_command();
 
-
 	// Record frame index entry (every 30th frame for seeking)
 	if (m_frame_count % 30 == 0)
 	{
@@ -559,7 +557,7 @@ void vvf_write::end_frame()
 
 	// Reset flag for next frame
 	m_frame_started = false;
-}
+} // vvf_write::end_frame()
 
 // Cohen-Sutherland line clipping algorithm
 // Returns true if line is visible (possibly clipped), false if completely outside
