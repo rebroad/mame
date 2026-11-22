@@ -1308,6 +1308,7 @@ std::error_condition video_manager::open_next(emu_file &file, const char *extens
 
 void video_manager::record_frame()
 {
+	// ignore if nothing to do
 	if (!is_recording())
 		return;
 
