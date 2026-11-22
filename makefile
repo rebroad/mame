@@ -1299,6 +1299,7 @@ $(PROJECTDIR)/$(MAKETYPE)-linux/Makefile: makefile $(SCRIPTS) $(GENIE)
 # Auto-detect parameter changes and trigger rebuild
 .PHONY: check_params
 check_params:
+	@echo "=== Build started at $$(date '+%Y-%m-%d %H:%M:%S') ==="
 ifdef SUBTARGET
 	@PARAM_FILE="$(PROJECTDIR)/.build_params"; \
 	VERSION_FILE="$(PROJECTDIR)/.makedep_version"; \
