@@ -69,6 +69,13 @@ extern "C" DECLSPEC void SDLCALL SDL_SetModuleHandle(void *hInst);
 
 int main(int argc, char** argv)
 {
+	// DEBUG: Add a line to error.log at the very start of main
+	FILE* debug_file = fopen("error.log", "w");
+	if (debug_file) {
+		fprintf(debug_file, "DEBUG: MAME main() started\n");
+		fclose(debug_file);
+	}
+
 	std::vector<std::string> args = osd_get_command_line(argc, argv);
 	int res = 0;
 
@@ -97,7 +104,22 @@ int main(int argc, char** argv)
 		sdl_options options;
 		sdl_osd_interface osd(options);
 		osd.register_options();
+
+		// DEBUG: Add a line to error.log before calling start_frontend
+		FILE* debug_file = fopen("error.log", "a");
+		if (debug_file) {
+			fprintf(debug_file, "DEBUG: About to call emulator_info::start_frontend()\n");
+			fclose(debug_file);
+		}
+
 		res = emulator_info::start_frontend(options, osd, args);
+
+		// DEBUG: Add a line to error.log after calling start_frontend
+		debug_file = fopen("error.log", "a");
+		if (debug_file) {
+			fprintf(debug_file, "DEBUG: emulator_info::start_frontend() returned with code %d\n", res);
+			fclose(debug_file);
+		}
 	}
 
 #ifdef SDLMAME_UNIX

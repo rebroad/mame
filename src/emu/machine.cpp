@@ -284,6 +284,11 @@ int running_machine::run(bool quiet)
 			std::error_condition const filerr = m_logfile->open("error.log");
 			if (filerr)
 				throw emu_fatalerror("running_machine::run: unable to open error.log file");
+			if (options().wasm_debug())
+			{
+				m_logfile->puts("DEBUG: error.log created successfully\n");
+				m_logfile->flush();
+			}
 
 			using namespace std::placeholders;
 			add_logerror_callback(std::bind(&running_machine::logfile_callback, this, _1));
@@ -340,6 +345,11 @@ int running_machine::run(bool quiet)
 		// run the CPUs until a reset or exit
 		while ((!m_hard_reset_pending && !m_exit_pending) || m_saveload_schedule != saveload_schedule::NONE)
 		{
+			if (options().wasm_debug() && m_logfile != nullptr)
+			{
+				m_logfile->puts("DEBUG: Main execution loop started\n");
+				m_logfile->flush();
+			}
 			auto profile = g_profiler.start(PROFILER_EXTRA);
 
 			// execute CPUs if not paused
@@ -968,12 +978,23 @@ void running_machine::soft_reset(s32 param)
 
 	// temporarily in the reset phase
 	m_current_phase = machine_phase::RESET;
+	if (options().wasm_debug() && m_logfile != nullptr)
+	{
+		m_logfile->puts("DEBUG: Machine started RESET phase\n");
+		m_logfile->flush();
+	}
 
 	// call all registered reset callbacks
 	call_notifiers(MACHINE_NOTIFY_RESET);
 
 	// now we're running
 	m_current_phase = machine_phase::RUNNING;
+	if (options().wasm_debug() && m_logfile != nullptr)
+	{
+		m_logfile->puts("DEBUG: Machine reached RUNNING phase\n");
+		m_logfile->flush();
+	}
+
 }
 
 
