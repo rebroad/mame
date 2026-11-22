@@ -1186,11 +1186,14 @@ def scan_source_dependencies(root, sources, smart=True, depth_limit=2):
 def write_project(options, projectfile, mappings, sources, single):
     if single:
         targetsrc = ''
+        written_directives = set()  # Track written BUSES/directives to avoid duplicates
         for source in sorted(sources):
             action = mappings.get(source)
             if action:
                 for line in action:
-                    projectfile.write(line + '\n')
+                    if line not in written_directives:
+                        projectfile.write(line + '\n')
+                        written_directives.add(line)
             if source.startswith('src/mame/'):
                 targetsrc += '        MAME_DIR .. "%s",\n' % (source, )
         projectfile.write(
