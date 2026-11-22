@@ -1644,8 +1644,8 @@ void video_manager::end_vector_frame()
 {
 	// Only process if a vector frame was actually started this VBLANK
 	// This prevents calling end_frame when the game doesn't generate new vectors
-	// Applies to both VVF recording and any future vector frame processing
-	if (!m_vector_frame_started)
+	// Conditional on vector_frame_skip option (enabled by default, recommended for WASM/browser)
+	if (machine().options().vector_frame_skip() && !m_vector_frame_started)
 		return;
 
 	if (m_vvf_writer && m_vvf_writer->recording())
