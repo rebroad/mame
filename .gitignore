@@ -40,6 +40,8 @@ package-lock.json
 !/makefile
 !/mame.doxygen
 !/*.md
+REARRANGE-TODO.md
+REARRANGE-DONE.md
 !/*.bdf
 !/LICENSE
 /.idea
