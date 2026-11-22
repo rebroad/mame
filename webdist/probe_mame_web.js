@@ -113,7 +113,9 @@ const puppeteer = require('puppeteer');
     };
 
     fs.writeFileSync('mame_web_debug.json', JSON.stringify(output, null, 2));
+    fs.writeFileSync('console_capture.txt', consoleMessages.join('\n'));
     console.log('\n📁 Debug info saved to: mame_web_debug.json');
+    console.log('📁 Console output saved to: console_capture.txt');
 
     // Keep browser open for manual inspection
     console.log('\n🔍 Browser will stay open for manual inspection...');
